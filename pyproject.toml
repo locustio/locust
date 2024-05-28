@@ -5,6 +5,7 @@ build-backend = "poetry_dynamic_versioning.backend"
 [tool.poetry]
 name = "locust"
 description = "Developer-friendly load testing framework"
+<<<<<<< HEAD
 version = "0.0.0"
 license = "MIT"
 readme = "README.md"
@@ -15,6 +16,26 @@ homepage = "https://locust.io/"
 repository = "https://github.com/locustio/locust"
 documentation = "https://docs.locust.io/"
 
+=======
+dynamic = ["version"]
+requires-python = ">=3.9"
+dependencies = [
+    "gevent >=22.10.2",
+    "flask >=2.0.0",
+    "Werkzeug >=2.0.0",
+    "requests >=2.26.0",
+    "requests >=2.32.2; python_version>'3.11'", # See #2555
+    "msgpack >=1.0.0",
+    "pyzmq >=25.0.0",
+    "geventhttpclient >=2.3.1",
+    "ConfigArgParse >=1.5.5",
+    "tomli >=1.1.0; python_version<'3.11'",
+    "psutil >=5.9.1",
+    "Flask-Login >=0.6.3",
+    "Flask-Cors >=3.0.10",
+    "pywin32; platform_system=='Windows'",
+]
+>>>>>>> master
 classifiers = [
     "Topic :: Software Development :: Testing :: Traffic Generation",
     "Development Status :: 5 - Production/Stable",

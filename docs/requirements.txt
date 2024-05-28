@@ -1,11 +1,11 @@
-sphinx==4.3.2
-sphinx-rtd-theme==0.5.2
+sphinx==7.3.7
+sphinx-rtd-theme==2.0.0
 readthedocs-sphinx-search==0.3.2
 Sphinx-Substitution-Extensions==2020.9.30.0
 Pygments==2.16.1
-alabaster==0.7.13
+alabaster==0.7.16
 babel==2.13.0
-docutils==0.16
+docutils==0.20.1
 imagesize==1.4.1
 snowballstemmer==2.2.0
 sphinx-prompt==1.5.0
@@ -14,4 +14,4 @@ sphinxcontrib-devhelp==1.0.2
 sphinxcontrib-htmlhelp==2.0.1
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.3
-sphinxcontrib-serializinghtml==1.1.5
+sphinxcontrib-serializinghtml==1.1.10
