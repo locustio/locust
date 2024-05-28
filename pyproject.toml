@@ -42,7 +42,6 @@ include = [
         "wheel",
     ] },
 ]
-include = ["locust/webui/dist/**/*", "locust/_version"]
 exclude = [
     "locust/webui/public",
     "locust/webui/src",
