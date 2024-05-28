@@ -68,11 +68,11 @@ latest-tag = true
 pattern = "^(?P<base>\\d+\\.\\d+\\.\\d+)(?P<stage>.*)$"
 format-jinja = """
 {%- if distance == 0 -%}
-{{ serialize_pep440(base, stage) }}
+{{ serialize_pep440(base, stage, revision) }}
 {%- elif revision is not none -%}
-{{ serialize_pep440(base, stage + 1, dev=distance) }}
+{{ serialize_pep440(base, stage, revision + 1, dev=distance) }}
 {%- else -%}
-{{ serialize_pep440(bump_version(base), stage, dev=distance) }}
+{{ serialize_pep440(bump_version(base), stage, revision, dev=distance) }}
 {%- endif -%}
 """
 
