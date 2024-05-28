@@ -32,5 +32,11 @@ release: build
 build_docs:
 	sphinx-build -b html docs/ docs/_build/
 
+.SILENT:
+.PHONY: serve_docs
+serve_docs:
+	echo "Serving docs at http://localhost:80"
+	python -m http.server 80 -d docs/_build
+
 changelog:
 	@echo "Not supported any more. Run ./generate_changelog.py <version_number> instead!"
