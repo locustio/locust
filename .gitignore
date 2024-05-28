@@ -31,4 +31,4 @@ yarn-error.log
 .DS_Store
 .python-version
 poetry.lock
-locust/webui/dist
+locust/webui/dist/**
