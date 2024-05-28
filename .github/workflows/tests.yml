@@ -145,10 +145,11 @@ jobs:
           python-version: "3.x"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip build
+          python -m pip install --upgrade pip poetry
+          python -m poetry self add "poetry-dynamic-versioning[plugin]"
       - name: Build + set TAG env var for later use
         run: |
-          python -m build
+          python -m poetry build
           echo "TAG=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
       - name: Publish tagged version to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -183,11 +184,12 @@ jobs:
       - name: Install dependencies
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
         run: |
-          python -m pip install --upgrade pip build
+          python -m pip install --upgrade pip poetry
+          python -m poetry self add "poetry-dynamic-versioning[plugin]"
       - name: Build
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
         run: |
-          python -m build
+          python -m poetry build
       - name: Publish prerelease version to PyPI
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
         uses: pypa/gh-action-pypi-publish@release/v1
