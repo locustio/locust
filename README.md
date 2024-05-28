@@ -68,6 +68,7 @@ Locust's code base is intentionally kept small and doesn't solve everything out 
 
 * Documentation: [docs.locust.io](https://docs.locust.io)
 * Support/Questions: [StackOverflow](https://stackoverflow.com/questions/tagged/locust)
+* Github Discussions: [Github Discussions](https://github.com/orgs/locustio/discussions)
 * Chat/discussion: [Slack](https://locustio.slack.com) [(signup)](https://communityinviter.com/apps/locustio/locust)
 
 ## Authors

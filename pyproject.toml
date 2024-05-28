@@ -59,6 +59,7 @@ generate-setup-file = false
 
 "Stack Overflow" = "https://stackoverflow.com/questions/tagged/locust"
 "Slack" = "https://locustio.slack.com/"
+"Slack/Signup" = "https://communityinviter.com/apps/locustio/locust"
 
 [tool.poetry-dynamic-versioning]
 enable = true
