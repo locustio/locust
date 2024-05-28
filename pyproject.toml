@@ -39,6 +39,7 @@ include = [
     "locust/_version.py",
     { path = "poetry.lock", format = [
         "sdist",
+        "wheel",
     ] },
 ]
 exclude = [
@@ -63,9 +64,17 @@ generate-setup-file = false
 enable = true
 vcs = "git"
 style = "pep440"
-format = "{base}{stage}"
 latest-tag = true
 pattern = "^(?P<base>\\d+\\.\\d+\\.\\d+)(?P<stage>.*)$"
+format-jinja = """
+{%- if distance == 0 -%}
+{{ serialize_pep440(base, stage, revision) }}
+{%- elif revision is not none -%}
+{{ serialize_pep440(base, stage, revision + 1, dev=distance, metadata=[commit]) }}
+{%- else -%}
+{{ serialize_pep440(bump_version(base), stage, revision, dev=distance, metadata=[commit]) }}
+{%- endif -%}
+"""
 
 [tool.poetry-dynamic-versioning.files."locust/_version.py"]
 persistent-substitution = true
