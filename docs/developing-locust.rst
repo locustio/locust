@@ -85,7 +85,7 @@ The documentation source is in the `docs/ <https://github.com/locustio/locust/tr
 
 .. code-block:: console
 
-    $ pip3 install -r docs/requirements.txt
+    $ pip3 -m poetry install --with docs
 
 Then you can build the documentation locally using:
 
