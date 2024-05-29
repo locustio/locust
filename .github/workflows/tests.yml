@@ -146,6 +146,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip poetry
+          python -m poetry config virtualenvs.create false
           python -m poetry self add "poetry-dynamic-versioning[plugin]"
       - name: Build + set TAG env var for later use
         run: |
@@ -185,6 +186,7 @@ jobs:
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
         run: |
           python -m pip install --upgrade pip poetry
+          python -m poetry config virtualenvs.create false
           python -m poetry self add "poetry-dynamic-versioning[plugin]"
       - name: Build
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
