@@ -12,7 +12,7 @@ build:
       - rm build.py
       - python -m poetry self add "poetry-dynamic-versioning[plugin]"
     post_install:
-      - sed -i'' '/script = "build.py"/d' pyproject.toml
+      - sed -i.bak '/script = "build.py"/d' pyproject.toml
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with docs
 
 sphinx:
