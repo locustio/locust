@@ -50,7 +50,7 @@ exclude = [
 ]
 
 [tool.poetry.build]
-script = "build.py"
+script = "pre_build.py"
 generate-setup-file = false
 
 [tool.poetry.urls]

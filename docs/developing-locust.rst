@@ -23,7 +23,7 @@ Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then run
     $ pip3 -m poetry self add "poetry-dynamic-versioning[plugin]"
 
     # perform an editable install of the "locust" package
-    $ pip3 -m poetry install
+    $ pip3 -m poetry install --with dev
 
 Now the ``locust`` command will run *your* code with no need for reinstalling after making changes.
 

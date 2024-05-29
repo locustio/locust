@@ -6,7 +6,7 @@ build: setup_dependencies
 	rm -rf dist/* && poetry build && ./rename-wheel.sh
 
 install: setup_dependencies
-	poetry install
+	poetry install --with dev
 
 .ONESHELL:
 setup_dependencies: check-poetry check-yarn

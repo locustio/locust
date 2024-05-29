@@ -17,13 +17,12 @@ RUN apt-get update && apt-get install -y git
 RUN if [ -n "$(arch | grep 'arm64\|aarch64')" ]; then apt install -y --no-install-recommends gcc python3-dev; fi
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+ENV SKIP_PRE_BUILD="true"
 COPY . /build
 WORKDIR /build
 RUN pip install poetry && \
     poetry config virtualenvs.create false && \
     poetry self add "poetry-dynamic-versioning[plugin]" && \
-    # Don't run the front-end build script, as we've already built it
-    sed -i '/script = "build.py"/d' pyproject.toml && \
     poetry build -f wheel && \
     pip install dist/*.whl
 
