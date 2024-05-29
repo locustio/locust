@@ -29,7 +29,10 @@ frontend_build:
 release: build
 	twine upload dist/*
 
-build_docs:
+setup_docs_dependencies:
+	poetry install --with docs
+
+build_docs: setup_docs_dependencies
 	sphinx-build -b html docs/ docs/_build/
 
 .SILENT:
