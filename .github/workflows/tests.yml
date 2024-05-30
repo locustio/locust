@@ -30,24 +30,21 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-      - name: Update pip
-        run: |
-          python -m pip install --upgrade pip
-      - name: Install poetry
-        run: |
-          python -m pip install poetry
-      - name: Setup a local virtual environment for poetry
-        run: |
-          python -m poetry config virtualenvs.create true --local
-          python -m poetry config virtualenvs.in-project true --local
-      - uses: actions/cache@v3
-        name: Define a cache for the virtual environment based on the dependencies lock file
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
         with:
-          path: ./.venv
-          key: ${{ runner.os }}|${{ matrix.python }}|venv-${{ hashFiles('poetry.lock') }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: Set up cache
+        uses: actions/cache@v3
+        id: cached-poetry-dependencies
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('pyproject.toml') }}
       - name: set full Python version in PY env var
         # See https://pre-commit.com/#github-actions-example
         run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+      - run: poetry self add "poetry-dynamic-versioning[plugin]"
       - run: python -m pip install tox
       - run: python -m tox -e ${{ matrix.tox }}
 
