@@ -44,9 +44,21 @@ jobs:
       - name: set full Python version in PY env var
         # See https://pre-commit.com/#github-actions-example
         run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+      - name: Set Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - uses: borales/actions-yarn@v3
+        with:
+          cmd: webui:install
+      - uses: borales/actions-yarn@v3
+        with:
+          cmd: webui:build
       - run: poetry self add "poetry-dynamic-versioning[plugin]"
       - run: python -m pip install tox
       - run: python -m tox -e ${{ matrix.tox }}
+        env: 
+          CI_BUILD: true
 
   lint_typecheck_test_webui:
     runs-on: ubuntu-latest
