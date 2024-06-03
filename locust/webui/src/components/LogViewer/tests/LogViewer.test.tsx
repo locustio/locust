@@ -9,7 +9,7 @@ describe('LogViewer', () => {
     const { getByText } = renderWithProvider(<LogViewer />, {
       swarm: swarmStateMock,
       logViewer: {
-        logs: ['Log 1', 'Log 2', 'Log 3'],
+        master: ['Log 1', 'Log 2', 'Log 3'],
       },
     });
 

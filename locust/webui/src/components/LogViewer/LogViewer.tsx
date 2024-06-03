@@ -1,7 +1,16 @@
-import { Box, Paper, Typography } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Paper,
+  Typography,
+} from '@mui/material';
 import { red, amber, blue } from '@mui/material/colors';
 
 import { useSelector } from 'redux/hooks';
+import { objectLength } from 'utils/object';
 
 const getLogColor = (log: string) => {
   if (log.includes('CRITICAL')) {
@@ -19,21 +28,48 @@ const getLogColor = (log: string) => {
   return 'text.primary';
 };
 
+function LogDisplay({ log }: { log: string }) {
+  return (
+    <Typography color={getLogColor(log)} variant='body2'>
+      {log}
+    </Typography>
+  );
+}
+
 export default function LogViewer() {
-  const logs = useSelector(({ logViewer: { logs } }) => logs);
+  const { master: masterLogs, workers: workerLogs } = useSelector(({ logViewer }) => logViewer);
 
   return (
-    <Box>
-      <Typography sx={{ mb: 2 }} variant='h5'>
-        Logs
-      </Typography>
-      <Paper elevation={3} sx={{ p: 2, fontFamily: 'monospace' }}>
-        {logs.map((log, index) => (
-          <Typography color={getLogColor(log)} key={`log-${index}`} variant='body2'>
-            {log}
+    <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 4 }}>
+      <Box>
+        <Typography sx={{ mb: 2 }} variant='h5'>
+          Master Logs
+        </Typography>
+        <Paper elevation={3} sx={{ p: 2, fontFamily: 'monospace' }}>
+          {masterLogs.map((log, index) => (
+            <LogDisplay key={`master-log-${index}`} log={log} />
+          ))}
+        </Paper>
+      </Box>
+      {!!objectLength(workerLogs) && (
+        <Box>
+          <Typography sx={{ mb: 2 }} variant='h5'>
+            Worker Logs
           </Typography>
-        ))}
-      </Paper>
+          {Object.entries(workerLogs).map(([workerId, logs], index) => (
+            <Accordion key={`worker-log-${index}`}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>{workerId}</AccordionSummary>
+              <AccordionDetails>
+                <Paper elevation={3} sx={{ p: 2, fontFamily: 'monospace' }}>
+                  {logs.map((log, index) => (
+                    <LogDisplay key={`worker-${workerId}-log-${index}`} log={log} />
+                  ))}
+                </Paper>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 }

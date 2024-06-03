@@ -33,7 +33,7 @@ from . import __version__ as version
 from . import argument_parser
 from . import stats as stats_module
 from .html import BUILD_PATH, ROOT_PATH, STATIC_PATH, get_html_report
-from .log import greenlet_exception_logger
+from .log import get_logs, greenlet_exception_logger
 from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
 from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
 from .user.inspectuser import get_ratio
@@ -490,16 +490,7 @@ class WebUI:
         @app.route("/logs")
         @self.auth_required_if_enabled
         def logs():
-            log_reader_handler = [
-                handler for handler in logging.getLogger("root").handlers if handler.name == "log_reader"
-            ]
-
-            if log_reader_handler:
-                logs = log_reader_handler[0].logs
-            else:
-                logs = []
-
-            return jsonify({"logs": logs})
+            return jsonify({"master": get_logs(), "workers": self.environment.worker_logs})
 
         @app.route("/login")
         def login():

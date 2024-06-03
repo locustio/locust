@@ -39,7 +39,7 @@ from gevent.pool import Group
 from . import argument_parser
 from .dispatch import UsersDispatcher
 from .exception import RPCError, RPCReceiveError, RPCSendError
-from .log import greenlet_exception_logger
+from .log import get_logs, greenlet_exception_logger
 from .rpc import (
     Message,
     rpc,
@@ -66,6 +66,7 @@ STATE_INIT, STATE_SPAWNING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPING, STATE_
     "missing",
 ]
 WORKER_REPORT_INTERVAL = 3.0
+WORKER_LOG_REPORT_INTERVAL = 10
 CPU_MONITOR_INTERVAL = 5.0
 CPU_WARNING_THRESHOLD = 90
 HEARTBEAT_INTERVAL = 1
@@ -1116,6 +1117,8 @@ class MasterRunner(DistributedRunner):
                 # a worker finished spawning (this happens multiple times during rampup)
                 self.clients[msg.node_id].state = STATE_RUNNING
                 self.clients[msg.node_id].user_classes_count = msg.data["user_classes_count"]
+            elif msg.type == "logs":
+                self.environment.update_worker_logs(msg.data)
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
                     client = self.clients[msg.node_id]
@@ -1212,6 +1215,7 @@ class WorkerRunner(DistributedRunner):
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.master_host = master_host
         self.master_port = master_port
+        self.logs: list[str] = []
         self.worker_cpu_warning_emitted = False
         self._users_dispatcher: UsersDispatcher | None = None
         self.client = rpc.Client(master_host, master_port, self.client_id)
@@ -1220,6 +1224,7 @@ class WorkerRunner(DistributedRunner):
         self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.heartbeat_timeout_checker).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
+        self.greenlet.spawn(self.logs_reporter).link_exception(greenlet_exception_handler)
 
         # register listener that adds the current number of spawned users to the report that is sent to the master node
         def on_report_to_master(client_id: str, data: dict[str, Any]):
@@ -1417,6 +1422,11 @@ class WorkerRunner(DistributedRunner):
                 logger.error(f"Temporary connection lost to master server: {e}, will retry later.")
             gevent.sleep(WORKER_REPORT_INTERVAL)
 
+    def logs_reporter(self) -> NoReturn:
+        while True:
+            self._send_logs()
+            gevent.sleep(WORKER_LOG_REPORT_INTERVAL)
+
     def send_message(self, msg_type: str, data: dict[str, Any] | None = None, client_id: str | None = None) -> None:
         """
         Sends a message to master node
@@ -1432,6 +1442,13 @@ class WorkerRunner(DistributedRunner):
         data: dict[str, Any] = {}
         self.environment.events.report_to_master.fire(client_id=self.client_id, data=data)
         self.client.send(Message("stats", data, self.client_id))
+
+    def _send_logs(self) -> None:
+        current_logs = get_logs()
+
+        if len(current_logs) > len(self.logs):
+            self.logs = current_logs
+            self.send_message("logs", {"worker_id": self.client_id, "logs": current_logs})
 
     def connect_to_master(self):
         self.retry += 1

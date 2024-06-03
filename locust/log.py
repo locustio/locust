@@ -75,6 +75,15 @@ def setup_logging(loglevel, logfile=None):
     logging.config.dictConfig(LOGGING_CONFIG)
 
 
+def get_logs():
+    log_reader_handler = [handler for handler in logging.getLogger("root").handlers if handler.name == "log_reader"][0]
+
+    if log_reader_handler:
+        return log_reader_handler.logs
+
+    return []
+
+
 def greenlet_exception_logger(logger, level=logging.CRITICAL):
     """
     Return a function that can be used as argument to Greenlet.link_exception() that will log the

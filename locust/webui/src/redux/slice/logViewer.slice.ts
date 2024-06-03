@@ -1,15 +1,15 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 
 import { updateStateWithPayload } from 'redux/utils';
+import { ILogsResponse } from 'types/ui.types';
 
-export interface ILogViewerState {
-  logs: string[];
-}
+export interface ILogViewerState extends ILogsResponse {}
 
 export type LogViewerAction = PayloadAction<ILogViewerState>;
 
 const initialState = {
-  logs: [] as string[],
+  master: [] as string[],
+  workers: {},
 };
 
 const logViewerSlice = createSlice({

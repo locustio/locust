@@ -1020,7 +1020,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         response = requests.get("http://127.0.0.1:%i/logs" % self.web_port)
 
-        self.assertIn(log_line, response.json().get("logs"))
+        self.assertIn(log_line, response.json().get("master"))
 
     def test_template_args(self):
         class MyUser(User):

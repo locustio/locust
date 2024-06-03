@@ -11,7 +11,7 @@ import { renderWithProvider } from 'test/testUtils';
 const mockLogs = ['Log 1', 'Log 2', 'Log 3'];
 
 const server = setupServer(
-  http.get(`${TEST_BASE_API}/logs`, () => HttpResponse.json({ logs: mockLogs })),
+  http.get(`${TEST_BASE_API}/logs`, () => HttpResponse.json({ master: mockLogs })),
 );
 
 function MockHook() {
@@ -32,7 +32,7 @@ describe('useLogViewer', () => {
 
     await waitFor(() => {
       expect(getByTestId('logs').textContent).toBe(JSON.stringify(mockLogs));
-      expect(store.getState().logViewer.logs).toEqual(mockLogs);
+      expect(store.getState().logViewer.master).toEqual(mockLogs);
     });
   });
 });

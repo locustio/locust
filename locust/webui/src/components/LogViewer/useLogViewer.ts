@@ -15,20 +15,20 @@ export default function useLogViewer() {
   const setLogs = useAction(logViewerActions.setLogs);
   const { data, refetch: refetchLogs } = useGetLogsQuery();
 
-  const logs = data ? data.logs : [];
+  const logs = data || { master: [], workers: {} };
 
   const shouldNotifyLogsUpdate = useCallback(
-    () => logs.slice(localStorage['logViewer']).some(isImportantLog),
+    () => logs.master.slice(localStorage['logViewer']).some(isImportantLog),
     [logs],
   );
 
   useInterval(refetchLogs, 5000, {
     shouldRunInterval: swarm.state === SWARM_STATE.SPAWNING || swarm.state == SWARM_STATE.RUNNING,
   });
-  useNotifications(logs, { key: 'logViewer', shouldNotify: shouldNotifyLogsUpdate });
+  useNotifications(logs.master, { key: 'logViewer', shouldNotify: shouldNotifyLogsUpdate });
 
   useEffect(() => {
-    setLogs({ logs });
+    setLogs(logs);
   }, [logs]);
 
   return logs;
