@@ -38,4 +38,4 @@ official Locust docker image as a base image::
 Running Locust using Kubernetes
 ===============================
 
-See [Extensions](https://github.com/locustio/locust/wiki/Extensions#helm) in the wiki.
+See `Extensions <https://github.com/locustio/locust/wiki/Extensions#helm>`_ in the wiki.
