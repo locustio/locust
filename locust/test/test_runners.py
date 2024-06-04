@@ -11,6 +11,7 @@ from locust.argument_parser import parse_options
 from locust.dispatch import UsersDispatcher
 from locust.env import Environment
 from locust.exception import RPCError, RPCReceiveError, StopUser
+from locust.log import LogReader
 from locust.main import create_environment
 from locust.rpc import Message
 from locust.runners import (
@@ -32,6 +33,7 @@ from locust.user import (
 )
 
 import json
+import logging
 import random
 import time
 import unittest
@@ -3961,6 +3963,34 @@ class TestWorkerRunner(LocustTestCase):
                             environment=Environment(), user_classes=[MyTestUser], client=client, auto_connect=False
                         )
                     self.assertEqual(2, len(client.outbox))
+
+    def test_send_logs(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            short_time = 0.05
+
+            log_handler = LogReader()
+            log_handler.name = "log_reader"
+            log_handler.setLevel(logging.INFO)
+            logger = logging.getLogger("root")
+            logger.addHandler(log_handler)
+            log_line = "some log info"
+            logger.info(log_line)
+
+            worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
+
+            gevent.sleep(short_time)
+
+            self.assertEqual("logs", client.outbox[3].type)
+            self.assertEqual(log_line, client.outbox[3].data.get("logs", [])[0])
+            self.assertEqual(worker.client_id, client.outbox[3].data.get("worker_id"))
+            worker.quit()
 
 
 class TestMessageSerializing(unittest.TestCase):
