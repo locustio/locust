@@ -30,7 +30,7 @@ const getLogColor = (log: string) => {
 
 function LogDisplay({ log }: { log: string }) {
   return (
-    <Typography color={getLogColor(log)} variant='body2'>
+    <Typography color={getLogColor(log)} fontFamily={'monospace'} variant='body2'>
       {log}
     </Typography>
   );
@@ -60,7 +60,7 @@ export default function LogViewer() {
             <Accordion key={`worker-log-${index}`}>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>{workerId}</AccordionSummary>
               <AccordionDetails>
-                <Paper elevation={3} sx={{ p: 2, fontFamily: 'monospace' }}>
+                <Paper elevation={3} sx={{ p: 2 }}>
                   {logs.map((log, index) => (
                     <LogDisplay key={`worker-${workerId}-log-${index}`} log={log} />
                   ))}
