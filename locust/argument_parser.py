@@ -6,7 +6,6 @@ from locust.rpc import Message, zmqrpc
 
 import ast
 import atexit
-import logging
 import os
 import platform
 import socket
@@ -29,7 +28,7 @@ import gevent
 import requests
 
 version = locust.__version__
-logger = logging.getLogger(__name__)
+
 
 DEFAULT_CONFIG_FILES = ("~/.locust.conf", "locust.conf", "pyproject.toml")
 
@@ -243,9 +242,9 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
             gevent.sleep(1)
 
     def log_warning():
-        gevent.sleep(0.1)
+        gevent.sleep(10)
         while not got_reply:
-            logger.warning("Waiting to connect to master to receive locustfile...")
+            sys.stderr.write("Waiting to connect to master to receive locustfile...\n")
             gevent.sleep(60)
 
     def wait_for_reply():
