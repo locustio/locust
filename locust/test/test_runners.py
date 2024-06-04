@@ -3992,6 +3992,40 @@ class TestWorkerRunner(LocustTestCase):
             self.assertEqual(worker.client_id, client.outbox[3].data.get("worker_id"))
             worker.quit()
 
+    def test_quit_worker_logs(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            short_time = 0.05
+
+            log_handler = LogReader()
+            log_handler.name = "log_reader"
+            log_handler.setLevel(logging.INFO)
+            logger = logging.getLogger("root")
+            logger.addHandler(log_handler)
+            log_line = "spamming log"
+
+            for _ in range(11):
+                logger.info(log_line)
+
+            worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
+
+            gevent.sleep(short_time)
+
+            self.assertEqual("logs", client.outbox[3].type)
+            self.assertEqual(
+                "The worker attempted to send more than 10 log lines in one interval. Further log sending was disabled for this worker.",
+                client.outbox[3].data.get("logs", [])[0],
+            )
+            self.assertEqual(worker.client_id, client.outbox[3].data.get("worker_id"))
+            worker.quit()
+            logger.removeHandler(log_handler)
+
 
 class TestMessageSerializing(unittest.TestCase):
     def test_message_serialize(self):

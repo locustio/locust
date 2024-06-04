@@ -2,6 +2,7 @@ import logging
 import logging.config
 import re
 import socket
+from collections import deque
 
 HOSTNAME = re.sub(r"\..*", "", socket.gethostname())
 
@@ -13,7 +14,7 @@ unhandled_greenlet_exception = False
 class LogReader(logging.Handler):
     def __init__(self):
         super().__init__()
-        self.logs = []
+        self.logs = deque(maxlen=500)
 
     def emit(self, record):
         self.logs.append(self.format(record))
@@ -76,10 +77,10 @@ def setup_logging(loglevel, logfile=None):
 
 
 def get_logs():
-    log_reader_handler = [handler for handler in logging.getLogger("root").handlers if handler.name == "log_reader"][0]
+    log_reader_handler = [handler for handler in logging.getLogger("root").handlers if handler.name == "log_reader"]
 
     if log_reader_handler:
-        return log_reader_handler.logs
+        return list(log_reader_handler[0].logs)
 
     return []
 

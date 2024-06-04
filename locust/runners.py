@@ -1422,9 +1422,20 @@ class WorkerRunner(DistributedRunner):
                 logger.error(f"Temporary connection lost to master server: {e}, will retry later.")
             gevent.sleep(WORKER_REPORT_INTERVAL)
 
-    def logs_reporter(self) -> NoReturn:
+    def logs_reporter(self) -> None:
         while True:
-            self._send_logs()
+            current_logs = get_logs()
+
+            if (len(current_logs) - len(self.logs)) > 10:
+                logger.warning(
+                    "The worker attempted to send more than 10 log lines in one interval. Further log sending was disabled for this worker."
+                )
+                self._send_logs(get_logs())
+                break
+            if len(current_logs) > len(self.logs):
+                self._send_logs(current_logs)
+
+            self.logs = current_logs
             gevent.sleep(WORKER_LOG_REPORT_INTERVAL)
 
     def send_message(self, msg_type: str, data: dict[str, Any] | None = None, client_id: str | None = None) -> None:
@@ -1443,12 +1454,8 @@ class WorkerRunner(DistributedRunner):
         self.environment.events.report_to_master.fire(client_id=self.client_id, data=data)
         self.client.send(Message("stats", data, self.client_id))
 
-    def _send_logs(self) -> None:
-        current_logs = get_logs()
-
-        if len(current_logs) > len(self.logs):
-            self.logs = current_logs
-            self.send_message("logs", {"worker_id": self.client_id, "logs": current_logs})
+    def _send_logs(self, current_logs) -> None:
+        self.send_message("logs", {"worker_id": self.client_id, "logs": current_logs})
 
     def connect_to_master(self):
         self.retry += 1
