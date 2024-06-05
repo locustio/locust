@@ -274,3 +274,15 @@ The list of statistics parameters that can be modified is:
 +-------------------------------------------+--------------------------------------------------------------------------------------+
 | PERCENTILES_TO_STATISTICS                 | List of response time percentiles in the screen of statistics for UI                 |
 +-------------------------------------------+--------------------------------------------------------------------------------------+
+
+Customization of additional static variables
+============================================
+
+This table lists the constants that are set within locust and may be overridden.
+
++-------------------------------------------+--------------------------------------------------------------------------------------+
+| Parameter name                            | Purpose                                                                              |
++-------------------------------------------+--------------------------------------------------------------------------------------+
+| locust.runners.WORKER_LOG_REPORT_INTERVAL | Interval for how frequently worker logs are reported to master. Can be disabled      |
+|                                           | by setting to a negative number                                                      |
++-------------------------------------------+--------------------------------------------------------------------------------------+

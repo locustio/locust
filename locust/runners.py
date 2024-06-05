@@ -1423,6 +1423,9 @@ class WorkerRunner(DistributedRunner):
             gevent.sleep(WORKER_REPORT_INTERVAL)
 
     def logs_reporter(self) -> None:
+        if WORKER_LOG_REPORT_INTERVAL < 0:
+            return
+
         while True:
             current_logs = get_logs()
 
