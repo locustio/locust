@@ -62,7 +62,6 @@ Further reading / knowledgebase
     developing-locust
     further-reading
     FAQ
-    Articles
 
 
 API
