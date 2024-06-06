@@ -72,14 +72,7 @@ You can validate the whole project using tox:
 Build documentation
 ===================
 
-The documentation source is in the `docs/ <https://github.com/locustio/locust/tree/master/docs/>`_ directory. To build the documentation
-
-#. Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and install Lucust in editable mode:
-
-    .. code-block:: console
-
-        $ git clone git://github.com/<YourName>/locust.git # clone the repo
-        $ pip3 install -e locust/                          # install in editable mode
+The documentation source is in the `docs/ <https://github.com/locustio/locust/tree/master/docs/>`_ directory. To build the documentation you'll need to `Install Locust for development`_ then
 
 #. Install the documentation requirements:
 
