@@ -1,6 +1,8 @@
-====================
-3rd party extensions
-====================
+.. _extensions:
+
+======================
+Third party extensions
+======================
 
 Support for load testing other protocols, reporting etc
 -------------------------------------------------------
@@ -48,6 +50,8 @@ Configuration Management
    data.
 -  `locust_slave <https://github.com/tinx/locust_slave>`__ - an Ansible
    role to manage Locust slave instances.
+
+.. _helm:
 
 Helm
 ----

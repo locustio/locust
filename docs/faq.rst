@@ -1,3 +1,5 @@
+.. _faq:
+
 ===
 FAQ
 ===
@@ -14,6 +16,8 @@ Sort out installation issues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    See [[Installation]]
+
+.. _increaserr:
 
 Increase my request rate/RPS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

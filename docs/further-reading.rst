@@ -2,13 +2,11 @@
 Further reading / knowledgebase
 ===============================
 
-The `Locust wiki <https://github.com/locustio/locust/wiki/>`_ serves as a community maintained knowledgebase for Locust, augmenting the official documentation.
+- :ref:`extensions`.
 
-- `Extensions <https://github.com/locustio/locust/wiki/Extensions>`_ Third party extensions and tools
+- An unmaintained list of Locust `articles, blog posts, reviews, and walkthroughs <https://github.com/orgs/locustio/discussions/2752>`_.
 
-- `Articles <https://github.com/locustio/locust/wiki/Articles>`_ Blog posts with reviews & walkthroughs of how to run Locust in various use cases
-
-- `Frequently Asked Questions <https://github.com/locustio/locust/wiki/FAQ>`_ Common questions about Locust answered here
+- :ref:`Common questions and answers about Locust <faq>`.
 
 You'll also find a lot of answers on `stackoverflow <https://stackoverflow.com/questions/tagged/locust?sort=MostVotes>`_, for example:
 

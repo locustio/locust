@@ -50,7 +50,7 @@ Other functionalities
     extending-locust
     logging
     use-as-lib
-    Extensions
+    extensions
 
 
 Further reading / knowledgebase
@@ -61,7 +61,7 @@ Further reading / knowledgebase
 
     developing-locust
     further-reading
-    FAQ
+    faq
 
 
 API
