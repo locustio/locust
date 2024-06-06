@@ -1,4 +1,3 @@
-import datetime
 import glob
 import os
 import pathlib
@@ -12,6 +11,7 @@ from . import stats as stats_module
 from .runners import STATE_STOPPED, STATE_STOPPING, MasterRunner
 from .stats import sort_stats, update_stats_history
 from .user.inspectuser import get_ratio
+from .util.date import format_utc_timestamp
 
 PERCENTILES_FOR_HTML_REPORT = [0.50, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -32,11 +32,10 @@ def get_html_report(
 ):
     stats = environment.runner.stats
 
-    start_ts = stats.start_time
-    start_time = datetime.datetime.fromtimestamp(start_ts, tz=datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    start_time = format_utc_timestamp(stats.start_time)
 
     if end_ts := stats.last_request_timestamp:
-        end_time = datetime.datetime.fromtimestamp(end_ts, tz=datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        end_time = format_utc_timestamp(end_ts)
     else:
         end_time = start_time
 

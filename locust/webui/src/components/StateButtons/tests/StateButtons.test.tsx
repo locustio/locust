@@ -21,9 +21,9 @@ describe('StateButtons', () => {
     });
 
     expect(queryByText('New')).toBeTruthy();
+    expect(queryByText('Reset')).toBeTruthy();
     expect(queryByText('Edit')).toBeFalsy();
     expect(queryByText('Stop')).toBeFalsy();
-    expect(queryByText('Reset')).toBeFalsy();
   });
 
   test('renders EditButton, StopButton, and ResetButton when swarm state is RUNNING', () => {

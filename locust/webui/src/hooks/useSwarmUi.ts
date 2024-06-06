@@ -45,7 +45,7 @@ export default function useSwarmUi() {
       totalAvgResponseTime,
     } = statsData;
 
-    const time = new Date().toLocaleTimeString();
+    const time = new Date().toUTCString();
 
     if (shouldAddMarker) {
       setShouldAddMarker(false);
