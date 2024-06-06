@@ -11,7 +11,6 @@ Getting started
 
     what-is-locust
     installation
-    Installation
     quickstart
 
 
