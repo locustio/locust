@@ -201,14 +201,14 @@ def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG
         usage=configargparse.SUPPRESS,
         description=textwrap.dedent(
             """
-Usage: locust [options] [UserClass ...]
+Usage: locust [options]
         """
         ),
         epilog="""Examples:
 
     locust -f my_test.py -H https://www.example.com
 
-    locust --headless -u 100 -t 20m --processes 4 MyHttpUser AnotherUser
+    locust --headless -u 100 -t 20m --processes 4 --run-users MyHttpUser AnotherUser
 
 See documentation for more details, including how to set options using a file or environment variables: https://docs.locust.io/en/stable/configuration.html""",
     )
@@ -419,6 +419,12 @@ def setup_parser_arguments(parser):
         nargs="*",
         help="User configuration as a JSON string or file. A list of arguments or an Array of JSON configuration may be provided",
         env_var="LOCUST_CONFIG_USERS",
+    )
+    parser.add_argument(
+        "--run-users",
+        nargs="*",
+        help="List of User classes to be used (available User classes can be listed with --list). LOCUST_USER_CLASSES environment variable can also be used to specify User classes. Default is to use all available User classes",
+        default=os.environ.get("LOCUST_USER_CLASSES", "").split(),
     )
 
     web_ui_group = parser.add_argument_group("Web UI options")
@@ -743,13 +749,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
     )
 
     user_classes_group = parser.add_argument_group("User classes")
-    user_classes_group.add_argument(
-        "user_classes",
-        nargs="*",
-        metavar="<UserClass1 UserClass2>",
-        help="At the end of the command line, you can list User classes to be used (available User classes can be listed with --list). LOCUST_USER_CLASSES environment variable can also be used to specify User classes. Default is to use all available User classes",
-        default=os.environ.get("LOCUST_USER_CLASSES", "").split(),
-    )
+    user_classes_group.add_argument("user_classes", nargs="*")
 
 
 def get_parser(default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParser:

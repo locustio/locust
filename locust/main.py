@@ -13,6 +13,7 @@ import signal
 import sys
 import time
 import traceback
+import warnings
 
 import gevent
 
@@ -310,16 +311,26 @@ def main():
         sys.exit(1)
 
     # make sure specified User exists
+    names = set()
+    if options.run_users:
+        if missing := set(options.run_users) - set(user_classes.keys()):
+            logger.error(f"Unknown User(s): {', '.join(missing)}\n")
+            sys.exit(1)
+        else:
+            names |= set(options.run_users) & set(user_classes.keys())
     if options.user_classes:
+        warnings.warn(
+            "Specifying users at the end of the command is deprecated. Use --run-users parameter instead",
+            DeprecationWarning,
+        )
         if missing := set(options.user_classes) - set(user_classes.keys()):
             logger.error(f"Unknown User(s): {', '.join(missing)}\n")
             sys.exit(1)
         else:
-            names = set(options.user_classes) & set(user_classes.keys())
-            user_classes = [user_classes[n] for n in names]
-    else:
-        # list() call is needed to consume the dict_view object in Python 3
-        user_classes = list(user_classes.values())
+            names |= set(options.user_classes) & set(user_classes.keys())
+    if not (options.run_users or options.user_classes):
+        names = set(user_classes.keys())
+    user_classes = [user_classes[n] for n in names]
 
     if os.name != "nt" and not options.master:
         try:
