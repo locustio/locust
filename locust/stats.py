@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-import datetime
 import hashlib
 import json
 import logging
@@ -34,6 +33,7 @@ import gevent
 
 from .event import Events
 from .exception import CatchResponseError
+from .util.date import format_utc_timestamp
 from .util.rounding import proper_round
 
 if TYPE_CHECKING:
@@ -113,7 +113,7 @@ HISTORY_STATS_INTERVAL_SEC = 5
 
 """Default interval for how frequently CSV files are written if this option is configured."""
 CSV_STATS_INTERVAL_SEC = 1
-CSV_STATS_FLUSH_INTERVAL_SEC = 10
+CSV_STATS_FLUSH_INTERVAL_SEC = 5
 
 """
 Default window size/resolution - in seconds - when calculating the current
@@ -922,10 +922,10 @@ def update_stats_history(runner: Runner) -> None:
 
     r = {
         **current_response_time_percentiles,
-        "time": datetime.datetime.now(tz=datetime.timezone.utc).strftime("%H:%M:%S"),
+        "time": format_utc_timestamp(time.time()),
         "current_rps": stats.total.current_rps or 0,
         "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
-        "total_avg_response_time": stats.total.avg_response_time,
+        "total_avg_response_time": proper_round(stats.total.avg_response_time, digits=2),
         "user_count": runner.user_count or 0,
     }
     stats.history.append(r)

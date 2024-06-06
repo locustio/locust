@@ -13,6 +13,7 @@ dependencies = [
     "flask >=2.0.0",
     "Werkzeug >=2.0.0",
     "requests >=2.26.0",
+    "requests >=2.32.2; python_version>'3.11'", # See #2555
     "msgpack >=1.0.0",
     "pyzmq >=25.0.0",
     "geventhttpclient >=2.3.1",

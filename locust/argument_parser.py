@@ -241,10 +241,18 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
             tempclient.send(Message("locustfile", None, client_id))
             gevent.sleep(1)
 
+    def log_warning():
+        gevent.sleep(10)
+        while not got_reply:
+            sys.stderr.write("Waiting to connect to master to receive locustfile...\n")
+            gevent.sleep(60)
+
     def wait_for_reply():
         return tempclient.recv()
 
     gevent.spawn(ask_for_locustfile)
+    gevent.spawn(log_warning)
+
     try:
         # wait same time as for client_ready ack. not that it is really relevant...
         msg = gevent.spawn(wait_for_reply).get(timeout=runners.CONNECT_TIMEOUT * runners.CONNECT_RETRY_COUNT)
@@ -723,7 +731,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         dest="stop_timeout",
         metavar="<number>",
         default="0",
-        help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed.",
+        help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. When running distributed, this only needs to be specified on the master.",
         env_var="LOCUST_STOP_TIMEOUT",
     )
     other_group.add_argument(

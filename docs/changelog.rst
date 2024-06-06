@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.28.0
+======
+* Remove legacy UI https://github.com/locustio/locust/pull/2703
+* Stop HTML escaping errors for /stats/requests endpoint https://github.com/locustio/locust/pull/2710
+* Various minor UI & logging improvements
+
 2.27.0
 ======
 * Simplify how locustfiles are found (using -f). Don’t automatically append .py https://github.com/locustio/locust/pull/2655
