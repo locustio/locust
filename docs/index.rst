@@ -30,6 +30,7 @@ Running your Locust tests
     :maxdepth: 1
 
     configuration
+    increasing-request-rate
     running-distributed
     running-in-debugger
     running-in-docker
