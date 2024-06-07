@@ -103,5 +103,8 @@ export interface IStatsResponse {
 }
 
 export interface ILogsResponse {
-  logs: string[];
+  master: string[];
+  workers: {
+    [key: string]: string[];
+  };
 }

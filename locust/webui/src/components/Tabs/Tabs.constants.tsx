@@ -6,6 +6,7 @@ import StatsTable from 'components/StatsTable/StatsTable';
 import SwarmCharts from 'components/SwarmCharts/SwarmCharts';
 import SwarmRatios from 'components/SwarmRatios/SwarmRatios';
 import WorkersTable from 'components/WorkersTable/WorkersTable';
+import { LOG_VIEWER_KEY } from 'constants/logs';
 import { IRootState } from 'redux/store';
 
 export const baseTabs = [
@@ -41,7 +42,7 @@ export const baseTabs = [
   },
   {
     component: LogViewer,
-    key: 'logViewer',
+    key: LOG_VIEWER_KEY,
     title: 'Logs',
   },
 ];

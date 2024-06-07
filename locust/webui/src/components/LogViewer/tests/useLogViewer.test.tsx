@@ -8,11 +8,14 @@ import { TEST_BASE_API } from 'test/constants';
 import { swarmStateMock } from 'test/mocks/swarmState.mock';
 import { renderWithProvider } from 'test/testUtils';
 
-const mockLogs = ['Log 1', 'Log 2', 'Log 3'];
+const mockLogs = {
+  master: ['Log 1', 'Log 2', 'Log 3'],
+  workers: {
+    '123': ['Worker Log'],
+  },
+};
 
-const server = setupServer(
-  http.get(`${TEST_BASE_API}/logs`, () => HttpResponse.json({ logs: mockLogs })),
-);
+const server = setupServer(http.get(`${TEST_BASE_API}/logs`, () => HttpResponse.json(mockLogs)));
 
 function MockHook() {
   const logs = useLogViewer();
@@ -32,7 +35,7 @@ describe('useLogViewer', () => {
 
     await waitFor(() => {
       expect(getByTestId('logs').textContent).toBe(JSON.stringify(mockLogs));
-      expect(store.getState().logViewer.logs).toEqual(mockLogs);
+      expect(store.getState().logViewer).toEqual(mockLogs);
     });
   });
 });
