@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import {
   Accordion,
   AccordionDetails,
@@ -9,6 +11,7 @@ import {
 } from '@mui/material';
 import { red, amber, blue } from '@mui/material/colors';
 
+import { isImportantLog } from 'components/LogViewer/logUtils';
 import { useSelector } from 'redux/hooks';
 import { objectLength } from 'utils/object';
 
@@ -36,6 +39,32 @@ function LogDisplay({ log }: { log: string }) {
   );
 }
 
+function WorkerLogs({ workerId, logs }: { workerId: string; logs: string[] }) {
+  const [hasImportantLog, setHasImportantLog] = useState(false);
+
+  useEffect(() => {
+    if (logs.some(isImportantLog)) {
+      setHasImportantLog(true);
+    }
+  }, [logs]);
+
+  return (
+    <Accordion>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />} onClick={() => setHasImportantLog(false)}>
+        {hasImportantLog && <PriorityHighIcon color='secondary' />}
+        {workerId}
+      </AccordionSummary>
+      <AccordionDetails>
+        <Paper elevation={3} sx={{ p: 2 }}>
+          {logs.map((log, index) => (
+            <LogDisplay key={`worker-${workerId}-log-${index}`} log={log} />
+          ))}
+        </Paper>
+      </AccordionDetails>
+    </Accordion>
+  );
+}
+
 export default function LogViewer() {
   const { master: masterLogs, workers: workerLogs } = useSelector(({ logViewer }) => logViewer);
 
@@ -57,16 +86,7 @@ export default function LogViewer() {
             Worker Logs
           </Typography>
           {Object.entries(workerLogs).map(([workerId, logs], index) => (
-            <Accordion key={`worker-log-${index}`}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>{workerId}</AccordionSummary>
-              <AccordionDetails>
-                <Paper elevation={3} sx={{ p: 2 }}>
-                  {logs.map((log, index) => (
-                    <LogDisplay key={`worker-${workerId}-log-${index}`} log={log} />
-                  ))}
-                </Paper>
-              </AccordionDetails>
-            </Accordion>
+            <WorkerLogs key={`worker-log-${index}`} logs={logs} workerId={workerId} />
           ))}
         </Box>
       )}
