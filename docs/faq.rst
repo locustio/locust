@@ -4,12 +4,6 @@
 FAQ
 ===
 
-If you have questions about Locust that are not answered here, please
-check
-`StackOverflow <https://stackoverflow.com/questions/tagged/locust>`__,
-or post your question there. This wiki is not for asking questions but
-for answering them :)
-
 How do I…
 
 ..
