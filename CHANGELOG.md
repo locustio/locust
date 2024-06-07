@@ -1,6 +1,40 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.29.0](https://github.com/locustio/locust/tree/2.29.0) (2024-06-07)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.28.0...2.29.0)
+
+**Fixed bugs:**
+
+- The time of the downloaded html report is not correct [\#2691](https://github.com/locustio/locust/issues/2691)
+- Event spawning\_complete fires every time a user is created [\#2671](https://github.com/locustio/locust/issues/2671)
+- Delay at startup and high cpu usage on Windows in Python 3.12 [\#2555](https://github.com/locustio/locust/issues/2555)
+
+**Closed issues:**
+
+- Log a warning if getting locustfile from master takes more than 60s [\#2748](https://github.com/locustio/locust/issues/2748)
+- Show the reset button even after stopping a test [\#2723](https://github.com/locustio/locust/issues/2723)
+- Add date to charts in web UI [\#2678](https://github.com/locustio/locust/issues/2678)
+
+**Merged pull requests:**
+
+- Send logs from workers to master and improve log viewer tab in the Web UI [\#2750](https://github.com/locustio/locust/pull/2750) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add Logging to download\_locustfile\_from\_master [\#2749](https://github.com/locustio/locust/pull/2749) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Modify timestamp generation to remove deprecation warning [\#2738](https://github.com/locustio/locust/pull/2738) ([JavierUhagon](https://github.com/JavierUhagon))
+- Docs: Fix API TOC [\#2737](https://github.com/locustio/locust/pull/2737) ([plaindocs](https://github.com/plaindocs))
+- Docs: Fix sphinx and theme upgrade [\#2736](https://github.com/locustio/locust/pull/2736) ([plaindocs](https://github.com/plaindocs))
+- Docs: Fix theme [\#2735](https://github.com/locustio/locust/pull/2735) ([plaindocs](https://github.com/plaindocs))
+- Docs: Import wiki to docs [\#2734](https://github.com/locustio/locust/pull/2734) ([plaindocs](https://github.com/plaindocs))
+- Mention installing Locust in Building the Docs [\#2733](https://github.com/locustio/locust/pull/2733) ([plaindocs](https://github.com/plaindocs))
+- Docs: Upgrade Sphinx to latest version \(7.3.7\) [\#2732](https://github.com/locustio/locust/pull/2732) ([plaindocs](https://github.com/plaindocs))
+- Add date and zoom to charts in web UI [\#2731](https://github.com/locustio/locust/pull/2731) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Use requests 2.32.2 or higher for Python 3.12 [\#2730](https://github.com/locustio/locust/pull/2730) ([cyberw](https://github.com/cyberw))
+- The time of the downloaded HTML report is not correct [\#2729](https://github.com/locustio/locust/pull/2729) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Ensure spawning\_complete only happens once on workers [\#2728](https://github.com/locustio/locust/pull/2728) ([cyberw](https://github.com/cyberw))
+- Improve confusing log messages if someone accidentally accesses the Web UI over HTTPS [\#2727](https://github.com/locustio/locust/pull/2727) ([cyberw](https://github.com/cyberw))
+- Show Reset Button when Test is Stopped [\#2726](https://github.com/locustio/locust/pull/2726) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.28.0](https://github.com/locustio/locust/tree/2.28.0) (2024-05-23)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.27.0...2.28.0)
