@@ -191,9 +191,6 @@ With the following file structure:
 The Web UI will display:
 
 .. image:: images/userclass_picker_example.png
-    :width: 200
-
-|
 
 The class picker additionally allows for disabling individual User tasks, changing the weight or fixed count, and configuring the host.
 

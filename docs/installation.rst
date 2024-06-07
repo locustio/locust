@@ -5,7 +5,7 @@ Installation
 
 0. `Install Python <https://docs.python-guide.org/starting/installation/>`_ (3.9 or later)
 
-1. Install the package (check `the wiki <https://github.com/locustio/locust/wiki/Installation>`_ if the installation fails)
+1. Install the package (check `Troubleshooting Installation`_ if the installation fails)
 
 .. code-block:: console
 
@@ -41,10 +41,17 @@ If you want to modify Locust, or contribute to the project, see :ref:`developing
 Troubleshooting installation
 ----------------------------
 
+
+.. contents:: Some solutions for common installation issues
+    :depth: 1
+    :local:
+    :backlinks: none
+
+
 psutil/\_psutil_common.c:9:10: fatal error: Python.h: No such file or directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   https://stackoverflow.com/questions/63440765/locust-installation-error-using-pip3-error-command-errored-out-with-exit-statu
+`Answered in Stackoverflow thread 63440765 <https://stackoverflow.com/questions/63440765/locust-installation-error-using-pip3-error-command-errored-out-with-exit-statu>`_
 
 ERROR: Failed building wheel for xxx
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,62 +73,49 @@ platform. You have two options:
 Windows
 ~~~~~~~
 
-   https://stackoverflow.com/questions/61592069/locust-is-not-installing-on-my-windows-10-for-load-testing
+`Answered in Stackoverflow thread 61592069 <https://stackoverflow.com/questions/61592069/locust-is-not-installing-on-my-windows-10-for-load-testing>`_
 
 Installation works, but the ``locust`` command is not found
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   When running pip, did you get a warning saying
-   ``The script locust is installed in '...' which is not on PATH``? Add
-   that directory to your PATH environment variable.
+When running pip, did you get a warning saying ``The script locust is installed in '...' which is not on PATH``?
+
+Add that directory to your PATH environment variable.
 
 Increasing Maximum Number of Open Files Limit
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   Every User/HTTP connection from Locust opens a new file (technically
-   a file descriptor). Many operating systems by default set a low limit
-   for the maximum number of files that can be open at the same time.
-   Locust will try to adjust this automatically for you, but in a lot of
-   cases your operating system will not allow it (in which case you will
-   get a warning in the log). Instead you will have to do it manually.
+Every User/HTTP connection from Locust opens a new file (technically
+a file descriptor). Many operating systems by default set a low limit
+for the maximum number of files that can be open at the same time.
+Locust will try to adjust this automatically for you, but in a lot of
+cases your operating system will not allow it (in which case you will
+get a warning in the log). Instead you will have to do it manually.
 
-   How to do this depends on your operating system, but you might find
-   some useful information here:
-   https://www.tecmint.com/increase-set-open-file-limits-in-linux/ and
-   practical examples
-   https://www.ibm.com/support/knowledgecenter/SS8NLW_11.0.2/com.ibm.discovery.es.in.doc/iiysiulimits.html
+How to do this depends on your operating system, but you might find
+some useful information here:
+https://www.tecmint.com/increase-set-open-file-limits-in-linux/ and
+practical examples
+https://www.ibm.com/support/knowledgecenter/SS8NLW_11.0.2/com.ibm.discovery.es.in.doc/iiysiulimits.html
 
-   For systemd-based systems (e.g. Debian/Ubuntu) different limits are
-   used for graphical login sessions. See
-   https://unix.stackexchange.com/a/443467 for additional settings.
+For systemd-based systems (e.g. Debian/Ubuntu) different limits are
+used for graphical login sessions. See
+https://unix.stackexchange.com/a/443467 for additional settings.
 
 Deploy on local environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For those who want to deploy a local environment, follow the steps
-below.
+To deploy a local environment:
 
-:construction: Work environment:
+#. Create Python’s environment: ``py -m venv env``
 
+#. Activate the environments:
 
-Create Python’s environment: py -m venv env
+   - on Windows: ``\Scripts\activate``
+   - on macOS: ``source env/bin/activate``
 
+#. Install dependencies ``pip3 install -r requirements.txt``
 
-Activate the environment on WINDOWS:
-env: ``\Scripts\activate```
+#. Launch ``locust -f scripts/locustfile.py``
 
-
-Activate the environment on MAC: source env/bin/activate
-
-:books: Dependencies
-
-
-Install dependencies with: pip3 install -r requirements.txt
-
-:signal_strength: Load testing
-
-
-Launch locust -f scripts/locustfile.py
-
-
-Open http://localhost:8089/ on your browser
+#. Open the web UI in your browser: http://localhost:8089/
