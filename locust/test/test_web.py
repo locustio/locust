@@ -1020,7 +1020,25 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         response = requests.get("http://127.0.0.1:%i/logs" % self.web_port)
 
-        self.assertIn(log_line, response.json().get("logs"))
+        self.assertIn(log_line, response.json().get("master"))
+
+    def test_worker_logs(self):
+        log_handler = LogReader()
+        log_handler.name = "log_reader"
+        log_handler.setLevel(logging.INFO)
+        logger = logging.getLogger("root")
+        logger.addHandler(log_handler)
+        log_line = "some log info"
+        logger.info(log_line)
+
+        worker_id = "123"
+        worker_log_line = "worker log"
+        self.environment.update_worker_logs({"worker_id": worker_id, "logs": [worker_log_line]})
+
+        response = requests.get("http://127.0.0.1:%i/logs" % self.web_port)
+
+        self.assertIn(log_line, response.json().get("master"))
+        self.assertIn(worker_log_line, response.json().get("workers").get(worker_id))
 
     def test_template_args(self):
         class MyUser(User):
