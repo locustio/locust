@@ -4,6 +4,14 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.29.0
+======
+* Ensure spawning_complete only happens once on workers https://github.com/locustio/locust/pull/2728
+* Correct time in the downloaded HTML report https://github.com/locustio/locust/pull/2729
+* Add date and zoom to charts in web UI https://github.com/locustio/locust/pull/2731
+* Send logs from workers to master and improve log viewer tab in the Web UI https://github.com/locustio/locust/pull/2750
+* Docs: Upgrade Sphinx and theme, Fix API TOC, import wiki to docs, and mention installing Locust in Building the Docs
+
 2.28.0
 ======
 * Remove legacy UI https://github.com/locustio/locust/pull/2703

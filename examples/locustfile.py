@@ -1,5 +1,6 @@
 from locust import HttpUser, between, task
 
+import logging
 import time
 
 
@@ -8,6 +9,9 @@ class QuickstartUser(HttpUser):
 
     @task
     def hello_world(self):
+        logging.debug("debug")
+        logging.info("info")
+        logging.warning("warning")
         self.client.get("/hello")
         self.client.get("/world")
 
