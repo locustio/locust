@@ -56,7 +56,7 @@ The following screenshots show what it might look like when running this test us
 
     If your response times are *not* increasing then add even more users until you find the service's breaking point, or celebrate that your service is already performant enough for your expected load.
 
-    If you need some help digging into server side problems, or you're having trouble generating enough load to saturate your system, take a look at the `Locust FAQ  <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_.
+    If you're having trouble generating enough load to saturate your system, take a look at :ref:`increaserr`.
 
 Direct command line usage / headless
 ====================================
@@ -89,7 +89,7 @@ To run Locust distributed across multiple Python processes or machines, you star
 with the ``--master`` command line parameter, and then any number of Locust worker processes using the ``--worker``
 command line parameter. See :ref:`running-distributed` for more info.
 
-To see all available options type: ```locust --help`` or check :ref:`configuration`.
+To see all available options type: ``locust --help`` or check :ref:`configuration`.
 
 Next steps
 ==========

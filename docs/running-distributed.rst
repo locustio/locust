@@ -18,7 +18,7 @@ To simplify startup, you can use the ``--processes`` flag. It will launch a mast
 .. note::
     There is almost no limit to how many Users you can run per worker. Locust/gevent can run thousands or even tens of thousands of Users per process just fine, as long as their total request rate (RPS) is not too high.
 
-    If Locust *is* getting close to running out of CPU resources, it will log a warning. If there is no warning but you are still unable to generate the expected load, then the problem must be `something else <https://github.com/locustio/locust/wiki/FAQ#increase-my-request-raterps>`_.
+    If Locust *is* getting close to running out of CPU resources, it will log a warning. If there is no warning but you are still unable to generate the expected load, then the problem must be :ref:`increaserr`.
 
 Single machine
 ==============
