@@ -17,10 +17,8 @@ Increase the number of requests per second using a combination of the following 
 
 #. If Locust prints a warning about high CPU usage (``WARNING/root: CPU usage above 90%! ...``) try the following:
 
-    -  Run Locust
-        `distributed <https://docs.locust.io/en/stable/running-locust-distributed.html>`__ to utilize multiple cores & multiple machines
-    -  Try switching to
-        `FastHttpUser <https://docs.locust.io/en/stable/increase-performance.html#increase-performance>`__ to reduce CPU usage
+    -  Run Locust `distributed <https://docs.locust.io/en/stable/running-locust-distributed.html>`__ to utilize multiple cores & multiple machines
+    -  Try switching to `FastHttpUser <https://docs.locust.io/en/stable/increase-performance.html#increase-performance>`__ to reduce CPU usage
     -  Check to see that there are no strange/infinite loops in your code
 
 #. If you are using a custom client (not HttpUser or FastHttpUser), make sure any client library you are using is gevent-friendly otherwise it will block the entire Python process (essentially limiting you to one user per worker)
