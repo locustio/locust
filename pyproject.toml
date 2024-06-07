@@ -124,19 +124,21 @@ pywin32 = { version = "*", markers = "sys_platform == 'win32'" }
 optional = true
 
 [tool.poetry.group.dev.dependencies]
+pre-commit = "*"
+ruff = "0.3.7"
 tox = "*"
 twine = "*"
-ruff = "*"
-pre-commit = "*"
 
 [tool.poetry.group.test]
 optional = true
 
 [tool.poetry.group.test.dependencies]
-cryptography = "*"
 pyquery = "*"
+cryptography = "*"
 mock = "*"
+mypy = "1.10.0"
 retry = "*"
+ruff = "0.3.7"
 types-requests = "*"
 
 [tool.poetry.group.docs]
