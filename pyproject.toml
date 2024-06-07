@@ -62,7 +62,7 @@ generate-setup-file = false
 "Slack/Signup" = "https://communityinviter.com/apps/locustio/locust"
 
 [tool.poetry-dynamic-versioning]
-enable = false
+enable = true
 vcs = "git"
 style = "pep440"
 latest-tag = true
@@ -124,15 +124,20 @@ pywin32 = { version = "*", markers = "sys_platform == 'win32'" }
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-# Linting etc.
 tox = "*"
 twine = "*"
 ruff = "*"
 pre-commit = "*"
 
-# Testing
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
 cryptography = "*"
 pyquery = "*"
+mock = "*"
+retry = "*"
+types-requests = "*"
 
 [tool.poetry.group.docs]
 optional = true
