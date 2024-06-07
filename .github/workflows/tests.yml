@@ -50,10 +50,10 @@ jobs:
         run: |
           python -m poetry config virtualenvs.in-project true
       - name: Cache the virtualenv
-        uses: actions/cache@v3
+        uses: actions/cache@v2
         with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('pyproject.toml') }}
+          path: ./.venv
+          key: ${{ runner.os }}-venv-${{ hashFiles('pyproject.toml') }}
       - name: Install poetry plugin
         run: python -m poetry self add "poetry-dynamic-versioning[plugin]"
       - name: Install dependencies

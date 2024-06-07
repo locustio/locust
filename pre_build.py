@@ -7,7 +7,7 @@ def build() -> None:
         print("Skipping front end build...")
         return
     print("Building front end...")
-    subprocess.run(["make", "frontend_build"], shell=True)
+    subprocess.run(["make", "frontend_build"])
 
 
 if __name__ == "__main__":
