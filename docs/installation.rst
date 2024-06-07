@@ -52,7 +52,7 @@ ERROR: Failed building wheel for xxx
 While Locust itself is a pure Python package, it has some dependencies
 (e.g. gevent and geventhttpclient) that are compiled from C code. Pretty
 much all common platforms have binary packages on PyPi, but sometimes
-there is a new release that doesnt, or you are running on some exotic
+there is a new release that doesn't, or you are running on some exotic
 platform. You have two options:
 
 -  (on macos) Install xcode: ``xcode-select --install``
@@ -95,23 +95,23 @@ Increasing Maximum Number of Open Files Limit
    used for graphical login sessions. See
    https://unix.stackexchange.com/a/443467 for additional settings.
 
-Deploy on local enviroment
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Deploy on local environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For those who want to deploy a local environment, follow the steps
 below.
 
-:construction: Work enviroment:
+:construction: Work environment:
 
 
-Create Python’s enviroment: py -m venv env
+Create Python’s environment: py -m venv env
 
 
-Activate the enviroment on WINDOWS:
+Activate the environment on WINDOWS:
 env: ``\Scripts\activate```
 
 
-Activate the enviroment on MAC: source env/bin/activate
+Activate the environment on MAC: source env/bin/activate
 
 :books: Dependencies
 
