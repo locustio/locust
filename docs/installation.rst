@@ -101,21 +101,3 @@ https://www.ibm.com/support/knowledgecenter/SS8NLW_11.0.2/com.ibm.discovery.es.i
 For systemd-based systems (e.g. Debian/Ubuntu) different limits are
 used for graphical login sessions. See
 https://unix.stackexchange.com/a/443467 for additional settings.
-
-Deploy on local environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-To deploy a local environment:
-
-#. Create Python’s environment: ``py -m venv env``
-
-#. Activate the environments:
-
-   - on Windows: ``\Scripts\activate``
-   - on macOS: ``source env/bin/activate``
-
-#. Install dependencies ``pip3 install -r requirements.txt``
-
-#. Launch ``locust -f scripts/locustfile.py``
-
-#. Open the web UI in your browser: http://localhost:8089/
