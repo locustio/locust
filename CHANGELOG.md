@@ -1,6 +1,94 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.29.0](https://github.com/locustio/locust/tree/2.29.0) (2024-06-07)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.28.0...2.29.0)
+
+**Fixed bugs:**
+
+- The time of the downloaded html report is not correct [\#2691](https://github.com/locustio/locust/issues/2691)
+- Event spawning\_complete fires every time a user is created [\#2671](https://github.com/locustio/locust/issues/2671)
+- Delay at startup and high cpu usage on Windows in Python 3.12 [\#2555](https://github.com/locustio/locust/issues/2555)
+
+**Closed issues:**
+
+- Log a warning if getting locustfile from master takes more than 60s [\#2748](https://github.com/locustio/locust/issues/2748)
+- Show the reset button even after stopping a test [\#2723](https://github.com/locustio/locust/issues/2723)
+- Add date to charts in web UI [\#2678](https://github.com/locustio/locust/issues/2678)
+
+**Merged pull requests:**
+
+- Send logs from workers to master and improve log viewer tab in the Web UI [\#2750](https://github.com/locustio/locust/pull/2750) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add Logging to download\_locustfile\_from\_master [\#2749](https://github.com/locustio/locust/pull/2749) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Modify timestamp generation to remove deprecation warning [\#2738](https://github.com/locustio/locust/pull/2738) ([JavierUhagon](https://github.com/JavierUhagon))
+- Docs: Fix API TOC [\#2737](https://github.com/locustio/locust/pull/2737) ([plaindocs](https://github.com/plaindocs))
+- Docs: Fix sphinx and theme upgrade [\#2736](https://github.com/locustio/locust/pull/2736) ([plaindocs](https://github.com/plaindocs))
+- Docs: Fix theme [\#2735](https://github.com/locustio/locust/pull/2735) ([plaindocs](https://github.com/plaindocs))
+- Docs: Import wiki to docs [\#2734](https://github.com/locustio/locust/pull/2734) ([plaindocs](https://github.com/plaindocs))
+- Mention installing Locust in Building the Docs [\#2733](https://github.com/locustio/locust/pull/2733) ([plaindocs](https://github.com/plaindocs))
+- Docs: Upgrade Sphinx to latest version \(7.3.7\) [\#2732](https://github.com/locustio/locust/pull/2732) ([plaindocs](https://github.com/plaindocs))
+- Add date and zoom to charts in web UI [\#2731](https://github.com/locustio/locust/pull/2731) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Use requests 2.32.2 or higher for Python 3.12 [\#2730](https://github.com/locustio/locust/pull/2730) ([cyberw](https://github.com/cyberw))
+- The time of the downloaded HTML report is not correct [\#2729](https://github.com/locustio/locust/pull/2729) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Ensure spawning\_complete only happens once on workers [\#2728](https://github.com/locustio/locust/pull/2728) ([cyberw](https://github.com/cyberw))
+- Improve confusing log messages if someone accidentally accesses the Web UI over HTTPS [\#2727](https://github.com/locustio/locust/pull/2727) ([cyberw](https://github.com/cyberw))
+- Show Reset Button when Test is Stopped [\#2726](https://github.com/locustio/locust/pull/2726) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
+## [2.28.0](https://github.com/locustio/locust/tree/2.28.0) (2024-05-23)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.27.0...2.28.0)
+
+**Fixed bugs:**
+
+- The Charts presentation in the report downloaded by locust is problematic [\#2706](https://github.com/locustio/locust/issues/2706)
+- Locust insists on using IPv6 despite being in an IPv4 stack. [\#2689](https://github.com/locustio/locust/issues/2689)
+- When there is an error in the FAILURES of the front-end page when there is a worker, there is no escape. [\#2674](https://github.com/locustio/locust/issues/2674)
+
+**Closed issues:**
+
+- Pin the headers and aggregated row to the top and bottom of the window [\#2688](https://github.com/locustio/locust/issues/2688)
+- Remove legacy UI [\#2673](https://github.com/locustio/locust/issues/2673)
+- TaskSet's `_task_queue` should be a `collections.deque`? [\#2653](https://github.com/locustio/locust/issues/2653)
+
+**Merged pull requests:**
+
+- Pin the headers to the top of the window [\#2717](https://github.com/locustio/locust/pull/2717) ([JavierUhagon](https://github.com/JavierUhagon))
+- Dont enable ipv6 for zmq if no ipv6 stack exists [\#2715](https://github.com/locustio/locust/pull/2715) ([cyberw](https://github.com/cyberw))
+- Give better error message if User subclass doesnt call base constructor [\#2713](https://github.com/locustio/locust/pull/2713) ([cyberw](https://github.com/cyberw))
+- Stop quoting error messages an extra time in distributed mode [\#2712](https://github.com/locustio/locust/pull/2712) ([cyberw](https://github.com/cyberw))
+- Lower log levels for exceptions in flask [\#2711](https://github.com/locustio/locust/pull/2711) ([cyberw](https://github.com/cyberw))
+- Stop HTML escaping errors for /stats/requests endpoint [\#2710](https://github.com/locustio/locust/pull/2710) ([cyberw](https://github.com/cyberw))
+- Update Stats History on HTML Report [\#2709](https://github.com/locustio/locust/pull/2709) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Logging: Only print hostname instead of FQDN [\#2705](https://github.com/locustio/locust/pull/2705) ([cyberw](https://github.com/cyberw))
+- Remove legacy UI [\#2703](https://github.com/locustio/locust/pull/2703) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- WebUI: update users, spawn\_rate, host and run\_time in `parsed_options` \(for LoadShapes that might access it\) [\#2656](https://github.com/locustio/locust/pull/2656) ([raulparada](https://github.com/raulparada))
+
+## [2.27.0](https://github.com/locustio/locust/tree/2.27.0) (2024-05-06)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.26.0...2.27.0)
+
+**Fixed bugs:**
+
+- User Classes with Empty Tasks Results in TypeError: 'NoneType' object is not iterable [\#2694](https://github.com/locustio/locust/issues/2694)
+
+**Closed issues:**
+
+- Why defining run\_time on worker node raises an error [\#2683](https://github.com/locustio/locust/issues/2683)
+
+**Merged pull requests:**
+
+- annotate return types of a few functions to enable more mypy check [\#2702](https://github.com/locustio/locust/pull/2702) ([tdadela](https://github.com/tdadela))
+- refactor\(WindowsKeyPoller\): change implementation of captured\_chars  [\#2701](https://github.com/locustio/locust/pull/2701) ([tdadela](https://github.com/tdadela))
+- refactor: replace deprecated utcfromtimestamp function [\#2700](https://github.com/locustio/locust/pull/2700) ([tdadela](https://github.com/tdadela))
+- Use deque for tasks in taskset instead of plain list [\#2698](https://github.com/locustio/locust/pull/2698) ([cyberw](https://github.com/cyberw))
+- fix: Ensure locust does not crash when an User class has no task [\#2696](https://github.com/locustio/locust/pull/2696) ([hangonlyra](https://github.com/hangonlyra))
+- Fix various spelling errors using codespell [\#2687](https://github.com/locustio/locust/pull/2687) ([cyberw](https://github.com/cyberw))
+- Dispatch/user distribution calculation using Kullback-Leibler divergence. Allow float weights. [\#2686](https://github.com/locustio/locust/pull/2686) ([tdadela](https://github.com/tdadela))
+- Allow worker process to run with --run-time specified, just log a warning about it being ignored [\#2685](https://github.com/locustio/locust/pull/2685) ([Sawiq](https://github.com/Sawiq))
+- Small cleanup: mypy type-ignore and dev deps [\#2684](https://github.com/locustio/locust/pull/2684) ([tdadela](https://github.com/tdadela))
+- Simplify how locustfiles are found \(using -f\). Don’t automatically append .py [\#2655](https://github.com/locustio/locust/pull/2655) ([DennisKrone](https://github.com/DennisKrone))
+
 ## [2.26.0](https://github.com/locustio/locust/tree/2.26.0) (2024-04-18)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.25.0...2.26.0)
@@ -35,7 +123,6 @@ The most important changes can also be found in [the documentation](https://docs
 - Add an example that displays cache stats using the new UI. [\#2669](https://github.com/locustio/locust/pull/2669) ([obriat](https://github.com/obriat))
 - Update User Classes in Distributed Mode [\#2666](https://github.com/locustio/locust/pull/2666) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
 - fix\(dispatch\): UserClasses weight distribution with gcd [\#2663](https://github.com/locustio/locust/pull/2663) ([llirrikk](https://github.com/llirrikk))
-- chore: fix some comments [\#2659](https://github.com/locustio/locust/pull/2659) ([JohnEndson](https://github.com/JohnEndson))
 - Fix issue with concurrent custom messages and docs [\#2654](https://github.com/locustio/locust/pull/2654) ([cyberw](https://github.com/cyberw))
 - Add functionality to run listener functions for `custom_messages` concurrently [\#2650](https://github.com/locustio/locust/pull/2650) ([samuelspagl](https://github.com/samuelspagl))
 - \[Modern UI\] Escape HTML Entities correctly in Exceptions Table [\#2648](https://github.com/locustio/locust/pull/2648) ([andrewbaldwin44](https://github.com/andrewbaldwin44))

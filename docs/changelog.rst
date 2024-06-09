@@ -4,6 +4,26 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.29.0
+======
+* Ensure spawning_complete only happens once on workers https://github.com/locustio/locust/pull/2728
+* Correct time in the downloaded HTML report https://github.com/locustio/locust/pull/2729
+* Add date and zoom to charts in web UI https://github.com/locustio/locust/pull/2731
+* Send logs from workers to master and improve log viewer tab in the Web UI https://github.com/locustio/locust/pull/2750
+* Docs: Upgrade Sphinx and theme, Fix API TOC, import wiki to docs, and mention installing Locust in Building the Docs
+
+2.28.0
+======
+* Remove legacy UI https://github.com/locustio/locust/pull/2703
+* Stop HTML escaping errors for /stats/requests endpoint https://github.com/locustio/locust/pull/2710
+* Various minor UI & logging improvements
+
+2.27.0
+======
+* Simplify how locustfiles are found (using -f). Don’t automatically append .py https://github.com/locustio/locust/pull/2655
+* Use more efficient algorithm to calculate user distribution, and allow float weights https://github.com/locustio/locust/pull/2686
+* Various minor fixes
+
 2.26.0
 ======
 * Drop support for Python 3.8

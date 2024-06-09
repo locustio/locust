@@ -9,6 +9,7 @@ import atexit
 import os
 import platform
 import socket
+import ssl
 import sys
 import tempfile
 import textwrap
@@ -30,6 +31,16 @@ version = locust.__version__
 
 
 DEFAULT_CONFIG_FILES = ("~/.locust.conf", "locust.conf", "pyproject.toml")
+
+
+# Clean up downloaded locustfile on exit
+def exit_handler(filename) -> None:
+    try:
+        os.remove(filename)
+    except FileNotFoundError:
+        pass  # when multiple workers are running on the same machine, another one may already have deleted it
+    except PermissionError:
+        pass  # this happens occasionally on windows on GH, maybe for the same reason?
 
 
 class LocustArgumentParser(configargparse.ArgumentParser):
@@ -170,14 +181,7 @@ def download_locustfile_from_url(url: str) -> str:
     with open(os.path.join(tempfile.gettempdir(), url.rsplit("/", 1)[-1]), "w") as locustfile:
         locustfile.write(response.text)
 
-    # Clean up downloaded files on exit
-    def exit_handler():
-        try:
-            os.remove(locustfile.name)
-        except FileNotFoundError:
-            pass  # this is normal when multiple workers are running on the same machine
-
-    atexit.register(exit_handler)
+    atexit.register(exit_handler, locustfile.name)
     return locustfile.name
 
 
@@ -237,10 +241,18 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
             tempclient.send(Message("locustfile", None, client_id))
             gevent.sleep(1)
 
+    def log_warning():
+        gevent.sleep(10)
+        while not got_reply:
+            sys.stderr.write("Waiting to connect to master to receive locustfile...\n")
+            gevent.sleep(60)
+
     def wait_for_reply():
         return tempclient.recv()
 
     gevent.spawn(ask_for_locustfile)
+    gevent.spawn(log_warning)
+
     try:
         # wait same time as for client_ready ack. not that it is really relevant...
         msg = gevent.spawn(wait_for_reply).get(timeout=runners.CONNECT_TIMEOUT * runners.CONNECT_RETRY_COUNT)
@@ -263,13 +275,7 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
     with open(os.path.join(tempfile.gettempdir(), filename), "w", encoding="utf-8") as locustfile:
         locustfile.write(msg.data["contents"])
 
-    def exit_handler():
-        try:
-            os.remove(locustfile.name)
-        except FileNotFoundError:
-            pass  # this is normal when multiple workers are running on the same machine
-
-    atexit.register(exit_handler)
+    atexit.register(exit_handler, locustfile.name)
 
     tempclient.close()
     return locustfile.name
@@ -500,7 +506,7 @@ def setup_parser_arguments(parser):
         "--legacy-ui",
         default=False,
         action="store_true",
-        help="Use the legacy frontend for the web UI (deprecated, support will be removed soon)",
+        help=configargparse.SUPPRESS,
         env_var="LOCUST_LEGACY_UI",
     )
 
@@ -708,7 +714,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         "-V",
         action="version",
         help="Show program's version number and exit",
-        version=f"locust {version} from {os.path.dirname(__file__)} (python {platform.python_version()})",
+        version=f"locust {version} from {os.path.dirname(__file__)} (Python {platform.python_version()}, {' '.join(ssl.OPENSSL_VERSION.split(' ')[0:2])})",
     )
     other_group.add_argument(
         "--exit-code-on-error",
@@ -725,7 +731,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         dest="stop_timeout",
         metavar="<number>",
         default="0",
-        help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. This parameter only needs to be specified for the master process when running Locust distributed.",
+        help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. When running distributed, this only needs to be specified on the master.",
         env_var="LOCUST_STOP_TIMEOUT",
     )
     other_group.add_argument(

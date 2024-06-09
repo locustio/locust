@@ -79,13 +79,19 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             web_ui.stop()
 
     def test_index(self):
-        self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % self.web_port).status_code)
+        self.assertEqual(self.web_ui, self.environment.web_ui)
 
-    def test_index_with_spawn_options(self):
         html_to_option = {
-            "user_count": ["-u", "100"],
+            "num_users": ["-u", "100"],
             "spawn_rate": ["-r", "10.0"],
         }
+
+        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+        d = pq(response.content.decode("utf-8"))
+
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(d("#root"))
+
         for html_name_to_test in html_to_option.keys():
             # Test that setting each spawn option individually populates the corresponding field in the html, and none of the others
             self.environment.parsed_options = parse_options(html_to_option[html_name_to_test])
@@ -95,15 +101,23 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
             d = pq(response.content.decode("utf-8"))
 
-            for html_name in html_to_option.keys():
-                start_value = d(f".start [name={html_name}]").attr("value")
-                edit_value = d(f".edit [name={html_name}]").attr("value")
-                if html_name_to_test == html_name:
-                    self.assertEqual(html_to_option[html_name][1], start_value)
-                    self.assertEqual(html_to_option[html_name][1], edit_value)
-                else:
-                    self.assertEqual("1", start_value, msg=f"start value was {start_value} for {html_name}")
-                    self.assertEqual("1", edit_value, msg=f"edit value was {edit_value} for {html_name}")
+            self.assertIn(f'"{html_name_to_test}": {html_to_option[html_name_to_test][1]}', str(d("script")))
+
+    def test_index_with_spawn_options(self):
+        html_to_option = {
+            "num_users": ["-u", "100"],
+            "spawn_rate": ["-r", "10.0"],
+        }
+
+        for html_name_to_test in html_to_option.keys():
+            self.environment.parsed_options = parse_options(html_to_option[html_name_to_test])
+
+            response = requests.get("http://127.0.0.1:%i/" % self.web_port)
+            self.assertEqual(200, response.status_code)
+
+            d = pq(response.content.decode("utf-8"))
+
+            self.assertIn(f'"{html_name_to_test}": {html_to_option[html_name_to_test][1]}', str(d))
 
     def test_stats_no_data(self):
         self.assertEqual(200, requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).status_code)
@@ -169,10 +183,17 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self._check_csv_headers(response.headers, "failures")
 
     def test_request_stats_with_errors(self):
-        self.stats.log_error("GET", "/", Exception("Error1337"))
+        self.stats.log_error("GET", "/", Exception("Error with special characters {'foo':'bar'}"))
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual(200, response.status_code)
-        self.assertIn("Error1337", response.text)
+
+        # escaped, old school
+        # self.assertIn(
+        #     '"Exception(&quot;Error with special characters{&#x27;foo&#x27;:&#x27;bar&#x27;}&quot;)"', response.text
+        # )
+
+        # not html escaping, leave that to the frontend
+        self.assertIn("\"Exception(\\\"Error with special characters {'foo':'bar'}\\\")", response.text)
 
     def test_reset_stats(self):
         try:
@@ -771,30 +792,6 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual(my_dict["val"], 42)
 
-    def test_custom_argument_dropdown(self):
-        class MyUser(User):
-            host = "http://example.com"
-
-        @locust.events.init_command_line_parser.add_listener
-        def _(parser, **kw):
-            parser.add_argument("--my-argument", default="a", choices=["a", "b"], help="Pick one")
-
-        parsed_options = parse_options(args=["--my-argument", "b"])
-        self.environment.user_classes = [MyUser]
-        self.environment.parsed_options = parsed_options
-        self.environment.web_ui.parsed_options = parsed_options
-
-        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
-        self.assertEqual(200, response.status_code)
-
-        # regex to match the intended select tag with id from the custom argument
-        dropdown_pattern = re.compile(r"<select[^>]*id=\"my_argument\"[^>]*>", flags=re.I)
-        self.assertRegex(response.text, dropdown_pattern)
-
-        # regex to match the input that generates if it fails to find the choices
-        textfield_pattern = re.compile(r"<input[^>]*id=\"my_argument\"[^>]*>", flags=re.I)
-        self.assertNotRegex(response.text, textfield_pattern)
-
     def test_swarm_host_value_not_specified(self):
         class MyUser(User):
             wait_time = constant(1)
@@ -922,40 +919,42 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         response = requests.get("http://127.0.0.1:%i/" % self.web_port)
         self.assertEqual(200, response.status_code)
         self.assertNotIn("http://example.com", response.content.decode("utf-8"))
-        self.assertIn("setting this will override the host on all User classes", response.content.decode("utf-8"))
 
     def test_report_page(self):
         self.stats.log_request("GET", "/test", 120, 5612)
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+
+        d = pq(r.content.decode("utf-8"))
+
         self.assertEqual(200, r.status_code)
-        self.assertIn("<title>Test Report for None</title>", r.text)
-        self.assertIn("<p>Script: <span>None</span></p>", r.text)
-        self.assertIn("charts-container", r.text)
-        self.assertIn(
-            '<a href="?download=1">Download the Report</a>',
-            r.text,
-            "Download report link not found in HTML content",
-        )
+        self.assertIn('"host": "None"', str(d))
+        self.assertIn('"num_requests": 1', str(d))
+        self.assertIn('"is_report": true', str(d))
+        self.assertIn('"show_download_link": true', str(d))
 
     def test_report_page_empty_stats(self):
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
         self.assertEqual(200, r.status_code)
-        self.assertIn("<title>Test Report for None</title>", r.text)
-        self.assertIn("charts-container", r.text)
 
     def test_report_download(self):
         self.stats.log_request("GET", "/test", 120, 5612)
         r = requests.get("http://127.0.0.1:%i/stats/report?download=1" % self.web_port)
+
+        d = pq(r.content.decode("utf-8"))
+
         self.assertEqual(200, r.status_code)
         self.assertIn("attachment", r.headers.get("Content-Disposition", ""))
-        self.assertNotIn("Download the Report", r.text, "Download report link found in HTML content")
+        self.assertIn('"show_download_link": false', str(d))
 
     def test_report_host(self):
         self.environment.host = "http://test.com"
         self.stats.log_request("GET", "/test", 120, 5612)
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+
+        d = pq(r.content.decode("utf-8"))
+
         self.assertEqual(200, r.status_code)
-        self.assertIn("http://test.com", r.text)
+        self.assertIn('"host": "http://test.com"', str(d))
 
     def test_report_host2(self):
         class MyUser(User):
@@ -969,8 +968,11 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.environment.user_classes = [MyUser]
         self.stats.log_request("GET", "/test", 120, 5612)
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
+
+        d = pq(r.content.decode("utf-8"))
+
         self.assertEqual(200, r.status_code)
-        self.assertIn("http://test2.com", r.text)
+        self.assertIn('"host": "http://test2.com"', str(d))
 
     def test_report_exceptions(self):
         try:
@@ -981,8 +983,10 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             self.runner.log_exception("local", str(e), "".join(traceback.format_tb(tb)))
         self.stats.log_request("GET", "/test", 120, 5612)
         r = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
-        # self.assertEqual(200, r.status_code)
-        self.assertIn("<h2>Exceptions Statistics</h2>", r.text)
+
+        d = pq(r.content.decode("utf-8"))
+
+        self.assertIn('exceptions_statistics": [{"count": 2', str(d))
 
         # Prior to 088a98bf8ff4035a0de3becc8cd4e887d618af53, the "nodes" field for each exception in
         # "self.runner.exceptions" was accidentally mutated in "get_html_report" to a string.
@@ -991,54 +995,6 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertTrue(
             isinstance(next(iter(self.runner.exceptions.values()))["nodes"], set), "exception object has been mutated"
         )
-
-    def test_custom_shape_deactivate_num_users_and_spawn_rate(self):
-        class TestShape(LoadTestShape):
-            def tick(self):
-                return None
-
-        self.environment.shape_class = TestShape
-
-        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
-        self.assertEqual(200, response.status_code)
-
-        # regex to match the intended select tag with id from the custom argument
-        re_disabled_user_count = re.compile(
-            r"<input[^>]*id=\"(new_)?user_count\"[^>]*disabled=\"disabled\"[^>]*>", flags=re.I
-        )
-        self.assertRegex(response.text, re_disabled_user_count)
-
-        re_disabled_spawn_rate = re.compile(
-            r"<input[^>]*id=\"(new_)?spawn_rate\"[^>]*disabled=\"disabled\"[^>]*>", flags=re.I
-        )
-        self.assertRegex(response.text, re_disabled_spawn_rate)
-
-    def test_custom_shape_with_use_common_options_keep_num_users_and_spawn_rate(self):
-        class TestShape(LoadTestShape):
-            use_common_options = True
-
-            def tick(self):
-                return None
-
-        self.environment.shape_class = TestShape
-
-        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
-        self.assertEqual(200, response.status_code)
-
-        # regex to match the intended select tag with id from the custom argument
-        re_user_count = re.compile(r"<input[^>]*id=\"(new_)?user_count\"[^>]*>", flags=re.I)
-        re_disabled_user_count = re.compile(
-            r"<input[^>]*id=\"(new_)?user_count\"[^>]*disabled=\"disabled\"[^>]*>", flags=re.I
-        )
-        self.assertRegex(response.text, re_user_count)
-        self.assertNotRegex(response.text, re_disabled_user_count)
-
-        re_spawn_rate = re.compile(r"<input[^>]*id=\"(new_)?spawn_rate\"[^>]*>", flags=re.I)
-        re_disabled_spawn_rate = re.compile(
-            r"<input[^>]*id=\"(new_)?spawn_rate\"[^>]*disabled=\"disabled\"[^>]*>", flags=re.I
-        )
-        self.assertRegex(response.text, re_spawn_rate)
-        self.assertNotRegex(response.text, re_disabled_spawn_rate)
 
     def test_html_stats_report(self):
         self.environment.locustfile = "locust.py"
@@ -1049,8 +1005,9 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         d = pq(response.content.decode("utf-8"))
 
-        self.assertIn("Script: <span>locust.py</span>", str(d))
-        self.assertIn("Target Host: <span>http://localhost</span>", str(d))
+        self.assertTrue(d("#root"))
+        self.assertIn('"locustfile": "locust.py"', str(d))
+        self.assertIn('"host": "http://localhost"', str(d))
 
     def test_logs(self):
         log_handler = LogReader()
@@ -1063,7 +1020,25 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         response = requests.get("http://127.0.0.1:%i/logs" % self.web_port)
 
-        self.assertIn(log_line, response.json().get("logs"))
+        self.assertIn(log_line, response.json().get("master"))
+
+    def test_worker_logs(self):
+        log_handler = LogReader()
+        log_handler.name = "log_reader"
+        log_handler.setLevel(logging.INFO)
+        logger = logging.getLogger("root")
+        logger.addHandler(log_handler)
+        log_line = "some log info"
+        logger.info(log_line)
+
+        worker_id = "123"
+        worker_log_line = "worker log"
+        self.environment.update_worker_logs({"worker_id": worker_id, "logs": [worker_log_line]})
+
+        response = requests.get("http://127.0.0.1:%i/logs" % self.web_port)
+
+        self.assertIn(log_line, response.json().get("master"))
+        self.assertIn(worker_log_line, response.json().get("workers").get(worker_id))
 
     def test_template_args(self):
         class MyUser(User):
@@ -1128,7 +1103,7 @@ class TestWebUIAuth(LocustTestCase):
         parser = get_parser(default_config_files=[])
         self.environment.parsed_options = parser.parse_args(["--web-login"])
 
-        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, modern_ui=True, web_login=True)
+        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, web_login=True)
 
         self.web_ui.app.secret_key = "secret!"
         gevent.sleep(0.01)
@@ -1280,99 +1255,3 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual("/test2", rows[2][3])
         self.assertEqual("", rows[3][2])
         self.assertEqual("Aggregated", rows[3][3])
-
-
-class TestModernWebUI(LocustTestCase, _HeaderCheckMixin):
-    def setUp(self):
-        super().setUp()
-
-        get_parser(default_config_files=[])
-        self.stats = self.environment.stats
-
-        self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, modern_ui=True)
-        self.web_ui.app.view_functions["request_stats"].clear_cache()
-        gevent.sleep(0.01)
-        self.web_port = self.web_ui.server.server_port
-
-    def tearDown(self):
-        super().tearDown()
-        self.web_ui.stop()
-        self.runner.quit()
-
-    def test_index_with_modern_ui(self):
-        self.assertEqual(self.web_ui, self.environment.web_ui)
-
-        html_to_option = {
-            "num_users": ["-u", "100"],
-            "spawn_rate": ["-r", "10.0"],
-        }
-
-        response = requests.get("http://127.0.0.1:%i/" % self.web_port)
-        d = pq(response.content.decode("utf-8"))
-
-        self.assertEqual(200, response.status_code)
-        self.assertTrue(d("#root"))
-
-        for html_name_to_test in html_to_option.keys():
-            # Test that setting each spawn option individually populates the corresponding field in the html, and none of the others
-            self.environment.parsed_options = parse_options(html_to_option[html_name_to_test])
-
-            response = requests.get("http://127.0.0.1:%i/" % self.web_port)
-            self.assertEqual(200, response.status_code)
-
-            d = pq(response.content.decode("utf-8"))
-
-            self.assertIn(f'"{html_name_to_test}": {html_to_option[html_name_to_test][1]}', str(d("script")))
-
-    def test_web_ui_no_runner(self):
-        env = Environment()
-        web_ui = WebUI(env, "127.0.0.1", 0)
-        gevent.sleep(0.01)
-        try:
-            response = requests.get("http://127.0.0.1:%i/" % web_ui.server.server_port)
-            self.assertEqual(500, response.status_code)
-            self.assertEqual("Error: Locust Environment does not have any runner", response.text)
-        finally:
-            web_ui.stop()
-
-    def test_html_stats_report(self):
-        self.environment.locustfile = "locust.py"
-        self.environment.host = "http://localhost"
-
-        response = requests.get("http://127.0.0.1:%i/stats/report" % self.web_port)
-        self.assertEqual(200, response.status_code)
-
-        d = pq(response.content.decode("utf-8"))
-
-        self.assertTrue(d("#root"))
-        self.assertIn('"locustfile": "locust.py"', str(d))
-        self.assertIn('"host": "http://localhost"', str(d))
-
-    def test_update_user(self):
-        class MyUser1(User):
-            @task
-            def my_task(self):
-                pass
-
-            @task
-            def my_task_2(self):
-                pass
-
-        class MyUser2(User):
-            @task
-            def my_task(self):
-                pass
-
-        self.environment.user_classes = [MyUser1, MyUser2]
-        self.environment.available_user_classes = {"User1": MyUser1, "User2": MyUser2}
-        self.environment.available_user_tasks = {"User1": MyUser1.tasks, "User2": MyUser2.tasks}
-
-        requests.post(
-            "http://127.0.0.1:%i/user" % self.web_port,
-            json={"user_class_name": "User1", "host": "http://localhost", "tasks": ["my_task_2"]},
-        )
-
-        self.assertEqual(
-            self.environment.available_user_classes["User1"].json(),
-            {"host": "http://localhost", "tasks": ["my_task_2"], "fixed_count": 0, "weight": 1},
-        )

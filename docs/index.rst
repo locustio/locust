@@ -30,6 +30,7 @@ Running your Locust tests
     :maxdepth: 1
 
     configuration
+    increasing-request-rate
     running-distributed
     running-in-debugger
     running-in-docker
@@ -49,6 +50,7 @@ Other functionalities
     extending-locust
     logging
     use-as-lib
+    extensions
 
 
 Further reading / knowledgebase
@@ -59,12 +61,13 @@ Further reading / knowledgebase
 
     developing-locust
     further-reading
+    faq
 
 
 API
 ---
 .. toctree ::
-    :maxdepth: 4
+    :maxdepth: 2
 
     api
 

@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import HtmlReport from 'pages/HtmlReport';
 import { swarmReportMock } from 'test/mocks/swarmState.mock';
+import { formatLocaleString } from 'utils/date';
 
 describe('HtmlReport', () => {
   test('renders a report', () => {
@@ -15,8 +16,19 @@ describe('HtmlReport', () => {
     expect(getByRole('heading', { name: 'Final ratio' })).toBeTruthy();
     expect(getByRole('link', { name: 'Download the Report' }));
     expect(getByText(swarmReportMock.locustfile)).toBeTruthy();
-    expect(getByText(`${swarmReportMock.startTime} - ${swarmReportMock.endTime}`)).toBeTruthy();
     expect(getByText(swarmReportMock.host)).toBeTruthy();
+  });
+
+  test('formats the start and end time as expected', () => {
+    const { getByText } = render(<HtmlReport {...swarmReportMock} />);
+
+    expect(
+      getByText(
+        `${formatLocaleString(swarmReportMock.startTime)} - ${formatLocaleString(
+          swarmReportMock.endTime,
+        )}`,
+      ),
+    ).toBeTruthy();
   });
 
   test('does not render the download link when showDownloadLink is false', () => {

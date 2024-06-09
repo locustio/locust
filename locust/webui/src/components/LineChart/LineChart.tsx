@@ -12,6 +12,7 @@ import {
 
 import { IUiState } from 'redux/slice/ui.slice';
 import { ICharts } from 'types/ui.types';
+import { formatLocaleString, formatLocaleTime } from 'utils/date';
 
 interface ILine {
   name: string;
@@ -59,6 +60,13 @@ const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) =>
     x: 10,
     y: 10,
   },
+  dataZoom: [
+    {
+      type: 'inside',
+      start: 0,
+      end: 50,
+    },
+  ],
   tooltip: {
     trigger: 'axis',
     formatter: (params: TooltipComponentOption) => {
@@ -70,7 +78,7 @@ const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) =>
       ) {
         return params.reduce(
           (tooltipText, { axisValue, color, seriesName, value }, index) => `
-          ${index === 0 ? axisValue : ''}
+          ${index === 0 ? formatLocaleString(axisValue) : ''}
           ${tooltipText}
           <br>
           <span style="color:${color};">
@@ -103,6 +111,9 @@ const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) =>
       lineStyle: {
         color: CHART_AXIS_COLOR,
       },
+    },
+    axisLabel: {
+      formatter: formatLocaleTime,
     },
     data: charts.time,
   },

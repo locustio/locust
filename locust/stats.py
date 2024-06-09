@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-import datetime
 import hashlib
 import json
 import logging
@@ -34,6 +33,7 @@ import gevent
 
 from .event import Events
 from .exception import CatchResponseError
+from .util.date import format_utc_timestamp
 from .util.rounding import proper_round
 
 if TYPE_CHECKING:
@@ -113,7 +113,7 @@ HISTORY_STATS_INTERVAL_SEC = 5
 
 """Default interval for how frequently CSV files are written if this option is configured."""
 CSV_STATS_INTERVAL_SEC = 1
-CSV_STATS_FLUSH_INTERVAL_SEC = 10
+CSV_STATS_FLUSH_INTERVAL_SEC = 5
 
 """
 Default window size/resolution - in seconds - when calculating the current
@@ -126,8 +126,7 @@ CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_
 PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0]
 
 PERCENTILES_TO_STATISTICS = [0.95, 0.99]
-PERCENTILES_TO_CHART = [0.50, 0.95]
-MODERN_UI_PERCENTILES_TO_CHART = [0.95]
+PERCENTILES_TO_CHART = [0.95]
 
 
 class RequestStatsAdditionError(Exception):
@@ -695,9 +694,7 @@ class StatsEntry:
             "current_rps": self.current_rps,
             "current_fail_per_sec": self.current_fail_per_sec,
             "median_response_time": self.median_response_time,
-            "ninetieth_response_time": self.get_response_time_percentile(0.9),  # for legacy ui
-            "ninety_ninth_response_time": self.get_response_time_percentile(0.99),  # for legacy ui
-            **response_time_percentiles,  # for modern ui
+            **response_time_percentiles,
             "avg_content_length": self.avg_content_length,
         }
 
@@ -711,7 +708,10 @@ class StatsError:
 
     @classmethod
     def parse_error(cls, error: Exception | str | None) -> str:
-        string_error = repr(error)
+        if isinstance(error, str):
+            string_error = error
+        else:
+            string_error = repr(error)
         target = "object at 0x"
         target_index = string_error.find(target)
         if target_index < 0:
@@ -733,16 +733,19 @@ class StatsError:
 
     def to_name(self) -> str:
         error = self.error
-        if isinstance(error, CatchResponseError):
-            # standalone
-            unwrapped_error = error.args[0]
-        if isinstance(error, str) and error.startswith("CatchResponseError("):
-            # distributed
-            length = len("CatchResponseError(")
-            unwrapped_error = error[length:-1]
-        else:
-            # standalone, unwrapped exception
-            unwrapped_error = repr(error)
+        if isinstance(error, str):  # in distributed mode, all errors have been converted to strings
+            if error.startswith("CatchResponseError("):
+                # unwrap CatchResponseErrors
+                length = len("CatchResponseError(")
+                unwrapped_error = error[length:-1]
+            else:
+                unwrapped_error = error
+        else:  # in standalone mode, errors are still objects
+            if isinstance(error, CatchResponseError):
+                # unwrap CatchResponseErrors
+                unwrapped_error = error.args[0]
+            else:
+                unwrapped_error = repr(error)
 
         return f"{self.method} {self.name}: {unwrapped_error}"
 
@@ -910,32 +913,32 @@ def sort_stats(stats: dict[Any, S]) -> list[S]:
     return [stats[key] for key in sorted(stats.keys())]
 
 
+def update_stats_history(runner: Runner) -> None:
+    stats = runner.stats
+    current_response_time_percentiles = {
+        f"response_time_percentile_{percentile}": stats.total.get_current_response_time_percentile(percentile) or 0
+        for percentile in PERCENTILES_TO_CHART
+    }
+
+    r = {
+        **current_response_time_percentiles,
+        "time": format_utc_timestamp(time.time()),
+        "current_rps": stats.total.current_rps or 0,
+        "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
+        "total_avg_response_time": proper_round(stats.total.avg_response_time, digits=2),
+        "user_count": runner.user_count or 0,
+    }
+    stats.history.append(r)
+
+
 def stats_history(runner: Runner) -> None:
     """Save current stats info to history for charts of report."""
     while True:
-        stats = runner.stats
-        if not stats.total.use_response_times_cache:
+        if not runner.stats.total.use_response_times_cache:
             break
         if runner.state != "stopped":
-            current_response_time_percentiles = {
-                f"response_time_percentile_{percentile}": stats.total.get_current_response_time_percentile(percentile)
-                or 0
-                for percentile in MODERN_UI_PERCENTILES_TO_CHART
-            }
+            update_stats_history(runner)
 
-            r = {
-                **current_response_time_percentiles,
-                "time": datetime.datetime.now(tz=datetime.timezone.utc).strftime("%H:%M:%S"),
-                "current_rps": stats.total.current_rps or 0,
-                "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
-                "response_time_percentile_1": stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[0])
-                or 0,
-                "response_time_percentile_2": stats.total.get_current_response_time_percentile(PERCENTILES_TO_CHART[1])
-                or 0,
-                "total_avg_response_time": stats.total.avg_response_time,
-                "user_count": runner.user_count or 0,
-            }
-            stats.history.append(r)
         gevent.sleep(HISTORY_STATS_INTERVAL_SEC)
 
 

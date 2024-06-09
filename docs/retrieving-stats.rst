@@ -21,10 +21,9 @@ By default only the Aggregate row is appended regularly to the history stats, bu
 the ``--csv-full-history`` flag, a row for each stats entry (and the Aggregate) is appended every time 
 the stats are written (once every 2 seconds by default).
 
-You can also customize how frequently this is written if you desire faster (or slower) writing:
+You can also customize how frequently this is written:
 
 .. code-block:: python
 
     import locust.stats
     locust.stats.CSV_STATS_INTERVAL_SEC = 5 # default is 1 second
-    locust.stats.CSV_STATS_FLUSH_INTERVAL_SEC = 60 # Determines how often the data is flushed to disk, default is 10 seconds

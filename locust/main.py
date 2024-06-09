@@ -128,12 +128,8 @@ def main():
             available_user_classes[key] = value
             available_user_tasks[key] = value.tasks or {}
 
-    if len(stats.PERCENTILES_TO_CHART) != 2:
-        logging.error("stats.PERCENTILES_TO_CHART parameter should be 2 parameters \n")
-        sys.exit(1)
-
-    if len(stats.MODERN_UI_PERCENTILES_TO_CHART) > 6:
-        logging.error("stats.MODERN_UI_PERCENTILES_TO_CHART parameter should be a maximum of 6 parameters \n")
+    if len(stats.PERCENTILES_TO_CHART) > 6:
+        logging.error("stats.PERCENTILES_TO_CHART parameter should be a maximum of 6 parameters \n")
         sys.exit(1)
 
     def is_valid_percentile(parameter):
@@ -179,11 +175,12 @@ def main():
         sys.exit(1)
 
     if options.hatch_rate:
-        sys.stderr.write("[DEPRECATED] The --hatch-rate parameter has been renamed --spawn-rate\n")
-        options.spawn_rate = options.hatch_rate
+        sys.stderr.write("--hatch-rate parameter has been renamed --spawn-rate\n")
+        sys.exit(1)
 
     if options.legacy_ui:
-        sys.stderr.write("[DEPRECATED] The legacy UI is deprecated and will be removed soon\n")
+        sys.stderr.write("--legacy-ui is no longer supported, remove the parameter to continue\n")
+        sys.exit(1)
 
     # setup logging
     if not options.skip_log_setup:
@@ -411,8 +408,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         if options.worker:
             logger.error("The --master argument cannot be combined with --worker")
             sys.exit(-1)
-        if options.expect_workers_max_wait and not options.expect_workers:
-            logger.error("The --expect-workers-max-wait argument only makes sense when combined with --expect-workers")
+        if options.expect_workers < 1:
+            logger.error(f"Invalid --expect-workers argument ({options.expect_workers}), must be a positive number")
             sys.exit(-1)
         runner = environment.create_master_runner(
             master_bind_host=options.master_bind_host,
@@ -437,7 +434,9 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         try:
             options.run_time = parse_timespan(options.run_time)
         except ValueError:
-            logger.error("Valid --run-time formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
+            logger.error(
+                f"Invalid --run-time argument ({options.run_time}), accepted formats are for example 120, 120s, 2m, 3h, 3h30m10s."
+            )
             sys.exit(1)
 
     if options.csv_prefix:
@@ -480,7 +479,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             stats_csv_writer=stats_csv_writer,
             delayed_start=True,
             userclass_picker_is_active=options.class_picker,
-            modern_ui=not options.legacy_ui,
         )
     else:
         web_ui = None
@@ -654,8 +652,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         logger.info("Got SIGTERM signal")
         shutdown()
 
-    def save_html_report(use_modern_ui=False):
-        html_report = get_html_report(environment, show_download_link=False, use_modern_ui=use_modern_ui)
+    def save_html_report():
+        html_report = get_html_report(environment, show_download_link=False)
         logger.info("writing html report to file: %s", options.html_file)
         with open(options.html_file, "w", encoding="utf-8") as file:
             file.write(html_report)
@@ -671,10 +669,10 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
         main_greenlet.join()
         if options.html_file:
-            save_html_report(not options.legacy_ui)
+            save_html_report()
     except KeyboardInterrupt:
         if options.html_file:
-            save_html_report(not options.legacy_ui)
+            save_html_report()
     except Exception:
         raise
     shutdown()

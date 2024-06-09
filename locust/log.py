@@ -1,8 +1,10 @@
 import logging
 import logging.config
+import re
 import socket
+from collections import deque
 
-HOSTNAME = socket.gethostname()
+HOSTNAME = re.sub(r"\..*", "", socket.gethostname())
 
 # Global flag that we set to True if any unhandled exception occurs in a greenlet
 # Used by main.py to set the process return code to non-zero
@@ -12,7 +14,7 @@ unhandled_greenlet_exception = False
 class LogReader(logging.Handler):
     def __init__(self):
         super().__init__()
-        self.logs = []
+        self.logs = deque(maxlen=500)
 
     def emit(self, record):
         self.logs.append(self.format(record))
@@ -72,6 +74,15 @@ def setup_logging(loglevel, logfile=None):
         LOGGING_CONFIG["root"]["handlers"] = ["file", "log_reader"]
 
     logging.config.dictConfig(LOGGING_CONFIG)
+
+
+def get_logs():
+    log_reader_handler = [handler for handler in logging.getLogger("root").handlers if handler.name == "log_reader"]
+
+    if log_reader_handler:
+        return list(log_reader_handler[0].logs)
+
+    return []
 
 
 def greenlet_exception_logger(logger, level=logging.CRITICAL):

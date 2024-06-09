@@ -219,9 +219,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             content=textwrap.dedent(
                 """
             from locust import User, task, constant, events
-            from locust.stats import PERCENTILES_TO_CHART
-            PERCENTILES_TO_CHART[0] = 0.9
-            PERCENTILES_TO_CHART[1] = 0.4
+            from locust import stats
+            stats.PERCENTILES_TO_CHART = [0.9, 0.4]
             class TestUser(User):
                 wait_time = constant(3)
                 @task
@@ -274,8 +273,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             content=textwrap.dedent(
                 """
             from locust import User, task, constant, events
-            from locust.stats import PERCENTILES_TO_CHART
-            PERCENTILES_TO_CHART[0] = 1.2
+            from locust import stats
+            stats.PERCENTILES_TO_CHART  = [1.2]
             class TestUser(User):
                 wait_time = constant(3)
                 @task
@@ -728,7 +727,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "locust",
                     "-f",
                     mocked.file_path,
-                    "--legacy-ui",
                     "--web-port",
                     str(port),
                     "--autostart",
@@ -795,7 +793,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         "locust",
                         "-f",
                         f"{mocked1.file_path},{mocked2}",
-                        "--legacy-ui",
                         "--web-port",
                         str(port),
                         "--autostart",
@@ -1115,7 +1112,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             "locust",
                             "-f",
                             mocked.file_path,
-                            "--legacy-ui",
                             "--host",
                             "https://test.com/",
                             "--run-time",
@@ -1138,16 +1134,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         # make sure title appears in the report
         _, locustfile = os.path.split(mocked.file_path)
-        self.assertIn(f"<title>Test Report for {locustfile}</title>", html_report_content)
-        self.assertIn(f"<p>Script: <span>{locustfile}</span></p>", html_report_content)
+        self.assertIn(locustfile, html_report_content)
 
         # make sure host appears in the report
         self.assertIn("https://test.com/", html_report_content)
-
-        # make sure the charts container appears in the report
-        self.assertIn("charts-container", html_report_content)
-
-        self.assertNotIn("Download the Report", html_report_content, "Download report link found in HTML content")
+        self.assertIn('"show_download_link": false', html_report_content)
 
     def test_run_with_userclass_picker(self):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
@@ -2138,6 +2129,8 @@ class AnyUser(HttpUser):
             self.assertIn("(index 3) reported as ready", stderr)
             self.assertIn("The last worker quit, stopping test", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
+            # ensure no weird escaping in error report. Not really related to ctrl-c...
+            self.assertIn(", 'Connection refused') ", stderr)
 
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_workers_shut_down_if_master_is_gone(self):

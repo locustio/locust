@@ -99,6 +99,8 @@ class Environment:
         """List of the available Tasks per User Classes to pick from in the Task Picker"""
         self.dispatcher_class = dispatcher_class
         """A user dispatcher class that decides how users are spawned, default :class:`UsersDispatcher <locust.dispatch.UsersDispatcher>`"""
+        self.worker_logs: dict[str, list[str]] = {}
+        """Captured logs from all connected workers"""
 
         self._remove_user_classes_with_weight_zero()
         self._validate_user_class_name_uniqueness()
@@ -166,7 +168,6 @@ class Environment:
         stats_csv_writer: StatsCSV | None = None,
         delayed_start=False,
         userclass_picker_is_active=False,
-        modern_ui=False,
     ) -> WebUI:
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
@@ -193,7 +194,6 @@ class Environment:
             stats_csv_writer=stats_csv_writer,
             delayed_start=delayed_start,
             userclass_picker_is_active=userclass_picker_is_active,
-            modern_ui=modern_ui,
         )
         return self.web_ui
 
@@ -210,6 +210,10 @@ class Environment:
                 setattr(user_class, key, value)
             if key == "tasks":
                 user_class.tasks = [task for task in user_tasks if task.__name__ in value]
+
+    def update_worker_logs(self, worker_log_report):
+        if worker_log_report.get("worker_id", None):
+            self.worker_logs[worker_log_report.get("worker_id")] = worker_log_report.get("logs", [])
 
     def _filter_tasks_by_tags(self) -> None:
         """

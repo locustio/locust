@@ -11,6 +11,7 @@ from locust.argument_parser import parse_options
 from locust.dispatch import UsersDispatcher
 from locust.env import Environment
 from locust.exception import RPCError, RPCReceiveError, StopUser
+from locust.log import LogReader
 from locust.main import create_environment
 from locust.rpc import Message
 from locust.runners import (
@@ -32,6 +33,7 @@ from locust.user import (
 )
 
 import json
+import logging
 import random
 import time
 import unittest
@@ -80,7 +82,12 @@ def mocked_rpc(raise_on_close=True):
             self.outbox.append(message)
 
         def send_to_client(self, message):
-            self.outbox.append((message.node_id, message))
+            print(message)
+            self.outbox.append(message)
+
+        @classmethod
+        def get_messages(cls, message_type=None) -> list:
+            return [message for message in cls.outbox if message_type is None or message.type == message_type]
 
         def recv_from_client(self):
             results = self.queue.get()
@@ -144,6 +151,24 @@ class LocustRunnerTestCase(LocustTestCase):
 
 
 class TestLocustRunner(LocustRunnerTestCase):
+    def test_missing_constructor_call_in_user(self):
+        class BadUser(User):
+            def __init__(self, *args, **kwargs):
+                pass  # not calling base class constructor!!!
+
+            @task
+            def t(self):
+                pass
+
+        environment = Environment(user_classes=[BadUser])
+        runner = LocalRunner(environment)
+        with self.assertRaises(AssertionError) as assert_raises_context:
+            runner.spawn_users({BadUser.__name__: 1})
+        self.assertIn(
+            "Attribute 'environment' is missing on user BadUser. Perhaps you defined your own __init__ and forgot to call the base constructor",
+            str(assert_raises_context.exception),
+        )
+
     def test_cpu_warning(self):
         _monitor_interval = runners.CPU_MONITOR_INTERVAL
         runners.CPU_MONITOR_INTERVAL = 2.0
@@ -1139,7 +1164,7 @@ class TestMasterWorkerRunners(LocustTestCase):
         self.assertEqual(master_env.runner.stats.total.max_response_time, 42)
         self.assertEqual(master_env.runner.stats.get("cool-string", "GET").avg_response_time, 42)
 
-    def test_test_stop_event(self):
+    def test_spawning_complete_and_test_stop_event(self):
         class TestUser(User):
             wait_time = constant(0.1)
 
@@ -1151,10 +1176,15 @@ class TestMasterWorkerRunners(LocustTestCase):
             # start a Master runner
             master_env = Environment(user_classes=[TestUser])
             test_stop_count = {"master": 0, "worker": 0}
+            spawning_complete_count = {"master": 0, "worker": 0}
 
             @master_env.events.test_stop.add_listener
             def _(*args, **kwargs):
                 test_stop_count["master"] += 1
+
+            @master_env.events.spawning_complete.add_listener
+            def _(*args, **kwargs):
+                spawning_complete_count["master"] += 1
 
             master = master_env.create_master_runner("*", 0)
             sleep(0)
@@ -1165,15 +1195,19 @@ class TestMasterWorkerRunners(LocustTestCase):
             def _(*args, **kwargs):
                 test_stop_count["worker"] += 1
 
+            @worker_env.events.spawning_complete.add_listener
+            def _(*args, **kwargs):
+                spawning_complete_count["worker"] += 1
+
             worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
 
             # give worker time to connect
             sleep(0.1)
             # issue start command that should trigger TestUsers to be spawned in the Workers
-            master.start(2, spawn_rate=1000)
-            sleep(0.1)
+            master.start(3, spawn_rate=1)
+            sleep(3)
             # check that worker nodes have started locusts
-            self.assertEqual(2, worker.user_count)
+            self.assertEqual(3, worker.user_count)
             # give time for users to generate stats, and stats to be sent to master
             sleep(0.1)
             master_env.events.quitting.fire(environment=master_env, reverse=True)
@@ -1182,7 +1216,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # make sure users are killed
             self.assertEqual(0, worker.user_count)
 
-        # check the test_stop event was called one time in master and one time in worker
+        # check the spwaning_complete and test_stop events were called one time in master and one time in worker
         self.assertEqual(
             1,
             test_stop_count["master"],
@@ -1192,6 +1226,16 @@ class TestMasterWorkerRunners(LocustTestCase):
             1,
             test_stop_count["worker"],
             "The test_stop event was not called exactly one time in the worker node",
+        )
+        self.assertEqual(
+            1,
+            spawning_complete_count["master"],
+            "The spawning_complete event was not called exactly one time in the master node",
+        )
+        self.assertEqual(
+            1,
+            spawning_complete_count["worker"],
+            "The spawning_complete event was not called exactly one time in the worker node",
         )
 
     def test_distributed_shape(self):
@@ -2547,11 +2591,10 @@ class TestMasterRunner(LocustRunnerTestCase):
             )
 
             master.start(100, 20)
-            self.assertEqual(6, len(server.outbox))
-            # First element of the outbox list is ack msg. That is why it is skipped in for loop
-            for i, (_, msg) in enumerate(server.outbox[1:].copy()):
+            self.assertEqual(7, len(server.get_messages()))
+            spawn_messages = server.get_messages("spawn")
+            for i, msg in enumerate(server.get_messages("spawn")):
                 self.assertDictEqual({"TestUser": int((i + 1) * 20)}, msg.data["user_classes_count"])
-                server.outbox.pop()
 
             # Normally, this attribute would be updated when the
             # master receives the report from the worker.
@@ -2561,11 +2604,9 @@ class TestMasterRunner(LocustRunnerTestCase):
             server.mocked_send(Message("client_ready", __version__, "zeh_fake_client2"))
             self.assertEqual(2, len(master.clients))
             sleep(0.1)  # give time for messages to be sent to clients
-            self.assertEqual(4, len(server.outbox))
-            client_id, msg = server.outbox.pop()
-            self.assertEqual({"TestUser": 50}, msg.data["user_classes_count"])
-            client_id, msg = server.outbox.pop()
-            self.assertEqual({"TestUser": 50}, msg.data["user_classes_count"])
+            spawn_messages = server.get_messages("spawn")
+            self.assertEqual({"TestUser": 50}, spawn_messages[-1].data["user_classes_count"])
+            self.assertEqual({"TestUser": 50}, spawn_messages[-2].data["user_classes_count"])
 
     def test_sends_spawn_data_to_ready_running_spawning_workers(self):
         """Sends spawn job to running, ready, or spawning workers"""
@@ -2584,8 +2625,8 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.clients[2].state = STATE_SPAWNING
             master.clients[3].state = STATE_RUNNING
             master.start(user_count=5, spawn_rate=5)
-
-            self.assertEqual(3, len(server.outbox))
+            self.assertEqual(3, len(server.get_messages("spawn")))
+            self.assertEqual(3, len(server.get_messages("spawning_complete")))
 
     def test_start_event(self):
         """
@@ -2610,7 +2651,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(7, 7)
-            self.assertEqual(10, len(server.outbox))
+            self.assertEqual(15, len(server.get_messages()))
             self.assertEqual(1, run_count[0])
 
             # change number of users and check that test_start isn't fired again
@@ -2649,7 +2690,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(7, 7)
-            self.assertEqual(10, len(server.outbox))
+            self.assertEqual(15, len(server.get_messages()))
             master.stop()
             self.assertTrue(self.runner_stopping)
             self.assertTrue(self.runner_stopped)
@@ -2688,7 +2729,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(7, 7)
-            self.assertEqual(10, len(server.outbox))
+            self.assertEqual(15, len(server.get_messages()))
             master.quit()
             self.assertTrue(self.runner_stopping)
             self.assertTrue(self.runner_stopped)
@@ -2735,13 +2776,10 @@ class TestMasterRunner(LocustRunnerTestCase):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(7, 7)
-            self.assertEqual(10, len(server.outbox))
+            self.assertEqual(15, len(server.outbox))
 
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
-            )
-
-            self.assertEqual(7, num_users, "Total number of locusts that would have been spawned is not 7")
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
+            self.assertEqual(7, num_users)
 
     def test_spawn_fewer_locusts_than_workers(self):
         class TestUser(User):
@@ -2756,11 +2794,9 @@ class TestMasterRunner(LocustRunnerTestCase):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(2, 2)
-            self.assertEqual(10, len(server.outbox))
+            self.assertEqual(15, len(server.outbox))
 
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
 
             self.assertEqual(2, num_users, "Total number of locusts that would have been spawned is not 2")
 
@@ -2783,12 +2819,11 @@ class TestMasterRunner(LocustRunnerTestCase):
                 server.mocked_send(Message("client_ready", __version__, "fake_client%i" % i))
 
             master.start(USERS_COUNT, USERS_COUNT)
-            self.assertEqual(USERS_COUNT * 2, len(server.outbox))
+            self.assertEqual(USERS_COUNT * 3, len(server.outbox))
 
             indexes = []
-            for _, msg in server.outbox:
-                if msg.type == "ack":
-                    indexes.append(msg.data["index"])
+            for msg in server.get_messages("ack"):
+                indexes.append(msg.data["index"])
             self.assertEqual(USERS_COUNT, len(indexes), "Total number of locusts/workers is not 5")
 
             indexes.sort()
@@ -2827,27 +2862,21 @@ class TestMasterRunner(LocustRunnerTestCase):
 
             # Wait for shape_worker to update user_count
             sleep(0.5)
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
             self.assertEqual(
                 1, num_users, "Total number of users in first stage of shape test is not 1: %i" % num_users
             )
 
             # Wait for shape_worker to update user_count again
             sleep(1.5)
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
             self.assertEqual(
                 1, num_users, "Total number of users in second stage of shape test is not 1: %i" % num_users
             )
 
             # Wait for shape_worker to update user_count few times but not reach the end yet
             sleep(2.5)
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
             self.assertEqual(
                 3, num_users, "Total number of users in second stage of shape test is not 3: %i" % num_users
             )
@@ -2885,18 +2914,14 @@ class TestMasterRunner(LocustRunnerTestCase):
             sleep(0.5)
 
             # Wait for shape_worker to update user_count
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
             self.assertEqual(
                 1, num_users, "Total number of users in first stage of shape test is not 1: %i" % num_users
             )
 
             # Wait for shape_worker to update user_count again
             sleep(2)
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
             self.assertEqual(
                 3, num_users, "Total number of users in second stage of shape test is not 3: %i" % num_users
             )
@@ -2934,9 +2959,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             sleep(0.5)
 
             # Wait for shape_worker to update user_count
-            num_users = sum(
-                sum(msg.data["user_classes_count"].values()) for _, msg in server.outbox if msg.type != "ack"
-            )
+            num_users = sum(sum(msg.data["user_classes_count"].values()) for msg in server.get_messages("spawn"))
             self.assertEqual(
                 5, num_users, "Total number of users in first stage of shape test is not 5: %i" % num_users
             )
@@ -2944,9 +2967,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             # Wait for shape_worker to update user_count again
             sleep(2)
             msgs = defaultdict(dict)
-            for _, msg in server.outbox:
-                if msg.type == "ack":
-                    continue
+            for msg in server.get_messages("spawn"):
                 msgs[msg.node_id][msg.data["timestamp"]] = sum(msg.data["user_classes_count"].values())
             # Count users for the last received messages
             num_users = sum(v[max(v.keys())] for v in msgs.values())
@@ -3091,8 +3112,10 @@ class TestMasterRunner(LocustRunnerTestCase):
                 master.clients[i] = WorkerNode(str(i))
             master.send_message("test_custom_msg", {"test_data": 123})
 
-            self.assertEqual(5, len(server.outbox))
-            for _, msg in server.outbox:
+            messages = server.get_messages()
+
+            self.assertEqual(5, len(messages))
+            for msg in messages:
                 self.assertEqual("test_custom_msg", msg.type)
                 self.assertEqual(123, msg.data["test_data"])
 
@@ -3179,10 +3202,12 @@ class TestMasterRunner(LocustRunnerTestCase):
             master = self.get_runner()
             server.mocked_send(Message("client_ready", __version__, "dummy_client"))
 
+            messages = server.get_messages()
+
             self.assertEqual(1, len(master.clients))
-            self.assertEqual("ack", server.outbox[0][1].type)
-            self.assertEqual(1, len(server.outbox))
-            self.assertEqual(0, server.outbox[0][1].data["index"])
+            self.assertEqual("ack", messages[0].type)
+            self.assertEqual(1, len(messages))
+            self.assertEqual(0, messages[0].data["index"])
 
     def test_worker_sends_bad_message_to_master(self):
         """
@@ -3205,11 +3230,12 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(10, 10)
             sleep(0.1)
             server.mocked_send(Message("stats", BAD_MESSAGE, "zeh_fake_client1"))
-            self.assertEqual(4, len(server.outbox))
+            messages = server.get_messages()
+            self.assertEqual(5, len(messages))
 
             # Expected message order in outbox: ack, spawn, reconnect, ack
             self.assertEqual(
-                "reconnect", server.outbox[2][1].type, "Master didn't send worker reconnect message when expected."
+                "reconnect", messages[3].type, "Master didn't send worker reconnect message when expected."
             )
 
     def test_worker_sends_unrecognized_message_to_master(self):
@@ -3233,7 +3259,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(10, 10)
             sleep(0.1)
             server.mocked_send(Message("stats", UNRECOGNIZED_MESSAGE, "zeh_fake_client1"))
-            self.assertEqual(2, len(server.outbox))
+            self.assertEqual(3, len(server.get_messages()))
 
     def test_unknown_host_sends_message_to_master(self):
         """
@@ -3256,7 +3282,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(10, 10)
             sleep(0.1)
             server.mocked_send(Message("stats", UNRECOGNIZED_HOST_MESSAGE, "unknown_host"))
-            self.assertEqual(2, len(server.outbox))
+            self.assertEqual(3, len(server.get_messages()))
 
 
 class TestWorkerRunner(LocustTestCase):
@@ -3289,8 +3315,9 @@ class TestWorkerRunner(LocustTestCase):
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             worker = self.get_runner(environment=Environment(), user_classes=[MyTestUser], client=client)
-            self.assertEqual(1, len(client.outbox))
-            self.assertEqual("client_ready", client.outbox[0].type)
+            messages = client.get_messages()
+            self.assertEqual(1, len(messages))
+            self.assertEqual("client_ready", messages[0].type)
             client.mocked_send(
                 Message(
                     "spawn",
@@ -3304,8 +3331,9 @@ class TestWorkerRunner(LocustTestCase):
                     "dummy_client_id",
                 )
             )
+            self.assertTrue(client.get_messages("spawning"))
             # wait for worker to spawn locusts
-            self.assertIn("spawning", [m.type for m in client.outbox])
+            # self.assertIn("spawning", [m.type for m in messages])
             worker.spawning_greenlet.join()
             self.assertEqual(1, len(worker.user_greenlets))
             # check that locust has started running
@@ -3329,8 +3357,9 @@ class TestWorkerRunner(LocustTestCase):
 
         with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
             worker = self.get_runner(environment=Environment(), user_classes=[MyTestUser], client=client)
-            self.assertEqual(1, len(client.outbox))
-            self.assertEqual("client_ready", client.outbox[0].type)
+            messages = client.get_messages()
+            self.assertEqual(1, len(messages))
+            self.assertEqual("client_ready", messages[0].type)
             client.mocked_send(
                 Message(
                     "spawn",
@@ -3346,7 +3375,7 @@ class TestWorkerRunner(LocustTestCase):
             )
             # print("outbox:", client.outbox)
             # wait for worker to spawn locusts
-            self.assertIn("spawning", [m.type for m in client.outbox])
+            self.assertTrue(client.get_messages("spawning"))
             worker.spawning_greenlet.join()
             self.assertEqual(1, len(worker.user_greenlets))
             # check that locust has started running
@@ -3490,14 +3519,14 @@ class TestWorkerRunner(LocustTestCase):
 
             sleep(2)
 
-            message = next((m for m in reversed(client.outbox) if m.type == "stats"), None)
+            message = client.get_messages("stats")[-1]
             self.assertIsNotNone(message)
             self.assertIn("user_count", message.data)
             self.assertIn("user_classes_count", message.data)
             self.assertEqual(message.data["user_count"], 10)
             self.assertEqual(message.data["user_classes_count"]["MyUser"], 10)
 
-            message = next((m for m in client.outbox if m.type == "spawning_complete"), None)
+            message = client.get_messages("spawning_complete")[0]
             self.assertIsNotNone(message)
             self.assertIn("user_count", message.data)
             self.assertIn("user_classes_count", message.data)
@@ -3522,11 +3551,11 @@ class TestWorkerRunner(LocustTestCase):
             worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
 
             t0 = time.perf_counter()
-            while len([m for m in client.outbox if m.type == "heartbeat"]) == 0:
+            while len(client.get_messages("heartbeat")) == 0:
                 self.assertLessEqual(time.perf_counter() - t0, 3)
                 sleep(0.1)
 
-            message = next(m for m in reversed(client.outbox) if m.type == "heartbeat")
+            message = client.get_messages("heartbeat")[-1]
             self.assertEqual(len(message.data), 3)
             self.assertIn("state", message.data)
             self.assertIn("current_cpu_usage", message.data)
@@ -3699,8 +3728,9 @@ class TestWorkerRunner(LocustTestCase):
             worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
             client.outbox.clear()
             worker.send_message("test_custom_msg", {"test_data": 123})
-            self.assertEqual("test_custom_msg", client.outbox[0].type)
-            self.assertEqual(123, client.outbox[0].data["test_data"])
+            messages = client.get_messages()
+            self.assertEqual("test_custom_msg", messages[0].type)
+            self.assertEqual(123, messages[0].data["test_data"])
             worker.quit()
 
     def test_custom_message_receive(self):
@@ -3771,8 +3801,9 @@ class TestWorkerRunner(LocustTestCase):
                 run_count[0] += 1
 
             worker = self.get_runner(environment=environment, user_classes=[MyTestUser], client=client)
-            self.assertEqual(1, len(client.outbox))
-            self.assertEqual("client_ready", client.outbox[0].type)
+            messages = client.get_messages()
+            self.assertEqual(1, len(messages))
+            self.assertEqual("client_ready", messages[0].type)
             client.mocked_send(
                 Message(
                     "spawn",
@@ -3789,7 +3820,7 @@ class TestWorkerRunner(LocustTestCase):
                 )
             )
             # wait for worker to spawn locusts
-            self.assertIn("spawning", [m.type for m in client.outbox])
+            self.assertTrue(client.get_messages("spawning"))
             worker.spawning_greenlet.join()
             self.assertEqual(1, len(worker.user_greenlets))
             self.assertEqual(1, run_count[0])
@@ -3857,8 +3888,9 @@ class TestWorkerRunner(LocustTestCase):
                 run_count[0] += 1
 
             worker = self.get_runner(environment=environment, user_classes=[MyTestUser], client=client)
-            self.assertEqual(1, len(client.outbox))
-            self.assertEqual("client_ready", client.outbox[0].type)
+            messages = client.get_messages()
+            self.assertEqual(1, len(messages))
+            self.assertEqual("client_ready", messages[0].type)
             client.mocked_send(
                 Message(
                     "spawn",
@@ -3876,7 +3908,7 @@ class TestWorkerRunner(LocustTestCase):
             )
 
             # wait for worker to spawn locusts
-            self.assertIn("spawning", [m.type for m in client.outbox])
+            self.assertTrue(client.get_messages("spawning"))
             worker.spawning_greenlet.join()
             self.assertEqual(1, len(worker.user_greenlets))
 
@@ -3923,9 +3955,10 @@ class TestWorkerRunner(LocustTestCase):
         with mock.patch("locust.runners.CONNECT_TIMEOUT", new=1):
             with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
                 worker = self.get_runner(environment=Environment(), user_classes=[MyTestUser], client=client)
+                messages = client.get_messages()
 
-                self.assertEqual("client_ready", client.outbox[0].type)
-                self.assertEqual(1, len(client.outbox))
+                self.assertEqual("client_ready", messages[0].type)
+                self.assertEqual(1, len(messages))
                 self.assertTrue(worker.connected)
 
     def test_worker_connect_failure(self):
@@ -3942,6 +3975,71 @@ class TestWorkerRunner(LocustTestCase):
                             environment=Environment(), user_classes=[MyTestUser], client=client, auto_connect=False
                         )
                     self.assertEqual(2, len(client.outbox))
+
+    def test_send_logs(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            short_time = 0.05
+
+            log_handler = LogReader()
+            log_handler.name = "log_reader"
+            log_handler.setLevel(logging.INFO)
+            logger = logging.getLogger("root")
+            logger.addHandler(log_handler)
+            log_line = "some log info"
+            logger.info(log_line)
+
+            worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
+
+            gevent.sleep(short_time)
+
+            messages = client.get_messages()
+
+            self.assertEqual("logs", messages[3].type)
+            self.assertEqual(log_line, messages[3].data.get("logs", [])[0])
+            self.assertEqual(worker.client_id, messages[3].data.get("worker_id"))
+            worker.quit()
+
+    def test_quit_worker_logs(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            short_time = 0.05
+
+            log_handler = LogReader()
+            log_handler.name = "log_reader"
+            log_handler.setLevel(logging.INFO)
+            logger = logging.getLogger("root")
+            logger.addHandler(log_handler)
+            log_line = "spamming log"
+
+            for _ in range(11):
+                logger.info(log_line)
+
+            worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
+
+            gevent.sleep(short_time)
+
+            message = client.get_messages("logs")[0]
+
+            self.assertEqual(
+                "The worker attempted to send more than 10 log lines in one interval. Further log sending was disabled for this worker.",
+                message.data.get("logs", [])[-1],
+            )
+            self.assertEqual(worker.client_id, message.data.get("worker_id"))
+            worker.quit()
+            logger.removeHandler(log_handler)
 
 
 class TestMessageSerializing(unittest.TestCase):
