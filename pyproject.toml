@@ -124,6 +124,7 @@ pywin32 = { version = "*", markers = "sys_platform == 'win32'" }
 optional = true
 
 [tool.poetry.group.dev.dependencies]
+mypy = "1.10.0"
 pre-commit = "*"
 ruff = "0.3.7"
 tox = "*"
