@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import logging
+import mimetypes
 import os.path
 from functools import wraps
 from html import escape
@@ -132,6 +133,8 @@ class WebUI:
         self.app.template_folder = BUILD_PATH
         self.app.static_folder = STATIC_PATH
         self.app.static_url_path = "/assets/"
+        # ensures static js files work on Windows
+        mimetypes.add_type("application/javascript", ".js")
 
         if self.web_login:
             self.login_manager = LoginManager()
