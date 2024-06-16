@@ -60,10 +60,10 @@ class EventHook:
         """Convenience method for firing the event with automatically calculated response time and automatically marking the request as failed if an exception is raised (this is really only useful for the *request* event)
 
         Example usage (in a task):
-
-            with self.environment.events.request.measure("myrequestType", "myRequestName") as request_meta:
-                # do the stuff you want to measure
-
+        ```
+        with self.environment.events.request.measure("requestType", "requestName") as request_meta:
+            # do the stuff you want to measure
+        ```
         You can optionally add/overwrite entries in the request_meta dict and they will be passed to the request event.
 
         Experimental.
