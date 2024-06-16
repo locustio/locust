@@ -183,8 +183,8 @@ class HttpSession(requests.Session):
         except RequestException as e:
             r = LocustResponse()
             r.error = e
-            r.status_code = 0  # with this status_code, content returns None
-            r.request = Request(method, url).prepare()
+            r.status_code = 0
+            r.request = e.request
             return r
 
 
