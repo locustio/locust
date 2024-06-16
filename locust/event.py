@@ -61,10 +61,10 @@ class EventHook:
 
         Example usage (in a task):
 
-        ```
-        with self.environment.events.request.measure("requestType", "requestName") as request_meta:
-            # do the stuff you want to measure
-        ```
+        .. code-block:: python
+
+            with self.environment.events.request.measure("requestType", "requestName") as request_meta:
+                # do the stuff you want to measure
 
         You can optionally add/overwrite entries in the request_meta dict and they will be passed to the request event.
 
