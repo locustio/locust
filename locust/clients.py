@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from urllib.parse import urlparse, urlunparse
 
 import requests
-from requests import Request, Response
+from requests import PreparedRequest, Request, Response
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
@@ -19,8 +19,11 @@ absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
 
 class LocustResponse(Response):
-    def raise_for_status(self):
-        if hasattr(self, "error") and self.error:
+    error: Exception | None = None
+    request: Request | PreparedRequest | None = None
+
+    def raise_for_status(self) -> None:
+        if self.error:
             raise self.error
         Response.raise_for_status(self)
 
@@ -77,7 +80,7 @@ class HttpSession(requests.Session):
         self.mount("https://", LocustHttpAdapter(pool_manager=pool_manager))
         self.mount("http://", LocustHttpAdapter(pool_manager=pool_manager))
 
-    def _build_url(self, path):
+    def _build_url(self, path) -> str:
         """prepend url with hostname unless it's already an absolute URL"""
         if absolute_http_url_regexp.match(path):
             return path
@@ -94,7 +97,7 @@ class HttpSession(requests.Session):
         finally:
             self.request_name = None
 
-    def request(self, method, url, name=None, catch_response=False, context={}, **kwargs):
+    def request(self, method, url, name=None, catch_response=False, context={}, **kwargs) -> Response:
         """
         Constructs and sends a :py:class:`requests.Request`.
         Returns :py:class:`requests.Response` object.
@@ -170,7 +173,7 @@ class HttpSession(requests.Session):
                 pass
             return response
 
-    def _send_request_safe_mode(self, method, url, **kwargs):
+    def _send_request_safe_mode(self, method, url, **kwargs) -> Response | LocustResponse:
         """
         Send an HTTP request, and catch any exception that might occur due to connection problems.
 
