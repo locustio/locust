@@ -20,7 +20,6 @@ absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
 class LocustResponse(Response):
     error: Exception | None = None
-    request: Request | PreparedRequest | None = None
 
     def raise_for_status(self) -> None:
         if self.error:
@@ -187,7 +186,7 @@ class HttpSession(requests.Session):
             r = LocustResponse()
             r.error = e
             r.status_code = 0
-            r.request = e.request
+            r.request = e.request  # type: ignore
             return r
 
 
