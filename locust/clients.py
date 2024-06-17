@@ -314,13 +314,13 @@ class LocustHttpAdapter(HTTPAdapter):
 
 
 # Monkey patch Response class to give some guidance
-def _success(self):
+def _success(self, *_args, **_kwargs):
     raise LocustError(
         "If you want to change the state of the request, you must pass catch_response=True. See http://docs.locust.io/en/stable/writing-a-locustfile.html#validating-responses"
     )
 
 
-def _failure(self):
+def _failure(self, *_args, **_kwargs):
     raise LocustError(
         "If you want to change the state of the request, you must pass catch_response=True. See http://docs.locust.io/en/stable/writing-a-locustfile.html#validating-responses"
     )
