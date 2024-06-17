@@ -97,7 +97,7 @@ class HttpSession(requests.Session):
         finally:
             self.request_name = None
 
-    def request(self, method, url, name=None, catch_response=False, context={}, **kwargs) -> Response:
+    def request(self, method, url, name=None, catch_response=False, context={}, **kwargs):
         """
         Constructs and sends a :py:class:`requests.Request`.
         Returns :py:class:`requests.Response` object.
