@@ -16,11 +16,16 @@ from urllib3 import PoolManager
 from .exception import CatchResponseError, LocustError, ResponseError
 
 if TYPE_CHECKING:
+    import sys
     from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping
     from typing import Any, TypedDict
 
     from requests.cookies import RequestsCookieJar
-    from typing_extensions import Unpack
+
+    if sys.version_info >= (3, 11):
+        from typing import Unpack
+    else:
+        from typing_extensions import Unpack
 
     # Annotations below were generated using output from mypy.
     # Mypy underneath uses information from the https://github.com/python/typeshed repo.
