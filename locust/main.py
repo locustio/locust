@@ -49,6 +49,7 @@ version = locust.__version__
 COMMON_OPTIONS = {
     "num_users": "users",
     "spawn_rate": "spawn-rate",
+    "params": "params",
     "run_time": "run-time",
 }
 
@@ -567,7 +568,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                 finally:
                     stop_and_optionally_quit()
             else:
-                headless_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
+                headless_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate, options.params)
                 headless_master_greenlet.link_exception(greenlet_exception_handler)
 
         if options.run_time:
