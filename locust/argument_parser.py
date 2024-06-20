@@ -15,7 +15,6 @@ import tempfile
 import textwrap
 from collections import OrderedDict
 from typing import Any, NamedTuple
-from urllib.parse import urlparse
 from uuid import uuid4
 
 if sys.version_info >= (3, 11):
@@ -26,6 +25,8 @@ else:
 import configargparse
 import gevent
 import requests
+
+from .util.url import is_url
 
 version = locust.__version__
 
@@ -148,20 +149,6 @@ def _parse_locustfile_path(path: str) -> list[str]:
     return parsed_paths
 
 
-def is_url(url: str) -> bool:
-    """
-    Check if path is an url
-    """
-    try:
-        result = urlparse(url)
-        if result.scheme == "https" or result.scheme == "http":
-            return True
-        else:
-            return False
-    except ValueError:
-        return False
-
-
 def download_locustfile_from_url(url: str) -> str:
     """
     Attempt to download and save locustfile from url.
@@ -271,14 +258,27 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
         sys.stderr.write(f"Got error from master: {msg.data['error']}\n")
         sys.exit(1)
 
-    filename = msg.data["filename"]
-    with open(os.path.join(tempfile.gettempdir(), filename), "w", encoding="utf-8") as locustfile:
-        locustfile.write(msg.data["contents"])
-
-    atexit.register(exit_handler, locustfile.name)
-
     tempclient.close()
-    return locustfile.name
+    return msg.data
+
+
+def parse_locustfile_paths_from_master(master_host, master_port):
+    locustfiles = download_locustfile_from_master(master_host, master_port).get("locustfiles", [])
+
+    def create_locustfile(file_to_create):
+        filename = file_to_create["filename"]
+        file_contents = file_to_create["contents"]
+
+        with open(os.path.join(tempfile.gettempdir(), filename), "w", encoding="utf-8") as locustfile:
+            locustfile.write(file_contents)
+
+        return locustfile.name
+
+    locustfiles = [
+        create_locustfile(locustfile) if "contents" in locustfile else locustfile for locustfile in locustfiles
+    ]
+
+    return parse_locustfile_paths(locustfiles)
 
 
 def parse_locustfile_option(args=None) -> list[str]:
@@ -339,8 +339,7 @@ def parse_locustfile_option(args=None) -> list[str]:
             )
             sys.exit(1)
         # having this in argument_parser module is a bit weird, but it needs to be done early
-        filename = download_locustfile_from_master(options.master_host, options.master_port)
-        return [filename]
+        return parse_locustfile_paths_from_master(options.master_host, options.master_port)
 
     locustfile_list = [f.strip() for f in options.locustfile.split(",")]
     parsed_paths = parse_locustfile_paths(locustfile_list)
