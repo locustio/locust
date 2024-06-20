@@ -26,6 +26,7 @@ import configargparse
 import gevent
 import requests
 
+from .util.directory import get_abspaths_in
 from .util.url import is_url
 
 version = locust.__version__
@@ -126,14 +127,7 @@ def _parse_locustfile_path(path: str) -> list[str]:
         parsed_paths.append(download_locustfile_from_url(path))
     elif os.path.isdir(path):
         # Find all .py files in directory tree
-        for root, _dirs, fs in os.walk(path):
-            parsed_paths.extend(
-                [
-                    os.path.abspath(os.path.join(root, f))
-                    for f in fs
-                    if os.path.isfile(os.path.join(root, f)) and f.endswith(".py") and not f.startswith("_")
-                ]
-            )
+        parsed_paths.extend(get_abspaths_in(path, extension=".py"))
         if not parsed_paths:
             sys.stderr.write(f"Could not find any locustfiles in directory '{path}'")
             sys.exit(1)

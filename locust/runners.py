@@ -39,6 +39,7 @@ from .stats import (
     StatsError,
     setup_distributed_stats_event_listeners,
 )
+from .util.directory import get_abspaths_in
 from .util.url import is_url
 
 if TYPE_CHECKING:
@@ -1034,7 +1035,12 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "locustfile":
                 logging.debug("Worker requested locust file")
                 assert self.environment.parsed_options
-                locustfile_list = [f.strip() for f in self.environment.parsed_options.locustfile.split(",")]
+                locustfile_options = self.environment.parsed_options.locustfile.split(",")
+                locustfile_list = [f.strip() for f in locustfile_options if not os.path.isdir(f)]
+
+                for f in locustfile_options:
+                    if os.path.isdir(f):
+                        locustfile_list.extend(get_abspaths_in(f, extension=".py"))
 
                 try:
                     locustfiles = []
