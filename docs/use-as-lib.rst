@@ -49,6 +49,11 @@ to view the stats, and to control the runner (e.g. start and stop load tests):
     env.create_web_ui()
     env.web_ui.greenlet.join()
 
+Skipping monkey patching
+========================
+
+Some packages such as boto3 may have incompatibility when using Locust as a library, where monkey patching is already applied. In this case monkey patching may be disabled by setting ``LOCUST_SKIP_MONKEY_PATCH=1`` as env variable.
+
 Full example
 ============
 
