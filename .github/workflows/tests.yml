@@ -58,7 +58,7 @@ jobs:
           node-version: 18.x
       - name: Install Yarn
         run: npm install -g yarn
-      - run: poetry run tox -e ${{ matrix.tox }}
+      - run: python -m poetry run tox -e ${{ matrix.tox }}
 
   lint_typecheck_test_webui:
     runs-on: ubuntu-latest
