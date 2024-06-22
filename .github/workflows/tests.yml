@@ -45,9 +45,10 @@ jobs:
           key: ${{ runner.os }}-venv-${{ hashFiles('pyproject.toml') }}
       - name: Install poetry plugin
         run: python -m poetry self add "poetry-dynamic-versioning[plugin]"
+      # Install test dependencies (tox) to the root (non-package install)
       - name: Install dependencies
         run: |
-          python -m poetry install --no-root --with dev,test
+          python -m poetry install --no-root --only test
       - name: set full Python version in PY env var
         # See https://pre-commit.com/#github-actions-example
         run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
@@ -58,6 +59,11 @@ jobs:
           node-version: 18.x
       - name: Install Yarn
         run: npm install -g yarn
+      # Build and install the package if it's Windows, to service shell-based tests
+      - if: ${{ matrix.os }} == "windows-latest"
+        run: |
+          python -m poetry build
+          pip install --find-links=dist locust
       - run: python -m poetry run tox -e ${{ matrix.tox }}
 
   lint_typecheck_test_webui:
