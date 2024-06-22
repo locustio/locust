@@ -1600,7 +1600,6 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True
             )
             proc_worker = subprocess.Popen(
                 [
