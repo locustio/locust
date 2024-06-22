@@ -140,6 +140,7 @@ mock = "*"
 mypy = "1.10.0"
 retry = "*"
 ruff = "0.3.7"
+tox = "*"
 types-requests = "*"
 
 [tool.poetry.group.docs]
