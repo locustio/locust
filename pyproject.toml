@@ -8,8 +8,8 @@ description = "Developer-friendly load testing framework"
 version = "2.29.0.dev29"
 license = "MIT"
 readme = "README.md"
-authors = ["Jonatan Heyman", "Carl Byström", "Joakim Hamrén", "Hugo Heyman"]
-maintainers = ["Lars Holmberg", "Jonatan Heyman"]
+authors = ["Jonatan Heyman", "Lars Holmberg"]
+maintainers = ["Lars Holmberg", "Jonatan Heyman", "Andrew Baldwin"]
 
 homepage = "https://locust.io/"
 repository = "https://github.com/locustio/locust"
