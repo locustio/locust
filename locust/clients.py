@@ -257,13 +257,13 @@ class HttpSession(requests.Session):
 
     # These # type: ignore[misc] comments below are needed because data and json parameters are already defined in the
     # RESTKwargs TypedDict. An alternative approach is to define another TypedDict which doesn't contain them.
-    def post(self, url: str | bytes, data: Any | None = None, json: Any | None = None, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override, misc]
+    def post(self, url: str | bytes, data: Any | None = None, json: Any | None = None, **kwargs: Unpack[RESTKwargs]) -> (ResponseContextManager | Response | LocustResponse):  # type: ignore[override, misc]
         return self.request("POST", url, data=data, json=json, **kwargs)  # type: ignore[misc]
 
-    def put(self, url: str | bytes, data: Any | None = None, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override, misc]
+    def put(self, url: str | bytes, data: Any | None = None, **kwargs: Unpack[RESTKwargs]) -> (ResponseContextManager | Response | LocustResponse):   # type: ignore[override, misc]
         return self.request("PUT", url, data=data, **kwargs)  # type: ignore[misc]
 
-    def patch(self, url: str | bytes, data: Any | None = None, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override, misc]
+    def patch(self, url: str | bytes, data: Any | None = None, **kwargs: Unpack[RESTKwargs]) -> (ResponseContextManager | Response | LocustResponse):  # type: ignore[override, misc]
         return self.request("PATCH", url, data=data, **kwargs)  # type: ignore[misc]
 
     def delete(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
