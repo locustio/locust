@@ -265,28 +265,28 @@ class HttpSession(requests.Session):
 
     # These # type: ignore[misc] comments below are needed because data and json parameters are already defined in the
     # RESTKwargs TypedDict. An alternative approach is to define another TypedDict which doesn't contain them.
-    def post(
+    def post(  # type: ignore[override, misc]  # <-- misc in this position to suppress mypy error
         self,
         url: str | bytes,
         data: Any | None = None,
         json: Any | None = None,
-        **kwargs: Unpack[RESTKwargs],  # type: ignore[override, misc]
+        **kwargs: Unpack[RESTKwargs],  # type: ignore[misc]  # <-- misc in this position to suppress pyright error
     ) -> ResponseContextManager | Response | LocustResponse:
         return self.request("POST", url, data=data, json=json, **kwargs)  # type: ignore[misc]
 
-    def put(
+    def put(  # type: ignore[override, misc]  # <-- misc in this position to suppress mypy error
         self,
         url: str | bytes,
         data: Any | None = None,
-        **kwargs: Unpack[RESTKwargs],  # type: ignore[override, misc]
+        **kwargs: Unpack[RESTKwargs],  # type: ignore[misc]  # <-- misc in this position to suppress pyright error
     ) -> ResponseContextManager | Response | LocustResponse:
         return self.request("PUT", url, data=data, **kwargs)  # type: ignore[misc]
 
-    def patch(
+    def patch(  # type: ignore[override, misc]  # <-- misc in this position to suppress mypy error
         self,
         url: str | bytes,
         data: Any | None = None,
-        **kwargs: Unpack[RESTKwargs],  # type: ignore[override, misc]
+        **kwargs: Unpack[RESTKwargs],  # type: ignore[misc]  # <-- misc in this position to suppress pyright error
     ) -> ResponseContextManager | Response | LocustResponse:
         return self.request("PATCH", url, data=data, **kwargs)  # type: ignore[misc]
 
