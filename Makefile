@@ -8,7 +8,6 @@ build: setup_dependencies
 install: setup_dependencies
 	poetry install --with dev
 
-.ONESHELL:
 setup_dependencies: check-poetry check-yarn
 	poetry config virtualenvs.create false
 	poetry self add "poetry-dynamic-versioning[plugin]"
