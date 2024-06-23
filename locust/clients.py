@@ -32,7 +32,6 @@ if TYPE_CHECKING:
 
     class RequestKwargs(TypedDict, total=False):
         params: Any | None  # simplified signature
-        data: Any | None  # simplified signature
         headers: Mapping[str, str | bytes | None] | None
         cookies: RequestsCookieJar | MutableMapping[str, str] | None
         files: Any | None  # simplified signature
@@ -44,7 +43,6 @@ if TYPE_CHECKING:
         stream: bool | None
         verify: bool | str | None
         cert: str | tuple[str, str] | None
-        json: Any | None
 
     class RESTKwargs(RequestKwargs, total=False):
         name: str | None
@@ -138,6 +136,9 @@ class HttpSession(requests.Session):
         name: str | None = None,
         catch_response: bool = False,
         context: dict = {},
+        *,
+        data: Any | None = None,
+        json: Any | None = None,
         **kwargs: Unpack[RequestKwargs],
     ):
         """
@@ -243,13 +244,18 @@ class HttpSession(requests.Session):
 
     # These # type: ignore[override] comments below are needed because our overridden version of functions receives
     # more arguments than functions in the base class.
-    def get(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | Response | LocustResponse:  # type: ignore[override]
+    def get(
+        self, url: str | bytes, *, data: Any | None = None, json: Any | None = None, **kwargs: Unpack[RESTKwargs]
+    ) -> ResponseContextManager | Response | LocustResponse:  # type: ignore[override]
         kwargs.setdefault("allow_redirects", True)
         return self.request("GET", url, **kwargs)
 
     def options(
         self,
         url: str | bytes,
+        *,
+        data: Any | None = None,
+        json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],  # type: ignore[override]
     ) -> ResponseContextManager | Response | LocustResponse:
         kwargs.setdefault("allow_redirects", True)
@@ -258,41 +264,49 @@ class HttpSession(requests.Session):
     def head(
         self,
         url: str | bytes,
+        *,
+        data: Any | None = None,
+        json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],  # type: ignore[override]
     ) -> ResponseContextManager | Response | LocustResponse:
         kwargs.setdefault("allow_redirects", False)
         return self.request("HEAD", url, **kwargs)
 
-    # These # type: ignore[misc] comments below are needed because data and json parameters are already defined in the
-    # RESTKwargs TypedDict. An alternative approach is to define another TypedDict which doesn't contain them.
-    def post(  # type: ignore[override, misc]  # <-- misc in this position to suppress mypy error
+    def post(
         self,
         url: str | bytes,
         data: Any | None = None,
         json: Any | None = None,
-        **kwargs: Unpack[RESTKwargs],  # type: ignore[misc]  # <-- misc in this position to suppress pyright error
+        **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
         return self.request("POST", url, data=data, json=json, **kwargs)  # type: ignore[misc]
 
-    def put(  # type: ignore[override, misc]  # <-- misc in this position to suppress mypy error
+    def put(
         self,
         url: str | bytes,
         data: Any | None = None,
-        **kwargs: Unpack[RESTKwargs],  # type: ignore[misc]  # <-- misc in this position to suppress pyright error
+        *,
+        json: Any | None = None,
+        **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
         return self.request("PUT", url, data=data, **kwargs)  # type: ignore[misc]
 
-    def patch(  # type: ignore[override, misc]  # <-- misc in this position to suppress mypy error
+    def patch(
         self,
         url: str | bytes,
         data: Any | None = None,
-        **kwargs: Unpack[RESTKwargs],  # type: ignore[misc]  # <-- misc in this position to suppress pyright error
+        *,
+        json: Any | None = None,
+        **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
         return self.request("PATCH", url, data=data, **kwargs)  # type: ignore[misc]
 
     def delete(
         self,
         url: str | bytes,
+        *,
+        data: Any | None = None,
+        json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],  # type: ignore[override]
     ) -> ResponseContextManager | Response | LocustResponse:
         return self.request("DELETE", url, **kwargs)
