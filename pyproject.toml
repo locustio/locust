@@ -101,6 +101,7 @@ locust = "locust.main:main"
 [tool.mypy]
 # missing type stubs
 ignore_missing_imports = true
+enable_incomplete_feature = ["Unpack"]
 python_version = "3.9"
 
 [[tool.mypy.overrides]]

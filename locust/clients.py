@@ -243,31 +243,59 @@ class HttpSession(requests.Session):
 
     # These # type: ignore[override] comments below are needed because our overridden version of functions receives
     # more arguments than functions in the base class.
-    def get(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+    def get(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | Response | LocustResponse:  # type: ignore[override]
         kwargs.setdefault("allow_redirects", True)
-        return self.request("GET", url, **kwargs)  # type: ignore[misc]
+        return self.request("GET", url, **kwargs)
 
-    def options(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+    def options(
+        self,
+        url: str | bytes,
+        **kwargs: Unpack[RESTKwargs],  # type: ignore[override]
+    ) -> ResponseContextManager | Response | LocustResponse:
         kwargs.setdefault("allow_redirects", True)
-        return self.request("OPTIONS", url, **kwargs)  # type: ignore[misc]
+        return self.request("OPTIONS", url, **kwargs)
 
-    def head(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
+    def head(
+        self,
+        url: str | bytes,
+        **kwargs: Unpack[RESTKwargs],  # type: ignore[override]
+    ) -> ResponseContextManager | Response | LocustResponse:
         kwargs.setdefault("allow_redirects", False)
-        return self.request("HEAD", url, **kwargs)  # type: ignore[misc]
+        return self.request("HEAD", url, **kwargs)
 
     # These # type: ignore[misc] comments below are needed because data and json parameters are already defined in the
     # RESTKwargs TypedDict. An alternative approach is to define another TypedDict which doesn't contain them.
-    def post(self, url: str | bytes, data: Any | None = None, json: Any | None = None, **kwargs: Unpack[RESTKwargs]) -> (ResponseContextManager | Response | LocustResponse):  # type: ignore[override, misc]
+    def post(
+        self,
+        url: str | bytes,
+        data: Any | None = None,
+        json: Any | None = None,
+        **kwargs: Unpack[RESTKwargs],  # type: ignore[override, misc]
+    ) -> ResponseContextManager | Response | LocustResponse:
         return self.request("POST", url, data=data, json=json, **kwargs)  # type: ignore[misc]
 
-    def put(self, url: str | bytes, data: Any | None = None, **kwargs: Unpack[RESTKwargs]) -> (ResponseContextManager | Response | LocustResponse):   # type: ignore[override, misc]
+    def put(
+        self,
+        url: str | bytes,
+        data: Any | None = None,
+        **kwargs: Unpack[RESTKwargs],  # type: ignore[override, misc]
+    ) -> ResponseContextManager | Response | LocustResponse:
         return self.request("PUT", url, data=data, **kwargs)  # type: ignore[misc]
 
-    def patch(self, url: str | bytes, data: Any | None = None, **kwargs: Unpack[RESTKwargs]) -> (ResponseContextManager | Response | LocustResponse):  # type: ignore[override, misc]
+    def patch(
+        self,
+        url: str | bytes,
+        data: Any | None = None,
+        **kwargs: Unpack[RESTKwargs],  # type: ignore[override, misc]
+    ) -> ResponseContextManager | Response | LocustResponse:
         return self.request("PATCH", url, data=data, **kwargs)  # type: ignore[misc]
 
-    def delete(self, url: str | bytes, **kwargs: Unpack[RESTKwargs]):  # type: ignore[override]
-        return self.request("DELETE", url, **kwargs)  # type: ignore[misc]
+    def delete(
+        self,
+        url: str | bytes,
+        **kwargs: Unpack[RESTKwargs],  # type: ignore[override]
+    ) -> ResponseContextManager | Response | LocustResponse:
+        return self.request("DELETE", url, **kwargs)
 
 
 class ResponseContextManager(LocustResponse):
@@ -293,7 +321,7 @@ class ResponseContextManager(LocustResponse):
         self._entered = True
         return self
 
-    def __exit__(self, exc, value, traceback):
+    def __exit__(self, exc, value, traceback):  # type: ignore[override]
         # if the user has already manually marked this response as failure or success
         # we can ignore the default behaviour of letting the response code determine the outcome
         if self._manual_result is not None:
