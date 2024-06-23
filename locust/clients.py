@@ -248,7 +248,7 @@ class HttpSession(requests.Session):
         self, url: str | bytes, *, data: Any | None = None, json: Any | None = None, **kwargs: Unpack[RESTKwargs]
     ) -> ResponseContextManager | Response | LocustResponse:  # type: ignore[override]
         kwargs.setdefault("allow_redirects", True)
-        return self.request("GET", url, **kwargs)
+        return self.request("GET", url, data=data, json=json, **kwargs)
 
     def options(
         self,
@@ -259,7 +259,7 @@ class HttpSession(requests.Session):
         **kwargs: Unpack[RESTKwargs],  # type: ignore[override]
     ) -> ResponseContextManager | Response | LocustResponse:
         kwargs.setdefault("allow_redirects", True)
-        return self.request("OPTIONS", url, **kwargs)
+        return self.request("OPTIONS", url, data=data, json=json, **kwargs)
 
     def head(
         self,
@@ -270,7 +270,7 @@ class HttpSession(requests.Session):
         **kwargs: Unpack[RESTKwargs],  # type: ignore[override]
     ) -> ResponseContextManager | Response | LocustResponse:
         kwargs.setdefault("allow_redirects", False)
-        return self.request("HEAD", url, **kwargs)
+        return self.request("HEAD", url, data=data, json=json, **kwargs)
 
     def post(
         self,
@@ -289,7 +289,7 @@ class HttpSession(requests.Session):
         json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
-        return self.request("PUT", url, data=data, **kwargs)  # type: ignore[misc]
+        return self.request("PUT", url, data=data, json=json, **kwargs)  # type: ignore[misc]
 
     def patch(
         self,
@@ -299,7 +299,7 @@ class HttpSession(requests.Session):
         json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
-        return self.request("PATCH", url, data=data, **kwargs)  # type: ignore[misc]
+        return self.request("PATCH", url, data=data, json=json, **kwargs)  # type: ignore[misc]
 
     def delete(
         self,
@@ -309,7 +309,7 @@ class HttpSession(requests.Session):
         json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],  # type: ignore[override]
     ) -> ResponseContextManager | Response | LocustResponse:
-        return self.request("DELETE", url, **kwargs)
+        return self.request("DELETE", url, data=data, json=json, **kwargs)
 
 
 class ResponseContextManager(LocustResponse):
