@@ -245,6 +245,7 @@ class HttpSession(requests.Session):
     def get(
         self, url: str | bytes, *, data: Any | None = None, json: Any | None = None, **kwargs: Unpack[RESTKwargs]
     ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a GET request"""
         kwargs.setdefault("allow_redirects", True)
         return self.request("GET", url, data=data, json=json, **kwargs)
 
@@ -256,6 +257,7 @@ class HttpSession(requests.Session):
         json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a OPTIONS request"""
         kwargs.setdefault("allow_redirects", True)
         return self.request("OPTIONS", url, data=data, json=json, **kwargs)
 
@@ -267,6 +269,7 @@ class HttpSession(requests.Session):
         json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a HEAD request"""
         kwargs.setdefault("allow_redirects", False)
         return self.request("HEAD", url, data=data, json=json, **kwargs)
 
@@ -277,6 +280,7 @@ class HttpSession(requests.Session):
         json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a POST request"""
         return self.request("POST", url, data=data, json=json, **kwargs)
 
     def put(
@@ -287,6 +291,7 @@ class HttpSession(requests.Session):
         json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a PUT request"""
         return self.request("PUT", url, data=data, json=json, **kwargs)
 
     def patch(
@@ -297,6 +302,7 @@ class HttpSession(requests.Session):
         json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a PATCH request"""
         return self.request("PATCH", url, data=data, json=json, **kwargs)
 
     def delete(
@@ -307,6 +313,7 @@ class HttpSession(requests.Session):
         json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a DELETE request"""
         return self.request("DELETE", url, data=data, json=json, **kwargs)
 
 
