@@ -242,11 +242,9 @@ class HttpSession(requests.Session):
             r.request = Request(method, url).prepare()
             return r
 
-    # These # type: ignore[override] comments below are needed because our overridden version of functions receives
-    # more arguments than functions in the base class.
     def get(
         self, url: str | bytes, *, data: Any | None = None, json: Any | None = None, **kwargs: Unpack[RESTKwargs]
-    ) -> ResponseContextManager | Response | LocustResponse:  # type: ignore[override]
+    ) -> ResponseContextManager | Response | LocustResponse:
         kwargs.setdefault("allow_redirects", True)
         return self.request("GET", url, data=data, json=json, **kwargs)
 
@@ -256,7 +254,7 @@ class HttpSession(requests.Session):
         *,
         data: Any | None = None,
         json: Any | None = None,
-        **kwargs: Unpack[RESTKwargs],  # type: ignore[override]
+        **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
         kwargs.setdefault("allow_redirects", True)
         return self.request("OPTIONS", url, data=data, json=json, **kwargs)
@@ -267,7 +265,7 @@ class HttpSession(requests.Session):
         *,
         data: Any | None = None,
         json: Any | None = None,
-        **kwargs: Unpack[RESTKwargs],  # type: ignore[override]
+        **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
         kwargs.setdefault("allow_redirects", False)
         return self.request("HEAD", url, data=data, json=json, **kwargs)
@@ -307,7 +305,7 @@ class HttpSession(requests.Session):
         *,
         data: Any | None = None,
         json: Any | None = None,
-        **kwargs: Unpack[RESTKwargs],  # type: ignore[override]
+        **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
         return self.request("DELETE", url, data=data, json=json, **kwargs)
 
