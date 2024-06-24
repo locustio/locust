@@ -277,7 +277,7 @@ class HttpSession(requests.Session):
         json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
-        return self.request("POST", url, data=data, json=json, **kwargs)  # type: ignore[misc]
+        return self.request("POST", url, data=data, json=json, **kwargs)
 
     def put(
         self,
@@ -287,7 +287,7 @@ class HttpSession(requests.Session):
         json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
-        return self.request("PUT", url, data=data, json=json, **kwargs)  # type: ignore[misc]
+        return self.request("PUT", url, data=data, json=json, **kwargs)
 
     def patch(
         self,
@@ -297,7 +297,7 @@ class HttpSession(requests.Session):
         json: Any | None = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
-        return self.request("PATCH", url, data=data, json=json, **kwargs)  # type: ignore[misc]
+        return self.request("PATCH", url, data=data, json=json, **kwargs)
 
     def delete(
         self,
