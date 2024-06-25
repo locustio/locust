@@ -193,7 +193,7 @@ class HttpSession(requests.Session):
         response_time = (time.perf_counter() - start_perf_counter) * 1000
 
         request_before_redirect = (response.history and response.history[0] or response).request
-        url = request_before_redirect.url
+        url = request_before_redirect.url  # type: ignore
 
         if not name:
             name = request_before_redirect.path_url
