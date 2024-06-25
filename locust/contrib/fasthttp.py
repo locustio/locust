@@ -284,9 +284,9 @@ class FastHttpSession:
         """Sends a PATCH request"""
         return self.request("PATCH", url, data=data, **kwargs)
 
-    def post(self, url, data=None, **kwargs):
+    def post(self, url, data=None, json=None, **kwargs):
         """Sends a POST request"""
-        return self.request("POST", url, data=data, **kwargs)
+        return self.request("POST", url, data=data, json=json, **kwargs)
 
     def put(self, url, data=None, **kwargs):
         """Sends a PUT request"""
