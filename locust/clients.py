@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlparse, urlunparse
 
 import requests
-from requests import Request, Response
+from requests import Response
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
@@ -54,8 +54,10 @@ absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
 
 class LocustResponse(Response):
-    def raise_for_status(self):
-        if hasattr(self, "error") and self.error:
+    error: Exception | None = None
+
+    def raise_for_status(self) -> None:
+        if self.error:
             raise self.error
         Response.raise_for_status(self)
 
@@ -112,7 +114,7 @@ class HttpSession(requests.Session):
         self.mount("https://", LocustHttpAdapter(pool_manager=pool_manager))
         self.mount("http://", LocustHttpAdapter(pool_manager=pool_manager))
 
-    def _build_url(self, path):
+    def _build_url(self, path) -> str:
         """prepend url with hostname unless it's already an absolute URL"""
         if absolute_http_url_regexp.match(path):
             return path
@@ -191,7 +193,7 @@ class HttpSession(requests.Session):
         response_time = (time.perf_counter() - start_perf_counter) * 1000
 
         request_before_redirect = (response.history and response.history[0] or response).request
-        url = request_before_redirect.url
+        url = request_before_redirect.url  # type: ignore
 
         if not name:
             name = request_before_redirect.path_url
@@ -225,7 +227,7 @@ class HttpSession(requests.Session):
                 pass
             return response
 
-    def _send_request_safe_mode(self, method, url, **kwargs):
+    def _send_request_safe_mode(self, method, url, **kwargs) -> Response | LocustResponse:
         """
         Send an HTTP request, and catch any exception that might occur due to connection problems.
 
@@ -238,8 +240,8 @@ class HttpSession(requests.Session):
         except RequestException as e:
             r = LocustResponse()
             r.error = e
-            r.status_code = 0  # with this status_code, content returns None
-            r.request = Request(method, url).prepare()
+            r.status_code = 0
+            r.request = e.request  # type: ignore
             return r
 
     def get(
@@ -440,17 +442,11 @@ class LocustHttpAdapter(HTTPAdapter):
 
 
 # Monkey patch Response class to give some guidance
-def _success(self):
+def _missing_catch_response_True(self, *_args, **_kwargs):
     raise LocustError(
-        "If you want to change the state of the request, you must pass catch_response=True. See http://docs.locust.io/en/stable/writing-a-locustfile.html#validating-responses"
+        "If you want to change the state of the request using .success() or .failure(), you must pass catch_response=True. See http://docs.locust.io/en/stable/writing-a-locustfile.html#validating-responses"
     )
 
 
-def _failure(self):
-    raise LocustError(
-        "If you want to change the state of the request, you must pass catch_response=True. See http://docs.locust.io/en/stable/writing-a-locustfile.html#validating-responses"
-    )
-
-
-Response.success = _success  # type: ignore[attr-defined]
-Response.failure = _failure  # type: ignore[attr-defined]
+Response.success = _missing_catch_response_True  # type: ignore[attr-defined]
+Response.failure = _missing_catch_response_True  # type: ignore[attr-defined]
