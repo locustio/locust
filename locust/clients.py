@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlparse, urlunparse
 
 import requests
-from requests import PreparedRequest, Request, Response
+from requests import Response
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
