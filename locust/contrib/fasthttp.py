@@ -326,6 +326,12 @@ class FastHttpUser(User):
     Note that setting this value has no effect when custom client_pool was given, and you need to spawn a your own gevent pool
     to use it (as Users only have one greenlet). See test_fasthttp.py / test_client_pool_concurrency for an example."""
 
+    proxy_host: str | None = None
+    """Parameter passed to FastHttpSession"""
+
+    proxy_port: int | None = None
+    """Parameter passed to FastHttpSession"""
+
     client_pool: HTTPClientPool | None = None
     """HTTP client pool to use. If not given, a new pool is created per single user."""
 
@@ -357,6 +363,8 @@ class FastHttpUser(User):
             client_pool=self.client_pool,
             ssl_context_factory=self.ssl_context_factory,
             headers=self.default_headers,
+            proxy_host=self.proxy_host,
+            proxy_port=self.proxy_port,
         )
         """
         Instance of HttpSession that is created upon instantiation of User.

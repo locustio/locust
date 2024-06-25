@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.29.1
+======
+* Add option to Skip Monkey Patching with LOCUST_SKIP_MONKEY_PATCH https://github.com/locustio/locust/pull/2765
+* HttpSession requests typing https://github.com/locustio/locust/pull/2699
+* Add proxy support for FastHttpUser https://github.com/locustio/locust/pull/2758
+
 2.29.0
 ======
 * Ensure spawning_complete only happens once on workers https://github.com/locustio/locust/pull/2728
