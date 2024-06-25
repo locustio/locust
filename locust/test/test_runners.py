@@ -2430,10 +2430,10 @@ class TestMasterRunner(LocustRunnerTestCase):
             master = self.get_runner()
             server.mocked_send(Message("client_ready", __version__, "fake_client"))
             stats = RequestStats()
-            stats.log_request("GET", "/1", 100, 3546)
-            stats.log_request("GET", "/1", 800, 56743)
+            stats.log_request("GET", "/1", 0.1, 3546)
+            stats.log_request("GET", "/1", 0.8, 56743)
             stats2 = RequestStats()
-            stats2.log_request("GET", "/2", 700, 2201)
+            stats2.log_request("GET", "/2", 0.7, 2201)
             server.mocked_send(
                 Message(
                     "stats",
@@ -2465,11 +2465,11 @@ class TestMasterRunner(LocustRunnerTestCase):
             master = self.get_runner()
             server.mocked_send(Message("client_ready", __version__, "fake_client"))
             stats = RequestStats()
-            stats.log_request("GET", "/1", 100, 3546)
-            stats.log_request("GET", "/1", 800, 56743)
+            stats.log_request("GET", "/1", 0.1, 3546)
+            stats.log_request("GET", "/1", 0.8, 56743)
             stats.log_request("GET", "/1", None, 56743)
             stats2 = RequestStats()
-            stats2.log_request("GET", "/2", 700, 2201)
+            stats2.log_request("GET", "/2", 0.7, 2201)
             stats2.log_request("GET", "/2", None, 2201)
             stats3 = RequestStats()
             stats3.log_request("GET", "/3", None, 2201)
@@ -2521,8 +2521,8 @@ class TestMasterRunner(LocustRunnerTestCase):
                 mocked_time.return_value += 1.0234
                 server.mocked_send(Message("client_ready", __version__, "fake_client"))
                 stats = RequestStats()
-                stats.log_request("GET", "/1", 100, 3546)
-                stats.log_request("GET", "/1", 800, 56743)
+                stats.log_request("GET", "/1", 0.1, 3546)
+                stats.log_request("GET", "/1", 0.8, 56743)
                 server.mocked_send(
                     Message(
                         "stats",
@@ -2537,7 +2537,7 @@ class TestMasterRunner(LocustRunnerTestCase):
                 )
                 mocked_time.return_value += 1
                 stats2 = RequestStats()
-                stats2.log_request("GET", "/2", 400, 2201)
+                stats2.log_request("GET", "/2", 0.4, 2201)
                 server.mocked_send(
                     Message(
                         "stats",
@@ -2557,9 +2557,9 @@ class TestMasterRunner(LocustRunnerTestCase):
                 # let 10 second pass, do some more requests, send it to the master and make
                 # sure the current response time percentiles only accounts for these new requests
                 mocked_time.return_value += 10.10023
-                stats.log_request("GET", "/1", 20, 1)
-                stats.log_request("GET", "/1", 30, 1)
-                stats.log_request("GET", "/1", 3000, 1)
+                stats.log_request("GET", "/1", 0.02, 1)
+                stats.log_request("GET", "/1", 0.03, 1)
+                stats.log_request("GET", "/1", 0.003, 1)
                 server.mocked_send(
                     Message(
                         "stats",

@@ -33,7 +33,7 @@ def _manual_report(name):
         events.request.fire(
             request_type="manual",
             name=name,
-            response_time=(time() - start_time) * 1000,
+            response_time=time() - start_time,
             response_length=0,
             exception=e,
         )
@@ -42,7 +42,7 @@ def _manual_report(name):
         events.request.fire(
             request_type="manual",
             name=name,
-            response_time=(time() - start_time) * 1000,
+            response_time=time() - start_time,
             response_length=0,
             exception=None,
         )

@@ -46,7 +46,7 @@ class TestRequestStats(unittest.TestCase):
         self.stats = RequestStats()
 
         def log(response_time, size):
-            self.stats.log_request("GET", "test_entry", response_time, size)
+            self.stats.log_request("GET", "test_entry", response_time * 0.001, size)
 
         def log_error(exc):
             self.stats.log_error("GET", "test_entry", exc)
@@ -86,7 +86,7 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(s.median_response_time, 6099)
 
     def test_total_rps(self):
-        self.stats.log_request("GET", "other_endpoint", 1337, 1337)
+        self.stats.log_request("GET", "other_endpoint", 1.337, 1337)
         s2 = self.stats.entries[("other_endpoint", "GET")]
         s2.start_time = 2.0
         s2.last_request_timestamp = 6.0
@@ -327,7 +327,7 @@ class TestStatsPrinting(LocustTestCase):
                     3,
                 ),
             ]:
-                self.stats.log_request(method, name, i, 2000 + i)
+                self.stats.log_request(method, name, i * 0.001, 2000 + i)
                 if i % freq == 0:
                     self.stats.log_error(method, name, RuntimeError(f"{method} error"))
 
@@ -439,7 +439,7 @@ class TestCsvStats(LocustTestCase):
         gevent.sleep(10)
 
         for i in range(10):
-            self.runner.stats.log_request("GET", "/", 10, content_length=666)
+            self.runner.stats.log_request("GET", "/", 0.01, content_length=666)
 
         gevent.sleep(5)
 
@@ -519,7 +519,7 @@ class TestCsvStats(LocustTestCase):
 
             @task
             def t(self):
-                self.environment.runner.stats.log_request("GET", "/", 10, 10)
+                self.environment.runner.stats.log_request("GET", "/", 0.01, 10)
 
         environment = Environment(user_classes=[TestUser])
         stats_writer = StatsCSVFileWriter(environment, PERCENTILES_TO_REPORT, self.STATS_BASE_NAME, full_history=True)

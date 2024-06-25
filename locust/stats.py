@@ -128,6 +128,11 @@ PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 
 PERCENTILES_TO_STATISTICS = [0.95, 0.99]
 PERCENTILES_TO_CHART = [0.95]
 
+"""
+Default response time precision is millisecond.
+Change this to 1,000,000 if needs microsecond precision
+"""
+RESPONSE_TIME_PRECISION = 1000
 
 class RequestStatsAdditionError(Exception):
     pass
@@ -230,7 +235,9 @@ class RequestStats:
     def start_time(self):
         return self.total.start_time
 
-    def log_request(self, method: str, name: str, response_time: int, content_length: int) -> None:
+    def log_request(self, method: str, name: str, response_time: float, content_length: int) -> None:
+        if response_time is not None:
+            response_time = int(response_time * RESPONSE_TIME_PRECISION)
         self.total.log(response_time, content_length)
         self.entries[(name, method)].log(response_time, content_length)
 
