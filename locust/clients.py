@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import re
 import time
-from collections.abc import Generator
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse, urlunparse
 
 import requests
@@ -14,6 +14,41 @@ from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, Reques
 from urllib3 import PoolManager
 
 from .exception import CatchResponseError, LocustError, ResponseError
+
+if TYPE_CHECKING:
+    import sys
+    from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping
+    from typing import Any, TypedDict
+
+    from requests.cookies import RequestsCookieJar
+
+    if sys.version_info >= (3, 11):
+        from typing import Unpack
+    else:
+        from typing_extensions import Unpack
+
+    # Annotations below were generated using output from mypy.
+    # Mypy underneath uses information from the https://github.com/python/typeshed repo.
+
+    class RequestKwargs(TypedDict, total=False):
+        params: Any | None  # simplified signature
+        headers: Mapping[str, str | bytes | None] | None
+        cookies: RequestsCookieJar | MutableMapping[str, str] | None
+        files: Any | None  # simplified signature
+        auth: Any | None  # simplified signature
+        timeout: float | tuple[float, float] | tuple[float, None] | None
+        allow_redirects: bool
+        proxies: MutableMapping[str, str] | None
+        hooks: Mapping[str, Iterable[Callable[[Response], Any]] | Callable[[Response], Any]] | None
+        stream: bool | None
+        verify: bool | str | None
+        cert: str | tuple[str, str] | None
+
+    class RESTKwargs(RequestKwargs, total=False):
+        name: str | None
+        catch_response: bool
+        context: dict
+
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
@@ -94,7 +129,18 @@ class HttpSession(requests.Session):
         finally:
             self.request_name = None
 
-    def request(self, method, url, name=None, catch_response=False, context={}, **kwargs):
+    def request(  # type: ignore[override]
+        self,
+        method: str | bytes,
+        url: str | bytes,
+        name: str | None = None,
+        catch_response: bool = False,
+        context: dict = {},
+        *,
+        data: Any | None = None,
+        json: Any | None = None,
+        **kwargs: Unpack[RequestKwargs],
+    ):
         """
         Constructs and sends a :py:class:`requests.Request`.
         Returns :py:class:`requests.Response` object.
@@ -108,7 +154,8 @@ class HttpSession(requests.Session):
           response, even if the response code is ok (2xx). The opposite also works, one can use catch_response to catch a request
           and then mark it as successful even if the response code was not (i.e 500 or 404).
         :param params: (optional) Dictionary or bytes to be sent in the query string for the :class:`Request`.
-        :param data: (optional) Dictionary or bytes to send in the body of the :class:`Request`.
+        :param data: (optional) Dictionary, list of tuples, bytes, or file-like object to send in the body of the :class:`Request`.
+        :param json: (optional) json to send in the body of the :class:`Request`.
         :param headers: (optional) Dictionary of HTTP Headers to send with the :class:`Request`.
         :param cookies: (optional) Dict or CookieJar object to send with the :class:`Request`.
         :param files: (optional) Dictionary of ``'filename': file-like-objects`` for multipart encoding upload.
@@ -117,9 +164,17 @@ class HttpSession(requests.Session):
         :type timeout: float or tuple
         :param allow_redirects: (optional) Set to True by default.
         :type allow_redirects: bool
-        :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
+        :param proxies: (optional) Dictionary mapping protocol or protocol and hostname to the URL of the proxy.
+        :param hooks: (optional) Dictionary mapping hook name to one event or list of events, event must be callable.
         :param stream: (optional) whether to immediately download the response content. Defaults to ``False``.
-        :param verify: (optional) if ``True``, the SSL cert will be verified. A CA_BUNDLE path can also be provided.
+        :param verify: (optional) Either a boolean, in which case it controls whether we verify
+          the server's TLS certificate, or a string, in which case it must be a path
+          to a CA bundle to use. Defaults to ``True``. When set to
+          ``False``, requests will accept any TLS certificate presented by
+          the server, and will ignore hostname mismatches and/or expired
+          certificates, which will make your application vulnerable to
+          man-in-the-middle (MitM) attacks. Setting verify to ``False``
+          may be useful during local development or testing.
         :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
         """
 
@@ -132,7 +187,7 @@ class HttpSession(requests.Session):
 
         start_time = time.time()
         start_perf_counter = time.perf_counter()
-        response = self._send_request_safe_mode(method, url, **kwargs)
+        response = self._send_request_safe_mode(method, url, data=data, json=json, **kwargs)
         response_time = (time.perf_counter() - start_perf_counter) * 1000
 
         request_before_redirect = (response.history and response.history[0] or response).request
@@ -187,6 +242,80 @@ class HttpSession(requests.Session):
             r.request = Request(method, url).prepare()
             return r
 
+    def get(
+        self, url: str | bytes, *, data: Any | None = None, json: Any | None = None, **kwargs: Unpack[RESTKwargs]
+    ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a GET request"""
+        kwargs.setdefault("allow_redirects", True)
+        return self.request("GET", url, data=data, json=json, **kwargs)
+
+    def options(
+        self,
+        url: str | bytes,
+        *,
+        data: Any | None = None,
+        json: Any | None = None,
+        **kwargs: Unpack[RESTKwargs],
+    ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a OPTIONS request"""
+        kwargs.setdefault("allow_redirects", True)
+        return self.request("OPTIONS", url, data=data, json=json, **kwargs)
+
+    def head(
+        self,
+        url: str | bytes,
+        *,
+        data: Any | None = None,
+        json: Any | None = None,
+        **kwargs: Unpack[RESTKwargs],
+    ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a HEAD request"""
+        kwargs.setdefault("allow_redirects", False)
+        return self.request("HEAD", url, data=data, json=json, **kwargs)
+
+    def post(
+        self,
+        url: str | bytes,
+        data: Any | None = None,
+        json: Any | None = None,
+        **kwargs: Unpack[RESTKwargs],
+    ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a POST request"""
+        return self.request("POST", url, data=data, json=json, **kwargs)
+
+    def put(
+        self,
+        url: str | bytes,
+        data: Any | None = None,
+        *,
+        json: Any | None = None,
+        **kwargs: Unpack[RESTKwargs],
+    ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a PUT request"""
+        return self.request("PUT", url, data=data, json=json, **kwargs)
+
+    def patch(
+        self,
+        url: str | bytes,
+        data: Any | None = None,
+        *,
+        json: Any | None = None,
+        **kwargs: Unpack[RESTKwargs],
+    ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a PATCH request"""
+        return self.request("PATCH", url, data=data, json=json, **kwargs)
+
+    def delete(
+        self,
+        url: str | bytes,
+        *,
+        data: Any | None = None,
+        json: Any | None = None,
+        **kwargs: Unpack[RESTKwargs],
+    ) -> ResponseContextManager | Response | LocustResponse:
+        """Sends a DELETE request"""
+        return self.request("DELETE", url, data=data, json=json, **kwargs)
+
 
 class ResponseContextManager(LocustResponse):
     """
@@ -211,7 +340,7 @@ class ResponseContextManager(LocustResponse):
         self._entered = True
         return self
 
-    def __exit__(self, exc, value, traceback):
+    def __exit__(self, exc, value, traceback):  # type: ignore[override]
         # if the user has already manually marked this response as failure or success
         # we can ignore the default behaviour of letting the response code determine the outcome
         if self._manual_result is not None:
