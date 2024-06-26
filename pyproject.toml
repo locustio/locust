@@ -5,7 +5,7 @@ build-backend = "poetry_dynamic_versioning.backend"
 [tool.poetry]
 name = "locust"
 description = "Developer-friendly load testing framework"
-version = "2.29.0.dev29"
+version = "0.0.0"
 license = "MIT"
 readme = "README.md"
 authors = ["Jonatan Heyman", "Lars Holmberg"]
@@ -115,6 +115,7 @@ pyzmq = ">=25.0.0"
 geventhttpclient = ">=2.3.1"
 ConfigArgParse = ">=1.5.5"
 tomli = { version = ">=1.1.0", python = "<3.11" }
+typing_extensions = { version = ">=4.6.0", python = "<3.11" }
 psutil = ">=5.9.1"
 Flask-Login = ">=0.6.3"
 Flask-Cors = ">=3.0.10"

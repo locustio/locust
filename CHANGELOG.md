@@ -1,6 +1,22 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.29.1](https://github.com/locustio/locust/tree/2.29.1) (2024-06-25)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.29.0...2.29.1)
+
+**Fixed bugs:**
+
+- locust/webui/dist/index.html script errors. [\#2753](https://github.com/locustio/locust/issues/2753)
+
+**Merged pull requests:**
+
+- Option to Skip Monkey Patching with LOCUST\_SKIP\_MONKEY\_PATCH [\#2765](https://github.com/locustio/locust/pull/2765) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- HttpSession: Improve error message when someone forgot to pass catch\_response=True + small optimization [\#2762](https://github.com/locustio/locust/pull/2762) ([cyberw](https://github.com/cyberw))
+- Add JavaScript to MIME types for Windows Operating Systems [\#2759](https://github.com/locustio/locust/pull/2759) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add proxy support for FastHttpUser [\#2758](https://github.com/locustio/locust/pull/2758) ([NicoAdrian](https://github.com/NicoAdrian))
+- Httpsession requests typing [\#2699](https://github.com/locustio/locust/pull/2699) ([tdadela](https://github.com/tdadela))
+
 ## [2.29.0](https://github.com/locustio/locust/tree/2.29.0) (2024-06-07)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.28.0...2.29.0)

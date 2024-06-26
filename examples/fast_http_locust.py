@@ -14,6 +14,8 @@ class WebsiteUser(FastHttpUser):
     # max_redirects = 5
     # max_retries = 1
     # network_timeout = 60.0
+    # proxy_host = my-proxy.com
+    # proxy_port = 8080
 
     @task
     def index(self):
