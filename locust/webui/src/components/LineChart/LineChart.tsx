@@ -36,6 +36,10 @@ interface ILineChart extends ILineChartProps {
   charts: ICharts;
 }
 
+interface ILineChartZoomEvent {
+  batch?: { start: number; end: number }[];
+}
+
 const CHART_TEXT_COLOR = '#b3c3bc';
 const CHART_AXIS_COLOR = '#5b6f66';
 
@@ -64,7 +68,7 @@ const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) =>
     {
       type: 'inside',
       start: 0,
-      end: 50,
+      end: 100,
     },
   ],
   tooltip: {
@@ -134,6 +138,10 @@ const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) =>
   color: colors,
   toolbox: {
     feature: {
+      restore: {
+        show: false,
+        title: 'Reset',
+      },
       saveAsImage: {
         name: title.replace(/\s+/g, '_').toLowerCase() + '_' + new Date().getTime() / 1000,
         title: 'Download as PNG',
@@ -178,6 +186,62 @@ export default function LineChart({ charts, title, lines, colors }: ILineChart) 
     initChart.setOption(
       createOptions({ charts, title, seriesData: getSeriesData({ charts, lines }), colors }),
     );
+    initChart.on('datazoom', datazoom => {
+      const { batch } = datazoom as ILineChartZoomEvent;
+      if (!batch) {
+        return;
+      }
+
+      const [{ start, end }] = batch;
+
+      if (start > 0 && end < 100) {
+        initChart.setOption({
+          toolbox: {
+            feature: {
+              restore: {
+                show: true,
+              },
+            },
+          },
+          dataZoom: [
+            {
+              type: 'inside',
+              start,
+              end,
+            },
+            {
+              type: 'slider',
+              show: true,
+              start,
+              end,
+            },
+          ],
+        });
+      } else {
+        initChart.setOption({
+          toolbox: {
+            feature: {
+              restore: {
+                show: false,
+              },
+            },
+          },
+          dataZoom: [
+            {
+              type: 'inside',
+              start,
+              end,
+            },
+            {
+              type: 'slider',
+              show: false,
+              start,
+              end,
+            },
+          ],
+        });
+      }
+    });
 
     const handleChartResize = () => initChart.resize();
     window.addEventListener('resize', handleChartResize);
