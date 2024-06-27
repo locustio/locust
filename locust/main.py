@@ -62,6 +62,7 @@ def create_environment(
     available_user_classes=None,
     available_shape_classes=None,
     available_user_tasks=None,
+    use_exporter=False,
 ):
     """
     Create an Environment instance from options
@@ -77,6 +78,7 @@ def create_environment(
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
         available_user_tasks=available_user_tasks,
+        use_exporter=use_exporter,
     )
 
 
@@ -351,6 +353,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
         available_user_tasks=available_user_tasks,
+        use_exporter=options.exporter,
     )
 
     if options.config_users:

@@ -672,6 +672,12 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         action="store_true",
         help="Prints the final stats in JSON format to stdout. Useful for parsing the results in other programs/scripts. Use together with --headless and --skip-log for an output only with the json data.",
     )
+    stats_group.add_argument(
+        "--exporter",
+        default=False,
+        action="store_true",
+        help="Exports Locust stats to Influx",
+    )
 
     log_group = parser.add_argument_group("Logging options")
     log_group.add_argument(
