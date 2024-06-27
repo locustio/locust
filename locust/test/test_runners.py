@@ -2155,13 +2155,18 @@ class TestMasterWorkerRunners(LocustTestCase):
             worker_env = Environment(user_classes=[TestUser])
             worker: WorkerRunner = worker_env.create_worker_runner("127.0.0.1", master.server.port)
 
-            with mock.patch.object(
-                worker.environment.events.heartbeat_received,
-                "fire",
-                wraps=worker.environment.events.heartbeat_received.fire,
-            ) as worker_heartbeat_received_mock, mock.patch.object(
-                master.environment.events.heartbeat_sent, "fire", wraps=master.environment.events.heartbeat_sent.fire
-            ) as master_heartbeat_sent_mock:
+            with (
+                mock.patch.object(
+                    worker.environment.events.heartbeat_received,
+                    "fire",
+                    wraps=worker.environment.events.heartbeat_received.fire,
+                ) as worker_heartbeat_received_mock,
+                mock.patch.object(
+                    master.environment.events.heartbeat_sent,
+                    "fire",
+                    wraps=master.environment.events.heartbeat_sent.fire,
+                ) as master_heartbeat_sent_mock,
+            ):
                 # give workers time to connect
                 sleep(0.1)
                 # issue start command that should trigger TestUsers to be spawned in the Workers
@@ -2220,11 +2225,14 @@ class TestMasterWorkerRunners(LocustTestCase):
             worker_env = Environment(user_classes=[TestUser])
             worker: WorkerRunner = worker_env.create_worker_runner("127.0.0.1", master.server.port)
 
-            with mock.patch.object(
-                worker.environment.events.usage_monitor, "fire", wraps=worker.environment.events.usage_monitor.fire
-            ) as worker_usage_monitor_mock, mock.patch.object(
-                master.environment.events.usage_monitor, "fire", wraps=master.environment.events.usage_monitor.fire
-            ) as master_usage_monitor_mock:
+            with (
+                mock.patch.object(
+                    worker.environment.events.usage_monitor, "fire", wraps=worker.environment.events.usage_monitor.fire
+                ) as worker_usage_monitor_mock,
+                mock.patch.object(
+                    master.environment.events.usage_monitor, "fire", wraps=master.environment.events.usage_monitor.fire
+                ) as master_usage_monitor_mock,
+            ):
                 # give workers time to connect
                 sleep(0.1)
                 # issue start command that should trigger TestUsers to be spawned in the Workers
