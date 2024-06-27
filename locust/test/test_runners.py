@@ -1,12 +1,7 @@
 from __future__ import annotations
 
 import locust
-from locust import (
-    LoadTestShape,
-    __version__,
-    constant,
-    runners,
-)
+from locust import LoadTestShape, __version__, constant, runners
 from locust.argument_parser import parse_options
 from locust.dispatch import UsersDispatcher
 from locust.env import Environment
@@ -26,11 +21,7 @@ from locust.runners import (
     WorkerRunner,
 )
 from locust.stats import RequestStats
-from locust.user import (
-    TaskSet,
-    User,
-    task,
-)
+from locust.user import TaskSet, User, task
 
 import json
 import logging
@@ -2135,6 +2126,141 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertEqual(0, worker.user_count)
 
             self.assertEqual(test_start_exec_count, 1)
+
+    def test_heartbeat_event(self) -> None:
+        """
+        Tests that heartbeat event is fired during a test
+        """
+
+        class TestUser(User):
+            wait_time = constant(0.1)
+
+            @task
+            def noop(self) -> None:
+                pass
+
+        with mock.patch("locust.runners.HEARTBEAT_INTERVAL", new=1):
+            # start a Master runner
+            master_env = Environment(user_classes=[TestUser])
+            worker_connect_events = []
+            timestamp_start: list[float] = [time.time() + 3600.0]
+
+            def on_connect(client_id: str) -> None:
+                worker_connect_events.append(client_id)
+                timestamp_start[0] = time.time()
+
+            master_env.events.worker_connect.add_listener(on_connect)
+            master = master_env.create_master_runner("*", 0)
+            sleep(0)
+            worker_env = Environment(user_classes=[TestUser])
+            worker: WorkerRunner = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+
+            with mock.patch.object(
+                worker.environment.events.heartbeat_received,
+                "fire",
+                wraps=worker.environment.events.heartbeat_received.fire,
+            ) as worker_heartbeat_received_mock, mock.patch.object(
+                master.environment.events.heartbeat_sent, "fire", wraps=master.environment.events.heartbeat_sent.fire
+            ) as master_heartbeat_sent_mock:
+                # give workers time to connect
+                sleep(0.1)
+                # issue start command that should trigger TestUsers to be spawned in the Workers
+                master.start(2, spawn_rate=2)
+                sleep(0.1)
+                # check that worker nodes have started locusts
+                self.assertEqual(2, worker.user_count)
+
+                # give time for nodes to send and receive 5 heartbeats, HEARTBEAT_INTERVAL mocked to 1 second, so
+                # sleep 5 seconds - 1 second that represents the overhead from connecting
+                sleep(5 - 1)
+                master.quit()
+
+                # make sure users are killed
+                self.assertEqual(0, worker.user_count)
+                # make sure events happened correctly
+                self.assertIn(worker.client_id, worker_connect_events)
+
+                timestamp_stop = time.time()
+
+                self.assertEqual(worker_heartbeat_received_mock.call_count, 5)
+                self.assertEqual(master_heartbeat_sent_mock.call_count, 5)
+
+                for call_args, call_kwargs in [
+                    *worker_heartbeat_received_mock.call_args_list,
+                    *master_heartbeat_sent_mock.call_args_list,
+                ]:
+                    self.assertEqual(call_args, ())  # args
+                    self.assertEqual(call_kwargs, {"client_id": worker.client_id, "timestamp": mock.ANY})  # kwargs
+                    self.assertGreaterEqual(call_kwargs["timestamp"], timestamp_start[0])
+                    self.assertLessEqual(call_kwargs["timestamp"], timestamp_stop)
+
+    def test_usage_monitor_event(self) -> None:
+        """
+        Tests that usage_monitor event is fired during a test
+        """
+
+        class TestUser(User):
+            wait_time = constant(0.1)
+
+            @task
+            def noop(self) -> None:
+                pass
+
+        with mock.patch("locust.runners.CPU_MONITOR_INTERVAL", new=1):
+            # start a Master runner
+            master_env = Environment(user_classes=[TestUser])
+            worker_connect_events = []
+
+            def on_connect(client_id: str) -> None:
+                worker_connect_events.append(client_id)
+
+            master_env.events.worker_connect.add_listener(on_connect)
+            master = master_env.create_master_runner("*", 0)
+            sleep(0)
+            worker_env = Environment(user_classes=[TestUser])
+            worker: WorkerRunner = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+
+            with mock.patch.object(
+                worker.environment.events.usage_monitor, "fire", wraps=worker.environment.events.usage_monitor.fire
+            ) as worker_usage_monitor_mock, mock.patch.object(
+                master.environment.events.usage_monitor, "fire", wraps=master.environment.events.usage_monitor.fire
+            ) as master_usage_monitor_mock:
+                # give workers time to connect
+                sleep(0.1)
+                # issue start command that should trigger TestUsers to be spawned in the Workers
+                master.start(2, spawn_rate=2)
+                sleep(0.1)
+                # check that worker nodes have started locusts
+                self.assertEqual(2, worker.user_count)
+
+                # give time for nodes to send 5 usage_monitor events, CPU_MONITOR_INTERVAL mocked to 1 second, so
+                # sleep 5 seconds
+                sleep(5)
+                master.quit()
+
+                # make sure users are killed
+                self.assertEqual(0, worker.user_count)
+                # make sure events happened correctly
+                self.assertIn(worker.client_id, worker_connect_events)
+
+                self.assertEqual(worker_usage_monitor_mock.call_count, 5)
+                self.assertEqual(master_usage_monitor_mock.call_count, 5)
+
+                for call_args, call_kwargs in master_usage_monitor_mock:
+                    self.assertEqual(call_args, ())  # args
+                    self.assertEqual(
+                        call_kwargs, {"environment": master_env, "cpu_usage": mock.ANY, "memory_usage": mock.ANY}
+                    )  # kwargs
+                    self.assertTrue(isinstance(call_kwargs["cpu_usage"], float))
+                    self.assertTrue(isinstance(call_kwargs["memory_usage"], int))
+
+                for call_args, call_kwargs in worker_usage_monitor_mock:
+                    self.assertEqual(call_args, ())  # args
+                    self.assertEqual(
+                        call_kwargs, {"environment": worker_env, "cpu_usage": mock.ANY, "memory_usage": mock.ANY}
+                    )  # kwargs
+                    self.assertTrue(isinstance(call_kwargs["cpu_usage"], float))
+                    self.assertTrue(isinstance(call_kwargs["memory_usage"], int))
 
 
 class TestMasterRunner(LocustRunnerTestCase):

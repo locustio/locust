@@ -235,14 +235,23 @@ class Events:
     Fired when the CPU usage exceeds runners.CPU_WARNING_THRESHOLD (90% by default)
     """
 
-    heartbeat: EventHook
+    heartbeat_sent: EventHook
     """
-    Fired when a heartbeat is sent by master and received by worker.
+    Fired when a heartbeat is sent by master to a worker.
 
     Event arguments:
 
     :param client_id: worker client id
-    :param direction: either "sent" or "received"
+    :param timestamp: time in seconds since the epoch (float) when the event occured
+    """
+
+    heartbeat_received: EventHook
+    """
+    Fired when a heartbeat is received by a worker from master.
+
+    Event arguments:
+
+    :param client_id: worker client id
     :param timestamp: time in seconds since the epoch (float) when the event occured
     """
 
