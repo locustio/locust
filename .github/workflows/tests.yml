@@ -53,22 +53,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18.x
-      - uses: borales/actions-yarn@v3
+      - uses: borales/actions-yarn@v5
         with:
           cmd: webui:install
-      - uses: borales/actions-yarn@v3
+      - uses: borales/actions-yarn@v5
         with:
           cmd: webui:build
-      - uses: borales/actions-yarn@v3
+      - uses: borales/actions-yarn@v5
         with:
           cmd: webui:test
-      - uses: borales/actions-yarn@v3
+      - uses: borales/actions-yarn@v5
         with:
           cmd: webui:lint
-      - uses: borales/actions-yarn@v3
+      - uses: borales/actions-yarn@v5
         with:
           cmd: webui:type-check
 
