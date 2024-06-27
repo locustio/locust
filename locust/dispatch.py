@@ -90,13 +90,13 @@ class UsersDispatcher(Iterator):
         assert len(user_classes) > 0
         assert len(set(self._user_classes)) == len(self._user_classes)
 
-        self._target_user_count: int = None
+        self._target_user_count: int = 0
 
-        self._spawn_rate: float = None
+        self._spawn_rate: float = 0.0
 
-        self._user_count_per_dispatch_iteration: int = None
+        self._user_count_per_dispatch_iteration: int = 0
 
-        self._wait_between_dispatch: float = None
+        self._wait_between_dispatch: float = 0.0
 
         self._initial_users_on_workers = {
             worker_node.id: {user_class.__name__: 0 for user_class in self._user_classes}
@@ -107,7 +107,7 @@ class UsersDispatcher(Iterator):
 
         self._current_user_count = self.get_current_user_count()
 
-        self._dispatcher_generator: Generator[dict[str, dict[str, int]], None, None] = None
+        self._dispatcher_generator: Generator[dict[str, dict[str, int]], None, None] = None  # type: ignore
 
         self._user_generator = self._user_gen()
 
@@ -131,7 +131,7 @@ class UsersDispatcher(Iterator):
         return sum(map(sum, map(dict.values, self._users_on_workers.values())))
 
     @property
-    def dispatch_in_progress(self):
+    def dispatch_in_progress(self) -> bool:
         return self._dispatch_in_progress
 
     @property
