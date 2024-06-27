@@ -235,6 +235,29 @@ class Events:
     Fired when the CPU usage exceeds runners.CPU_WARNING_THRESHOLD (90% by default)
     """
 
+    heartbeat: EventHook
+    """
+    Fired when a heartbeat is sent by master and received by worker.
+
+    Event arguments:
+
+    :param client_id: worker client id
+    :param direction: either "sent" or "received"
+    :param timestamp: time in seconds since the epoch (float) when the event occured
+    """
+
+    usage_monitor: EventHook
+    """
+    Fired every runners.CPU_MONITOR_INTERVAL (5.0 seconds by default) with information about
+    current CPU and memory usage.
+
+    Event arguments:
+
+    :param environment: locust environment
+    :param cpu_usage: current CPU usage in percent
+    :param memory_usage: current memory usage (RSS) in bytes
+    """
+
     def __init__(self):
         # For backward compatibility use also values of class attributes
         for name, value in vars(type(self)).items():
