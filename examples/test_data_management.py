@@ -3,13 +3,13 @@
 #
 # 1. Locustfile parse time
 # 2. Locust start (init)
+# 3. Test start
+# 4. User start
+# 5. Inside a task
 # M1. CPU & memory usage
 # M2. master sent heartbeat to worker 1-N
 # M3. worker 1-N received heartbeat from master
 # (M* are repeated as long as locust is running)
-# 3. Test start
-# 4. User start
-# 5. Inside a task
 # ...
 # 6. Test run stopping
 # 7. User stop
