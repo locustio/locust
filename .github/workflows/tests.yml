@@ -26,8 +26,8 @@ jobs:
           - { name: "3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
       - name: Update pip
@@ -36,7 +36,7 @@ jobs:
       - name: Get pip cache dir
         id: pip-cache
         run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: pip|${{ runner.os }}|${{ matrix.python }}|${{ hashFiles('pyproject.toml') }}
@@ -49,7 +49,7 @@ jobs:
   lint_typecheck_test_webui:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set Node.js 18.x
         uses: actions/setup-node@v3
         with:
@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' # PR build doesnt get proper version, so dont try to build it
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: docker/login-action@v1
@@ -105,7 +105,7 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - run: echo "TAG=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
@@ -136,11 +136,11 @@ jobs:
     if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - name: Install dependencies
@@ -172,11 +172,11 @@ jobs:
     if: github.ref == 'refs/heads/master' && github.repository_owner == 'locustio'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - run: git rev-parse HEAD^2 2>/dev/null >/dev/null || echo NOT_MERGE_COMMIT=1 | tee -a $GITHUB_ENV
