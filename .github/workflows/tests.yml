@@ -36,6 +36,7 @@ jobs:
       - name: Get pip cache dir
         id: pip-cache
         run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+        shell: bash
       - uses: actions/cache@v4
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
@@ -43,6 +44,7 @@ jobs:
       - name: set full Python version in PY env var
         # See https://pre-commit.com/#github-actions-example
         run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+        shell: bash
       - run: python -m pip install tox
       - run: python -m tox -e ${{ matrix.tox }}
 
