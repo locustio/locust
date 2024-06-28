@@ -45,7 +45,8 @@ include = [
 exclude = [
     "locust/webui/public",
     "locust/webui/src",
-    "locust/webui/*.*",
+    "locust/webui/**",
+    "locust/webui/node_modules",
     "locust/test",
 ]
 
