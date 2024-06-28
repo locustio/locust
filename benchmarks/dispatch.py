@@ -1,11 +1,11 @@
 """
 This file contains a benchmark to validate the performance of Locust itself.
 More precisely, the performance of the `UsersDispatcher` class which is responsible
-for calculating the distribution of users on each workers. This benchmark is to be used
+for calculating the distribution of users on each worker. This benchmark is to be used
 by people working on Locust's development.
 """
 
-from locust import User
+from locust import User  # noqa: F401 It's used inside exec
 from locust.dispatch import UsersDispatcher
 from locust.runners import WorkerNode
 
@@ -62,10 +62,10 @@ exec("USER_CLASSES = [" + ",".join(f"User{i+1}" for i in range(len(WEIGHTS))) + 
 if __name__ == "__main__":
     now = time.time()
 
-    worker_count_cases = [10, 100, 500, 1000, 5000, 10_000, 15_000, 20_000]
-    user_count_cases = [10, 100, 1000, 10_000, 50_000, 100_000, 500_000]
-    number_of_user_classes_cases = [1, 10, 40, 60, 80, 100]
-    spawn_rate_cases = [1, 10, 100, 500, 1000, 2500, 5000, 10_000, 20_000, 25_000]
+    worker_count_cases = [10, 100, 1000]
+    user_count_cases = [1000, 10_000, 100_000, 1_000_000]
+    number_of_user_classes_cases = [1, 10, 100]
+    spawn_rate_cases = [1, 100, 10_000]
 
     case_count = (
         len(worker_count_cases) * len(user_count_cases) * len(number_of_user_classes_cases) * len(spawn_rate_cases)
