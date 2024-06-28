@@ -108,6 +108,7 @@ class UsersDispatcher(Iterator):
         self._current_user_count = self.get_current_user_count()
 
         self._dispatcher_generator: Generator[dict[str, dict[str, int]], None, None] = None  # type: ignore
+        # a generator is assigned (in new_dispatch()) to _dispatcher_generator before it's used
 
         self._user_generator = self._user_gen()
 
