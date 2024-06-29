@@ -31,31 +31,31 @@ WEIGHTS = [
 # fmt: on
 
 for i, x in enumerate(WEIGHTS):
-    exec(f"class User{i+1}(User): weight = {x}")
+    exec(f"class User{i}(User): weight = {x}")
 
 # Equivalent to:
 #
-# class User1(User):
+# class User0(User):
 #     weight = 5
 #
-# class User2(User):
+# class User1(User):
 #     weight = 55
 # .
 # .
 # .
-# class User100(User):
+# class User99(User):
 #     weight = 69
 
-exec("USER_CLASSES = [" + ",".join(f"User{i+1}" for i in range(len(WEIGHTS))) + "]")
+exec("USER_CLASSES = [" + ",".join(f"User{i}" for i in range(len(WEIGHTS))) + "]")
 # Equivalent to:
 #
 # USER_CLASSES = [
+#     User0,
 #     User1,
-#     User2,
 #     .
 #     .
 #     .
-#     User100,
+#     User99,
 # ]
 
 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
                 print(f"Skipping user_count = {user_count:,} - spawn_rate = {spawn_rate:,}")
                 continue
 
-            workers = [WorkerNode(str(i + 1)) for i in range(worker_count)]
+            workers = [WorkerNode(str(i)) for i in range(worker_count)]
 
             ts = time.perf_counter()
             users_dispatcher = UsersDispatcher(
