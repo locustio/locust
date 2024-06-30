@@ -49,10 +49,15 @@ exec("USER_CLASSES = [" + ",".join(f"User{i}" for i in range(len(WEIGHTS))) + "]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--full-benchmark", action="store_true")
-    parser.add_argument("-i", "--include-fixed-users", action="store_true")
-    parser.add_argument("-r", "--repeat", default=1, type=int)
-    parser.add_argument("-s", "--save-output", action="store_true")
+    parser.add_argument("-f", "--full-benchmark", action="store_true", help="run benchmark on full test matrix")
+    parser.add_argument(
+        "-i",
+        "--include-fixed-users",
+        action="store_true",
+        help="add test cases when 50 percent of users use User.fixed_count instead of User.weight",
+    )
+    parser.add_argument("-r", "--repeat", default=1, type=int, help="number of test cases with the same parameters")
+    parser.add_argument("-s", "--save-output", action="store_true", help="save test results to files")
     args = parser.parse_args()
 
     now = time.time()
