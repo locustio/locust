@@ -48,8 +48,9 @@ exec("USER_CLASSES = [" + ",".join(f"User{i}" for i in range(len(WEIGHTS))) + "]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--save-output", action="store_true")
     parser.add_argument("-f", "--full-benchmark", action="store_true")
+    parser.add_argument("-r", "--repeat", default=0, type=int)
+    parser.add_argument("-s", "--save-output", action="store_true")
     args = parser.parse_args()
 
     now = time.time()
@@ -59,6 +60,7 @@ if __name__ == "__main__":
     number_of_user_classes_cases = [1, 30, 1000]
     spawn_rate_cases = [100, 10_000]
     fixed_count_cases = [False, True]  # [0% fixed_count, 50% fixed_count]
+    repeat_cases = list(range(1, args.repeat + 1))
 
     if not args.full_benchmark:
         worker_count_cases = [max(worker_count_cases)]
@@ -72,14 +74,27 @@ if __name__ == "__main__":
         * len(number_of_user_classes_cases)
         * len(spawn_rate_cases)
         * len(fixed_count_cases)
+        * len(repeat_cases)
     )
 
     results = {}
 
     try:
-        for case_index, (worker_count, user_count, number_of_user_classes, spawn_rate, fixed_users) in enumerate(
+        for case_index, (
+            worker_count,
+            user_count,
+            number_of_user_classes,
+            spawn_rate,
+            fixed_users,
+            iteration,
+        ) in enumerate(
             itertools.product(
-                worker_count_cases, user_count_cases, number_of_user_classes_cases, spawn_rate_cases, fixed_count_cases
+                worker_count_cases,
+                user_count_cases,
+                number_of_user_classes_cases,
+                spawn_rate_cases,
+                fixed_count_cases,
+                repeat_cases,
             )
         ):
             workers = [WorkerNode(str(i)) for i in range(worker_count)]
@@ -147,7 +162,7 @@ if __name__ == "__main__":
                 )
             )
 
-            results[(worker_count, user_count, number_of_user_classes, spawn_rate, fixed_users)] = (
+            results[(worker_count, user_count, number_of_user_classes, spawn_rate, fixed_users, iteration)] = (
                 cpu_ramp_up,
                 cpu_ramp_down,
             )
@@ -160,6 +175,7 @@ if __name__ == "__main__":
             "User Classes",
             "Spawn Rate",
             "Fixed Users",
+            "Iteration",
             "Ramp-Up (avg/min/max) (ms)",
             "Ramp-Down (avg/min/max) (ms)",
         ]
@@ -178,10 +194,11 @@ if __name__ == "__main__":
                     number_of_user_classes,
                     f"{spawn_rate:,}",
                     "50%" if fixed_users else "0%",
+                    iteration,
                     cpu_ramp_up,
                     cpu_ramp_down,
                 ]
-                for (worker_count, user_count, number_of_user_classes, spawn_rate, fixed_users), (
+                for (worker_count, user_count, number_of_user_classes, spawn_rate, fixed_users, iteration), (
                     cpu_ramp_up,
                     cpu_ramp_down,
                 ) in results.items()
