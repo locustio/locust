@@ -5,7 +5,7 @@ import itertools
 import math
 import time
 from collections import defaultdict
-from collections.abc import Generator, Iterator
+from collections.abc import Iterator
 from heapq import heapify, heapreplace
 from math import log2
 from operator import attrgetter
@@ -17,32 +17,31 @@ if TYPE_CHECKING:
     from locust import User
     from locust.runners import WorkerNode
 
+    from collections.abc import Generator, Iterable
+    from typing import TypeVar
 
-def _kl_generator(users: list[tuple[type[User], float]]) -> Iterator[str | None]:
+    T = TypeVar("T")
+
+
+def _kl_generator(users: Iterable[tuple[T, float]]) -> Iterator[T | None]:
     """Generator based on Kullback-Leibler divergence
 
     For example, given users A, B with weights 5 and 1 respectively,
     this algorithm will yield AAABAAAAABAA.
     """
-    if not users:
+    heap = [(x * log2(x / (x + 1.0)), x + 1.0, x, name) for name, x in users]
+    if not heap:
         while True:
             yield None
 
-    names = [u[0].__name__ for u in users]
-    weights = [u[1] for u in users]
-    generated = weights.copy()
-
-    heap = [(x * log2(x / (x + 1.0)), i) for i, x in enumerate(generated)]
     heapify(heap)
-
     while True:
-        i = heap[0][1]  # choose element which choosing minimizes divergence the most
-        yield names[i]
-        generated[i] += 1.0
-        x = generated[i]
-        kl_diff = weights[i] * log2(x / (x + 1.0))
+        _, x, weight, name = heap[0]
+        # (divergence diff, number of generated elements + initial weight, initial weight, name) = heap[0]
+        yield name
+        kl_diff = weight * log2(x / (x + 1.0))
         # calculate how much choosing element i for (x + 1)th time decreases divergence
-        heapreplace(heap, (kl_diff, i))
+        heapreplace(heap, (kl_diff, x + 1.0, weight, name))
 
 
 class UsersDispatcher(Iterator):
@@ -370,8 +369,8 @@ class UsersDispatcher(Iterator):
     def _user_gen(self) -> Iterator[str | None]:
         fixed_users = {u.__name__: u for u in self._user_classes if u.fixed_count}
 
-        fixed_users_gen = _kl_generator([(u, u.fixed_count) for u in fixed_users.values()])
-        weighted_users_gen = _kl_generator([(u, u.weight) for u in self._user_classes if not u.fixed_count])
+        fixed_users_gen = _kl_generator([(u.__name__, u.fixed_count) for u in fixed_users.values()])
+        weighted_users_gen = _kl_generator([(u.__name__, u.weight) for u in self._user_classes if not u.fixed_count])
 
         # Spawn users
         while True:
