@@ -95,26 +95,26 @@ if __name__ == "__main__":
 
             workers = [WorkerNode(str(i)) for i in range(worker_count)]
 
-            ts = time.perf_counter()
+            ts = time.process_time()
             users_dispatcher = UsersDispatcher(
                 worker_nodes=workers,
                 user_classes=USER_CLASSES[:number_of_user_classes],  # noqa: F821 (Undefined name `USER_CLASSES`) -> It's created inside "exec"
             )
-            instantiate_duration = time.perf_counter() - ts
+            instantiate_duration = time.process_time() - ts
 
             # Ramp-up
-            ts = time.perf_counter()
+            ts = time.process_time()
             users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate)
-            new_dispatch_ramp_up_duration = time.perf_counter() - ts
+            new_dispatch_ramp_up_duration = time.process_time() - ts
             assert len(users_dispatcher.dispatch_iteration_durations) == 0
             users_dispatcher._wait_between_dispatch = 0
             all_dispatched_users_ramp_up = list(users_dispatcher)
             dispatch_iteration_durations_ramp_up = users_dispatcher.dispatch_iteration_durations[:]
 
             # Ramp-down
-            ts = time.perf_counter()
+            ts = time.process_time()
             users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=spawn_rate)
-            new_dispatch_ramp_down_duration = time.perf_counter() - ts
+            new_dispatch_ramp_down_duration = time.process_time() - ts
             assert len(users_dispatcher.dispatch_iteration_durations) == 0
             users_dispatcher._wait_between_dispatch = 0
             all_dispatched_users_ramp_down = list(users_dispatcher)
