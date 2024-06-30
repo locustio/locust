@@ -10,6 +10,7 @@ from locust.dispatch import UsersDispatcher
 from locust.runners import WorkerNode
 
 import argparse
+import gc
 import itertools
 import statistics
 import time
@@ -49,7 +50,7 @@ exec("USER_CLASSES = [" + ",".join(f"User{i}" for i in range(len(WEIGHTS))) + "]
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--full-benchmark", action="store_true")
-    parser.add_argument("-r", "--repeat", default=0, type=int)
+    parser.add_argument("-r", "--repeat", default=1, type=int)
     parser.add_argument("-s", "--save-output", action="store_true")
     args = parser.parse_args()
 
@@ -114,18 +115,24 @@ if __name__ == "__main__":
             instantiate_duration = time.process_time() - ts
 
             # Ramp-up
+            gc.disable()
             ts = time.process_time()
             users_dispatcher.new_dispatch(target_user_count=user_count, spawn_rate=spawn_rate)
             new_dispatch_ramp_up_duration = time.process_time() - ts
+            gc.enable()
+
             assert len(users_dispatcher.dispatch_iteration_durations) == 0
             users_dispatcher._wait_between_dispatch = 0
             all_dispatched_users_ramp_up = list(users_dispatcher)
             dispatch_iteration_durations_ramp_up = users_dispatcher.dispatch_iteration_durations[:]
 
             # Ramp-down
+            gc.disable()
             ts = time.process_time()
             users_dispatcher.new_dispatch(target_user_count=0, spawn_rate=spawn_rate)
             new_dispatch_ramp_down_duration = time.process_time() - ts
+            gc.enable()
+
             assert len(users_dispatcher.dispatch_iteration_durations) == 0
             users_dispatcher._wait_between_dispatch = 0
             all_dispatched_users_ramp_down = list(users_dispatcher)
