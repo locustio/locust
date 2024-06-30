@@ -9,6 +9,7 @@ from locust import User  # noqa: F401 It's used inside exec
 from locust.dispatch import UsersDispatcher
 from locust.runners import WorkerNode
 
+import argparse
 import itertools
 import statistics
 import time
@@ -60,12 +61,23 @@ exec("USER_CLASSES = [" + ",".join(f"User{i}" for i in range(len(WEIGHTS))) + "]
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--save-output", action="store_true")
+    parser.add_argument("-f", "--full-benchmark", action="store_true")
+    args = parser.parse_args()
+
     now = time.time()
 
     worker_count_cases = [10, 100, 1000]
     user_count_cases = [1000, 10_000, 100_000, 1_000_000]
     number_of_user_classes_cases = [1, 10, 100]
     spawn_rate_cases = [1, 100, 10_000]
+
+    if not args.full_benchmark:
+        worker_count_cases = [max(worker_count_cases)]
+        user_count_cases = [max(user_count_cases)]
+        number_of_user_classes_cases = [max(number_of_user_classes_cases)]
+        spawn_rate_cases = [max(spawn_rate_cases)]
 
     case_count = (
         len(worker_count_cases) * len(user_count_cases) * len(number_of_user_classes_cases) * len(spawn_rate_cases)
@@ -170,12 +182,11 @@ if __name__ == "__main__":
             ]
         )
         print()
-        print()
-        print()
         print(table)
 
-        with open(f"results-dispatch-benchmarks-{int(now)}.txt", "w") as file:
-            file.write(table.get_string())
+        if args.save_output:
+            with open(f"results-dispatch-benchmarks-{int(now)}.txt", "w") as file:
+                file.write(table.get_string())
 
-        with open(f"results-dispatch-benchmarks-{int(now)}.json", "w") as file:
-            file.write(table.get_json_string())
+            with open(f"results-dispatch-benchmarks-{int(now)}.json", "w") as file:
+                file.write(table.get_json_string())
