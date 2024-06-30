@@ -55,9 +55,10 @@ if __name__ == "__main__":
     now = time.time()
 
     worker_count_cases = [10, 100, 1000]
-    user_count_cases = [1000, 10_000, 100_000, 1_000_000]
-    number_of_user_classes_cases = [1, 10, 100, 1000]
+    user_count_cases = [10_000, 100_000, 1_000_000]
+    number_of_user_classes_cases = [1, 30, 1000]
     spawn_rate_cases = [100, 10_000]
+    fixed_count_cases = [False, True]  # [0% fixed_count, 50% fixed_count]
 
     if not args.full_benchmark:
         worker_count_cases = [max(worker_count_cases)]
@@ -66,16 +67,29 @@ if __name__ == "__main__":
         spawn_rate_cases = [max(spawn_rate_cases)]
 
     case_count = (
-        len(worker_count_cases) * len(user_count_cases) * len(number_of_user_classes_cases) * len(spawn_rate_cases)
+        len(worker_count_cases)
+        * len(user_count_cases)
+        * len(number_of_user_classes_cases)
+        * len(spawn_rate_cases)
+        * len(fixed_count_cases)
     )
 
     results = {}
 
     try:
-        for case_index, (worker_count, user_count, number_of_user_classes, spawn_rate) in enumerate(
-            itertools.product(worker_count_cases, user_count_cases, number_of_user_classes_cases, spawn_rate_cases)
+        for case_index, (worker_count, user_count, number_of_user_classes, spawn_rate, fixed_users) in enumerate(
+            itertools.product(
+                worker_count_cases, user_count_cases, number_of_user_classes_cases, spawn_rate_cases, fixed_count_cases
+            )
         ):
             workers = [WorkerNode(str(i)) for i in range(worker_count)]
+            if fixed_users:
+                sum_fixed_weight = 0
+                for j in range(0, number_of_user_classes, 2):
+                    sum_fixed_weight += USER_CLASSES[j].weight
+
+                for j in range(0, number_of_user_classes, 2):  # set fixed_weights for 50% of users
+                    USER_CLASSES[j].fixed_count = max(1, USER_CLASSES[j].weight // sum_fixed_weight)  # type: ignore # assigned .weight is int
 
             ts = time.process_time()
             users_dispatcher = UsersDispatcher(
@@ -101,6 +115,10 @@ if __name__ == "__main__":
             users_dispatcher._wait_between_dispatch = 0
             all_dispatched_users_ramp_down = list(users_dispatcher)
             dispatch_iteration_durations_ramp_down = users_dispatcher.dispatch_iteration_durations[:]
+
+            if fixed_users:
+                for j in range(0, number_of_user_classes, 2):
+                    USER_CLASSES[j].fixed_count = None
 
             cpu_ramp_up = "{:3.3f}/{:3.3f}/{:3.3f}".format(  # noqa: UP032
                 1000 * statistics.mean(dispatch_iteration_durations_ramp_up),
@@ -129,7 +147,10 @@ if __name__ == "__main__":
                 )
             )
 
-            results[(worker_count, user_count, number_of_user_classes, spawn_rate)] = (cpu_ramp_up, cpu_ramp_down)
+            results[(worker_count, user_count, number_of_user_classes, spawn_rate, fixed_users)] = (
+                cpu_ramp_up,
+                cpu_ramp_down,
+            )
 
     finally:
         table = PrettyTable()
@@ -138,6 +159,7 @@ if __name__ == "__main__":
             "Users",
             "User Classes",
             "Spawn Rate",
+            "Fixed Users",
             "Ramp-Up (avg/min/max) (ms)",
             "Ramp-Down (avg/min/max) (ms)",
         ]
@@ -145,6 +167,7 @@ if __name__ == "__main__":
         table.align["Users"] = "l"
         table.align["User Classes"] = "l"
         table.align["Spawn Rate"] = "l"
+        table.align["Fixed Users"] = "l"
         table.align["Ramp-Up (avg/min/max) (ms)"] = "c"
         table.align["Ramp-Down (avg/min/max) (ms)"] = "c"
         table.add_rows(
@@ -154,10 +177,11 @@ if __name__ == "__main__":
                     f"{user_count:,}",
                     number_of_user_classes,
                     f"{spawn_rate:,}",
+                    "50%" if fixed_users else "0%",
                     cpu_ramp_up,
                     cpu_ramp_down,
                 ]
-                for (worker_count, user_count, number_of_user_classes, spawn_rate), (
+                for (worker_count, user_count, number_of_user_classes, spawn_rate, fixed_users), (
                     cpu_ramp_up,
                     cpu_ramp_down,
                 ) in results.items()
