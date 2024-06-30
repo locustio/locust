@@ -5,7 +5,7 @@ for calculating the distribution of users on each worker. This benchmark is to b
 by people working on Locust's development.
 """
 
-from locust import User  # noqa: F401 It's used inside exec
+from locust import User
 from locust.dispatch import UsersDispatcher
 from locust.runners import WorkerNode
 
@@ -16,20 +16,9 @@ import time
 
 from prettytable import PrettyTable
 
-# fmt: off
-WEIGHTS = [
-     5, 55, 37,  2, 97, 41, 33, 19, 19, 34,
-    78, 76, 28, 62, 69,  5, 55, 37,  2, 97,
-    41, 33, 19, 19, 34, 78, 76, 28, 62, 69,
-    41, 33, 19, 19, 34, 78, 76, 28, 62, 69,
-    41, 33, 19, 19, 34, 78, 76, 28, 62, 69,
-     5, 55, 37,  2, 97, 41, 33, 19, 19, 34,
-    78, 76, 28, 62, 69,  5, 55, 37,  2, 97,
-    41, 33, 19, 19, 34, 78, 76, 28, 62, 69,
-    41, 33, 19, 19, 34, 78, 76, 28, 62, 69,
-    41, 33, 19, 19, 34, 78, 76, 28, 62, 69,
-]
-# fmt: on
+NUMBER_OF_USER_CLASSES: int = 1000
+USER_CLASSES: list[type[User]] = []
+WEIGHTS = list(range(1, NUMBER_OF_USER_CLASSES + 1))
 
 for i, x in enumerate(WEIGHTS):
     exec(f"class User{i}(User): weight = {x}")
@@ -44,8 +33,6 @@ for i, x in enumerate(WEIGHTS):
 # .
 # .
 # .
-# class User99(User):
-#     weight = 69
 
 exec("USER_CLASSES = [" + ",".join(f"User{i}" for i in range(len(WEIGHTS))) + "]")
 # Equivalent to:
@@ -56,7 +43,6 @@ exec("USER_CLASSES = [" + ",".join(f"User{i}" for i in range(len(WEIGHTS))) + "]
 #     .
 #     .
 #     .
-#     User99,
 # ]
 
 
@@ -70,8 +56,8 @@ if __name__ == "__main__":
 
     worker_count_cases = [10, 100, 1000]
     user_count_cases = [1000, 10_000, 100_000, 1_000_000]
-    number_of_user_classes_cases = [1, 10, 100]
-    spawn_rate_cases = [1, 100, 10_000]
+    number_of_user_classes_cases = [1, 10, 100, 1000]
+    spawn_rate_cases = [100, 10_000]
 
     if not args.full_benchmark:
         worker_count_cases = [max(worker_count_cases)]
@@ -89,16 +75,12 @@ if __name__ == "__main__":
         for case_index, (worker_count, user_count, number_of_user_classes, spawn_rate) in enumerate(
             itertools.product(worker_count_cases, user_count_cases, number_of_user_classes_cases, spawn_rate_cases)
         ):
-            if user_count / spawn_rate > 1000:
-                print(f"Skipping user_count = {user_count:,} - spawn_rate = {spawn_rate:,}")
-                continue
-
             workers = [WorkerNode(str(i)) for i in range(worker_count)]
 
             ts = time.process_time()
             users_dispatcher = UsersDispatcher(
                 worker_nodes=workers,
-                user_classes=USER_CLASSES[:number_of_user_classes],  # noqa: F821 (Undefined name `USER_CLASSES`) -> It's created inside "exec"
+                user_classes=USER_CLASSES[:number_of_user_classes],
             )
             instantiate_duration = time.process_time() - ts
 
