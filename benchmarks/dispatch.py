@@ -50,6 +50,7 @@ exec("USER_CLASSES = [" + ",".join(f"User{i}" for i in range(len(WEIGHTS))) + "]
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--full-benchmark", action="store_true")
+    parser.add_argument("-i", "--include-fixed-users", action="store_true")
     parser.add_argument("-r", "--repeat", default=1, type=int)
     parser.add_argument("-s", "--save-output", action="store_true")
     args = parser.parse_args()
@@ -60,7 +61,8 @@ if __name__ == "__main__":
     user_count_cases = [10_000, 100_000, 1_000_000]
     number_of_user_classes_cases = [1, 30, 1000]
     spawn_rate_cases = [100, 10_000]
-    fixed_count_cases = [False, True]  # [0% fixed_count, 50% fixed_count]
+    fixed_count_cases = [False, True] if args.include_fixed_users else [False]
+    # [0% fixed_count users, 50% fixed_count users] if args.mixed_user_types else [0% fixed_count users]
     repeat_cases = list(range(1, args.repeat + 1))
 
     if not args.full_benchmark:
@@ -191,6 +193,7 @@ if __name__ == "__main__":
         table.align["User Classes"] = "l"
         table.align["Spawn Rate"] = "l"
         table.align["Fixed Users"] = "l"
+        table.align["Iteration"] = "c"
         table.align["Ramp-Up (avg/min/max) (ms)"] = "c"
         table.align["Ramp-Down (avg/min/max) (ms)"] = "c"
         table.add_rows(
