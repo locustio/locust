@@ -18,15 +18,6 @@ if TYPE_CHECKING:
     from locust.runners import WorkerNode
 
 
-# To profile line-by-line, uncomment the code below (i.e. `import line_profiler ...`) and
-# place `@profile` on the functions/methods you wish to profile. Then, in the unit test you are
-# running, use `from locust.dispatch import profile; profile.print_stats()` at the end of the unit test.
-# Placing it in a `finally` block is recommended.
-# import line_profiler
-#
-# profile = line_profiler.LineProfiler()
-
-
 def _kl_generator(users: list[tuple[type[User], float]]) -> Iterator[str | None]:
     """Generator based on Kullback-Leibler divergence
 
