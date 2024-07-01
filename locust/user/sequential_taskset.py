@@ -1,6 +1,6 @@
 from locust.exception import LocustError
 
-import logging
+from itertools import cycle
 
 from .task import TaskSet, TaskSetMeta
 
@@ -26,8 +26,12 @@ class SequentialTaskSetMeta(TaskSetMeta):
                 # compared to methods declared with @task
                 if isinstance(value, list):
                     new_tasks.extend(value)
+                elif isinstance(value, dict):
+                    for task, weight in value.items():
+                        for _ in range(weight):
+                            new_tasks.append(task)
                 else:
-                    raise ValueError("On SequentialTaskSet the task attribute can only be set to a list")
+                    raise ValueError("The 'tasks' attribute can only be set to list or dict")
 
             if "locust_task_weight" in dir(value):
                 # method decorated with @task
@@ -52,13 +56,11 @@ class SequentialTaskSet(TaskSet, metaclass=SequentialTaskSetMeta):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._task_index = 0
+        self._task_cycle = cycle(self.tasks)
 
     def get_next_task(self):
         if not self.tasks:
             raise LocustError(
                 "No tasks defined. Use the @task decorator or set the 'tasks' attribute of the SequentialTaskSet"
             )
-        task = self.tasks[self._task_index % len(self.tasks)]
-        self._task_index += 1
-        return task
+        return next(self._task_cycle)
