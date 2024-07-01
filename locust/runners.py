@@ -49,6 +49,8 @@ from .stats import (
     StatsError,
     setup_distributed_stats_event_listeners,
 )
+from .util.directory import get_abspaths_in
+from .util.url import is_url
 
 if TYPE_CHECKING:
     from . import User
@@ -1039,31 +1041,43 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "locustfile":
                 logging.debug("Worker requested locust file")
                 assert self.environment.parsed_options
-                filename = self.environment.parsed_options.locustfile
+                locustfile_options = self.environment.parsed_options.locustfile.split(",")
+                locustfile_list = [f.strip() for f in locustfile_options if not os.path.isdir(f)]
+
+                for f in locustfile_options:
+                    if os.path.isdir(f):
+                        locustfile_list.extend(get_abspaths_in(f, extension=".py"))
+
                 try:
-                    with open(filename) as f:
-                        file_contents = f.read()
+                    locustfiles = []
+
+                    for filename in locustfile_list:
+                        if is_url(filename):
+                            locustfiles.append(filename)
+                        else:
+                            with open(filename) as f:
+                                filename = os.path.basename(filename)
+                                file_contents = f.read()
+
+                            locustfiles.append({"filename": filename, "contents": file_contents})
                 except Exception as e:
-                    logger.error(
-                        f"--locustfile must be a full path to a single locustfile for file distribution to work {e}"
-                    )
+                    error_message = "locustfile must be a full path to a single locustfile, a comma-separated list of .py files, or a URL for file distribution to work"
+                    logger.error(f"{error_message} {e}")
                     self.send_message(
                         "locustfile",
                         client_id=client_id,
-                        data={
-                            "error": f"locustfile must be a full path to a single locustfile for file distribution to work (was '{filename}')"
-                        },
+                        data={"error": f"{error_message} (was '{filename}')"},
                     )
                 else:
-                    if getattr(self, "_old_file_contents", file_contents) != file_contents:
+                    if hasattr(self, "_has_sent_locustfiles"):
                         logger.warning(
                             "Locustfile contents changed on disk after first worker requested locustfile, sending new content. If you make any major changes (like changing User class names) you need to restart master."
                         )
-                    self._old_file_contents = file_contents
+                    self._has_sent_locustfiles = True
                     self.send_message(
                         "locustfile",
                         client_id=client_id,
-                        data={"filename": os.path.basename(filename), "contents": file_contents},
+                        data={"locustfiles": locustfiles},
                     )
                 continue
             elif msg.type == "client_stopped":
