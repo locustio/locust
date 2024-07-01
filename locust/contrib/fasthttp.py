@@ -12,12 +12,11 @@ import socket
 import time
 import traceback
 from base64 import b64encode
-from collections.abc import Generator
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from json.decoder import JSONDecodeError
 from ssl import SSLError
-from typing import Any, Callable, cast
+from typing import TYPE_CHECKING, cast
 from urllib.parse import urlparse, urlunparse
 
 import gevent
@@ -31,6 +30,36 @@ from geventhttpclient.useragent import CompatRequest, CompatResponse, Connection
 
 # borrow requests's content-type header parsing
 from requests.utils import get_encoding_from_headers
+
+if TYPE_CHECKING:
+    import sys
+    from collections.abc import Callable, Generator
+    from typing import TypedDict
+
+    if sys.version_info >= (3, 11):
+        from typing import Unpack
+    else:
+        from typing_extensions import Unpack
+
+    class PostKwargs(TypedDict, total=False):
+        name: str | None
+        catch_response: bool
+        stream: bool
+        headers: dict | None
+        auth: tuple[str | bytes, str | bytes] | None
+        allow_redirects: bool
+        context: dict
+
+    class PutKwargs(PostKwargs, total=False):
+        json: dict | None
+
+    class PatchKwargs(PostKwargs, total=False):
+        json: dict | None
+
+    class RESTKwargs(PostKwargs, total=False):
+        data: str | dict | None
+        json: dict | None
+
 
 # Monkey patch geventhttpclient.useragent.CompatRequest so that Cookiejar works with Python >= 3.3
 # More info: https://github.com/requests/requests/pull/871
@@ -85,7 +114,7 @@ class FastHttpSession:
         client_pool: HTTPClientPool | None = None,
         ssl_context_factory: Callable | None = None,
         **kwargs,
-    ):
+    ) -> None:
         self.environment = environment
         self.base_url = base_url
         self.cookiejar = CookieJar()
@@ -117,14 +146,14 @@ class FastHttpSession:
             # store authentication header (we construct this by using _basic_auth_str() function from requests.auth)
             self.auth_header = _construct_basic_auth_str(parsed_url.username, parsed_url.password)
 
-    def _build_url(self, path):
+    def _build_url(self, path: str) -> str:
         """prepend url with hostname unless it's already an absolute URL"""
         if absolute_http_url_regexp.match(path):
             return path
         else:
             return f"{self.base_url}{path}"
 
-    def _send_request_safe_mode(self, method, url, **kwargs):
+    def _send_request_safe_mode(self, method: str, url: str, **kwargs):
         """
         Send an HTTP request, and catch any exception that might occur due to either
         connection problems, or invalid HTTP status codes
@@ -155,7 +184,7 @@ class FastHttpSession:
         catch_response: bool = False,
         stream: bool = False,
         headers: dict | None = None,
-        auth=None,
+        auth: tuple[str | bytes, str | bytes] | None = None,
         json: dict | None = None,
         allow_redirects: bool = True,
         context: dict = {},
@@ -264,31 +293,37 @@ class FastHttpSession:
             self.environment.events.request.fire(**request_meta)
             return response
 
-    def delete(self, url, **kwargs):
+    def delete(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | FastResponse:
         """Sends a DELETE request"""
         return self.request("DELETE", url, **kwargs)
 
-    def get(self, url, **kwargs):
+    def get(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | FastResponse:
         """Sends a GET request"""
         return self.request("GET", url, **kwargs)
 
-    def head(self, url, **kwargs):
+    def head(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | FastResponse:
         """Sends a HEAD request"""
         return self.request("HEAD", url, **kwargs)
 
-    def options(self, url, **kwargs):
+    def options(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | FastResponse:
         """Sends a OPTIONS request"""
         return self.request("OPTIONS", url, **kwargs)
 
-    def patch(self, url, data=None, **kwargs):
+    def patch(
+        self, url: str, data: str | dict | None = None, **kwargs: Unpack[PatchKwargs]
+    ) -> ResponseContextManager | FastResponse:
         """Sends a PATCH request"""
         return self.request("PATCH", url, data=data, **kwargs)
 
-    def post(self, url, data=None, json=None, **kwargs):
+    def post(
+        self, url: str, data: str | dict | None = None, json: dict | None = None, **kwargs: Unpack[PostKwargs]
+    ) -> ResponseContextManager | FastResponse:
         """Sends a POST request"""
         return self.request("POST", url, data=data, json=json, **kwargs)
 
-    def put(self, url, data=None, **kwargs):
+    def put(
+        self, url: str, data: str | dict | None = None, **kwargs: Unpack[PutKwargs]
+    ) -> ResponseContextManager | FastResponse:
         """Sends a PUT request"""
         return self.request("PUT", url, data=data, **kwargs)
 
