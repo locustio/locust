@@ -367,35 +367,24 @@ class UsersDispatcher(Iterator):
         return users_on_workers, user_gen, worker_gen, active_users
 
     def _user_gen(self) -> Iterator[str | None]:
-        fixed_users = {u.__name__: u for u in self._user_classes if u.fixed_count}
+        weighted_users_gen = _kl_generator((u.__name__, u.weight) for u in self._user_classes if not u.fixed_count)
 
-        fixed_users_gen = _kl_generator([(u.__name__, u.fixed_count) for u in fixed_users.values()])
-        weighted_users_gen = _kl_generator([(u.__name__, u.weight) for u in self._user_classes if not u.fixed_count])
-
-        # Spawn users
         while True:
-            if self._try_dispatch_fixed:
+            if self._try_dispatch_fixed:  # Fixed_count users are spawned before weight users.
+                # Some peoples treat this implementation detail as a feature.
                 self._try_dispatch_fixed = False
-                current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
-                spawned_classes: set[str] = set()
-                while len(spawned_classes) != len(fixed_users):
-                    user_name: str | None = next(fixed_users_gen)
-                    if not user_name:
-                        break
-
-                    if current_fixed_users_count[user_name] < fixed_users[user_name].fixed_count:
-                        current_fixed_users_count[user_name] += 1
-                        yield user_name
-
-                        # 'self._try_dispatch_fixed' was changed outhere,  we have to recalculate current count
-                        if self._try_dispatch_fixed:
-                            current_fixed_users_count = {u: self._get_user_current_count(u) for u in fixed_users}
-                            spawned_classes.clear()
-                            self._try_dispatch_fixed = False
-                    else:
-                        spawned_classes.add(user_name)
-
-            yield next(weighted_users_gen)
+                fixed_users_missing = [
+                    (u.__name__, miss)
+                    for u in self._user_classes
+                    if u.fixed_count and (miss := u.fixed_count - self._get_user_current_count(u.__name__)) > 0
+                ]
+                total_miss = sum(miss for _, miss in fixed_users_missing)
+                fixed_users_gen = _kl_generator(fixed_users_missing)  # type: ignore[arg-type]
+                # https://mypy.readthedocs.io/en/stable/common_issues.html#variance
+                for _ in range(total_miss):
+                    yield next(fixed_users_gen)
+            else:
+                yield next(weighted_users_gen)
 
     @staticmethod
     def _fast_users_on_workers_copy(users_on_workers: dict[str, dict[str, int]]) -> dict[str, dict[str, int]]:
