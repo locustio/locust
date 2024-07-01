@@ -5,6 +5,7 @@ from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleT
 import logging
 import random
 import traceback
+from itertools import accumulate
 from collections import deque
 from time import time
 from typing import (
@@ -32,7 +33,7 @@ LOCUST_STATE_RUNNING, LOCUST_STATE_WAITING, LOCUST_STATE_STOPPING = ["running", 
 
 @runtime_checkable
 class TaskHolder(Protocol[TaskT]):
-    tasks: list[TaskT]
+    tasks: dict[TaskT, int | float]
 
 
 @overload
@@ -121,7 +122,8 @@ def tag(*tags: str) -> Callable[[TaskT], TaskT]:
 
     def decorator_func(decorated):
         if hasattr(decorated, "tasks"):
-            decorated.tasks = list(map(tag(*tags), decorated.tasks))
+            tagged_tasks = map(tag(*tags), decorated.tasks.keys())
+            decorated.tasks = {task: weight for task, weight in zip(tagged_tasks, decorated.tasks.values())}
         else:
             if "locust_tag_set" not in decorated.__dict__:
                 decorated.locust_tag_set = set()
@@ -134,33 +136,33 @@ def tag(*tags: str) -> Callable[[TaskT], TaskT]:
     return decorator_func
 
 
-def get_tasks_from_base_classes(bases, class_dict):
+def get_tasks_from_base_classes(bases, class_dict) -> dict[Callable | TaskSet, int | float]:
     """
     Function used by both TaskSetMeta and UserMeta for collecting all declared tasks
     on the TaskSet/User class and all its base classes
     """
-    new_tasks = []
+    new_tasks = {}
     for base in bases:
         if hasattr(base, "tasks") and base.tasks:
-            new_tasks += base.tasks
+            new_tasks.update(base.tasks)
 
     if "tasks" in class_dict and class_dict["tasks"] is not None:
         tasks = class_dict["tasks"]
         if isinstance(tasks, dict):
-            tasks = tasks.items()
-
-        for task in tasks:
-            if isinstance(task, tuple):
-                task, count = task
-                for _ in range(count):
-                    new_tasks.append(task)
-            else:
-                new_tasks.append(task)
+            new_tasks.update(tasks)
+        elif isinstance(tasks, list):
+            for task in tasks:
+                if isinstance(task, tuple):
+                    task, count = task
+                    new_tasks[task] = count
+                else:
+                    new_tasks[task] = 1
+        else:
+            raise ValueError("The 'tasks' attribute can only be set to list or dict")
 
     for item in class_dict.values():
         if "locust_task_weight" in dir(item):
-            for i in range(item.locust_task_weight):
-                new_tasks.append(item)
+            new_tasks[item] = item.locust_task_weight
 
     return new_tasks
 
@@ -169,25 +171,17 @@ def filter_tasks_by_tags(
     task_holder: type[TaskHolder],
     tags: set[str] | None = None,
     exclude_tags: set[str] | None = None,
-    checked: dict[TaskT, bool] | None = None,
 ):
     """
     Function used by Environment to recursively remove any tasks/TaskSets from a TaskSet/User that
     shouldn't be executed according to the tag options
     """
 
-    new_tasks = []
-    if checked is None:
-        checked = {}
-    for task in task_holder.tasks:
-        if task in checked:
-            if checked[task]:
-                new_tasks.append(task)
-            continue
-
+    new_tasks = {}
+    for task, weight in task_holder.tasks.items():
         passing = True
-        if hasattr(task, "tasks"):
-            filter_tasks_by_tags(task, tags, exclude_tags, checked)
+        if hasattr(task, "tasks"):  # task is TaskSet
+            filter_tasks_by_tags(task, tags, exclude_tags)
             passing = len(task.tasks) > 0
         else:
             if tags is not None:
@@ -196,8 +190,7 @@ def filter_tasks_by_tags(
                 passing &= "locust_tag_set" not in dir(task) or len(task.locust_tag_set & exclude_tags) == 0
 
         if passing:
-            new_tasks.append(task)
-        checked[task] = passing
+            new_tasks[task] = weight
 
     task_holder.tasks = new_tasks
     if not new_tasks:
@@ -234,7 +227,7 @@ class TaskSet(metaclass=TaskSetMeta):
     will then continue in the first TaskSet).
     """
 
-    tasks: list[TaskSet | Callable] = []
+    tasks: dict[Callable | TaskSet, int | float] = dict()
     """
     Collection of python callables and/or TaskSet classes that the User(s) will run.
 
@@ -280,12 +273,26 @@ class TaskSet(metaclass=TaskSetMeta):
         self._task_queue: deque = deque()
         self._time_start = time()
 
+        self.task_list = list(self.tasks.keys())
+        self.task_cum_weights = list(accumulate(self.tasks.values()))
+
         if isinstance(parent, TaskSet):
             self._user = parent.user
+            self._isdefaulttaskset = False
         else:
             self._user = parent
+            self._isdefaulttaskset = True
 
         self._parent = parent
+        s = self.user if isinstance(self._parent, TaskSet) else self
+        if not s.tasks:
+            if getattr(s, "task", None):
+                extra_message = ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?"
+            else:
+                extra_message = "."
+            raise Exception(
+                f"No tasks defined on {s.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute"
+            )
 
         # if this class doesn't have a min_wait, max_wait or wait_function defined, copy it from Locust
         if not self.min_wait:
@@ -373,16 +380,23 @@ class TaskSet(metaclass=TaskSetMeta):
         self.execute_task(self._task_queue.popleft())
 
     def execute_task(self, task):
-        # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
-        if hasattr(task, "__self__") and task.__self__ == self:
-            # task is a bound method on self
-            task()
-        elif hasattr(task, "tasks") and issubclass(task, TaskSet):
+        # Check if this is a nested TaskSet or User's internal
+        if not self._isdefaulttaskset:  # Nested case
+            s = self
+        else:  # We are in User
+            # check if the function is a method bound to the current locust, and if so, don't pass self as first argument
+            if hasattr(task, "__self__") and task.__self__ == self:
+                # task is a bound method on self
+                task()
+                return
+            s = self.user
+
+        if hasattr(task, "tasks") and issubclass(task, TaskSet):
             # task is another (nested) TaskSet class
-            task(self).run()
+            task(s).run()
         else:
             # task is a function
-            task(self)
+            task(s)
 
     def schedule_task(self, task_callable, first=False):
         """
@@ -397,15 +411,9 @@ class TaskSet(metaclass=TaskSetMeta):
             self._task_queue.append(task_callable)
 
     def get_next_task(self):
-        if not self.tasks:
-            if getattr(self, "task", None):
-                extra_message = ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?"
-            else:
-                extra_message = "."
-            raise Exception(
-                f"No tasks defined on {self.__class__.__name__}{extra_message} use the @task decorator or set the 'tasks' attribute of the TaskSet"
-            )
-        return random.choice(self.tasks)
+        return random.choices(self.user.task_list, cum_weights=self.user.task_cum_weights) if self._isdefaulttaskset\
+            else random.choices(self.task_list, cum_weights=self.task_cum_weights)
+
 
     def wait_time(self):
         """
@@ -462,29 +470,3 @@ class TaskSet(metaclass=TaskSetMeta):
         Shortcut to the client :py:attr:`client <locust.User.client>` attribute of this TaskSet's :py:class:`User <locust.User>`
         """
         return self.user.client
-
-
-class DefaultTaskSet(TaskSet):
-    """
-    Default root TaskSet that executes tasks in User.tasks.
-    It executes tasks declared directly on the Locust with the user instance as the task argument.
-    """
-
-    def get_next_task(self):
-        if not self.user.tasks:
-            if getattr(self.user, "task", None):
-                extra_message = ", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?"
-            else:
-                extra_message = "."
-            raise Exception(
-                f"No tasks defined on {self.user.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
-            )
-        return random.choice(self.user.tasks)
-
-    def execute_task(self, task):
-        if hasattr(task, "tasks") and issubclass(task, TaskSet):
-            # task is  (nested) TaskSet class
-            task(self.user).run()
-        else:
-            # task is a function
-            task(self.user)

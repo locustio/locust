@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from itertools import accumulate
+
 from locust.clients import HttpSession
 from locust.exception import LocustError, StopUser
 from locust.user.task import (
     LOCUST_STATE_RUNNING,
     LOCUST_STATE_STOPPING,
     LOCUST_STATE_WAITING,
-    DefaultTaskSet,
     TaskSet,
     get_tasks_from_base_classes,
 )
@@ -88,7 +89,7 @@ class User(metaclass=UserMeta):
     Method that returns the time between the execution of locust tasks in milliseconds
     """
 
-    tasks: list[TaskSet | Callable] = []
+    tasks: dict[TaskSet | Callable, int | float] = {}
     """
     Collection of python callables and/or TaskSet classes that the Locust user(s) will run.
 
@@ -120,6 +121,8 @@ class User(metaclass=UserMeta):
         super().__init__()
         self.environment = environment
         """A reference to the :py:class:`Environment <locust.env.Environment>` in which this user is running"""
+        self.task_list = list(self.tasks.keys())
+        self.task_cum_weights = list(accumulate(self.tasks.values()))
         self._state: str | None = None
         self._greenlet: greenlet.Greenlet | None = None
         self._group: Group
@@ -141,7 +144,7 @@ class User(metaclass=UserMeta):
     @final
     def run(self):
         self._state = LOCUST_STATE_RUNNING
-        self._taskset_instance = DefaultTaskSet(self)
+        self._taskset_instance = TaskSet(self)
         try:
             # run the TaskSet on_start method, if it has one
             try:
