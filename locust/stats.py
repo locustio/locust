@@ -9,25 +9,12 @@ import signal
 import time
 from abc import abstractmethod
 from collections import OrderedDict, defaultdict, namedtuple
-from collections import (
-    OrderedDict as OrderedDictType,
-)
 from collections.abc import Iterable
 from copy import copy
 from html import escape
 from itertools import chain
-from tempfile import NamedTemporaryFile
 from types import FrameType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    NoReturn,
-    Protocol,
-    TypedDict,
-    TypeVar,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Callable, NoReturn, Protocol, TypedDict, TypeVar, cast
 
 import gevent
 
@@ -319,12 +306,12 @@ class StatsEntry:
         A {response_time => count} dict that holds the response time distribution of all
         the requests.
 
-        The keys (the response time in ms) are rounded to store 1, 2, ... 9, 10, 20. .. 90,
-        100, 200 .. 900, 1000, 2000 ... 9000, in order to save memory.
+        The keys (the response time in ms) are rounded to store 1, 2, ... 98, 99, 100, 110, 120, ... 980, 990, 1000,
+        1100, 1200, ... 9800, 9900, 10_000, 11_000, 12_000 ... in order to save memory.
 
         This dict is used to calculate the median and percentile response times.
         """
-        self.response_times_cache: OrderedDictType[int, CachedResponseTimes] | None = None
+        self.response_times_cache: OrderedDict[int, CachedResponseTimes] | None = None
         """
         If use_response_times_cache is set to True, this will be a {timestamp => CachedResponseTimes()}
         OrderedDict that holds a copy of the response_times dict for each of the last 20 seconds.
