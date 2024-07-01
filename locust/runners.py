@@ -15,19 +15,9 @@ import traceback
 from abc import abstractmethod
 from collections import defaultdict
 from collections.abc import Iterator, MutableMapping, ValuesView
-from operator import (
-    itemgetter,
-    methodcaller,
-)
+from operator import itemgetter, methodcaller
 from types import TracebackType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    NoReturn,
-    TypedDict,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Callable, NoReturn, TypedDict, cast
 from uuid import uuid4
 
 import gevent
@@ -40,15 +30,8 @@ from . import argument_parser
 from .dispatch import UsersDispatcher
 from .exception import RPCError, RPCReceiveError, RPCSendError
 from .log import get_logs, greenlet_exception_logger
-from .rpc import (
-    Message,
-    rpc,
-)
-from .stats import (
-    RequestStats,
-    StatsError,
-    setup_distributed_stats_event_listeners,
-)
+from .rpc import Message, rpc
+from .stats import RequestStats, StatsError, setup_distributed_stats_event_listeners
 
 if TYPE_CHECKING:
     from . import User
@@ -106,7 +89,7 @@ class Runner:
         self.spawning_greenlet: gevent.Greenlet | None = None
         self.shape_greenlet: gevent.Greenlet | None = None
         self.shape_last_tick: tuple[int, float] | tuple[int, float, list[type[User]] | None] | None = None
-        self.current_cpu_usage: int = 0
+        self.current_cpu_usage: float = 0.0
         self.cpu_warning_emitted: bool = False
         self.worker_cpu_warning_emitted: bool = False
         self.current_memory_usage: int = 0
@@ -308,6 +291,10 @@ class Runner:
                         f"CPU usage above {CPU_WARNING_THRESHOLD}%! This may constrain your throughput and may even give inconsistent response time measurements! See https://docs.locust.io/en/stable/running-distributed.html for how to distribute the load over multiple CPU cores or machines"
                     )
                     self.cpu_warning_emitted = True
+
+            self.environment.events.usage_monitor.fire(
+                environment=self.environment, cpu_usage=self.current_cpu_usage, memory_usage=self.current_memory_usage
+            )
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
     @abstractmethod
@@ -1102,6 +1089,7 @@ class MasterRunner(DistributedRunner):
                         )
                     if "current_memory_usage" in msg.data:
                         c.memory_usage = msg.data["current_memory_usage"]
+                    self.environment.events.heartbeat_sent.fire(client_id=msg.node_id, timestamp=time.time())
                     self.server.send_to_client(Message("heartbeat", None, msg.node_id))
                 else:
                     logging.debug(f"Got heartbeat message from unknown worker {msg.node_id}")
@@ -1399,6 +1387,9 @@ class WorkerRunner(DistributedRunner):
                 self.reset_connection()
             elif msg.type == "heartbeat":
                 self.last_heartbeat_timestamp = time.time()
+                self.environment.events.heartbeat_received.fire(
+                    client_id=msg.node_id, timestamp=self.last_heartbeat_timestamp
+                )
             elif msg.type == "update_user_class":
                 self.environment.update_user_class(msg.data)
             elif msg.type == "spawning_complete":
