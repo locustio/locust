@@ -8,6 +8,7 @@ export interface ISwarmStat {
   currentFailPerSec: number;
   currentRps: number;
   maxResponseTime: number;
+  overThresholdCount: number;
   medianResponseTime: number;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   minResponseTime: number;

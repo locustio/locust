@@ -3,4 +3,5 @@ export interface ITableStructure {
   title: string;
   round?: number;
   markdown?: boolean;
+  hidden?: boolean;
 }

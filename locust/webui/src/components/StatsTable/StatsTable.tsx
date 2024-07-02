@@ -1,5 +1,4 @@
 import { connect } from 'react-redux';
-
 import Table from 'components/Table/Table';
 import ViewColumnSelector from 'components/ViewColumnSelector/ViewColumnSelector';
 import { swarmTemplateArgs } from 'constants/swarm';
@@ -24,6 +23,7 @@ const tableStructure = [
   { key: 'avgResponseTime', title: 'Average (ms)', round: 2 },
   { key: 'minResponseTime', title: 'Min (ms)' },
   { key: 'maxResponseTime', title: 'Max (ms)' },
+  { key: 'overThresholdPercentages', title: 'Requests Over Threshold (%)' },
   { key: 'avgContentLength', title: 'Average size (bytes)', round: 2 },
   { key: 'currentRps', title: 'Current RPS', round: 2 },
   { key: 'currentFailPerSec', title: 'Current Failures/s', round: 2 },
@@ -31,7 +31,7 @@ const tableStructure = [
 
 export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
   const { selectedColumns, addColumn, removeColumn, filteredStructure } =
-    useSelectViewColumns(tableStructure);
+    useSelectViewColumns(tableStructure, stats);
 
   return (
     <>

@@ -94,7 +94,7 @@ class HttpSession(requests.Session):
         finally:
             self.request_name = None
 
-    def request(self, method, url, name=None, catch_response=False, context={}, **kwargs):
+    def request(self, method, url, name=None, catch_response=False, context={}, threshold=None, **kwargs):
         """
         Constructs and sends a :py:class:`requests.Request`.
         Returns :py:class:`requests.Response` object.
@@ -121,11 +121,14 @@ class HttpSession(requests.Session):
         :param stream: (optional) whether to immediately download the response content. Defaults to ``False``.
         :param verify: (optional) if ``True``, the SSL cert will be verified. A CA_BUNDLE path can also be provided.
         :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
+        :param threshold (optional) if set, the request will be marked as a failure if the response time exceeds this value (in ms).
         """
 
         # if group name has been set and no name parameter has been passed in; set the name parameter to group_name
         if self.request_name and not name:
             name = self.request_name
+        
+        print(f"Threshold: {threshold}")
 
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
@@ -154,6 +157,7 @@ class HttpSession(requests.Session):
             "exception": None,
             "start_time": start_time,
             "url": url,
+            "threshold": threshold,
         }
 
         # get the length of the content, but if the argument stream is set to True, we take

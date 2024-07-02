@@ -111,6 +111,7 @@ class Runner:
         self.current_memory_usage: int = 0
         self.greenlet.spawn(self.monitor_cpu_and_memory).link_exception(greenlet_exception_handler)
         self.exceptions: dict[int, ExceptionDict] = {}
+        self.aggregated_threshold: int = 0
         # Because of the way the ramp-up/ramp-down is implemented, target_user_classes_count
         # is only updated at the end of the ramp-up/ramp-down.
         # See https://github.com/locustio/locust/issues/1883#issuecomment-919239824 for context.
@@ -122,8 +123,8 @@ class Runner:
         self._users_dispatcher: UsersDispatcher | None = None
 
         # set up event listeners for recording requests
-        def on_request(request_type, name, response_time, response_length, exception=None, **_kwargs):
-            self.stats.log_request(request_type, name, response_time, response_length)
+        def on_request(request_type, name, response_time, response_length, exception=None, threshold=None, **_kwargs):
+            self.stats.log_request(request_type, name, response_time, response_length, threshold)
             if exception:
                 self.stats.log_error(request_type, name, exception)
 

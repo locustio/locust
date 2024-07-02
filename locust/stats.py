@@ -229,10 +229,14 @@ class RequestStats:
     @property
     def start_time(self):
         return self.total.start_time
+    
+    @property
+    def threshold(self):
+        return self.total.threshold
 
-    def log_request(self, method: str, name: str, response_time: int, content_length: int) -> None:
-        self.total.log(response_time, content_length)
-        self.entries[(name, method)].log(response_time, content_length)
+    def log_request(self, method: str, name: str, response_time: int, content_length: int, threshold: int | None = None) -> None:
+        self.total.log(response_time, content_length, None)  # Modify this line
+        self.entries[(name, method)].log(response_time, content_length, threshold)  # Modify this line
 
     def log_error(self, method: str, name: str, error: Exception | str | None) -> None:
         self.total.log_error(error)
@@ -334,6 +338,8 @@ class StatsEntry:
         self.start_time: float = 0.0
         """ Time of the first request for this entry """
         self.last_request_timestamp: float | None = None
+        """ Maximum response time that is over the threshold"""
+        self.threshold: int | None = None
         """ Time of the last request for this entry """
         self.reset()
 
@@ -350,11 +356,14 @@ class StatsEntry:
         self.num_reqs_per_sec = defaultdict(int)
         self.num_fail_per_sec = defaultdict(int)
         self.total_content_length = 0
+        self.threshold = None
+        self.over_threshold_count = None
+        self.over_threshold_percentages = None
         if self.use_response_times_cache:
             self.response_times_cache = OrderedDict()
             self._cache_response_times(int(time.time()))
 
-    def log(self, response_time: int, content_length: int) -> None:
+    def log(self, response_time: int, content_length: int, threshold: int | None) -> None:
         # get the time
         current_time = time.time()
         t = int(current_time)
@@ -364,11 +373,30 @@ class StatsEntry:
             self._cache_response_times(t - 1)
 
         self.num_requests += 1
+        if threshold:
+            self.threshold = threshold
+            self._log_over_threshold(response_time)
+            self._log_over_threshold_percentages()
+
         self._log_time_of_request(current_time)
         self._log_response_time(response_time)
 
         # increase total content-length
         self.total_content_length += content_length
+    
+    def _log_over_threshold(self, response_time: int) -> None:
+        if response_time > self.threshold:
+            if self.over_threshold_count is None:
+                self.over_threshold_count = 0
+            self.over_threshold_count += 1
+
+    def _log_over_threshold_percentages(self) -> None:
+        if self.over_threshold_count is None or self.num_requests == 0:
+            self.over_threshold_percentages = 0
+            return
+        print(f'over_threshold_count: {self.over_threshold_count} num_requests: {self.num_requests}' )
+        print(self)
+        self.over_threshold_percentages = round(self.over_threshold_count / self.num_requests, 2) * 100
 
     def _log_time_of_request(self, current_time: float) -> None:
         t = int(current_time)
@@ -694,6 +722,9 @@ class StatsEntry:
             "current_rps": self.current_rps,
             "current_fail_per_sec": self.current_fail_per_sec,
             "median_response_time": self.median_response_time,
+            "threshold": self.threshold,
+            "over_threshold_count": self.over_threshold_count,
+            "over_threshold_percentages": self.over_threshold_percentages,
             **response_time_percentiles,
             "avg_content_length": self.avg_content_length,
         }
