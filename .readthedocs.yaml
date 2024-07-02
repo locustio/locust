@@ -5,12 +5,12 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
+  jobs:
+    post_create_environment:
+      - python -m pip install poetry
+      - python -m poetry self add "poetry-dynamic-versioning[plugin]"
+    post_install:
+      - SKIP_PRE_BUILD=true VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with docs
 
 sphinx:
   configuration: docs/conf.py
-
-python:
-  install:
-    - method: pip
-      path: .
-    - requirements: docs/requirements.txt
