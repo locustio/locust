@@ -13,7 +13,6 @@ import signal
 import sys
 import time
 import traceback
-import warnings
 
 import gevent
 
@@ -319,10 +318,11 @@ def main():
         else:
             names |= set(options.run_users) & set(user_classes.keys())
     if options.user_classes:
-        warnings.warn(
-            "Specifying users at the end of the command is deprecated. Use --run-users parameter instead",
-            DeprecationWarning,
-        )
+        # TODO deprecate in future release
+        # warnings.warn(
+        #    "Specifying users at the end of the command is deprecated. Use --run-users parameter instead",
+        #     DeprecationWarning,
+        # )
         if missing := set(options.user_classes) - set(user_classes.keys()):
             logger.error(f"Unknown User(s): {', '.join(missing)}\n")
             sys.exit(1)
