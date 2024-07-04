@@ -153,6 +153,14 @@ authentication to the app should be granted.
 A full example can be seen `in the auth example <https://github.com/locustio/locust/tree/master/examples/web_ui_auth.py>`_.
 
 
+Exporting Stats to InfluxDB
+===========================
+
+You may wish to have more contorl over how the stats are aggregated and displayed. With the `--exporter` flag, Locust will
+export the stats to InfluxDB. Simply set the environment variables `INFLUXDB_URL`, `INFLUXDB_URL`, and `INFLUXDB_ORG` for your
+InfluxDB instance. For more on InfluxDB, see their `docs <https://docs.influxdata.com/influxdb/v2/>`.
+
+
 Run a background greenlet
 =========================
 
