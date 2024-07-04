@@ -61,7 +61,9 @@ class EventHook:
 
         Example usage (in a task):
 
-            with self.environment.events.request.measure("myrequestType", "myRequestName") as request_meta:
+        .. code-block:: python
+
+            with self.environment.events.request.measure("requestType", "requestName") as request_meta:
                 # do the stuff you want to measure
 
         You can optionally add/overwrite entries in the request_meta dict and they will be passed to the request event.
@@ -231,6 +233,38 @@ class Events:
     cpu_warning: EventHook
     """
     Fired when the CPU usage exceeds runners.CPU_WARNING_THRESHOLD (90% by default)
+    """
+
+    heartbeat_sent: EventHook
+    """
+    Fired when a heartbeat is sent by master to a worker.
+
+    Event arguments:
+
+    :param client_id: worker client id
+    :param timestamp: time in seconds since the epoch (float) when the event occured
+    """
+
+    heartbeat_received: EventHook
+    """
+    Fired when a heartbeat is received by a worker from master.
+
+    Event arguments:
+
+    :param client_id: worker client id
+    :param timestamp: time in seconds since the epoch (float) when the event occured
+    """
+
+    usage_monitor: EventHook
+    """
+    Fired every runners.CPU_MONITOR_INTERVAL (5.0 seconds by default) with information about
+    current CPU and memory usage.
+
+    Event arguments:
+
+    :param environment: locust environment
+    :param cpu_usage: current CPU usage in percent
+    :param memory_usage: current memory usage (RSS) in bytes
     """
 
     def __init__(self):

@@ -12,7 +12,8 @@ if os.getenv("LOCUST_PLAYWRIGHT", None):
 
 from gevent import monkey
 
-monkey.patch_all()
+if not os.getenv("LOCUST_SKIP_MONKEY_PATCH", None):
+    monkey.patch_all()
 
 from ._version import version as __version__
 from .contrib.fasthttp import FastHttpUser

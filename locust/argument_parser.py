@@ -241,10 +241,18 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
             tempclient.send(Message("locustfile", None, client_id))
             gevent.sleep(1)
 
+    def log_warning():
+        gevent.sleep(10)
+        while not got_reply:
+            sys.stderr.write("Waiting to connect to master to receive locustfile...\n")
+            gevent.sleep(60)
+
     def wait_for_reply():
         return tempclient.recv()
 
     gevent.spawn(ask_for_locustfile)
+    gevent.spawn(log_warning)
+
     try:
         # wait same time as for client_ready ack. not that it is really relevant...
         msg = gevent.spawn(wait_for_reply).get(timeout=runners.CONNECT_TIMEOUT * runners.CONNECT_RETRY_COUNT)

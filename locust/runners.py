@@ -15,19 +15,9 @@ import traceback
 from abc import abstractmethod
 from collections import defaultdict
 from collections.abc import Iterator, MutableMapping, ValuesView
-from operator import (
-    itemgetter,
-    methodcaller,
-)
+from operator import itemgetter, methodcaller
 from types import TracebackType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    NoReturn,
-    TypedDict,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Callable, NoReturn, TypedDict, cast
 from uuid import uuid4
 
 import gevent
@@ -39,16 +29,9 @@ from gevent.pool import Group
 from . import argument_parser
 from .dispatch import UsersDispatcher
 from .exception import RPCError, RPCReceiveError, RPCSendError
-from .log import greenlet_exception_logger
-from .rpc import (
-    Message,
-    rpc,
-)
-from .stats import (
-    RequestStats,
-    StatsError,
-    setup_distributed_stats_event_listeners,
-)
+from .log import get_logs, greenlet_exception_logger
+from .rpc import Message, rpc
+from .stats import RequestStats, StatsError, setup_distributed_stats_event_listeners
 
 if TYPE_CHECKING:
     from . import User
@@ -66,6 +49,7 @@ STATE_INIT, STATE_SPAWNING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPING, STATE_
     "missing",
 ]
 WORKER_REPORT_INTERVAL = 3.0
+WORKER_LOG_REPORT_INTERVAL = 10
 CPU_MONITOR_INTERVAL = 5.0
 CPU_WARNING_THRESHOLD = 90
 HEARTBEAT_INTERVAL = 1
@@ -105,7 +89,7 @@ class Runner:
         self.spawning_greenlet: gevent.Greenlet | None = None
         self.shape_greenlet: gevent.Greenlet | None = None
         self.shape_last_tick: tuple[int, float] | tuple[int, float, list[type[User]] | None] | None = None
-        self.current_cpu_usage: int = 0
+        self.current_cpu_usage: float = 0.0
         self.cpu_warning_emitted: bool = False
         self.worker_cpu_warning_emitted: bool = False
         self.current_memory_usage: int = 0
@@ -308,6 +292,10 @@ class Runner:
                         f"CPU usage above {CPU_WARNING_THRESHOLD}%! This may constrain your throughput and may even give inconsistent response time measurements! See https://docs.locust.io/en/stable/running-distributed.html for how to distribute the load over multiple CPU cores or machines"
                     )
                     self.cpu_warning_emitted = True
+
+            self.environment.events.usage_monitor.fire(
+                environment=self.environment, cpu_usage=self.current_cpu_usage, memory_usage=self.current_memory_usage
+            )
             gevent.sleep(CPU_MONITOR_INTERVAL)
 
     @abstractmethod
@@ -1102,6 +1090,7 @@ class MasterRunner(DistributedRunner):
                         )
                     if "current_memory_usage" in msg.data:
                         c.memory_usage = msg.data["current_memory_usage"]
+                    self.environment.events.heartbeat_sent.fire(client_id=msg.node_id, timestamp=time.time())
                     self.server.send_to_client(Message("heartbeat", None, msg.node_id))
                 else:
                     logging.debug(f"Got heartbeat message from unknown worker {msg.node_id}")
@@ -1117,6 +1106,8 @@ class MasterRunner(DistributedRunner):
                 # a worker finished spawning (this happens multiple times during rampup)
                 self.clients[msg.node_id].state = STATE_RUNNING
                 self.clients[msg.node_id].user_classes_count = msg.data["user_classes_count"]
+            elif msg.type == "logs":
+                self.environment.update_worker_logs(msg.data)
             elif msg.type == "quit":
                 if msg.node_id in self.clients:
                     client = self.clients[msg.node_id]
@@ -1213,6 +1204,7 @@ class WorkerRunner(DistributedRunner):
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.master_host = master_host
         self.master_port = master_port
+        self.logs: list[str] = []
         self.worker_cpu_warning_emitted = False
         self._users_dispatcher: UsersDispatcher | None = None
         self.client = rpc.Client(master_host, master_port, self.client_id)
@@ -1221,6 +1213,7 @@ class WorkerRunner(DistributedRunner):
         self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.heartbeat_timeout_checker).link_exception(greenlet_exception_handler)
         self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
+        self.greenlet.spawn(self.logs_reporter).link_exception(greenlet_exception_handler)
 
         # register listener that adds the current number of spawned users to the report that is sent to the master node
         def on_report_to_master(client_id: str, data: dict[str, Any]):
@@ -1395,6 +1388,9 @@ class WorkerRunner(DistributedRunner):
                 self.reset_connection()
             elif msg.type == "heartbeat":
                 self.last_heartbeat_timestamp = time.time()
+                self.environment.events.heartbeat_received.fire(
+                    client_id=msg.node_id, timestamp=self.last_heartbeat_timestamp
+                )
             elif msg.type == "update_user_class":
                 self.environment.update_user_class(msg.data)
             elif msg.type == "spawning_complete":
@@ -1418,6 +1414,25 @@ class WorkerRunner(DistributedRunner):
                 logger.error(f"Temporary connection lost to master server: {e}, will retry later.")
             gevent.sleep(WORKER_REPORT_INTERVAL)
 
+    def logs_reporter(self) -> None:
+        if WORKER_LOG_REPORT_INTERVAL < 0:
+            return
+
+        while True:
+            current_logs = get_logs()
+
+            if (len(current_logs) - len(self.logs)) > 10:
+                logger.warning(
+                    "The worker attempted to send more than 10 log lines in one interval. Further log sending was disabled for this worker."
+                )
+                self._send_logs(get_logs())
+                break
+            if len(current_logs) > len(self.logs):
+                self._send_logs(current_logs)
+
+            self.logs = current_logs
+            gevent.sleep(WORKER_LOG_REPORT_INTERVAL)
+
     def send_message(self, msg_type: str, data: dict[str, Any] | None = None, client_id: str | None = None) -> None:
         """
         Sends a message to master node
@@ -1433,6 +1448,9 @@ class WorkerRunner(DistributedRunner):
         data: dict[str, Any] = {}
         self.environment.events.report_to_master.fire(client_id=self.client_id, data=data)
         self.client.send(Message("stats", data, self.client_id))
+
+    def _send_logs(self, current_logs) -> None:
+        self.send_message("logs", {"worker_id": self.client_id, "logs": current_logs})
 
     def connect_to_master(self):
         self.retry += 1
