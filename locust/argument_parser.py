@@ -253,11 +253,10 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
         sys.exit(1)
 
     tempclient.close()
-    return msg.data
+    return msg.data.get("locustfiles", [])
 
 
-def parse_locustfiles_from_master(master_host, master_port):
-    locustfile_sources = download_locustfile_from_master(master_host, master_port).get("locustfiles", [])
+def parse_locustfiles_from_master(locustfile_sources):
     locustfiles = []
 
     for source in locustfile_sources:
@@ -272,7 +271,7 @@ def parse_locustfiles_from_master(master_host, master_port):
         else:
             locustfiles.append(source)
 
-    return parse_locustfile_paths(locustfiles)
+    return locustfiles
 
 
 def parse_locustfile_option(args=None) -> list[str]:
@@ -333,9 +332,11 @@ def parse_locustfile_option(args=None) -> list[str]:
             )
             sys.exit(1)
         # having this in argument_parser module is a bit weird, but it needs to be done early
-        return parse_locustfiles_from_master(options.master_host, options.master_port)
+        locustfile_sources = download_locustfile_from_master(options.master_host, options.master_port)
+        locustfile_list = parse_locustfiles_from_master(locustfile_sources)
+    else:
+        locustfile_list = [f.strip() for f in options.locustfile.split(",")]
 
-    locustfile_list = [f.strip() for f in options.locustfile.split(",")]
     parsed_paths = parse_locustfile_paths(locustfile_list)
 
     if not parsed_paths:
