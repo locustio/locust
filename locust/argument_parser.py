@@ -219,7 +219,7 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
 
     def ask_for_locustfile():
         while not got_reply:
-            tempclient.send(Message("locustfile", None, client_id))
+            tempclient.send(Message("locustfile", {"version": version}, client_id))
             gevent.sleep(1)
 
     def log_warning():
