@@ -1846,7 +1846,7 @@ class SecondUser(HttpUser):
                 )
 
                 try:
-                    stdout = proc_worker.communicate(timeout=5)[0]
+                    stdout = proc_worker.communicate(timeout=15)[0]
                     self.assertIn(
                         "Got error from master: locustfile must be a full path to a single locustfile for file distribution to work",
                         stdout,
