@@ -30,15 +30,8 @@ from . import argument_parser
 from .dispatch import UsersDispatcher
 from .exception import RPCError, RPCReceiveError, RPCSendError
 from .log import get_logs, greenlet_exception_logger
-from .rpc import (
-    Message,
-    rpc,
-)
-from .stats import (
-    RequestStats,
-    StatsError,
-    setup_distributed_stats_event_listeners,
-)
+from .rpc import Message, rpc
+from .stats import RequestStats, StatsError, setup_distributed_stats_event_listeners
 from .util.directory import get_abspaths_in
 from .util.url import is_url
 
@@ -1034,16 +1027,16 @@ class MasterRunner(DistributedRunner):
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
             elif msg.type == "locustfile":
                 logging.debug("Worker requested locust file")
-                assert self.environment.parsed_options
-                locustfile_options = self.environment.parsed_options.locustfile.split(",")
+                assert self.environment.parsed_locustfiles
+                locustfile_options = self.environment.parsed_locustfiles
                 locustfile_list = [f.strip() for f in locustfile_options if not os.path.isdir(f)]
 
-                for f in locustfile_options:
-                    if os.path.isdir(f):
-                        locustfile_list.extend(get_abspaths_in(f, extension=".py"))
+                for locustfile_option in locustfile_options:
+                    if os.path.isdir(locustfile_option):
+                        locustfile_list.extend(get_abspaths_in(locustfile_option, extension=".py"))
 
                 try:
-                    locustfiles = []
+                    locustfiles: list[str | dict[str, str]] = []
 
                     for filename in locustfile_list:
                         if is_url(filename):
@@ -1063,11 +1056,6 @@ class MasterRunner(DistributedRunner):
                         data={"error": f"{error_message} (was '{filename}')"},
                     )
                 else:
-                    if hasattr(self, "_has_sent_locustfiles"):
-                        logger.warning(
-                            "Locustfile contents changed on disk after first worker requested locustfile, sending new content. If you make any major changes (like changing User class names) you need to restart master."
-                        )
-                    self._has_sent_locustfiles = True
                     self.send_message(
                         "locustfile",
                         client_id=client_id,

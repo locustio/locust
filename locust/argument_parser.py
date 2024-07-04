@@ -256,21 +256,21 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
     return msg.data
 
 
-def parse_locustfile_paths_from_master(master_host, master_port):
-    locustfiles = download_locustfile_from_master(master_host, master_port).get("locustfiles", [])
+def parse_locustfiles_from_master(master_host, master_port):
+    locustfile_sources = download_locustfile_from_master(master_host, master_port).get("locustfiles", [])
+    locustfiles = []
 
-    def create_locustfile(file_to_create):
-        filename = file_to_create["filename"]
-        file_contents = file_to_create["contents"]
+    for source in locustfile_sources:
+        if "contents" in source:
+            filename = source["filename"]
+            file_contents = source["contents"]
 
-        with open(os.path.join(tempfile.gettempdir(), filename), "w", encoding="utf-8") as locustfile:
-            locustfile.write(file_contents)
+            with open(os.path.join(tempfile.gettempdir(), filename), "w", encoding="utf-8") as locustfile:
+                locustfile.write(file_contents)
 
-        return locustfile.name
-
-    locustfiles = [
-        create_locustfile(locustfile) if "contents" in locustfile else locustfile for locustfile in locustfiles
-    ]
+            locustfiles.append(locustfile.name)
+        else:
+            locustfiles.append(source)
 
     return parse_locustfile_paths(locustfiles)
 
@@ -333,7 +333,7 @@ def parse_locustfile_option(args=None) -> list[str]:
             )
             sys.exit(1)
         # having this in argument_parser module is a bit weird, but it needs to be done early
-        return parse_locustfile_paths_from_master(options.master_host, options.master_port)
+        return parse_locustfiles_from_master(options.master_host, options.master_port)
 
     locustfile_list = [f.strip() for f in options.locustfile.split(",")]
     parsed_paths = parse_locustfile_paths(locustfile_list)
