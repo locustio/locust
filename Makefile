@@ -34,6 +34,8 @@ setup_docs_dependencies:
 build_docs: setup_docs_dependencies
 	sphinx-build -b html docs/ docs/_build/
 
+# This command can be used to serve the built documentation at http://localhost for
+# easier offline viewing
 .SILENT:
 .PHONY: serve_docs
 serve_docs:

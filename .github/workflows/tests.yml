@@ -171,6 +171,7 @@ jobs:
       - name: Build + set TAG env var for later use
         run: |
           python -m poetry build
+          ./rename-wheel.sh
           echo "TAG=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
       - name: Publish tagged version to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -212,6 +213,7 @@ jobs:
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
         run: |
           python -m poetry build
+          ./rename-wheel.sh
       - name: Publish prerelease version to PyPI
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
         uses: pypa/gh-action-pypi-publish@release/v1
