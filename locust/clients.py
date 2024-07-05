@@ -178,7 +178,6 @@ class HttpSession(requests.Session):
           man-in-the-middle (MitM) attacks. Setting verify to ``False``
           may be useful during local development or testing.
         :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
-        :param threshold (optional) if set, the request will be marked as a failure if the response time exceeds this value (in ms).
         """
 
         # if group name has been set and no name parameter has been passed in; set the name parameter to group_name
