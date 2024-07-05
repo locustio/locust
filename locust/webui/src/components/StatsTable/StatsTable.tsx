@@ -1,4 +1,5 @@
 import { connect } from 'react-redux';
+
 import Table from 'components/Table/Table';
 import ViewColumnSelector from 'components/ViewColumnSelector/ViewColumnSelector';
 import { swarmTemplateArgs } from 'constants/swarm';
