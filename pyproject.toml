@@ -203,10 +203,6 @@ locust = ["locust"]
 ignore_missing_imports = true
 python_version = "3.9"
 
-[[tool.mypy.overrides]]
-module = ["locust.dispatch"]
-strict_optional = false
-
 [tool.pyright]
 exclude = ["locust/test"]
 reportOptionalMemberAccess = "none"
