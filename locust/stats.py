@@ -221,7 +221,9 @@ class RequestStats:
     def threshold(self):
         return self.total.threshold
 
-    def log_request(self, method: str, name: str, response_time: int, content_length: int, threshold: int | None = None) -> None:
+    def log_request(
+        self, method: str, name: str, response_time: int, content_length: int, threshold: int | None = None
+    ) -> None:
         self.total.log(response_time, content_length, None)
         self.entries[(name, method)].log(response_time, content_length, threshold)
 
@@ -381,8 +383,6 @@ class StatsEntry:
         if self.over_threshold_count is None or self.num_requests == 0:
             self.over_threshold_percentages = 0
             return
-        print(f'over_threshold_count: {self.over_threshold_count} num_requests: {self.num_requests}' )
-        print(self)
         self.over_threshold_percentages = round(self.over_threshold_count / self.num_requests, 2) * 100
 
     def _log_time_of_request(self, current_time: float) -> None:

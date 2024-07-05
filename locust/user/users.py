@@ -274,6 +274,7 @@ class HttpUser(User):
         """
         self.client.trust_env = False
 
+
 class ThresholdHttpUser(User):
     """
     This is a HTTP user that as HttpUser, but with the ability to set a threshold for response times.

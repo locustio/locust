@@ -448,6 +448,7 @@ def _missing_catch_response_True(self, *_args, **_kwargs):
         "If you want to change the state of the request using .success() or .failure(), you must pass catch_response=True. See http://docs.locust.io/en/stable/writing-a-locustfile.html#validating-responses"
     )
 
+
 class ThresholdHttpSession(HttpSession):
     def request(self, method, url, name=None, catch_response=False, context={}, threshold=None, **kwargs):
         """
@@ -526,6 +527,7 @@ class ThresholdHttpSession(HttpSession):
             with ResponseContextManager(response, request_event=self.request_event, request_meta=request_meta):
                 pass
             return response
+
 
 Response.success = _missing_catch_response_True  # type: ignore[attr-defined]
 Response.failure = _missing_catch_response_True  # type: ignore[attr-defined]
