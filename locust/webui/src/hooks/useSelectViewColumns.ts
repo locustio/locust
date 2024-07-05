@@ -7,7 +7,6 @@ export default function useSelectViewColumns(defaultStructure: ITableStructure[]
     defaultStructure.filter(column => !column.hidden).map(column => column.key),
   );
 
-  // Function to filter columns with data
   const filterColumnsWithData = (structure: ITableStructure[], stats: ISwarmStat[]) => {
     return structure.filter(column => stats.some(stat => stat[column.key] !== undefined && stat[column.key] !== null));
   };

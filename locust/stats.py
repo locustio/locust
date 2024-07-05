@@ -216,7 +216,7 @@ class RequestStats:
     @property
     def start_time(self):
         return self.total.start_time
-    
+
     @property
     def threshold(self):
         return self.total.threshold
@@ -370,7 +370,7 @@ class StatsEntry:
 
         # increase total content-length
         self.total_content_length += content_length
-    
+
     def _log_over_threshold(self, response_time: int) -> None:
         if response_time > self.threshold:
             if self.over_threshold_count is None:

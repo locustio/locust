@@ -482,8 +482,6 @@ class ThresholdHttpSession(HttpSession):
         # if group name has been set and no name parameter has been passed in; set the name parameter to group_name
         if self.request_name and not name:
             name = self.request_name
-        
-        print(f"Threshold: {threshold}")
 
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)

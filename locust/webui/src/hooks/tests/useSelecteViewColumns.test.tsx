@@ -9,15 +9,20 @@ const mockStructure = [
   { title: '# Requests', key: 'numRequests' },
 ];
 
+const mockStats = [
+  { method: 'GET', name: 'Endpoint 1', numRequests: 100 },
+  { method: 'POST', name: 'Endpoint 2', numRequests: 200 },
+];
+
 describe('useSelectViewColumns hook', () => {
   test('should initialize with default columns', () => {
-    const { result } = renderHook(() => useSelectViewColumns(mockStructure));
+    const { result } = renderHook(() => useSelectViewColumns(mockStructure, mockStats));
 
     expect(result.current.selectedColumns).toEqual(mockStructure.map(s => s.key));
   });
 
   test('should add a new column', () => {
-    const { result } = renderHook(() => useSelectViewColumns(mockStructure));
+    const { result } = renderHook(() => useSelectViewColumns(mockStructure, mockStats));
 
     act(() => {
       result.current.addColumn('column3');
@@ -27,7 +32,7 @@ describe('useSelectViewColumns hook', () => {
   });
 
   test('should remove an existing column', () => {
-    const { result } = renderHook(() => useSelectViewColumns(mockStructure));
+    const { result } = renderHook(() => useSelectViewColumns(mockStructure, mockStats));
 
     act(() => {
       result.current.removeColumn('method');
@@ -37,7 +42,7 @@ describe('useSelectViewColumns hook', () => {
   });
 
   test('filterStructure should filter out unselected columns', () => {
-    const { result } = renderHook(() => useSelectViewColumns(mockStructure));
+    const { result } = renderHook(() => useSelectViewColumns(mockStructure, mockStats));
 
     act(() => {
       // remove column with key 'method'
