@@ -256,7 +256,7 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
     return msg.data.get("locustfiles", [])
 
 
-def parse_locustfiles_from_master(locustfile_sources):
+def parse_locustfiles_from_master(locustfile_sources) -> list[str]:
     locustfiles = []
 
     for source in locustfile_sources:

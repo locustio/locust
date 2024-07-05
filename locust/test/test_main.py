@@ -1828,6 +1828,7 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
             )
+            gevent.sleep(2)
             proc_worker = subprocess.Popen(
                 [
                     "locust",
