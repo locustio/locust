@@ -128,7 +128,12 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - run: echo "TAG=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip poetry
+          python -m poetry config virtualenvs.create false
+          python -m poetry self add "poetry-dynamic-versioning[plugin]"
+      - run: echo "TAG=$(poetry version -s)" | tee -a $GITHUB_ENV
       - run: echo "BRANCH=$(git branch -a --contains ${{ env.TAG }} | grep -v HEAD | cut -d '/' -f3)" | tee -a $GITHUB_ENV
       - uses: docker/login-action@v1
         with:
@@ -172,7 +177,7 @@ jobs:
         run: |
           python -m poetry build
           ./rename-wheel.sh
-          echo "TAG=${GITHUB_REF#refs/*/}" | tee -a $GITHUB_ENV
+          echo "TAG=$(poetry version -s)" | tee -a $GITHUB_ENV
       - name: Publish tagged version to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
