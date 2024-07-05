@@ -374,7 +374,7 @@ class StatsEntry:
         self.total_content_length += content_length
 
     def _log_over_threshold(self, response_time: int) -> None:
-        if response_time > self.threshold:
+        if self.threshold is not None and response_time > self.threshold:
             if self.over_threshold_count is None:
                 self.over_threshold_count = 0
             self.over_threshold_count += 1
