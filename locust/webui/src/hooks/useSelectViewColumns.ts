@@ -3,13 +3,18 @@ import { useState, useEffect } from 'react';
 import { ITableStructure } from 'types/table.types';
 import { ISwarmStat } from 'types/ui.types';
 
+type SwarmStatKey = keyof ISwarmStat | `responseTimePercentile${number}`;
+
 export default function useSelectViewColumns(defaultStructure: ITableStructure[], stats: ISwarmStat[]) {
   const [selectedColumns, setSelectedColumns] = useState<string[]>(
     defaultStructure.filter(column => !column.hidden).map(column => column.key),
   );
 
   const filterColumnsWithData = (structure: ITableStructure[], stats: ISwarmStat[]) => {
-    return structure.filter(column => stats.some(stat => stat[column.key] !== undefined && stat[column.key] !== null));
+    return structure.filter(column => 
+      stats.some(stat => (stat as any)[column.key as SwarmStatKey] !== undefined && 
+                          (stat as any)[column.key as SwarmStatKey] !== null)
+    );
   };
 
   useEffect(() => {
