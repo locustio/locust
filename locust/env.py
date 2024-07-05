@@ -8,7 +8,7 @@ from configargparse import Namespace
 from .dispatch import UsersDispatcher
 from .event import Events
 from .exception import RunnerAlreadyExistsError
-from .exporter import LocustExporter
+from .exporter import InfluxExporter
 from .runners import LocalRunner, MasterRunner, Runner, WorkerRunner
 from .shape import LoadTestShape
 from .stats import RequestStats, StatsCSV
@@ -70,7 +70,7 @@ class Environment:
         """If set, only tasks that are tagged by tags in this list will be executed. Leave this as None to use the one from parsed_options"""
         self.exclude_tags = exclude_tags
         """If set, only tasks that aren't tagged by tags in this list will be executed. Leave this as None to use the one from parsed_options"""
-        self.exporter = LocustExporter(self) if use_exporter else None
+        self.exporter = InfluxExporter(self) if use_exporter else None
         """Reference to LocustExporter instance for use with influxDB"""
         self.stats = RequestStats()
         """Reference to RequestStats instance"""

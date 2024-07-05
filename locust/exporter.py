@@ -13,13 +13,13 @@ from .exception import CatchResponseError
 from .runners import MasterRunner, WorkerRunner
 
 INFLUXDB_URL = os.getenv("INFLUXDB_URL")
-INFLUXDB_URL = os.getenv("INFLUXDB_URL")
+INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
 INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
 
 
-class LocustExporter:
+class InfluxExporter:
     def __init__(self, environment):
-        if not INFLUXDB_URL or not INFLUXDB_URL or not INFLUXDB_ORG:
+        if not INFLUXDB_URL or not INFLUXDB_TOKEN or not INFLUXDB_ORG:
             sys.stderr.write(
                 "Locust was set to export stats but INFLUXDB_URL, INFLUXDB_URL, or INFLUXDB_ORG were not set as env variables. Please ensure the variables are set or remove the exporter flag.\n"
             )
@@ -27,7 +27,7 @@ class LocustExporter:
 
         self._client = InfluxDBClient(
             url=INFLUXDB_URL,
-            token=INFLUXDB_URL,
+            token=INFLUXDB_TOKEN,
             org=INFLUXDB_ORG,
         )
         self.stat_entries = {}
