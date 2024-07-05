@@ -6,8 +6,6 @@ from datetime import datetime
 
 import gevent
 import requests
-from influxdb_client import BucketsApi, InfluxDBClient
-from influxdb_client.client.write_api import SYNCHRONOUS
 
 from .exception import CatchResponseError
 from .runners import MasterRunner, WorkerRunner
@@ -25,11 +23,15 @@ class InfluxExporter:
             )
             sys.exit(1)
 
+        from influxdb_client import BucketsApi, InfluxDBClient
+        from influxdb_client.client.write_api import SYNCHRONOUS
+
         self._client = InfluxDBClient(
             url=INFLUXDB_URL,
             token=INFLUXDB_TOKEN,
             org=INFLUXDB_ORG,
         )
+        self._BucketsApi = BucketsApi
         self.stat_entries = {}
         self._points = []
         self._environment = environment
@@ -44,7 +46,7 @@ class InfluxExporter:
         atexit.register(self.on_exit)
 
     def _create_bucket(self):
-        buckets_api = BucketsApi(self._client)
+        buckets_api = self._BucketsApi(self._client)
         current_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
         bucket_name = f"locust_test_{current_time}"
 
