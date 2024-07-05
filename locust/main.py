@@ -311,24 +311,24 @@ def main():
 
     # make sure specified User exists
     names = set()
-    if options.run_users:
-        if missing := set(options.run_users) - set(user_classes.keys()):
-            logger.error(f"Unknown User(s): {', '.join(missing)}\n")
-            sys.exit(1)
-        else:
-            names |= set(options.run_users)
     if options.user_classes:
-        # TODO deprecate in future release
-        # warnings.warn(
-        #    "Specifying users at the end of the command is deprecated. Use --run-users parameter instead",
-        #     DeprecationWarning,
-        # )
         if missing := set(options.user_classes) - set(user_classes.keys()):
             logger.error(f"Unknown User(s): {', '.join(missing)}\n")
             sys.exit(1)
         else:
             names |= set(options.user_classes)
-    if not (options.run_users or options.user_classes):
+    if options.old_user_classes:
+        # TODO deprecate in future release
+        # warnings.warn(
+        #    "Specifying users at the end of the command is deprecated. Use --run-users parameter instead",
+        #     DeprecationWarning,
+        # )
+        if missing := set(options.old_user_classes) - set(user_classes.keys()):
+            logger.error(f"Unknown User(s): {', '.join(missing)}\n")
+            sys.exit(1)
+        else:
+            names |= set(options.old_user_classes)
+    if not (options.old_user_classes or options.user_classes):
         names = set(user_classes.keys())
     user_classes = [user_classes[n] for n in names]
 

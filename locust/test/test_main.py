@@ -1087,7 +1087,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         "5",
                         "-r",
                         "10",
-                        "--run-users",
+                        "--user-classes",
                         "User2",
                         "User3",
                     ]
@@ -2203,6 +2203,7 @@ class AnyUser(HttpUser):
                     "4",
                     "-L",
                     "DEBUG",
+                    "--user-classes",
                     "UserThatDoesntExist",
                 ],
                 stdout=PIPE,

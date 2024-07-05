@@ -208,7 +208,7 @@ Usage: locust [options]
 
     locust -f my_test.py -H https://www.example.com
 
-    locust --headless -u 100 -t 20m --processes 4 --run-users MyHttpUser AnotherUser
+    locust --headless -u 100 -t 20m --processes 4 --user-classes MyHttpUser AnotherUser
 
 See documentation for more details, including how to set options using a file or environment variables: https://docs.locust.io/en/stable/configuration.html""",
     )
@@ -421,7 +421,7 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_CONFIG_USERS",
     )
     parser.add_argument(
-        "--run-users",
+        "--user-classes",
         nargs="*",
         help="List of User classes to be used (available User classes can be listed with --list). LOCUST_USER_CLASSES environment variable can also be used to specify User classes. Default is to use all available User classes",
         default=os.environ.get("LOCUST_USER_CLASSES", "").split(),
@@ -749,7 +749,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
     )
 
     user_classes_group = parser.add_argument_group("User classes")
-    user_classes_group.add_argument("user_classes", nargs="*")
+    user_classes_group.add_argument("old_user_classes", nargs="*")
 
 
 def get_parser(default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParser:
