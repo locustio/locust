@@ -483,7 +483,7 @@ class FastResponse(CompatResponse):
 
     _response: HTTPSocketPoolResponse | None = None
 
-    encoding: str | None = None
+    encoding: str | float | None = None
     """In some cases setting the encoding explicitly is needed. If so, do it before calling .text"""
 
     request: FastRequest | None = None
