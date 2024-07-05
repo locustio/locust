@@ -102,7 +102,7 @@ version_tuple = __version_tuple__
 """
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = ">=3.9,<4.0"
 
 gevent = ">=22.10.2"
 flask = ">=2.0.0"
@@ -131,6 +131,7 @@ pre-commit = "^3.7.1"
 ruff = "0.3.7"
 tox = "^4.16.0"
 twine = "^5.1.1"
+influxdb-client = "^1.44.0"
 
 [tool.poetry.group.test]
 optional = true
