@@ -676,6 +676,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         "--exporter",
         default=False,
         action="store_true",
+        env_var="LOCUST_EXPORTER",
         help="Exports Locust stats to Influx",
     )
 
