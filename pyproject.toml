@@ -72,7 +72,7 @@ format-jinja = """
 {%- if distance == 0 -%}
 {{ serialize_pep440(base) }}
 {%- else -%}
-{{ serialize_pep440(base, dev=distance) }}
+{{ serialize_pep440(bump_version(base), dev=distance) }}
 {%- endif -%}
 """
 
