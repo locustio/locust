@@ -184,8 +184,6 @@ class HttpSession(requests.Session):
         # if group name has been set and no name parameter has been passed in; set the name parameter to group_name
         if self.request_name and not name:
             name = self.request_name
-        
-        print(f"Threshold: {threshold}")
 
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
@@ -214,7 +212,6 @@ class HttpSession(requests.Session):
             "exception": None,
             "start_time": start_time,
             "url": url,
-            "threshold": threshold,
         }
 
         # get the length of the content, but if the argument stream is set to True, we take
@@ -451,6 +448,86 @@ def _missing_catch_response_True(self, *_args, **_kwargs):
         "If you want to change the state of the request using .success() or .failure(), you must pass catch_response=True. See http://docs.locust.io/en/stable/writing-a-locustfile.html#validating-responses"
     )
 
+class ThresholdHttpSession(HttpSession):
+    def request(self, method, url, name=None, catch_response=False, context={}, threshold=None, **kwargs):
+        """
+        Constructs and sends a :py:class:`requests.Request`.
+        Returns :py:class:`requests.Response` object.
+
+        :param method: method for the new :class:`Request` object.
+        :param url: URL for the new :class:`Request` object.
+        :param name: (optional) An argument that can be specified to use as label in Locust's statistics instead of the URL path.
+          This can be used to group different URL's that are requested into a single entry in Locust's statistics.
+        :param catch_response: (optional) Boolean argument that, if set, can be used to make a request return a context manager
+          to work as argument to a with statement. This will allow the request to be marked as a fail based on the content of the
+          response, even if the response code is ok (2xx). The opposite also works, one can use catch_response to catch a request
+          and then mark it as successful even if the response code was not (i.e 500 or 404).
+        :param params: (optional) Dictionary or bytes to be sent in the query string for the :class:`Request`.
+        :param data: (optional) Dictionary or bytes to send in the body of the :class:`Request`.
+        :param headers: (optional) Dictionary of HTTP Headers to send with the :class:`Request`.
+        :param cookies: (optional) Dict or CookieJar object to send with the :class:`Request`.
+        :param files: (optional) Dictionary of ``'filename': file-like-objects`` for multipart encoding upload.
+        :param auth: (optional) Auth tuple or callable to enable Basic/Digest/Custom HTTP Auth.
+        :param timeout: (optional) How long to wait for the server to send data before giving up, as a float, or a :ref:`(connect timeout, read timeout) <timeouts>` tuple.
+        :type timeout: float or tuple
+        :param allow_redirects: (optional) Set to True by default.
+        :type allow_redirects: bool
+        :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
+        :param stream: (optional) whether to immediately download the response content. Defaults to ``False``.
+        :param verify: (optional) if ``True``, the SSL cert will be verified. A CA_BUNDLE path can also be provided.
+        :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
+        :param threshold (optional) if set, the request will be marked as a failure if the response time exceeds this value (in ms).
+        """
+
+        # if group name has been set and no name parameter has been passed in; set the name parameter to group_name
+        if self.request_name and not name:
+            name = self.request_name
+        
+        print(f"Threshold: {threshold}")
+
+        # prepend url with hostname unless it's already an absolute URL
+        url = self._build_url(url)
+
+        start_time = time.time()
+        start_perf_counter = time.perf_counter()
+        response = self._send_request_safe_mode(method, url, **kwargs)
+        response_time = (time.perf_counter() - start_perf_counter) * 1000
+
+        request_before_redirect = (response.history and response.history[0] or response).request
+        url = request_before_redirect.url
+
+        if not name:
+            name = request_before_redirect.path_url
+
+        if self.user:
+            context = {**self.user.context(), **context}
+
+        # store meta data that is used when reporting the request to locust's statistics
+        request_meta = {
+            "request_type": method,
+            "response_time": response_time,
+            "name": name,
+            "context": context,
+            "response": response,
+            "exception": None,
+            "start_time": start_time,
+            "url": url,
+            "threshold": threshold,
+        }
+
+        # get the length of the content, but if the argument stream is set to True, we take
+        # the size from the content-length header, in order to not trigger fetching of the body
+        if kwargs.get("stream", False):
+            request_meta["response_length"] = int(response.headers.get("content-length") or 0)
+        else:
+            request_meta["response_length"] = len(response.content or b"")
+
+        if catch_response:
+            return ResponseContextManager(response, request_event=self.request_event, request_meta=request_meta)
+        else:
+            with ResponseContextManager(response, request_event=self.request_event, request_meta=request_meta):
+                pass
+            return response
 
 Response.success = _missing_catch_response_True  # type: ignore[attr-defined]
 Response.failure = _missing_catch_response_True  # type: ignore[attr-defined]

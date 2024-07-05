@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from locust.clients import HttpSession
+from locust.clients import HttpSession, ThresholdHttpSession
 from locust.exception import LocustError, StopUser
 from locust.user.task import (
     LOCUST_STATE_RUNNING,
@@ -270,6 +270,37 @@ class HttpUser(User):
         )
         """
         Instance of HttpSession that is created upon instantiation of Locust.
+        The client supports cookies, and therefore keeps the session between HTTP requests.
+        """
+        self.client.trust_env = False
+
+class ThresholdHttpUser(User):
+    """
+    This is a HTTP user that as HttpUser, but with the ability to set a threshold for response times.
+    """
+
+    abstract: bool = True
+    """If abstract is True, the class is meant to be subclassed, and users will not choose this locust during a test"""
+
+    pool_manager: PoolManager | None = None
+    """Connection pool manager to use. If not given, a new manager is created per single user."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.host is None:
+            raise LocustError(
+                "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
+            )
+
+        """This uses the ThresholdHttpSession class instead of HttpSession, the only difference is that it has a threshold parameter."""
+        self.client = ThresholdHttpSession(
+            base_url=self.host,
+            request_event=self.environment.events.request,
+            user=self,
+            pool_manager=self.pool_manager,
+        )
+        """
+        Instance of ThresholdHttpSession that is created upon instantiation of Locust.
         The client supports cookies, and therefore keeps the session between HTTP requests.
         """
         self.client.trust_env = False

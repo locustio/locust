@@ -222,8 +222,8 @@ class RequestStats:
         return self.total.threshold
 
     def log_request(self, method: str, name: str, response_time: int, content_length: int, threshold: int | None = None) -> None:
-        self.total.log(response_time, content_length, None)  # Modify this line
-        self.entries[(name, method)].log(response_time, content_length, threshold)  # Modify this line
+        self.total.log(response_time, content_length, None)
+        self.entries[(name, method)].log(response_time, content_length, threshold)
 
     def log_error(self, method: str, name: str, error: Exception | str | None) -> None:
         self.total.log_error(error)
