@@ -148,7 +148,8 @@ SequentialTaskSet class
 =======================
 
 :py:class:`SequentialTaskSet <locust.SequentialTaskSet>` is a TaskSet whose tasks will be executed 
-in the order that they are declared. It is possible to nest SequentialTaskSets 
+in the order that they are declared. If the  *<Task : int>* dictionary is used, each task will be repeated by the amount
+given by the integer at the point of declaration. It is possible to nest SequentialTaskSets
 within a TaskSet and vice versa.
 
 For example, the following code will request URLs /1-/4 in order, and then repeat.
@@ -164,8 +165,9 @@ For example, the following code will request URLs /1-/4 in order, and then repea
             self.client.get("/1")
             self.client.get("/2")
         
-        # you can still use the tasks attribute to specify a list of tasks
+        # you can still use the tasks attribute to specify a list or dict of tasks
         tasks = [function_task]
+        # tasks = {function_task: 1}
         
         @task
         def last_task(self):

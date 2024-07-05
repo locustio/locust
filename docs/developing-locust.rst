@@ -11,10 +11,19 @@ Install Locust for development
 
 Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then run
 
-.. code-block:: console
+.. code-block:: sh
 
-    $ git clone git://github.com/<YourName>/locust.git # clone the repo
-    $ pip3 install -e locust/                          # install in editable mode
+    # clone the repo
+    $ git clone git://github.com/<YourName>/locust.git
+
+    # install the poetry build system
+    $ pip3 install poetry 
+
+    # install the dynamic versioning plugin for poetry
+    $ pip3 -m poetry self add "poetry-dynamic-versioning[plugin]"
+
+    # perform an editable install of the "locust" package
+    $ pip3 -m poetry install --with dev
 
 Now the ``locust`` command will run *your* code with no need for reinstalling after making changes.
 
@@ -78,7 +87,7 @@ The documentation source is in the `docs/ <https://github.com/locustio/locust/tr
 
     .. code-block:: console
 
-        $ pip3 install -r docs/requirements.txt
+        $ pip3 -m poetry install --with docs
 
 #. Build the documentation locally:
 
