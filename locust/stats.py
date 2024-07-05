@@ -352,7 +352,7 @@ class StatsEntry:
             self.response_times_cache = OrderedDict()
             self._cache_response_times(int(time.time()))
 
-    def log(self, response_time: int, content_length: int, threshold: int | None) -> None:
+    def log(self, response_time: int, content_length: int, threshold: int | None = None) -> None:
         # get the time
         current_time = time.time()
         t = int(current_time)
