@@ -452,7 +452,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     # start Web UI
     if not options.headless and not options.worker:
-        # spawn web greenlet
         protocol = "https" if options.tls_cert and options.tls_key else "http"
 
         if options.web_host == "*":
