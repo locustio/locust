@@ -321,6 +321,12 @@ def main():
         # list() call is needed to consume the dict_view object in Python 3
         user_classes = list(user_classes.values())
 
+    fixed_count_total = sum([user_class.fixed_count for user_class in user_classes])
+    if not shape_class and fixed_count_total > options.num_users:
+        logger.info(
+            f"Total fixed_count of User classes ({fixed_count_total}) is greater than the specified number of users ({options.num_users}), so not all will be spawned."
+        )
+
     if os.name != "nt" and not options.master:
         try:
             import resource

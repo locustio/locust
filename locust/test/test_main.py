@@ -1023,6 +1023,51 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shutting down (exit code 0)", output)
                 self.assertEqual(0, proc.returncode)
 
+    def test_warning_with_lower_user_count_than_fixed_count(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+        from locust import User, task, constant
+
+        class User1(User):
+            fixed_count = 2
+            wait_time = constant(1)
+
+            @task
+            def t(self):
+                pass
+
+        class User2(User):
+            fixed_count = 2
+            wait_time = constant(1)
+
+            @task
+            def t(self):
+                pass
+        """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                " ".join(
+                    [
+                        "locust",
+                        "-f",
+                        mocked.file_path,
+                        "--headless",
+                        "--run-time",
+                        "1s",
+                        "-u",
+                        "3",
+                    ]
+                ),
+                stderr=STDOUT,
+                stdout=PIPE,
+                shell=True,
+                text=True,
+            )
+
+            output = proc.communicate()[0]
+            self.assertIn("Total fixed_count of User classes (4) is greater than ", output)
+
     def test_with_package_as_locustfile(self):
         with TemporaryDirectory() as temp_dir:
             with open(f"{temp_dir}/__init__.py", mode="w"):
