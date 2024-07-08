@@ -121,7 +121,11 @@ class InfluxExporter:
             "content_length": response_length,
         }
 
+        success = True
+
         if exception:
+            success = False
+
             if isinstance(exception, CatchResponseError):
                 fields["exception"] = str(exception)
             else:
@@ -134,6 +138,6 @@ class InfluxExporter:
 
         self._queue_point(
             "request",
-            tags={"name": name, "method": request_type},
+            tags={"name": name, "method": request_type, "success": success},
             fields=fields,
         )
