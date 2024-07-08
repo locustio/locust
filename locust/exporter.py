@@ -116,8 +116,6 @@ class InfluxExporter:
         url=None,
         **kwargs,
     ):
-        measurement = "request_failure" if exception else "request_success"
-
         fields = {
             "response_time": response_time,
             "content_length": response_length,
@@ -135,7 +133,7 @@ class InfluxExporter:
             fields["exception"] = None
 
         self._queue_point(
-            measurement,
+            "request",
             tags={"name": name, "method": request_type},
             fields=fields,
         )
