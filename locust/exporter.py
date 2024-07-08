@@ -10,9 +10,9 @@ import requests
 from .exception import CatchResponseError
 from .runners import MasterRunner, WorkerRunner
 
-INFLUXDB_URL = os.getenv("INFLUXDB_URL")
-INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
-INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
+INFLUXDB_URL = "http://localhost:8086"
+INFLUXDB_TOKEN = "k42NZXHkEvaB_uVASlLCEUCVFizHGVSlChDXU_MlOG-Ig-sGTOajgg2rK_6icr3mCJlt9d-ur8qVn2dFnooDCA=="
+INFLUXDB_ORG = "andrewbaldwin44"
 
 
 class InfluxExporter:
@@ -47,7 +47,7 @@ class InfluxExporter:
 
     def _create_bucket(self):
         buckets_api = self._BucketsApi(self._client)
-        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M")
+        current_time = datetime.now().strftime("%Y-%m-%d_%H:%M")
         bucket_name = f"locust_test_{current_time}"
 
         try:
