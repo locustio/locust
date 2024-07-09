@@ -451,36 +451,36 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         stats_csv_writer = StatsCSV(environment, stats.PERCENTILES_TO_REPORT)
 
     # start Web UI
-    if not options.headless and not options.worker:
-        protocol = "https" if options.tls_cert and options.tls_key else "http"
+    # if not options.headless and not options.worker:
+    #     protocol = "https" if options.tls_cert and options.tls_key else "http"
 
-        if options.web_host == "*":
-            # special check for "*" so that we're consistent with --master-bind-host
-            web_host = ""
-        else:
-            web_host = options.web_host
-        if web_host:
-            logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
-        else:
-            if os.name == "nt":
-                logger.info(
-                    f"Starting web interface at {protocol}://localhost:{options.web_port} (accepting connections from all network interfaces)"
-                )
-            else:
-                logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}")
+    #     if options.web_host == "*":
+    #         # special check for "*" so that we're consistent with --master-bind-host
+    #         web_host = ""
+    #     else:
+    #         web_host = options.web_host
+    #     if web_host:
+    #         logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
+    #     else:
+    #         if os.name == "nt":
+    #             logger.info(
+    #                 f"Starting web interface at {protocol}://localhost:{options.web_port} (accepting connections from all network interfaces)"
+    #             )
+    #         else:
+    #             logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}")
 
-        web_ui = environment.create_web_ui(
-            host=web_host,
-            port=options.web_port,
-            web_login=options.web_login,
-            tls_cert=options.tls_cert,
-            tls_key=options.tls_key,
-            stats_csv_writer=stats_csv_writer,
-            delayed_start=True,
-            userclass_picker_is_active=options.class_picker,
-        )
-    else:
-        web_ui = None
+    #     web_ui = environment.create_web_ui(
+    #         host=web_host,
+    #         port=options.web_port,
+    #         web_login=options.web_login,
+    #         tls_cert=options.tls_cert,
+    #         tls_key=options.tls_key,
+    #         stats_csv_writer=stats_csv_writer,
+    #         delayed_start=True,
+    #         userclass_picker_is_active=options.class_picker,
+    #     )
+    # else:
+    web_ui = None
 
     if options.autostart and options.headless:
         logger.warning("The --autostart argument is implied by --headless, no need to set both.")
