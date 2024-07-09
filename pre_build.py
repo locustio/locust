@@ -1,7 +1,7 @@
 import os
 import subprocess
-from sys import exit
 from shutil import which
+from sys import exit
 
 
 def build() -> None:

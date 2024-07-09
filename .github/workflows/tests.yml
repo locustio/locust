@@ -61,8 +61,9 @@ jobs:
         run: npm install -g yarn
       # Build and install the package if it's Windows, to service shell-based tests
       - if: ${{ matrix.os }} == "windows-latest"
+        env:
+          SKIP_PRE_BUILD: true
         run: |
-          set SKIP_PRE_BUILD=true 
           python -m poetry build
           pip install --find-links=dist locust
       - run: python -m poetry run tox -e ${{ matrix.tox }}
