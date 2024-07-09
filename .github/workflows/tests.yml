@@ -62,7 +62,7 @@ jobs:
       # Build and install the package if it's Windows, to service shell-based tests
       - if: ${{ matrix.os }} == "windows-latest"
         run: |
-          python -m poetry build
+          SKIP_PRE_BUILD=true python -m poetry build
           pip install --find-links=dist locust
       - run: python -m poetry run tox -e ${{ matrix.tox }}
 
