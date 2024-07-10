@@ -1,12 +1,20 @@
 {
-  "name": "webui",
+  "name": "locust-webui",
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
+  "main": "./lib/webui.js",
+  "module": "./lib/webui.mjs",
+  "typings": "./lib/types/main.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
     "dev:watch": "vite build --watch",
-    "build": "vite build",
+    "build:ui": "vite build",
+    "build:lib": "vite build --config vite.lib.config.ts",
+    "build": "yarn build:ui && yarn build:lib",
     "lint": "eslint './src/**/*.{ts,tsx}'",
     "format": "prettier --write '**/**/*.{ts,tsx}'",
     "type-check": "tsc",
@@ -30,6 +38,7 @@
     "vite-tsconfig-paths": "^4.2.1"
   },
   "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.6",
     "@testing-library/react": "^14.1.0",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",

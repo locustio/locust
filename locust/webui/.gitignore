@@ -1,3 +1,6 @@
 /node_modules
 
 tsconfig.tsbuildinfo
+.rollup.cache
+lib
+dist

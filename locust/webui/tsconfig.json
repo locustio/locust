@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022", "dom", "DOM.Iterable"],
-    "allowJs": true,
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
@@ -11,9 +11,7 @@
     "esModuleInterop": true,
     "module": "ESNext",
     "moduleResolution": "node",
-    "resolveJsonModule": true,
     "isolatedModules": true,
-    "downlevelIteration": true,
     "jsx": "preserve",
     "incremental": true,
     "baseUrl": ".",
@@ -21,7 +19,7 @@
       "*": ["src/*"]
     }
   },
-  "include": ["src", "vite.config.ts"],
-  "typeRoots": ["src/global.d.ts", "src/modules.d.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src"],
+  "typeRoots": ["src/global.d.ts"],
+  "exclude": ["**/*.test.ts", "**/*.test.tsx", "**/test", "**/tests"]
 }
