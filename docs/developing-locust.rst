@@ -23,10 +23,10 @@ Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then run
     $ python -m pip install poetry 
 
     # install the dynamic versioning plugin for poetry
-    $ python -m poetry self add "poetry-dynamic-versioning[plugin]"
+    $ poetry self add "poetry-dynamic-versioning[plugin]"
 
     # perform an editable install of the "locust" package
-    $ python -m poetry install --with dev,test
+    $ poetry install --with dev,test
 
 Now the ``locust`` command will run *your* code with no need for reinstalling after making changes.
 
@@ -43,7 +43,7 @@ We use `tox <https://tox.readthedocs.io/en/stable/>`_ to automate tests across m
 
 .. code-block:: console
 
-    $ python -m poetry run tox
+    $ poetry run tox
     ...
     py39: install_deps> python -I -m pip install cryptography mock pyquery retry
     py39: commands[0]> python3 -m pip install .
@@ -55,7 +55,7 @@ To only run a specific suite or specific test you can call `pytest <https://docs
 
 .. code-block:: console
 
-    $ python -m pytest locust/test/test_main.py::DistributedIntegrationTests::test_distributed_tags
+    $ pytest locust/test/test_main.py::DistributedIntegrationTests::test_distributed_tags
 
 Formatting and linting
 ======================
@@ -64,14 +64,14 @@ Locust uses `ruff <https://github.com/astral-sh/ruff/>`_ for formatting and lint
 
 .. code-block:: console
 
-    $ python -m poetry run ruff --fix <file_or_folder_to_be_formatted>
-    $ python -m poetry run ruff format <file_or_folder_to_be_formatted>
+    $ poetry run ruff --fix <file_or_folder_to_be_formatted>
+    $ poetry run ruff format <file_or_folder_to_be_formatted>
 
 You can validate the whole project using tox:
 
 .. code-block:: console
 
-    $ python -m poetry run tox -e ruff
+    $ poetry run tox -e ruff
     ruff: install_deps> python -I -m pip install ruff==0.1.13
     ruff: commands[0]> ruff check .
     ruff: commands[1]> ruff format --check
@@ -88,7 +88,7 @@ The documentation source is in the `docs/ <https://github.com/locustio/locust/tr
 
     .. code-block:: console
 
-        $ python -m poetry install --with docs
+        $ poetry install --with docs
 
 #. Build the documentation locally:
 
