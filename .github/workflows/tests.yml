@@ -14,42 +14,51 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {name: Windows, python: '3.12', os: windows-latest, tox: fail_fast_test_main, skip_pre_build: "true" }
-          # - {name: Mac, python: '3.12', os: macos-latest, tox: fail_fast_test_main, skip_pre_build: "false" }
-          - { name: "ruff", python: "3.11", os: ubuntu-latest, tox: "ruff", skip_pre_build: "false" }
-          - { name: "mypy", python: "3.10", os: ubuntu-latest, tox: "mypy", skip_pre_build: "false" }
+          - {name: Windows, python: '3.12', os: windows-latest, tox: fail_fast_test_main }
+          # - {name: Mac, python: '3.12', os: macos-latest, tox: fail_fast_test_main }
+          - { name: "ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
+          - { name: "mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
           # run some integration tests and abort immediately if they fail, for faster feedback
-          - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main, skip_pre_build: "false" }
-          - { name: "3.12", python: "3.12", os: ubuntu-latest, tox: py312, skip_pre_build: "false" }
-          - { name: "3.11", python: "3.11", os: ubuntu-latest, tox: py311, skip_pre_build: "false" }
-          - { name: "3.10", python: "3.10", os: ubuntu-latest, tox: py310, skip_pre_build: "false" }
-          - { name: "3.9", python: "3.9", os: ubuntu-latest, tox: py39, skip_pre_build: "false" }
+          - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main }
+          - { name: "3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
+          - { name: "3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
+          - { name: "3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
+          - { name: "3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # Set up Python and virtual environment
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-      - name: Install poetry
+      - name: Make venv
+        run: |
+          python -m venv .venv
+      - name: Activate the virtualenv
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          .venv\Scripts\activate
+      # Set up poetry and cache for dependencies
+      - name: install poetry
         run: |
           python -m pip install poetry
-      - name: Configure poetry
-        run: |
-          python -m poetry config virtualenvs.in-project true
+          poetry config virtualenvs.create false
       - name: Cache the virtualenv
         uses: actions/cache@v3
         with:
-          path: ./.venv
+          path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('pyproject.toml') }}
-      - name: Install poetry plugin
-        run: python -m poetry self add "poetry-dynamic-versioning[plugin]"
+      - name: Install versioning plugin
+        run: |
+          python -m pip install poetry-dynamic-versioning[plugin]
       # Install test dependencies (tox) to the root (non-package install)
       - name: Install test dependencies
         run: |
-          python -m poetry install --no-root --only test
+          poetry install --no-root --only test
       - name: set full Python version in PY env var
+        if: ${{ matrix.os != 'windows-latest' }}
         # See https://pre-commit.com/#github-actions-example
         run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
       # Install node and yarn in order to build the front end during packaging  
@@ -59,24 +68,8 @@ jobs:
           node-version: 18.x
       - name: Install Yarn
         run: npm install -g yarn
-      # Build and install the package if it's Windows, to service shell-based tests
-      - name: Install binary on Windows
-        if: ${{ matrix.os == 'windows-latest' }}
-        env:
-          SKIP_PRE_BUILD: true
-        # Make `locust` available on the Windows shell by installing it with `pip`
-        # before running tests which invoke it in the `cmd` prompt
-        run: |
-          python -m poetry build
-          python -m poetry self add "poetry-plugin-export"
-          python -m poetry export --without-hashes --format=requirements.txt > requirements.txt
-          pip install -r requirements.txt
-          pip install poetry-core>=1.0.0
-          pip install locust --find-links=dist
       - name: Run tox tests
-        env:
-          SKIP_PRE_BUILD: ${{ matrix.skip_pre_build }}
-        run: python -m poetry run tox -e ${{ matrix.tox }}
+        run: poetry run tox -e ${{ matrix.tox }}
 
   lint_typecheck_test_webui:
     runs-on: ubuntu-latest
