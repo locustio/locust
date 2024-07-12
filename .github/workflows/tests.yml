@@ -43,7 +43,7 @@ jobs:
       - name: Activate the virtualenv
         if: ${{ matrix.os != 'windows-latest' }}
         run: |
-          source .venv\bin\activate
+          source .venv/bin/activate
       # Set up poetry and cache for dependencies
       - name: install poetry
         run: |
