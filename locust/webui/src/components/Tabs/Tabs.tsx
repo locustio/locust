@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import { Box, Tabs as MuiTabs, Tab as MuiTab, Container } from '@mui/material';
 import { connect } from 'react-redux';
@@ -11,7 +11,11 @@ import { IRootState } from 'redux/store';
 import { ITab } from 'types/tab.types';
 import { pushQuery } from 'utils/url';
 
-interface ITabs {
+interface IStateProps {
+  extendedTabs?: ITab[];
+}
+
+interface ITabs extends IStateProps {
   currentTabIndexFromQuery: number;
   notification: INotificationState;
   setNotification: (payload: INotificationState) => void;
@@ -48,6 +52,10 @@ function Tabs({ currentTabIndexFromQuery, notification, setNotification, setUrl,
     setCurrentTabIndex(index);
   };
 
+  useEffect(() => {
+    setCurrentTabIndex(currentTabIndexFromQuery);
+  }, [currentTabIndexFromQuery]);
+
   return (
     <Container maxWidth='xl'>
       <Box sx={{ mb: 2 }}>
@@ -68,10 +76,13 @@ function Tabs({ currentTabIndexFromQuery, notification, setNotification, setUrl,
   );
 }
 
-const storeConnector = (state: IRootState) => {
+const storeConnector = (
+  state: IRootState,
+  { extendedTabs: extendedTabsFromProps }: IStateProps,
+) => {
   const {
     notification,
-    swarm: { extendedTabs = [] },
+    swarm: { extendedTabs },
     url: { query: urlQuery },
   } = state;
 
@@ -79,13 +90,19 @@ const storeConnector = (state: IRootState) => {
     shouldDisplayTab(state),
   );
 
-  const tabs = [...baseTabs, ...conditionalTabsToDisplay, ...extendedTabs];
+  const tabs = [
+    ...baseTabs,
+    ...conditionalTabsToDisplay,
+    ...(extendedTabsFromProps || extendedTabs || []),
+  ];
+
+  const tabIndexFromQuery =
+    urlQuery && urlQuery.tab ? tabs.findIndex(({ key }) => key === urlQuery.tab) : 0;
 
   return {
     notification,
     tabs,
-    currentTabIndexFromQuery:
-      urlQuery && urlQuery.tab ? tabs.findIndex(({ key }) => key === urlQuery.tab) : 0,
+    currentTabIndexFromQuery: tabIndexFromQuery > -1 ? tabIndexFromQuery : 0,
   };
 };
 

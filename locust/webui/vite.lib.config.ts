@@ -20,7 +20,7 @@ export default defineConfig((config: UserConfig) => ({
   build: {
     outDir: 'lib',
     lib: {
-      entry: './src/lib.ts',
+      entry: './src/lib.tsx',
       fileName: 'webui',
       formats: ['es', 'cjs'] as LibraryFormats[],
     },

@@ -12,15 +12,17 @@ import { THEME_MODE } from 'constants/theme';
 import useSwarmUi from 'hooks/useSwarmUi';
 import { IRootState } from 'redux/store';
 import createTheme from 'styles/theme';
+import { ITab } from 'types/tab.types';
 import { SwarmState } from 'types/ui.types';
 
 interface IDashboard {
   isDarkMode: boolean;
   isModalOpen?: boolean;
   swarmState: SwarmState;
+  extendedTabs?: ITab[];
 }
 
-function Dashboard({ isDarkMode, swarmState }: IDashboard) {
+function Dashboard({ isDarkMode, swarmState, extendedTabs }: IDashboard) {
   useSwarmUi();
   useLogViewer();
 
@@ -32,7 +34,9 @@ function Dashboard({ isDarkMode, swarmState }: IDashboard) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Layout>{swarmState === SWARM_STATE.READY ? <SwarmForm /> : <Tabs />}</Layout>
+      <Layout>
+        {swarmState === SWARM_STATE.READY ? <SwarmForm /> : <Tabs extendedTabs={extendedTabs} />}
+      </Layout>
     </ThemeProvider>
   );
 }
