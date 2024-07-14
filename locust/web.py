@@ -5,6 +5,7 @@ import json
 import logging
 import mimetypes
 import os.path
+import select
 from functools import wraps
 from html import escape
 from io import StringIO
@@ -14,6 +15,7 @@ from time import time
 from typing import TYPE_CHECKING, Any
 
 import gevent
+import psycopg2.extensions
 from flask import (
     Flask,
     Response,
@@ -28,7 +30,9 @@ from flask import (
 )
 from flask_cors import CORS
 from flask_login import LoginManager, login_required
+from flask_socketio import SocketIO, send
 from gevent import pywsgi
+from psycopg2.extensions import Notify
 
 from . import __version__ as version
 from . import argument_parser
@@ -51,6 +55,73 @@ greenlet_exception_handler = greenlet_exception_logger(logger)
 DEFAULT_CACHE_TIME = 2.0
 
 
+# copied from Timescale. Couldnt be arsed
+def _dbconn(env: Environment) -> psycopg2.extensions.connection:
+    logging.debug(
+        f"Connecting to Postgres ({env.parsed_options.pguser}@{env.parsed_options.pghost}:{env.parsed_options.pgport or 5432})"
+    )
+    try:
+        conn = psycopg2.connect(
+            host=env.parsed_options.pghost,
+            user=env.parsed_options.pguser,
+            password=env.parsed_options.pgpassword,
+            database=env.parsed_options.pgdatabase,
+            port=env.parsed_options.pgport,
+            keepalives_idle=120,
+            keepalives_interval=20,
+            keepalives_count=6,
+        )
+    except Exception:
+        logging.error(
+            f"Could not connect to postgres ({env.parsed_options.pguser}@{env.parsed_options.pghost}:{env.parsed_options.pgport or 5432})."
+            + "Use standard postgres env vars or --pg* command line options to specify where to report locust samples (https://www.postgresql.org/docs/13/libpq-envars.html)"
+        )
+        raise
+    conn.autocommit = True
+    return conn
+
+
+def listen_and_emit(env: Environment, conn):
+    conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)  # is this needed?
+
+    curs = conn.cursor()
+    curs.execute("""
+CREATE OR REPLACE FUNCTION notify_request_insert()
+RETURNS trigger AS $$
+DECLARE
+    payload JSON;
+BEGIN
+    -- Convert the new row into JSON
+    payload := row_to_json(NEW);
+    -- Send the notification with the payload
+    PERFORM pg_notify('insert_event', payload::text);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+""")
+    curs.execute("""
+DROP TRIGGER IF EXISTS request_insert_trigger
+ON request;
+""")
+    curs.execute("""
+CREATE TRIGGER request_insert_trigger
+AFTER INSERT ON request
+FOR EACH ROW
+EXECUTE FUNCTION notify_request_insert();
+""")
+
+    curs.execute("LISTEN insert_event;")
+    while True:
+        if select.select([conn], [], [], 5) == ([], [], []):
+            pass  # timeout
+        else:
+            conn.poll()
+            while conn.notifies:
+                n: Notify = conn.notifies.pop(0)
+                row = json.loads(n.payload)
+                env.web_ui.socketio.emit("request", row)
+
+
 class WebUI:
     """
     Sets up and runs a Flask web app that can start and stop load tests using the
@@ -69,6 +140,8 @@ class WebUI:
         def my_custom_route():
             return "your IP is: %s" % request.remote_addr
     """
+
+    socketio: SocketIO | None = None
 
     greenlet: gevent.Greenlet | None = None
     """
@@ -120,6 +193,8 @@ class WebUI:
         self.userclass_picker_is_active = userclass_picker_is_active
         self.web_login = web_login
         app = Flask(__name__)
+        self.socketio = SocketIO()
+        self.socketio.init_app(app)
         CORS(app)
         self.app = app
         app.jinja_env.add_extension("jinja2.ext.do")
@@ -516,6 +591,7 @@ class WebUI:
 
     def start(self):
         self.greenlet = gevent.spawn(self.start_server)
+        self.listen_and_emit_greenlet = gevent.spawn(listen_and_emit, self.environment, _dbconn(self.environment))
         self.greenlet.link_exception(greenlet_exception_handler)
 
     def start_server(self):
