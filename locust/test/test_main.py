@@ -70,11 +70,7 @@ class ProcessIntegrationTest(TestCase):
 class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_help_arg(self):
         output = subprocess.check_output(
-            ["locust", "--help"],
-            stderr=subprocess.STDOUT,
-            timeout=5,
-            text=True,
-            shell=True
+            ["locust", "--help"], stderr=subprocess.STDOUT, timeout=5, text=True, shell=True
         ).strip()
         self.assertTrue(output.startswith("Usage: locust [options] [UserClass"))
         self.assertIn("Common options:", output)
@@ -107,7 +103,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             gevent.sleep(1)
 
@@ -147,11 +143,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 with open("locust.conf", "w") as conf_file:
                     conf_file.write("custom-string-arg config_file_value")
                 proc = subprocess.Popen(
-                    ["locust", "-f", file_path, "--autostart"],
-                    stdout=PIPE,
-                    stderr=PIPE,
-                    text=True,
-                    shell=True
+                    ["locust", "-f", file_path, "--autostart"], stdout=PIPE, stderr=PIPE, text=True, shell=True
                 )
                 gevent.sleep(1)
             finally:
@@ -233,7 +225,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
         ) as file_path:
             proc = subprocess.Popen(
-                ["locust", "-f", file_path, "--web-port", str(port), "--autostart"], stdout=PIPE, stderr=PIPE, text=True, shell=True
+                ["locust", "-f", file_path, "--web-port", str(port), "--autostart"],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+                shell=True,
             )
             gevent.sleep(1)
             response = requests.get(f"http://localhost:{port}/")
@@ -263,7 +259,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             gevent.sleep(1)
             response = requests.get(f"http://localhost:{port}/")
@@ -287,7 +283,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
             )
         ) as file_path:
-            proc = subprocess.Popen(["locust", "-f", file_path, "--autostart"], stdout=PIPE, stderr=PIPE, text=True, shell=True)
+            proc = subprocess.Popen(
+                ["locust", "-f", file_path, "--autostart"], stdout=PIPE, stderr=PIPE, text=True, shell=True
+            )
             gevent.sleep(1)
             stdout, stderr = proc.communicate()
             self.assertIn("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", stderr)
@@ -298,7 +296,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:
                 proc = subprocess.Popen(
-                    ["locust", "-f", f"{mocked1.file_path},{mocked2.file_path}"], stdout=PIPE, stderr=PIPE, text=True, shell=True
+                    ["locust", "-f", f"{mocked1.file_path},{mocked2.file_path}"],
+                    stdout=PIPE,
+                    stderr=PIPE,
+                    text=True,
+                    shell=True,
                 )
                 gevent.sleep(SHORT_SLEEP)
                 proc.send_signal(signal.SIGTERM)
@@ -392,7 +394,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             stdout, stderr = proc.communicate(timeout=4)
             self.assertNotIn("Traceback", stderr)
@@ -414,7 +416,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             stdout, stderr = proc.communicate()
             self.assertIn("ERROR/locust.main: Valid --stop-timeout formats are", stderr)
@@ -437,7 +439,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             gevent.sleep(1)
             proc.send_signal(signal.SIGTERM)
@@ -478,7 +480,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
-                        shell=True
+                        shell=True,
                     )
                     gevent.sleep(3)
                     proc.send_signal(signal.SIGTERM)
@@ -517,7 +519,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
 
             try:
@@ -583,7 +585,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    shell=True
+                    shell=True,
                 )
 
                 try:
@@ -617,7 +619,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             gevent.sleep(1.9)
             try:
@@ -657,7 +659,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             gevent.sleep(2.8)
             try:
@@ -706,7 +708,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
-                        shell=True
+                        shell=True,
                     )
                     gevent.sleep(3)
                     proc.send_signal(signal.SIGTERM)
@@ -749,7 +751,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             gevent.sleep(2.8)
             response = requests.get(f"http://localhost:{port}/")
@@ -816,7 +818,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    shell=True
+                    shell=True,
                 )
                 gevent.sleep(2.8)
                 success = True
@@ -850,7 +852,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     ["locust", "-f", mocked.file_path, "--web-host", "127.0.0.2", "--web-port", str(port)],
                     stdout=PIPE,
                     stderr=PIPE,
-                    shell=True
+                    shell=True,
                 )
                 gevent.sleep(1)
                 self.assertEqual(200, requests.get(f"http://127.0.0.2:{port}/", timeout=1).status_code)
@@ -869,7 +871,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
-                shell=True
+                shell=True,
             )
             gevent.sleep(1)
             self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=3).status_code)
@@ -1058,7 +1060,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
-                        shell=True
+                        shell=True,
                     )
                     stdout, stderr = proc.communicate()
                     self.assertIn("Starting Locust", stderr)
@@ -1143,7 +1145,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stderr=subprocess.STDOUT,
                         timeout=10,
                         text=True,
-                        shell=True
+                        shell=True,
                     ).strip()
                 except subprocess.CalledProcessError as e:
                     raise AssertionError(f"Running locust command failed. Output was:\n\n{e.stdout}") from e
@@ -1167,7 +1169,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    shell=True
+                    shell=True,
                 )
                 gevent.sleep(2)
                 proc.send_signal(signal.SIGTERM)
@@ -1190,7 +1192,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
-                proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True, shell=True)
+                proc = subprocess.Popen(
+                    ["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True, shell=True
+                )
                 gevent.sleep(1)
                 stdout, stderr = proc.communicate()
 
@@ -1207,7 +1211,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             print(MOCK_LOCUSTFILE_CONTENT_C)
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
                 proc = subprocess.Popen(
-                    ["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"], stdout=PIPE, stderr=PIPE, text=True, shell=True
+                    ["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"],
+                    stdout=PIPE,
+                    stderr=PIPE,
+                    text=True,
+                    shell=True,
                 )
                 gevent.sleep(1)
                 stdout, stderr = proc.communicate()
@@ -1242,7 +1250,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_D) as file2:
-                proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True, shell=True)
+                proc = subprocess.Popen(
+                    ["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True, shell=True
+                )
                 gevent.sleep(1)
                 stdout, stderr = proc.communicate()
 
@@ -1364,7 +1374,7 @@ class MyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             stdout, stderr = proc.communicate()
             self.assertIn("MyUser had no tasks left after filtering", stderr)
@@ -1407,7 +1417,7 @@ class MyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             gevent.sleep(1.9)
             proc.send_signal(signal.SIGINT)
@@ -1454,7 +1464,7 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             _, stderr = proc.communicate()
             self.assertIn("Waiting for workers to be ready, 0 of 2 connected", stderr)
@@ -1503,7 +1513,7 @@ def on_test_stop(environment, **kwargs):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             proc_worker = subprocess.Popen(
                 [
@@ -1517,7 +1527,7 @@ def on_test_stop(environment, **kwargs):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             stdout, stderr = proc.communicate()
             stdout_worker, stderr_worker = proc_worker.communicate()
@@ -1570,7 +1580,7 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             proc_worker = subprocess.Popen(
                 [
@@ -1584,7 +1594,7 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             stdout, stderr = proc.communicate()
             stdout_worker, stderr_worker = proc_worker.communicate()
@@ -1627,7 +1637,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             proc_worker = subprocess.Popen(
                 [
@@ -1639,7 +1649,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             stdout = proc.communicate()[0]
             proc_worker.communicate()
@@ -1684,7 +1694,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             proc_worker = subprocess.Popen(
                 [
@@ -1696,7 +1706,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             stdout = proc.communicate()[0]
             proc_worker.communicate()
@@ -1739,7 +1749,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             proc_worker = subprocess.Popen(
                 [
@@ -1751,7 +1761,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             gevent.sleep(2)
             # modify the locustfile to trigger warning about file change when the second worker connects
@@ -1769,7 +1779,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             stdout = proc.communicate()[0]
             stdout_worker = proc_worker.communicate()[0]
@@ -1809,7 +1819,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             gevent.sleep(2)
             proc = subprocess.Popen(
@@ -1827,7 +1837,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
 
             stdout = proc.communicate()[0]
@@ -1868,7 +1878,7 @@ class SecondUser(HttpUser):
                     stderr=STDOUT,
                     stdout=PIPE,
                     text=True,
-                    shell=True
+                    shell=True,
                 )
                 proc_worker = subprocess.Popen(
                     [
@@ -1880,7 +1890,7 @@ class SecondUser(HttpUser):
                     stderr=STDOUT,
                     stdout=PIPE,
                     text=True,
-                    shell=True
+                    shell=True,
                 )
 
                 try:
@@ -1932,7 +1942,7 @@ class SecondUser(HttpUser):
                 stderr=DEVNULL,
                 stdout=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             stdout, stderr = proc.communicate()
 
@@ -1987,7 +1997,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             proc_worker_1 = subprocess.Popen(
                 [
@@ -2001,7 +2011,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             proc_worker_2 = subprocess.Popen(
                 [
@@ -2015,7 +2025,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             stdout, stderr = master.communicate()
             self.assertNotIn("Traceback", stderr)
@@ -2057,7 +2067,6 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
             )
             try:
                 _, stderr = proc.communicate(timeout=9)
@@ -2078,7 +2087,6 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
             )
             try:
                 _, stderr = proc.communicate(timeout=9)
@@ -2098,7 +2106,6 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
             )
 
             worker_parent_proc = subprocess.Popen(
@@ -2107,7 +2114,6 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
             )
 
             try:
@@ -2153,7 +2159,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             gevent.sleep(3)
             children = proc.children(recursive=True)
@@ -2206,7 +2212,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
 
             worker_parent_proc = subprocess.Popen(
@@ -2223,7 +2229,7 @@ class AnyUser(HttpUser):
                 stderr=PIPE,
                 text=True,
                 start_new_session=True,
-                shell=True
+                shell=True,
             )
             gevent.sleep(2)
             master_proc.kill()
@@ -2256,7 +2262,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             _, stderr = proc.communicate()
             self.assertIn("Unknown User(s): UserThatDoesntExist", stderr)
@@ -2288,14 +2294,14 @@ class AnyUser(User):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             master_proc = subprocess.Popen(
                 ["locust", "-f", mocked.file_path, "--master", "--headless", "-t", "5"],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
             try:
                 _, stderr = worker_proc.communicate(timeout=3)
