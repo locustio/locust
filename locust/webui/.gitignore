@@ -4,3 +4,4 @@ tsconfig.tsbuildinfo
 .rollup.cache
 lib
 dist
+locust-ui-*.tgz

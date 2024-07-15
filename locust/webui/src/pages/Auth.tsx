@@ -2,10 +2,10 @@ import { useMemo } from 'react';
 import { Alert, Box, Button, IconButton, TextField, Typography } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
-import { useSelector } from 'react-redux';
 
 import DarkLightToggle from 'components/Layout/Navbar/DarkLightToggle';
 import { THEME_MODE } from 'constants/theme';
+import { useSelector } from 'redux/hooks';
 import createTheme from 'styles/theme';
 import { IAuthArgs } from 'types/auth.types';
 

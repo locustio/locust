@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
+  "type": "module",
   "main": "./lib/webui.js",
-  "module": "./lib/webui.mjs",
   "types": "./lib/types/lib.d.ts",
   "files": [
-    "dist",
+    "lib",
+    "README.md",
     "../../LICENSE"
   ],
+  "prepack": "json -f package.json -I -e \"delete this.devDependencies; delete this.dependencies; delete this.scripts\"",
   "scripts": {
     "dev": "vite",
     "dev:watch": "vite build --watch",
@@ -21,25 +23,35 @@
     "type-check": "tsc",
     "test": "vitest --silent=false"
   },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-redux": "^8.0.5"
+  },
+  "peerDependenciesMeta": {
+    "react-redux": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.14.9",
     "@mui/material": "^5.14.10",
-    "@reduxjs/toolkit": "^1.9.3",
-    "@vitejs/plugin-react-swc": "^3.3.2",
+    "@reduxjs/toolkit": "^2.2.6",
+    "@vitejs/plugin-react-swc": "^3.7.0",
     "echarts": "^5.4.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-error-boundary": "^4.0.12",
     "react-markdown": "^9.0.0",
-    "react-redux": "^8.0.5",
+    "react-redux": "^9.1.2",
     "vite": "^4.5.1",
-    "vite-plugin-checker": "^0.6.2",
-    "vite-tsconfig-paths": "^4.2.1"
+    "vite-plugin-checker": "^0.7.2",
+    "vite-plugin-dts": "^3.9.1",
+    "vite-tsconfig-paths": "^4.3.2"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "^11.1.6",
     "@testing-library/react": "^14.1.0",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
