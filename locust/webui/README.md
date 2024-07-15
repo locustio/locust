@@ -85,29 +85,4 @@ const extendedTabs = {[
     },
 ]};
 ```
-Locust UI additionally exports it's own Redux Provider and typed hooks that you may use in place of importing directly from react-redux:
-```js
-import {
-  LocustProvider, // Wrapper of react-redux Provider using locustStore
-  useSelector, // Typed wrapper of react-redux useSelector
-} from "locust-webui";
-
-function App() {
-    const locustState = useSelector(state => state);
-
-    return (
-        <LocustUi 
-            // ...
-        />
-    )
-}
-
-ReactDOM.createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-        <LocustProvider>
-            <App />
-        </LocustProvider>
-    </React.StrictMode>
-);
-```
 

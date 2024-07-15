@@ -1,16 +1,13 @@
-import { ReactNode, useEffect } from 'react';
-import { Provider as ReactReduxProvider } from 'react-redux';
-import { TypedUseSelectorHook, useSelector as useReduxSelector } from 'react-redux';
+import { useEffect } from 'react';
+import { Provider } from 'react-redux';
 
 import Dashboard from 'pages/Dashboard';
 import { useAction } from 'redux/hooks';
 import { swarmActions } from 'redux/slice/swarm.slice';
 import { uiActions } from 'redux/slice/ui.slice';
-import { IRootState, store } from 'redux/store';
+import { store } from 'redux/store';
 import { ITab } from 'types/tab.types';
 export type { IRootState } from 'redux/store';
-
-export const useSelector: TypedUseSelectorHook<IRootState> = useReduxSelector;
 
 export const locustStore = store;
 
@@ -50,10 +47,6 @@ export interface ILocustUi<TabType, StatKeys extends string> {
   extendedStats: IExtendedStat<TabType, StatKeys>[];
 }
 
-export function LocustProvider({ children }: { children: ReactNode }) {
-  return <ReactReduxProvider store={store}>{children}</ReactReduxProvider>;
-}
-
 export default function LocustUi<TabType extends string, StatKey extends string>({
   extendedTabs,
   extendedTables,
@@ -72,8 +65,8 @@ export default function LocustUi<TabType extends string, StatKey extends string>
   }, [extendedStats]);
 
   return (
-    <LocustProvider>
+    <Provider store={locustStore}>
       <Dashboard extendedTabs={extendedTabs} />
-    </LocustProvider>
+    </Provider>
   );
 }
