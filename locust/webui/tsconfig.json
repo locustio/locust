@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "allowJs": false,
+    "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -18,6 +18,5 @@
     }
   },
   "include": ["src"],
-  "typeRoots": ["src/global.d.ts", "src/images.d.ts"],
-  "exclude": ["**/*.test.ts", "**/*.test.tsx", "**/test", "**/tests"]
+  "typeRoots": ["src/global.d.ts", "src/images.d.ts"]
 }

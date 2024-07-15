@@ -10,6 +10,7 @@ export default defineConfig((config: UserConfig) => ({
     tsconfigPaths(),
     dts({
       outDir: './lib/types',
+      exclude: ['**/*.test.ts', '**/*.test.tsx', '**/test', '**/tests'],
     }),
     config.mode !== 'production' &&
       config.mode !== 'test' &&
