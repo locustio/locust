@@ -5,9 +5,10 @@
   "license": "MIT",
   "main": "./lib/webui.js",
   "module": "./lib/webui.mjs",
-  "typings": "./lib/types/main.d.ts",
+  "types": "./lib/types/lib.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "../../LICENSE"
   ],
   "scripts": {
     "dev": "vite",

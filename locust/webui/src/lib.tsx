@@ -43,7 +43,7 @@ export interface ILocustUi<TabType, StatKeys extends string> {
   extendedStats: IExtendedStat<TabType, StatKeys>[];
 }
 
-export default function LocustUi<TabType extends string = string, StatKey extends string = string>({
+export default function LocustUi<TabType extends string, StatKey extends string>({
   extendedTabs,
   extendedTables,
   extendedReports,
