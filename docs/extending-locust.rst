@@ -122,7 +122,7 @@ as it involves also writing and including HTML and Javascript files to be served
 greatly enhance the utility and customizability of the web UI.
 
 A working example of extending the web UI, complete with HTML and Javascript example files, can be found
-in the `examples directory <https://github.com/locustio/locust/tree/master/examples/>`_ of the Locust
+in the `examples directory <https://github.com/locustio/locust/blob/master/examples/extend_web_ui.py>`_ of the Locust
 source code.
 
 *  ``extend_modern_web_ui.py``: Display a table with content-length for each call.
