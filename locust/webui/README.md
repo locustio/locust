@@ -6,7 +6,7 @@ The Locust UI is used for viewing stats, reports, and information on your curren
 
 The Locust UI may be extended to fit your needs. If you only need limited extensibility, you may do so in your Locustfile, see the [extend_web_ui example](https://github.com/locustio/locust/blob/master/examples/extend_web_ui.py). 
 
-However, you may want to further extend certain functionalities. To do so, you may replace the default Locust UI with your own React application. Start by installing the locust-ui:
+However, you may want to further extend certain functionalities. To do so, you may replace the default Locust UI with your own React application. Start by installing the locust-ui in your React application:
 ```sh
 npm install locust-ui
 ```
@@ -50,6 +50,14 @@ import LocustUi from "locust-ui";
     ]}
 />
 ```
+
+For Locust to be able to pass data to your React frontend, place the following script tag in your html template file:
+```html
+<script>
+    window.templateArgs = {{ template_args|tojson }}
+</script>
+```
+
 The Locust UI package exports a Redux store. By wrapping your App in a Redux provider, you may be able to read Locust data from state:
 ```js
 import { locustStore } from "locust-webui";
@@ -64,7 +72,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 );
 ```
 
-By default, the extended tabs will display the provided data in a table. However you may render any React component in the tab:
+Lastly, you must configure Locust to point to your own React build output. See the [locust_ui_as_a_module example](https://github.com/locustio/locust/blob/master/examples/locust_ui_as_a_module.py).
+
+### Options
+By default, the extended tabs will display the provided data in a table. However you may choose to render any React component in the tab:
 ```js
 import { IRootState } from "locust-webui";
 import { useSelector } from "react-redux";
@@ -85,4 +96,6 @@ const extendedTabs = {[
     },
 ]};
 ```
+
+
 

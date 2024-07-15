@@ -117,12 +117,11 @@ Extending Web UI
 As an alternative to adding simple web routes, you can use `Flask Blueprints
 <https://flask.palletsprojects.com/en/1.1.x/blueprints/>`_ and `templates
 <https://flask.palletsprojects.com/en/1.1.x/tutorial/templates/>`_ to not only add routes but also extend
-the web UI to allow you to show custom data along side the built-in Locust stats. This is more advanced
-as it involves also writing and including HTML and Javascript files to be served by routes but can
+the web UI to allow you to show custom data along side the built-in Locust stats. This is more advanced but can
 greatly enhance the utility and customizability of the web UI.
 
-A working example of extending the web UI, complete with HTML and Javascript example files, can be found
-in the `examples directory <https://github.com/locustio/locust/blob/master/examples/extend_web_ui.py>`_ of the Locust
+Working examples of extending the web UI can be found
+in the `examples directory <https://github.com/locustio/locust/tree/master/examples>`_ of the Locust
 source code.
 
 *  ``extend_modern_web_ui.py``: Display a table with content-length for each call.
