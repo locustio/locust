@@ -3,6 +3,7 @@ import { Alert, Box, Button, IconButton, TextField, Typography } from '@mui/mate
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
 
+import Logo from 'assets/logo.png';
 import DarkLightToggle from 'components/Layout/Navbar/DarkLightToggle';
 import { THEME_MODE } from 'constants/theme';
 import { useSelector } from 'redux/hooks';
@@ -41,7 +42,7 @@ export default function Auth({ authProviders, error, usernamePasswordCallback }:
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'center', columnGap: 2 }}>
-          <img height='52' src='./assets/logo.png' width='52' />
+          <img height='52' src={Logo} width='52' />
           <Typography
             component='h1'
             noWrap

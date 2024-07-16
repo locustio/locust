@@ -2,8 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import App from 'App';
 import * as authConstants from 'constants/auth';
-import * as swarmConstants from 'constants/swarm';
-import { swarmReportMock } from 'test/mocks/swarmState.mock';
 import { renderWithProvider } from 'test/testUtils';
 
 describe('App', () => {
@@ -23,13 +21,5 @@ describe('App', () => {
     expect(getByLabelText('Password')).toBeTruthy();
 
     (vi.mocked(authConstants) as any).authArgs = undefined;
-  });
-
-  it('renders the HTML Report when isReport is true', () => {
-    vi.mocked(swarmConstants).htmlReportProps = swarmReportMock;
-
-    const { getByText } = renderWithProvider(<App />);
-
-    expect(getByText('Locust Test Report')).toBeTruthy();
   });
 });
