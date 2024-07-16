@@ -5,7 +5,8 @@ from html import escape
 from itertools import chain
 from json import dumps
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment as JinjaEnvironment
+from jinja2 import FileSystemLoader
 
 from . import stats as stats_module
 from .runners import STATE_STOPPED, STATE_STOPPING, MasterRunner
@@ -14,17 +15,17 @@ from .user.inspectuser import get_ratio
 from .util.date import format_utc_timestamp
 
 PERCENTILES_FOR_HTML_REPORT = [0.50, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
+DEFAULT_BUILD_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui", "dist")
 
 
-def render_template(file, build_path, **kwargs):
-    env = Environment(loader=FileSystemLoader(build_path), extensions=["jinja2.ext.do"])
+def render_template_from(file, build_path=DEFAULT_BUILD_PATH, **kwargs):
+    env = JinjaEnvironment(loader=FileSystemLoader(build_path))
     template = env.get_template(file)
     return template.render(**kwargs)
 
 
 def get_html_report(
     environment,
-    build_path,
     show_download_link=True,
     theme="",
 ):
@@ -67,9 +68,8 @@ def get_html_report(
         "total": get_ratio(environment.user_classes, user_spawned, True),
     }
 
-    return render_template(
+    return render_template_from(
         "report.html",
-        build_path=build_path,
         template_args={
             "is_report": True,
             "requests_statistics": [stat.to_dict(escape_string_values=True) for stat in requests_statistics],

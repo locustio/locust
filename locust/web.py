@@ -33,7 +33,7 @@ from gevent import pywsgi
 from . import __version__ as version
 from . import argument_parser
 from . import stats as stats_module
-from .html import get_html_report
+from .html import DEFAULT_BUILD_PATH, get_html_report, render_template_from
 from .log import get_logs, greenlet_exception_logger
 from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
 from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
@@ -49,7 +49,6 @@ logger = logging.getLogger(__name__)
 greenlet_exception_handler = greenlet_exception_logger(logger)
 
 DEFAULT_CACHE_TIME = 2.0
-DEFAULT_BUILD_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui", "dist")
 
 
 class WebUI:
@@ -157,7 +156,13 @@ class WebUI:
 
         @app.route("/assets/<path:path>")
         def send_assets(path):
-            return send_from_directory(os.path.join(self.app.template_folder, "assets"), path)
+            directory = (
+                os.path.join(self.app.template_folder, "assets")
+                if os.path.exists(os.path.join(app.template_folder, "assets", path))
+                else os.path.join(DEFAULT_BUILD_PATH, "assets")
+            )
+
+            return send_from_directory(directory, path)
 
         @app.route("/")
         @self.auth_required_if_enabled
@@ -307,7 +312,6 @@ class WebUI:
             theme = request.args.get("theme", "")
             res = get_html_report(
                 self.environment,
-                build_path=DEFAULT_BUILD_PATH,
                 show_download_link=not request.args.get("download"),
                 theme=theme,
             )
@@ -499,7 +503,7 @@ class WebUI:
             if not self.web_login:
                 return redirect(url_for("index"))
 
-            return render_template(
+            return render_template_from(
                 "auth.html",
                 auth_args=self.auth_args,
             )
