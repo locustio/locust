@@ -14,19 +14,17 @@ from .user.inspectuser import get_ratio
 from .util.date import format_utc_timestamp
 
 PERCENTILES_FOR_HTML_REPORT = [0.50, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
-ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
-BUILD_PATH = os.path.join(ROOT_PATH, "webui", "dist")
-STATIC_PATH = os.path.join(BUILD_PATH, "assets")
 
 
-def render_template(file, **kwargs):
-    env = Environment(loader=FileSystemLoader(BUILD_PATH), extensions=["jinja2.ext.do"])
+def render_template(file, build_path, **kwargs):
+    env = Environment(loader=FileSystemLoader(build_path), extensions=["jinja2.ext.do"])
     template = env.get_template(file)
     return template.render(**kwargs)
 
 
 def get_html_report(
     environment,
+    build_path,
     show_download_link=True,
     theme="",
 ):
@@ -56,16 +54,6 @@ def get_html_report(
     update_stats_history(environment.runner)
     history = stats.history
 
-    static_js = []
-    js_files = [os.path.basename(filepath) for filepath in glob.glob(os.path.join(STATIC_PATH, "*.js"))]
-
-    for js_file in js_files:
-        path = os.path.join(STATIC_PATH, js_file)
-        static_js.append("// " + js_file + "\n")
-        with open(path, encoding="utf8") as f:
-            static_js.append(f.read())
-        static_js.extend(["", ""])
-
     is_distributed = isinstance(environment.runner, MasterRunner)
     user_spawned = (
         environment.runner.reported_user_classes_count if is_distributed else environment.runner.user_classes_count
@@ -81,6 +69,7 @@ def get_html_report(
 
     return render_template(
         "report.html",
+        build_path=build_path,
         template_args={
             "is_report": True,
             "requests_statistics": [stat.to_dict(escape_string_values=True) for stat in requests_statistics],
@@ -107,5 +96,4 @@ def get_html_report(
             "percentiles_to_chart": stats_module.PERCENTILES_TO_CHART,
         },
         theme=theme,
-        static_js="\n".join(static_js),
     )

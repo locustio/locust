@@ -497,6 +497,13 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_USERCLASS_PICKER",
     )
     web_ui_group.add_argument(
+        "--build-path",
+        type=str,
+        default="",
+        help=configargparse.SUPPRESS,
+        env_var="LOCUST_BUILD_PATH",
+    )
+    web_ui_group.add_argument(
         "--legacy-ui",
         default=False,
         action="store_true",
