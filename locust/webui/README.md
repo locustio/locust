@@ -72,7 +72,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 );
 ```
 
-Lastly, you must configure Locust to point to your own React build output. See the [locust_ui_as_a_module example](https://github.com/locustio/locust/blob/master/examples/locust_ui_as_a_module.py).
+Lastly, you must configure Locust to point to your own React build output. To achieve this, you can use the flags `--build-path` and `--static-path`. For more see [the Locust docs](https://docs.locust.io/en/stable/configuration.html).
 
 ### Options
 By default, the extended tabs will display the provided data in a table. However you may choose to render any React component in the tab:
