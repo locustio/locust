@@ -1640,7 +1640,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True,
+                # shell=True,
             )
             proc_worker = subprocess.Popen(
                 [
@@ -1652,7 +1652,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True,
+                # shell=True,
             )
             stdout = proc.communicate()[0]
             proc_worker.communicate()
