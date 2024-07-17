@@ -1620,6 +1620,9 @@ class SecondUser(HttpUser):
             """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            print("### MQ START ###")
+            print(mocked.file_path)
+            print("### MQ END ###")
             proc = subprocess.Popen(
                 [
                     "locust",
