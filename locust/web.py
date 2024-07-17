@@ -458,7 +458,7 @@ class WebUI:
                             "count": row["count"],
                             "msg": escape(row["msg"]),
                             "traceback": escape(row["traceback"]),
-                            "nodes": ", ".join(row["nodes"]),
+                            "noddes": ", ".join(row["nodes"]),
                         }
                         for row in (environment.runner.exceptions.values() if environment.runner is not None else [])
                     ]
