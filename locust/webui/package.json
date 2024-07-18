@@ -11,6 +11,10 @@
     "README.md",
     "LICENSE"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/locustio/locust/tree/master/locust/webui"
+  },
   "prepack": "json -f package.json -I -e \"delete this.devDependencies; delete this.dependencies; delete this.scripts\"",
   "scripts": {
     "dev": "vite",
