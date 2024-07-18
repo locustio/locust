@@ -113,7 +113,7 @@ CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_
 PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0]
 
 PERCENTILES_TO_STATISTICS = [0.95, 0.99]
-PERCENTILES_TO_CHART = [0.95]
+PERCENTILES_TO_CHART = [0.5, 0.95]
 
 
 class RequestStatsAdditionError(Exception):
@@ -675,7 +675,6 @@ class StatsEntry:
             "safe_name": escape(self.name, quote=False),
             "num_requests": self.num_requests,
             "num_failures": self.num_failures,
-            "avg_response_time": self.avg_response_time,
             "min_response_time": 0 if self.min_response_time is None else proper_round(self.min_response_time),
             "max_response_time": proper_round(self.max_response_time),
             "current_rps": self.current_rps,
