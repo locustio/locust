@@ -23,21 +23,15 @@ export default defineConfig((config: UserConfig) => ({
   ],
   build: {
     outDir: 'lib',
+    minify: true,
+    sourcemap: false,
     lib: {
       entry: './src/lib.tsx',
       formats: ['es'] as LibraryFormats[],
       fileName: () => 'webui.js',
     },
-    sourcemap: true,
     rollupOptions: {
       external: ['react', 'react-dom', 'react-redux'],
-      output: {
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM',
-          'react-redux': 'react-redux',
-        },
-      },
     },
   },
 }));
