@@ -4,7 +4,7 @@ import { Box, Tabs as MuiTabs, Tab as MuiTab, Container } from '@mui/material';
 import { connect } from 'react-redux';
 
 import DataTable from 'components/DataTable/DataTable';
-import { baseTabs, conditionalTabs } from 'components/Tabs/Tabs.constants';
+import { baseTabs } from 'components/Tabs/Tabs.constants';
 import { INotificationState, notificationActions } from 'redux/slice/notification.slice';
 import { IUrlState, urlActions } from 'redux/slice/url.slice';
 import { IRootState } from 'redux/store';
@@ -13,6 +13,7 @@ import { pushQuery } from 'utils/url';
 
 interface IStateProps {
   extendedTabs?: ITab[];
+  tabs?: ITab[];
 }
 
 interface ITabs extends IStateProps {
@@ -78,30 +79,28 @@ function Tabs({ currentTabIndexFromQuery, notification, setNotification, setUrl,
 
 const storeConnector = (
   state: IRootState,
-  { extendedTabs: extendedTabsFromProps }: IStateProps,
+  { tabs: tabsFromProps, extendedTabs: extendedTabsFromProps }: IStateProps,
 ) => {
   const {
     notification,
-    swarm: { extendedTabs },
+    swarm: { extendedTabs: extendedTabsFromState },
     url: { query: urlQuery },
   } = state;
 
-  const conditionalTabsToDisplay = conditionalTabs.filter(({ shouldDisplayTab }) =>
-    shouldDisplayTab(state),
+  const tabs = tabsFromProps
+    ? tabsFromProps
+    : [...baseTabs, ...(extendedTabsFromProps || extendedTabsFromState || [])];
+
+  const tabsToDisplay = tabs.filter(
+    ({ shouldDisplayTab }) => !shouldDisplayTab || (shouldDisplayTab && shouldDisplayTab(state)),
   );
 
-  const tabs = [
-    ...baseTabs,
-    ...conditionalTabsToDisplay,
-    ...(extendedTabsFromProps || extendedTabs || []),
-  ];
-
   const tabIndexFromQuery =
-    urlQuery && urlQuery.tab ? tabs.findIndex(({ key }) => key === urlQuery.tab) : 0;
+    urlQuery && urlQuery.tab ? tabsToDisplay.findIndex(({ key }) => key === urlQuery.tab) : 0;
 
   return {
     notification,
-    tabs,
+    tabs: tabsToDisplay,
     currentTabIndexFromQuery: tabIndexFromQuery > -1 ? tabIndexFromQuery : 0,
   };
 };

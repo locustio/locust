@@ -20,9 +20,10 @@ interface IDashboard {
   isModalOpen?: boolean;
   swarmState: SwarmState;
   extendedTabs?: ITab[];
+  tabs?: ITab[];
 }
 
-function Dashboard({ isDarkMode, swarmState, extendedTabs }: IDashboard) {
+function Dashboard({ isDarkMode, swarmState, tabs, extendedTabs }: IDashboard) {
   useSwarmUi();
   useLogViewer();
 
@@ -35,7 +36,11 @@ function Dashboard({ isDarkMode, swarmState, extendedTabs }: IDashboard) {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Layout>
-        {swarmState === SWARM_STATE.READY ? <SwarmForm /> : <Tabs extendedTabs={extendedTabs} />}
+        {swarmState === SWARM_STATE.READY ? (
+          <SwarmForm />
+        ) : (
+          <Tabs extendedTabs={extendedTabs} tabs={tabs} />
+        )}
       </Layout>
     </ThemeProvider>
   );
