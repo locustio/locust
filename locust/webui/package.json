@@ -1,7 +1,6 @@
 {
   "name": "locust-ui",
   "version": "1.0.0",
-  "private": true,
   "license": "MIT",
   "type": "module",
   "main": "./lib/webui.js",
