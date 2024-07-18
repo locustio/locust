@@ -9,7 +9,7 @@
   "files": [
     "lib",
     "README.md",
-    "../../LICENSE"
+    "LICENSE"
   ],
   "prepack": "json -f package.json -I -e \"delete this.devDependencies; delete this.dependencies; delete this.scripts\"",
   "scripts": {
