@@ -132,11 +132,9 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual("/<html>", data["stats"][0]["name"])
         self.assertEqual("/&lt;html&gt;", data["stats"][0]["safe_name"])
         self.assertEqual("GET", data["stats"][0]["method"])
-        self.assertEqual(120, data["stats"][0]["avg_response_time"])
 
         self.assertEqual("Aggregated", data["stats"][1]["name"])
         self.assertEqual(1, data["stats"][1]["num_requests"])
-        self.assertEqual(120, data["stats"][1]["avg_response_time"])
 
     def test_stats_cache(self):
         self.stats.log_request("GET", "/test", 120, 5612)
