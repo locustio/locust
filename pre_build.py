@@ -14,10 +14,12 @@ def build() -> None:
         )
         exit(1)
     print("Building front end...")
-    use_shell = os.name == "nt"
-    subprocess.run(["yarn", "webui:install"], shell=use_shell)
-    subprocess.run(["yarn", "webui:build"], shell=use_shell)
-
+    if os.name == "nt":
+        subprocess.run(" ".join(["yarn", "webui:install"]), shell=True)
+        subprocess.run(" ".join(["yarn", "webui:build"]), shell=True)
+    else:
+        subprocess.run(["yarn", "webui:install"])
+        subprocess.run(["yarn", "webui:build"])
 
 if __name__ == "__main__":
     build()
