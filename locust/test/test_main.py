@@ -1270,7 +1270,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with mock_locustfile(content=content) as mocked:
             out = self.assert_run(
-                [
+                " ".join([
                     "locust",
                     "-f",
                     mocked.file_path,
@@ -1278,7 +1278,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "--headless",
                     "--exit-code-on-error",
                     "0",
-                ]
+                ])
             )
 
             self.assertIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", out.stderr)
@@ -1296,7 +1296,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with mock_locustfile(content=content) as mocked:
             out = self.assert_run(
-                [
+                " ".join([
                     "locust",
                     "--headless",
                     "-f",
@@ -1304,7 +1304,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "--exit-code-on-error=0",
                     "--users=1",
                     "--spawn-rate=1",
-                ]
+                ])
             )
             self.assertIn("Shape test starting.", out.stderr)
             self.assertIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", out.stderr)
@@ -1324,7 +1324,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with mock_locustfile(content=content) as mocked:
             out = self.assert_run(
-                [
+                " ".join([
                     "locust",
                     "-f",
                     mocked.file_path,
@@ -1333,7 +1333,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "--spawn-rate=1",
                     "--headless",
                     "--exit-code-on-error=0",
-                ]
+                ])
             )
             self.assertIn("Shape test starting.", out.stderr)
             self.assertNotIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", out.stderr)
@@ -1885,6 +1885,8 @@ class SecondUser(HttpUser):
                         "locust",
                         "-f",
                         "-",
+                        "--masterhost",
+                        "localhost",
                         "--worker",
                     ]),
                     stderr=STDOUT,
