@@ -1899,14 +1899,14 @@ class SecondUser(HttpUser):
                         "Got error from master: locustfile must be a full path to a single locustfile for file distribution to work",
                         stdout,
                     )
-                    proc.kill()
+                    proc.terminate()
                     master_stdout = proc.communicate(timeout=2)[0]
                     self.assertIn(
                         "--locustfile must be a full path to a single locustfile for file distribution", master_stdout
                     )
                 except Exception:
-                    proc.kill()
-                    proc_worker.kill()
+                    proc.terminate()
+                    proc_worker.terminate()
                     stdout, worker_stderr = proc_worker.communicate()
                     stdout_master, _ = proc.communicate()
 
