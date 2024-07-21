@@ -14,6 +14,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 import gevent
+import pexpect
 import psutil
 import requests
 from pyquery import PyQuery as pq
@@ -1865,71 +1866,41 @@ class SecondUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with mock_locustfile() as mocked2:
-                proc = subprocess.Popen(
-                    " ".join([
-                        "locust",
-                        "-f",
-                        f"'{mocked.file_path}, {mocked2.file_path}'",
-                        "--headless",
-                        "--master",
-                        "-L",
-                        "debug",
-                    ]),
-                    stderr=STDOUT,
-                    stdout=PIPE,
-                    text=True,
-                    shell=True,
-                    start_new_session=True,
+                master = pexpect.spawn(" ".join(
+                        [
+                            "locust",
+                            "-f",
+                            f"'{mocked.file_path}, {mocked2.file_path}'",
+                            "--headless",
+                            "--master",
+                            "-L",
+                            "debug",
+                        ]
+                    ),
+                    encoding="utf8"
                 )
-                proc_worker = subprocess.Popen(
-                    " ".join([
-                        "locust",
-                        "-f",
-                        "-",
-                        "--worker",
-                    ]),
-                    stderr=STDOUT,
-                    stdout=PIPE,
-                    text=True,
-                    shell=True,
-                    start_new_session=True,
+                master.logfile = sys.stdout
+                worker = pexpect.spawn(
+                    " ".join(
+                        [
+                            "locust",
+                            "-f",
+                            "-",
+                            "--worker",
+                        ]
+                    ),
+                    encoding="utf8",
                 )
-
-                try:
-                    stdout = proc_worker.communicate(timeout=5)[0]
-                    self.assertIn(
-                        "Got error from master: locustfile must be a full path to a single locustfile for file distribution to work",
-                        stdout,
-                    )
-                    for child in psutil.Process(proc.pid).children(recursive=True):
-                        child.terminate()
-                    master_stdout = proc.communicate(timeout=2)[0]
-                    self.assertIn(
-                        "--locustfile must be a full path to a single locustfile for file distribution", master_stdout
-                    )
-                except Exception:
-                    try:
-                        for child in psutil.Process(proc.pid).children(recursive=True):
-                            child.terminate()
-                    except psutil.NoSuchProcess:
-                        pass
-                    try:
-                        for child in psutil.Process(proc_worker.pid).children(recursive=True):
-                            child.terminate()
-                    except psutil.NoSuchProcess:
-                        pass
-                    stdout, worker_stderr = proc_worker.communicate()
-                    stdout_master, _ = proc.communicate()
-
-                    assert False, f"processes never finished: worker: {stdout} master: {stdout_master} (master command was {" ".join([
-                        "locust",
-                        "-f",
-                        f"'{mocked.file_path}, {mocked2.file_path}'",
-                        "--headless",
-                        "--master",
-                        "-L",
-                        "debug",
-                    ])}"
+                worker.logfile = sys.stdout
+                master.expect(
+                    "--locustfile must be a full path to a single locustfile for file distribution", timeout=5
+                )
+                worker.expect(
+                    "Got error from master: locustfile must be a full path to a single locustfile for file distribution to work",
+                    timeout=5,
+                )
+                worker.expect(pexpect.EOF)
+                master.close()
 
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
