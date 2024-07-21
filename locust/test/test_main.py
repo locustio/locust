@@ -1921,7 +1921,15 @@ class SecondUser(HttpUser):
                     stdout, worker_stderr = proc_worker.communicate()
                     stdout_master, _ = proc.communicate()
 
-                    assert False, f"processes never finished: worker: {stdout} master: {stdout_master}"
+                    assert False, f"processes never finished: worker: {stdout} master: {stdout_master} (master command was {" ".join([
+                        "locust",
+                        "-f",
+                        f"'{mocked.file_path}, {mocked2.file_path}'",
+                        "--headless",
+                        "--master",
+                        "-L",
+                        "debug",
+                    ])}"
 
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
