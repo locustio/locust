@@ -1850,68 +1850,67 @@ class SecondUser(HttpUser):
             self.assertEqual(0, proc_worker.returncode)
             self.assertIn("hello", worker_stdout)
 
-    # def test_distributed_with_locustfile_distribution_not_plain_filename(self):
-    #     import shlex
-    #     LOCUSTFILE_CONTENT = textwrap.dedent(
-    #         """
-    #         from locust import User, task, constant
+    def test_distributed_with_locustfile_distribution_not_plain_filename(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
 
-    #         class User1(User):
-    #             wait_time = constant(1)
+            class User1(User):
+                wait_time = constant(1)
 
-    #             @task
-    #             def t(self):
-    #                 pass
-    #         """
-    #     )
-    #     with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-    #         with mock_locustfile() as mocked2:
-    #             proc = subprocess.Popen(
-    #                 shlex.split(" ".join([
-    #                     "locust",
-    #                     "-f",
-    #                     f"{mocked.file_path},{mocked2.file_path}",
-    #                     "--headless",
-    #                     "--master",
-    #                     "-L",
-    #                     "debug",
-    #                 ])),
-    #                 stderr=STDOUT,
-    #                 stdout=PIPE,
-    #                 text=True,
-    #                 shell=True,
-    #             )
-    #             proc_worker = subprocess.Popen(
-    #                 " ".join([
-    #                     "locust",
-    #                     "-f",
-    #                     "-",
-    #                     "--masterhost",
-    #                     "localhost",
-    #                     "--worker",
-    #                 ]),
-    #                 stderr=STDOUT,
-    #                 stdout=PIPE,
-    #                 text=True,
-    #                 shell=True,
-    #             )
+                @task
+                def t(self):
+                    pass
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            with mock_locustfile() as mocked2:
+                proc = subprocess.Popen(
+                    " ".join([
+                        "locust",
+                        "-f",
+                        f"'{mocked.file_path}, {mocked2.file_path}'",
+                        "--headless",
+                        "--master",
+                        "-L",
+                        "debug",
+                    ]),
+                    stderr=STDOUT,
+                    stdout=PIPE,
+                    text=True,
+                    shell=True,
+                )
+                proc_worker = subprocess.Popen(
+                    " ".join([
+                        "locust",
+                        "-f",
+                        "-",
+                        "--masterhost",
+                        "localhost",
+                        "--worker",
+                    ]),
+                    stderr=STDOUT,
+                    stdout=PIPE,
+                    text=True,
+                    shell=True,
+                )
 
-    #             try:
-    #                 stdout = proc_worker.communicate(timeout=5)[0]
-    #                 self.assertIn(
-    #                     "Got error from master: locustfile must be a full path to a single locustfile for file distribution to work",
-    #                     stdout,
-    #                 )
-    #                 proc.kill()
-    #                 master_stdout = proc.communicate()[0]
-    #                 self.assertIn(
-    #                     "--locustfile must be a full path to a single locustfile for file distribution", master_stdout
-    #                 )
-    #             except Exception:
-    #                 proc.kill()
-    #                 proc_worker.kill()
-    #                 stdout, worker_stderr = proc_worker.communicate()
-    #                 assert False, f"worker never finished: {stdout}"
+                try:
+                    stdout = proc_worker.communicate(timeout=5)[0]
+                    self.assertIn(
+                        "Got error from master: locustfile must be a full path to a single locustfile for file distribution to work",
+                        stdout,
+                    )
+                    proc.kill()
+                    master_stdout = proc.communicate()[0]
+                    self.assertIn(
+                        "--locustfile must be a full path to a single locustfile for file distribution", master_stdout
+                    )
+                except Exception:
+                    proc.kill()
+                    proc_worker.kill()
+                    stdout, worker_stderr = proc_worker.communicate()
+                    assert False, f"worker never finished: {stdout}"
 
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
