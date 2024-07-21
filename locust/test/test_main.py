@@ -1900,7 +1900,7 @@ class SecondUser(HttpUser):
                         stdout,
                     )
                     proc.kill()
-                    master_stdout = proc.communicate()[0]
+                    master_stdout = proc.communicate(timeout=2)[0]
                     self.assertIn(
                         "--locustfile must be a full path to a single locustfile for file distribution", master_stdout
                     )
@@ -1908,7 +1908,9 @@ class SecondUser(HttpUser):
                     proc.kill()
                     proc_worker.kill()
                     stdout, worker_stderr = proc_worker.communicate()
-                    assert False, f"worker never finished: {stdout}"
+                    stdout_master, _ = proc.communicate()
+
+                    assert False, f"processes never finished: worker: {stdout} master: {stdout_master}"
 
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
