@@ -1908,11 +1908,16 @@ class SecondUser(HttpUser):
                         "--locustfile must be a full path to a single locustfile for file distribution", master_stdout
                     )
                 except Exception:
-                    for child in psutil.Process(proc.pid).children(recursive=True):
-                        child.terminate()
-                    for child in psutil.Process(proc_worker.pid).children(recursive=True):
-                        child.terminate()
-
+                    try:
+                        for child in psutil.Process(proc.pid).children(recursive=True):
+                            child.terminate()
+                    except psutil.NoSuchProcess:
+                        pass
+                    try:
+                        for child in psutil.Process(proc_worker.pid).children(recursive=True):
+                            child.terminate()
+                    except psutil.NoSuchProcess:
+                        pass
                     stdout, worker_stderr = proc_worker.communicate()
                     stdout_master, _ = proc.communicate()
 
