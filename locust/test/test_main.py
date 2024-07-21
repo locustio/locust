@@ -1885,8 +1885,6 @@ class SecondUser(HttpUser):
                         "locust",
                         "-f",
                         "-",
-                        "--masterhost",
-                        "localhost",
                         "--worker",
                     ]),
                     stderr=STDOUT,
