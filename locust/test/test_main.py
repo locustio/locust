@@ -1901,14 +1901,18 @@ class SecondUser(HttpUser):
                         "Got error from master: locustfile must be a full path to a single locustfile for file distribution to work",
                         stdout,
                     )
-                    proc.send_signal(2)
+                    for child in psutil.Process(proc.pid).children(recursive=True):
+                        child.terminate()
                     master_stdout = proc.communicate(timeout=2)[0]
                     self.assertIn(
                         "--locustfile must be a full path to a single locustfile for file distribution", master_stdout
                     )
                 except Exception:
-                    proc.send_signal(2)
-                    proc_worker.send_signal(2)
+                    for child in psutil.Process(proc.pid).children(recursive=True):
+                        child.terminate()
+                    for child in psutil.Process(proc_worker.pid).children(recursive=True):
+                        child.terminate()
+
                     stdout, worker_stderr = proc_worker.communicate()
                     stdout_master, _ = proc.communicate()
 
