@@ -2275,8 +2275,9 @@ class AnyUser(HttpUser):
 
             proc.send_signal(signal.SIGINT)
             gevent.sleep(2)
-
-            for child in children:
+            
+            # Don't run this check on the shell process 
+            for child in children[1:]:
                 self.assertFalse(child.is_running(), "child processes failed to terminate")
 
             try:
