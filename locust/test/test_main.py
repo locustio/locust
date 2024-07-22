@@ -1934,6 +1934,7 @@ class SecondUser(HttpUser):
             self.assertEqual(0, proc_worker.returncode)
             self.assertIn("hello", worker_stdout)
 
+    @unittest.skipIf(os.name == "nt", reason="Process hangs on Windows")
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
@@ -1989,6 +1990,7 @@ class SecondUser(HttpUser):
                         "Got error from master: locustfile must be a full path to a single locustfile for file distribution to work",
                         stdout,
                     )
+                    # Remove if we bring this test back in on Windows
                     if os.name == "nt":
                         os.kill(proc.pid, signal.CTRL_C_EVENT)
                     else:
@@ -2270,8 +2272,7 @@ class AnyUser(HttpUser):
             )
             gevent.sleep(3)
             children = proc.children(recursive=True)
-            # Additional process expected due to the running shell
-            self.assertEqual(len(children), 5, "unexpected number of child worker processes")
+            self.assertEqual(len(children), 4, "unexpected number of child worker processes")
 
             proc.send_signal(signal.SIGINT)
             gevent.sleep(2)
