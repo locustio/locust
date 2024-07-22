@@ -10,10 +10,16 @@ if os.getenv("LOCUST_PLAYWRIGHT", None):
         # dont show a massive callstack if trio is not installed
         os._exit(1)
 
-from gevent import monkey
-
 if not os.getenv("LOCUST_SKIP_MONKEY_PATCH", None):
+    from gevent import monkey, queue
+
     monkey.patch_all()
+
+    if not os.getenv("LOCUST_SKIP_URLLIB3_PATCH", None):
+        import urllib3
+
+        urllib3.connectionpool.ConnectionPool.QueueCls = queue.LifoQueue
+        # https://github.com/locustio/locust/issues/2812
 
 from ._version import version as __version__
 from .contrib.fasthttp import FastHttpUser
