@@ -16,41 +16,41 @@ from threading import Semaphore
 sema = Semaphore(4)
 
 
-# class WebsiteUser(HttpUser):
-#     host = "http://127.0.0.1:8089"
-
-#     @task
-#     def index(l):
-#         l.client.get("/fast")
-#         l.client.get("/slow")
-#         l.client.get("/fast_except_every_5_minutes")
-
-
-class fWebsiteUser(HttpUser):
+class WebsiteUser(HttpUser):
     host = "http://127.0.0.1:8089"
-    wait_time = constant_pacing(5)
 
     @task
     def index(l):
         l.client.get("/fast")
-
-
-class sWebsiteUser(HttpUser):
-    host = "http://127.0.0.1:8089"
-    wait_time = constant_pacing(5)
-
-    @task
-    def index(l):
         l.client.get("/slow")
-
-
-class feWebsiteUser(HttpUser):
-    host = "http://127.0.0.1:8089"
-    wait_time = constant_pacing(5)
-
-    @task
-    def index(l):
         l.client.get("/fast_except_every_5_minutes")
+
+
+# class fWebsiteUser(HttpUser):
+#     host = "http://127.0.0.1:8089"
+#     wait_time = constant_pacing(5)
+
+#     @task
+#     def index(l):
+#         l.client.get("/fast")
+
+
+# class sWebsiteUser(HttpUser):
+#     host = "http://127.0.0.1:8089"
+#     wait_time = constant_pacing(5)
+
+#     @task
+#     def index(l):
+#         l.client.get("/slow")
+
+
+# class feWebsiteUser(HttpUser):
+#     host = "http://127.0.0.1:8089"
+#     wait_time = constant_pacing(5)
+
+#     @task
+#     def index(l):
+#         l.client.get("/fast_except_every_5_minutes")
 
 
 @events.init.add_listener
@@ -79,4 +79,4 @@ def locust_init(environment, **kwargs):
             return "fast"
 
 
-# example: locust -f examples/bottlenecked_server.py -u 120 -r 2 --autostart
+# example: locust -f examples/bottlenecked_server.py --print-stats -u 20 -r 0.2 --autostart --run-time 5m
