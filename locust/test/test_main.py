@@ -1999,11 +1999,11 @@ class SecondUser(HttpUser):
                     )
                 except Exception:
                     if os.name == "nt":
-                        os.killpg(proc.pid, signal.SIGTERM)
-                        os.killpg(proc_worker.pid, signal.SIGTERM)
-                    else:
                         os.kill(proc.pid, signal.CTRL_C_EVENT)
                         os.kill(proc_worker.pid, signal.CTRL_C_EVENT)
+                    else:
+                        os.killpg(proc.pid, signal.SIGTERM)
+                        os.killpg(proc_worker.pid, signal.SIGTERM)
                     stdout, worker_stderr = proc_worker.communicate()
                     assert False, f"worker never finished: {stdout}"
 
