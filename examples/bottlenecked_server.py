@@ -23,7 +23,6 @@ class WebsiteUser(HttpUser):
     def index(l):
         l.client.get("/fast")
         l.client.get("/slow")
-        l.client.get("/fast_except_every_5_minutes")
 
 
 # class fWebsiteUser(HttpUser):
