@@ -2270,7 +2270,8 @@ class AnyUser(HttpUser):
             )
             gevent.sleep(3)
             children = proc.children(recursive=True)
-            self.assertEqual(len(children), 4, "unexpected number of child worker processes")
+            # Additional process expected due to the running shell
+            self.assertEqual(len(children), 5, "unexpected number of child worker processes")
 
             proc.send_signal(signal.SIGINT)
             gevent.sleep(2)
