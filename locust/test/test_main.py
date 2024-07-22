@@ -1879,6 +1879,7 @@ class SecondUser(HttpUser):
                     stdout=PIPE,
                     text=True,
                     shell=True,
+                    start_new_session=True,
                 )
                 proc_worker = subprocess.Popen(
                     " ".join([
@@ -1891,6 +1892,7 @@ class SecondUser(HttpUser):
                     stdout=PIPE,
                     text=True,
                     shell=True,
+                    start_new_session=True,
                 )
 
                 try:
@@ -1899,14 +1901,14 @@ class SecondUser(HttpUser):
                         "Got error from master: locustfile must be a full path to a single locustfile for file distribution to work",
                         stdout,
                     )
-                    proc.kill()
+                    os.killpg(proc.pid, signal.SIGTERM)
                     master_stdout = proc.communicate()[0]
                     self.assertIn(
                         "--locustfile must be a full path to a single locustfile for file distribution", master_stdout
                     )
                 except Exception:
-                    proc.kill()
-                    proc_worker.kill()
+                    os.killpg(proc.pid, signal.SIGTERM)
+                    os.killpg(proc_worker.pid, signal.SIGTERM)
                     stdout, worker_stderr = proc_worker.communicate()
                     assert False, f"worker never finished: {stdout}"
 
