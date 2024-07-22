@@ -244,7 +244,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             gevent.sleep(1)
             response = requests.get(f"http://localhost:{port}/")
             self.assertEqual(200, response.status_code)
-            proc.send_signal(signal.SIGTERM)
+            os.killpg(proc.pid, signal.SIGTERM)
             stdout, stderr = proc.communicate()
             self.assertIn("Starting web interface at", stderr)
 
@@ -2272,6 +2272,9 @@ class AnyUser(HttpUser):
             )
             gevent.sleep(3)
             children = proc.children(recursive=True)
+            print("###")
+            print(children)
+            print("###")
             self.assertEqual(len(children), 4, "unexpected number of child worker processes")
 
             proc.send_signal(signal.SIGINT)
