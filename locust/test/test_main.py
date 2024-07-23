@@ -2269,6 +2269,7 @@ class AnyUser(HttpUser):
                 stderr=PIPE,
                 text=True,
                 shell=True,
+                start_new_session=True,
             )
             gevent.sleep(3)
             children = proc.children(recursive=False)
@@ -2277,7 +2278,9 @@ class AnyUser(HttpUser):
                 children = children[0].children()
             self.assertEqual(len(children), 4, "unexpected number of child worker processes")
 
-            proc.send_signal(signal.SIGINT)
+            os.killpg(os.getpgid(proc.pid), signal.SIGINT)
+            # proc.send_signal(signal.SIGINT)
+            # os.killpg(proc.pid, signal.SIGTERM)
             gevent.sleep(2)
 
             for child in children:
