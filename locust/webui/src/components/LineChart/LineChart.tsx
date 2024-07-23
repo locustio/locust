@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import {
   init,
-  registerTheme,
   dispose,
   ECharts,
   EChartsOption,
@@ -10,6 +9,7 @@ import {
   TooltipComponentOption,
 } from 'echarts';
 
+import { useSelector } from 'redux/hooks';
 import { IUiState } from 'redux/slice/ui.slice';
 import { ICharts } from 'types/ui.types';
 import { formatLocaleString, formatLocaleTime } from 'utils/date';
@@ -40,25 +40,7 @@ interface ILineChartZoomEvent {
   batch?: { start: number; end: number }[];
 }
 
-const CHART_TEXT_COLOR = '#b3c3bc';
-const CHART_AXIS_COLOR = '#5b6f66';
-
-registerTheme('locust', {
-  backgroundColor: '#27272a',
-  textStyle: { color: CHART_TEXT_COLOR },
-  title: {
-    textStyle: { color: CHART_TEXT_COLOR },
-  },
-});
-
 const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) => ({
-  legend: {
-    icon: 'circle',
-    inactiveColor: CHART_TEXT_COLOR,
-    textStyle: {
-      color: CHART_TEXT_COLOR,
-    },
-  },
   title: {
     text: title,
     x: 10,
@@ -98,10 +80,6 @@ const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) =>
     axisPointer: {
       animation: true,
     },
-    textStyle: {
-      color: CHART_TEXT_COLOR,
-      fontSize: 13,
-    },
     backgroundColor: 'rgba(21,35,28, 0.93)',
     borderWidth: 0,
     extraCssText: 'z-index:1;',
@@ -110,11 +88,6 @@ const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) =>
     type: 'category',
     splitLine: {
       show: false,
-    },
-    axisLine: {
-      lineStyle: {
-        color: CHART_AXIS_COLOR,
-      },
     },
     axisLabel: {
       formatter: formatLocaleTime,
@@ -126,11 +99,6 @@ const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) =>
     boundaryGap: [0, '5%'],
     splitLine: {
       show: false,
-    },
-    axisLine: {
-      lineStyle: {
-        color: CHART_AXIS_COLOR,
-      },
     },
   },
   series: seriesData,
@@ -163,17 +131,18 @@ const getSeriesData = ({ charts, lines }: { charts: IUiState['charts']; lines: I
     data: charts[key],
   }));
 
-const createMarkLine = (charts: ICharts) => ({
+const createMarkLine = (charts: ICharts, isDarkMode: boolean) => ({
   symbol: 'none',
   label: {
     formatter: (params: DefaultLabelFormatterCallbackParams) => `Run #${params.dataIndex + 1}`,
   },
-  lineStyle: { color: CHART_AXIS_COLOR },
+  lineStyle: { color: isDarkMode ? '#5b6f66' : '#000' },
   data: (charts.markers || []).map((timeMarker: string) => ({ xAxis: timeMarker })),
 });
 
 export default function LineChart({ charts, title, lines, colors }: ILineChart) {
   const [chart, setChart] = useState<ECharts | null>(null);
+  const isDarkMode = useSelector(({ theme: { isDarkMode } }) => isDarkMode);
 
   const chartContainer = useRef<HTMLDivElement | null>(null);
 
@@ -264,11 +233,53 @@ export default function LineChart({ charts, title, lines, colors }: ILineChart) 
         xAxis: { data: charts.time },
         series: lines.map(({ key }, index) => ({
           data: charts[key],
-          ...(index === 0 ? { markLine: createMarkLine(charts) } : {}),
+          ...(index === 0 ? { markLine: createMarkLine(charts, isDarkMode) } : {}),
         })),
       });
     }
-  }, [charts, chart, lines]);
+  }, [charts, chart, lines, isDarkMode]);
+
+  useEffect(() => {
+    if (chart) {
+      const chartTextColor = isDarkMode ? '#b3c3bc' : '#000';
+      const chartAxisColor = isDarkMode ? '#5b6f66' : '#000';
+
+      chart.setOption({
+        backgroundColor: isDarkMode ? '#27272a' : '#fff',
+        textStyle: { color: chartTextColor },
+        title: {
+          textStyle: { color: chartTextColor },
+        },
+        legend: {
+          icon: 'circle',
+          inactiveColor: chartTextColor,
+          textStyle: {
+            color: chartTextColor,
+          },
+        },
+        tooltip: {
+          textStyle: {
+            color: chartTextColor,
+            fontSize: 13,
+          },
+        },
+        xAxis: {
+          axisLine: {
+            lineStyle: {
+              color: chartAxisColor,
+            },
+          },
+        },
+        yAxis: {
+          axisLine: {
+            lineStyle: {
+              color: chartAxisColor,
+            },
+          },
+        },
+      });
+    }
+  }, [chart, isDarkMode]);
 
   return <div ref={chartContainer} style={{ width: '100%', height: '300px' }}></div>;
 }

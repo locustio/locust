@@ -12,7 +12,15 @@ const percentilesToChartLines = swarmTemplateArgs.percentilesToChart
     }))
   : [];
 
-const percentileColors = ['#9966CC', '#8A2BE2', '#8E4585', '#E0B0FF', '#C8A2C8', '#E6E6FA'];
+const percentileColors = [
+  '#eeff00',
+  '#9966CC',
+  '#8A2BE2',
+  '#8E4585',
+  '#E0B0FF',
+  '#C8A2C8',
+  '#E6E6FA',
+];
 
 const availableSwarmCharts: ILineChartProps[] = [
   {
