@@ -97,9 +97,6 @@ const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) =>
   yAxis: {
     type: 'value',
     boundaryGap: [0, '5%'],
-    splitLine: {
-      show: false,
-    },
   },
   series: seriesData,
   grid: { x: 60, y: 70, x2: 40, y2: 40 },
@@ -274,6 +271,11 @@ export default function LineChart({ charts, title, lines, colors }: ILineChart) 
           axisLine: {
             lineStyle: {
               color: chartAxisColor,
+            },
+          },
+          splitLine: {
+            lineStyle: {
+              color: isDarkMode ? '#4c4c52' : '#ddd',
             },
           },
         },
