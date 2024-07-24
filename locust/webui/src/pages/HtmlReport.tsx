@@ -15,6 +15,19 @@ import { formatLocaleString } from 'utils/date';
 
 const theme = createTheme(window.theme || INITIAL_THEME);
 
+const statsReportTableStructure = [
+  { key: 'method', title: 'Type' },
+  { key: 'name', title: 'Name' },
+  { key: 'numRequests', title: '# Requests' },
+  { key: 'numFailures', title: '# Fails' },
+  { key: 'avgResponseTime', title: 'Average (ms)', round: 2 },
+  { key: 'minResponseTime', title: 'Min (ms)' },
+  { key: 'maxResponseTime', title: 'Max (ms)' },
+  { key: 'avgContentLength', title: 'Average size (bytes)', round: 2 },
+  { key: 'totalRps', title: 'RPS', round: 2 },
+  { key: 'totalFailPerSec', title: 'Failures/s', round: 2 },
+];
+
 export default function HtmlReport({
   locustfile,
   showDownloadLink,
@@ -72,7 +85,7 @@ export default function HtmlReport({
             <Typography component='h2' mb={1} noWrap variant='h4'>
               Request Statistics
             </Typography>
-            <StatsTable stats={requestsStatistics} />
+            <StatsTable stats={requestsStatistics} tableStructure={statsReportTableStructure} />
           </Box>
           {!!responseTimeStatistics.length && (
             <Box>

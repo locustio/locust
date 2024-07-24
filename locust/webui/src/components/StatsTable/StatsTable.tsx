@@ -5,6 +5,7 @@ import ViewColumnSelector from 'components/ViewColumnSelector/ViewColumnSelector
 import { swarmTemplateArgs } from 'constants/swarm';
 import useSelectViewColumns from 'hooks/useSelectViewColumns';
 import { IRootState } from 'redux/store';
+import { ITableStructure } from 'types/table.types';
 import { ISwarmStat } from 'types/ui.types';
 
 const percentilesToStatisticsRows = swarmTemplateArgs.percentilesToStatistics
@@ -14,7 +15,7 @@ const percentilesToStatisticsRows = swarmTemplateArgs.percentilesToStatistics
     }))
   : [];
 
-const tableStructure = [
+export const baseTableStructure = [
   { key: 'method', title: 'Type' },
   { key: 'name', title: 'Name' },
   { key: 'numRequests', title: '# Requests' },
@@ -29,7 +30,12 @@ const tableStructure = [
   { key: 'currentFailPerSec', title: 'Current Failures/s', round: 2 },
 ];
 
-export function StatsTable({ stats }: { stats: ISwarmStat[] }) {
+interface IStatsTable {
+  stats: ISwarmStat[];
+  tableStructure?: ITableStructure[];
+}
+
+export function StatsTable({ stats, tableStructure = baseTableStructure }: IStatsTable) {
   const { selectedColumns, addColumn, removeColumn, filteredStructure } =
     useSelectViewColumns(tableStructure);
 

@@ -38,7 +38,7 @@ from .util.timespan import parse_timespan
 
 try:
     # import locust_plugins if it is installed, to allow it to register custom arguments etc
-    import locust_cloud  # pyright: ignore[reportMissingImports]
+    import locust_plugins  # pyright: ignore[reportMissingImports]
 except ModuleNotFoundError:
     pass
 
