@@ -1946,15 +1946,15 @@ class SecondUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with mock_locustfile() as mocked2:
-                # file_paths = f"{mocked.file_path}, {mocked2.file_path}"
-                # if use_shell():
-                #     file_paths = f"'{mocked.file_path}, {mocked2.file_path}'"
+                file_paths = f"{mocked.file_path}, {mocked2.file_path}"
+                if use_shell():
+                    file_paths = f"'{mocked.file_path}, {mocked2.file_path}'"
                 proc = subprocess.Popen(
                     shell_str(
                         [
                             "locust",
                             "-f",
-                            f"{mocked.file_path}, {mocked2.file_path}",
+                            file_paths,
                             "--headless",
                             "--master",
                             "-L",
