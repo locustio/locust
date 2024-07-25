@@ -35,8 +35,8 @@ def use_shell(override: bool = False) -> bool:
     return os.name == "nt"
 
 
-def shell_str(args_list: list[str]) -> list[str] | str:
-    if use_shell():
+def shell_str(args_list: list[str], override: bool = False) -> list[str] | str:
+    if use_shell(override=override):
         return " ".join(args_list)
     return args_list
 
@@ -1965,6 +1965,7 @@ class SecondUser(HttpUser):
                     stdout=PIPE,
                     text=True,
                     shell=use_shell(),
+                    start_new_session=True,
                 )
                 proc_worker = subprocess.Popen(
                     shell_str(
@@ -1979,6 +1980,7 @@ class SecondUser(HttpUser):
                     stdout=PIPE,
                     text=True,
                     shell=use_shell(),
+                    start_new_session=True,
                 )
 
                 try:
