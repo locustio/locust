@@ -628,9 +628,8 @@ By default, connections are reused by an HttpUser, even across tasks runs. To av
     self.client.get("/", headers={"Connection": "close"})
     self.client.get("/new_connection_here")
 
-Or you can close the entire requests.Session object (this also deletes cookies, closes the SSL session etc). 
-
-This has some CPU overhead (and the response time of the next request will be higher due to SSL renegotiation etc), so dont use this unless you really need it.
+Or you can close the entire requests.Session object (this also deletes cookies, closes the SSL session etc). This has some CPU overhead 
+(and the response time of the next request will be higher due to SSL renegotiation etc), so dont use this unless you really need it.
 
 .. code-block:: python
     
