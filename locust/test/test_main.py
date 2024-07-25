@@ -244,7 +244,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             gevent.sleep(1)
             response = requests.get(f"http://localhost:{port}/")
             self.assertEqual(200, response.status_code)
-            os.killpg(proc.pid, signal.SIGTERM)
+            # os.killpg does not play nicely on Darwin
+            os.kill(proc.pid, signal.SIGTERM)
             stdout, stderr = proc.communicate()
             self.assertIn("Starting web interface at", stderr)
 
