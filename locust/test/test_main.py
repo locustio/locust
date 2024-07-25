@@ -11,7 +11,6 @@ import textwrap
 import unittest
 from subprocess import DEVNULL, PIPE, STDOUT
 from tempfile import TemporaryDirectory
-from typing import Union
 from unittest import TestCase
 
 import gevent
@@ -30,16 +29,16 @@ def is_port_in_use(port: int) -> bool:
         return s.connect_ex(("localhost", port)) == 0
 
 
-def use_shell(override: bool) -> bool:
+def use_shell(override: bool = False) -> bool:
     if override:
         return override
     return os.name == "nt"
 
 
-def shell_str(input: list[str]) -> list[str] | str:
+def shell_str(args_list: list[str]) -> list[str] | str:
     if use_shell():
-        return " ".join(input)
-    return input
+        return " ".join(args_list)
+    return args_list
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
