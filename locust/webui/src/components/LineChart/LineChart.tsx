@@ -10,37 +10,41 @@ import {
 } from 'echarts';
 
 import { useSelector } from 'redux/hooks';
-import { IUiState } from 'redux/slice/ui.slice';
 import { ICharts } from 'types/ui.types';
 import { formatLocaleString, formatLocaleTime } from 'utils/date';
 
-interface ILine {
+interface ILine<ChartType> {
   name: string;
-  key: keyof ICharts;
+  key: keyof ChartType;
 }
 
-interface ICreateOptions {
+interface ICreateOptions<ChartType> {
   title: string;
   seriesData: EChartsOption['Series'][];
-  charts: ICharts;
+  charts: ChartType;
   colors?: string[];
 }
 
-export interface ILineChartProps {
+export interface ILineChartProps<ChartType = ICharts> {
   title: string;
-  lines: ILine[];
+  lines: ILine<ChartType>[];
   colors?: string[];
 }
 
-interface ILineChart extends ILineChartProps {
-  charts: ICharts;
+interface ILineChart<ChartType> extends ILineChartProps<ChartType> {
+  charts: ChartType;
 }
 
 interface ILineChartZoomEvent {
   batch?: { start: number; end: number }[];
 }
 
-const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) => ({
+const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
+  charts,
+  title,
+  seriesData,
+  colors,
+}: ICreateOptions<ChartType>) => ({
   title: {
     text: title,
     x: 10,
@@ -120,7 +124,13 @@ const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) =>
   },
 });
 
-const getSeriesData = ({ charts, lines }: { charts: IUiState['charts']; lines: ILine[] }) =>
+const getSeriesData = <ChartType,>({
+  charts,
+  lines,
+}: {
+  charts: ChartType;
+  lines: ILine<ChartType>[];
+}) =>
   lines.map(({ key, name }) => ({
     name,
     type: 'line',
@@ -128,7 +138,10 @@ const getSeriesData = ({ charts, lines }: { charts: IUiState['charts']; lines: I
     data: charts[key],
   }));
 
-const createMarkLine = (charts: ICharts, isDarkMode: boolean) => ({
+const createMarkLine = <ChartType extends Pick<ICharts, 'markers'>>(
+  charts: ChartType,
+  isDarkMode: boolean,
+) => ({
   symbol: 'none',
   label: {
     formatter: (params: DefaultLabelFormatterCallbackParams) => `Run #${params.dataIndex + 1}`,
@@ -137,7 +150,12 @@ const createMarkLine = (charts: ICharts, isDarkMode: boolean) => ({
   data: (charts.markers || []).map((timeMarker: string) => ({ xAxis: timeMarker })),
 });
 
-export default function LineChart({ charts, title, lines, colors }: ILineChart) {
+export default function LineChart<ChartType extends Pick<ICharts, 'time' | 'markers'> = ICharts>({
+  charts,
+  title,
+  lines,
+  colors,
+}: ILineChart<ChartType>) {
   const [chart, setChart] = useState<ECharts | null>(null);
   const isDarkMode = useSelector(({ theme: { isDarkMode } }) => isDarkMode);
 
@@ -150,7 +168,12 @@ export default function LineChart({ charts, title, lines, colors }: ILineChart) 
 
     const initChart = init(chartContainer.current, 'locust');
     initChart.setOption(
-      createOptions({ charts, title, seriesData: getSeriesData({ charts, lines }), colors }),
+      createOptions<ChartType>({
+        charts,
+        title,
+        seriesData: getSeriesData<ChartType>({ charts, lines }),
+        colors,
+      }),
     );
     initChart.on('datazoom', datazoom => {
       const { batch } = datazoom as ILineChartZoomEvent;
@@ -230,7 +253,7 @@ export default function LineChart({ charts, title, lines, colors }: ILineChart) 
         xAxis: { data: charts.time },
         series: lines.map(({ key }, index) => ({
           data: charts[key],
-          ...(index === 0 ? { markLine: createMarkLine(charts, isDarkMode) } : {}),
+          ...(index === 0 ? { markLine: createMarkLine<ChartType>(charts, isDarkMode) } : {}),
         })),
       });
     }
