@@ -11,6 +11,7 @@ import textwrap
 import unittest
 from subprocess import DEVNULL, PIPE, STDOUT
 from tempfile import TemporaryDirectory
+from typing import Union
 from unittest import TestCase
 
 import gevent
@@ -27,6 +28,18 @@ SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give 
 def is_port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(("localhost", port)) == 0
+
+
+def use_shell(override: bool) -> bool:
+    if override:
+        return override
+    return os.name == "nt"
+
+
+def shell_str(input: list[str]) -> list[str] | str:
+    if use_shell():
+        return " ".join(input)
+    return input
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
@@ -62,7 +75,7 @@ class ProcessIntegrationTest(TestCase):
         super().tearDown()
 
     def assert_run(self, cmd: list[str], timeout: int = 5) -> subprocess.CompletedProcess[str]:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, shell=True)
+        out = subprocess.run(shell_str(cmd), capture_output=True, text=True, timeout=timeout, shell=use_shell())
         self.assertEqual(0, out.returncode, f"locust run failed with exit code {out.returncode}:\n{out.stderr}")
         return out
 
@@ -70,7 +83,7 @@ class ProcessIntegrationTest(TestCase):
 class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_help_arg(self):
         output = subprocess.check_output(
-            " ".join(["locust", "--help"]), stderr=subprocess.STDOUT, timeout=5, text=True, shell=True
+            shell_str(["locust", "--help"]), stderr=subprocess.STDOUT, timeout=5, text=True, shell=use_shell()
         ).strip()
         self.assertTrue(output.startswith("Usage: locust [options] [UserClass"))
         self.assertIn("Common options:", output)
@@ -99,13 +112,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         ) as file_path:
             # print(subprocess.check_output(["cat", file_path]))
             proc = subprocess.Popen(
-                " ".join(
-                    ["locust", "-f", file_path, "--custom-string-arg", "command_line_value", "--web-port", str(port)]
-                ),
+                ["locust", "-f", file_path, "--custom-string-arg", "command_line_value", "--web-port", str(port)],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
             )
             gevent.sleep(1)
 
@@ -145,11 +155,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 with open("locust.conf", "w") as conf_file:
                     conf_file.write("custom-string-arg config_file_value")
                 proc = subprocess.Popen(
-                    " ".join(["locust", "-f", file_path, "--autostart"]),
+                    ["locust", "-f", file_path, "--autostart"],
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    shell=True,
                 )
                 gevent.sleep(1)
             finally:
@@ -181,7 +190,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
         ) as file_path:
             proc = subprocess.Popen(
-                " ".join(["locust", "-f", file_path]), stdout=PIPE, stderr=PIPE, text=True, shell=True
+                ["locust", "-f", file_path],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
             )
             gevent.sleep(1)
             proc.send_signal(signal.SIGTERM)
@@ -207,7 +219,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
         ) as file_path:
             proc = subprocess.Popen(
-                " ".join(["locust", "-f", file_path]), stdout=PIPE, stderr=PIPE, text=True, shell=True
+                ["locust", "-f", file_path],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
             )
             gevent.sleep(SHORT_SLEEP)
             proc.send_signal(signal.SIGTERM)
@@ -235,17 +250,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
         ) as file_path:
             proc = subprocess.Popen(
-                " ".join(["locust", "-f", file_path, "--web-port", str(port), "--autostart"]),
+                shell_str(["locust", "-f", file_path, "--web-port", str(port), "--autostart"]),
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             gevent.sleep(1)
             response = requests.get(f"http://localhost:{port}/")
             self.assertEqual(200, response.status_code)
-            # os.killpg does not play nicely on Darwin
-            os.kill(proc.pid, signal.SIGTERM)
+            proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
             self.assertIn("Starting web interface at", stderr)
 
@@ -266,11 +280,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
         ) as file_path:
             proc = subprocess.Popen(
-                " ".join(["locust", "-f", file_path, "--web-port", str(port), "--autostart"]),
+                shell_str(["locust", "-f", file_path, "--web-port", str(port), "--autostart"]),
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             gevent.sleep(1)
             response = requests.get(f"http://localhost:{port}/")
@@ -295,7 +309,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
         ) as file_path:
             proc = subprocess.Popen(
-                " ".join(["locust", "-f", file_path, "--autostart"]), stdout=PIPE, stderr=PIPE, text=True, shell=True
+                shell_str(["locust", "-f", file_path, "--autostart"]),
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+                shell=use_shell(),
             )
             gevent.sleep(1)
             stdout, stderr = proc.communicate()
@@ -307,11 +325,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:
                 proc = subprocess.Popen(
-                    " ".join(["locust", "-f", f"{mocked1.file_path},{mocked2.file_path}"]),
-                    stdout=PIPE,
-                    stderr=PIPE,
-                    text=True,
-                    shell=True,
+                    ["locust", "-f", f"{mocked1.file_path},{mocked2.file_path}"], stdout=PIPE, stderr=PIPE, text=True
                 )
                 gevent.sleep(SHORT_SLEEP)
                 proc.send_signal(signal.SIGTERM)
@@ -327,9 +341,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with TemporaryDirectory() as temp_dir:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A, dir=temp_dir):
                 with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B, dir=temp_dir):
-                    proc = subprocess.Popen(
-                        " ".join(["locust", "-f", temp_dir]), stdout=PIPE, stderr=PIPE, text=True, shell=True
-                    )
+                    proc = subprocess.Popen(["locust", "-f", temp_dir], stdout=PIPE, stderr=PIPE, text=True)
                     gevent.sleep(SHORT_SLEEP)
                     proc.send_signal(signal.SIGTERM)
                     stdout, stderr = proc.communicate()
@@ -373,11 +385,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 )
             ) as mocked2:
                 proc = subprocess.Popen(
-                    " ".join(["locust", "-f", f"{mocked1.file_path},{mocked2}"]),
+                    ["locust", "-f", f"{mocked1.file_path},{mocked2}"],
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    shell=True,
                 )
                 gevent.sleep(SHORT_SLEEP)
                 proc.send_signal(signal.SIGTERM)
@@ -391,7 +402,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -413,7 +424,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             stdout, stderr = proc.communicate(timeout=4)
             self.assertNotIn("Traceback", stderr)
@@ -423,7 +434,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_invalid_stop_timeout_string(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -437,7 +448,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             stdout, stderr = proc.communicate()
             self.assertIn("ERROR/locust.main: Valid --stop-timeout formats are", stderr)
@@ -447,22 +458,19 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_headless_spawn_options_wo_run_time(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
-                " ".join(
-                    [
-                        "locust",
-                        "-f",
-                        mocked.file_path,
-                        "--host",
-                        "https://test.com/",
-                        "--headless",
-                        "--exit-code-on-error",
-                        "0",
-                    ]
-                ),
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "https://test.com/",
+                    "--headless",
+                    "--exit-code-on-error",
+                    "0",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
             )
             gevent.sleep(1)
             proc.send_signal(signal.SIGTERM)
@@ -490,22 +498,19 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     dir=temp_dir,
                 ):
                     proc = subprocess.Popen(
-                        " ".join(
-                            [
-                                "locust",
-                                "-f",
-                                temp_dir,
-                                "--headless",
-                                "-u",
-                                "2",
-                                "--exit-code-on-error",
-                                "0",
-                            ]
-                        ),
+                        [
+                            "locust",
+                            "-f",
+                            temp_dir,
+                            "--headless",
+                            "-u",
+                            "2",
+                            "--exit-code-on-error",
+                            "0",
+                        ],
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
-                        shell=True,
                     )
                     gevent.sleep(3)
                     proc.send_signal(signal.SIGTERM)
@@ -531,7 +536,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with mock_locustfile(content=content) as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -546,7 +551,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
 
             try:
@@ -599,7 +604,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 )
             ) as mocked2:
                 proc = subprocess.Popen(
-                    " ".join(
+                    shell_str(
                         [
                             "locust",
                             "-f",
@@ -614,7 +619,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    shell=True,
+                    shell=use_shell(),
                 )
 
                 try:
@@ -637,20 +642,17 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         port = get_free_tcp_port()
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
-                " ".join(
-                    [
-                        "locust",
-                        "-f",
-                        mocked.file_path,
-                        "--web-port",
-                        str(port),
-                        "--autostart",
-                    ]
-                ),
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--web-port",
+                    str(port),
+                    "--autostart",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
             )
             gevent.sleep(1.9)
             try:
@@ -675,7 +677,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         port = get_free_tcp_port()
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -692,7 +694,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             gevent.sleep(2.8)
             try:
@@ -728,22 +730,19 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     dir=temp_dir,
                 ):
                     proc = subprocess.Popen(
-                        " ".join(
-                            [
-                                "locust",
-                                "-f",
-                                temp_dir,
-                                "--autostart",
-                                "-u",
-                                "2",
-                                "--exit-code-on-error",
-                                "0",
-                            ]
-                        ),
+                        [
+                            "locust",
+                            "-f",
+                            temp_dir,
+                            "--autostart",
+                            "-u",
+                            "2",
+                            "--exit-code-on-error",
+                            "0",
+                        ],
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
-                        shell=True,
                     )
                     gevent.sleep(3)
                     proc.send_signal(signal.SIGTERM)
@@ -773,7 +772,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
         ) as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -788,7 +787,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             gevent.sleep(2.8)
             response = requests.get(f"http://localhost:{port}/")
@@ -842,7 +841,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 )
             ) as mocked2:
                 proc = subprocess.Popen(
-                    " ".join(
+                    shell_str(
                         [
                             "locust",
                             "-f",
@@ -857,7 +856,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    shell=True,
+                    shell=use_shell(),
                 )
                 gevent.sleep(2.8)
                 success = True
@@ -888,10 +887,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             # MacOS only sets up the loopback interface for 127.0.0.1 and not for 127.*.*.*, so we can't test this
             with mock_locustfile() as mocked:
                 proc = subprocess.Popen(
-                    " ".join(["locust", "-f", mocked.file_path, "--web-host", "127.0.0.2", "--web-port", str(port)]),
+                    ["locust", "-f", mocked.file_path, "--web-host", "127.0.0.2", "--web-port", str(port)],
                     stdout=PIPE,
                     stderr=PIPE,
-                    shell=True,
                 )
                 gevent.sleep(1)
                 self.assertEqual(200, requests.get(f"http://127.0.0.2:{port}/", timeout=1).status_code)
@@ -899,7 +897,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -912,7 +910,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ),
                 stdout=PIPE,
                 stderr=PIPE,
-                shell=True,
+                shell=use_shell(),
             )
             gevent.sleep(1)
             self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=3).status_code)
@@ -1088,7 +1086,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with open(f"{temp_dir}/__init__.py", mode="w"):
                 with mock_locustfile(dir=temp_dir):
                     proc = subprocess.Popen(
-                        " ".join(
+                        shell_str(
                             [
                                 "locust",
                                 "-f",
@@ -1103,7 +1101,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
-                        shell=True,
+                        shell=use_shell(),
                     )
                     stdout, stderr = proc.communicate()
                     self.assertIn("Starting Locust", stderr)
@@ -1171,7 +1169,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with temporary_file("", suffix=".html") as html_report_file_path:
                 try:
                     subprocess.check_output(
-                        " ".join(
+                        shell_str(
                             [
                                 "locust",
                                 "-f",
@@ -1190,7 +1188,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stderr=subprocess.STDOUT,
                         timeout=10,
                         text=True,
-                        shell=True,
+                        shell=use_shell(),
                     ).strip()
                 except subprocess.CalledProcessError as e:
                     raise AssertionError(f"Running locust command failed. Output was:\n\n{e.stdout}") from e
@@ -1210,11 +1208,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_B) as file2:
                 proc = subprocess.Popen(
-                    " ".join(["locust", "-f", f"{file1},{file2}", "--class-picker"]),
+                    shell_str(["locust", "-f", f"{file1},{file2}", "--class-picker"]),
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    shell=True,
+                    shell=use_shell(),
                 )
                 gevent.sleep(2)
                 proc.send_signal(signal.SIGTERM)
@@ -1238,7 +1236,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
                 proc = subprocess.Popen(
-                    " ".join(["locust", "-f", f"{file1},{file2}"]), stdout=PIPE, stderr=PIPE, text=True, shell=True
+                    shell_str(["locust", "-f", f"{file1},{file2}"]),
+                    stdout=PIPE,
+                    stderr=PIPE,
+                    text=True,
+                    shell=use_shell(),
                 )
                 gevent.sleep(1)
                 stdout, stderr = proc.communicate()
@@ -1256,11 +1258,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             print(MOCK_LOCUSTFILE_CONTENT_C)
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
                 proc = subprocess.Popen(
-                    " ".join(["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"]),
+                    shell_str(["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"]),
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    shell=True,
+                    shell=use_shell(),
                 )
                 gevent.sleep(1)
                 stdout, stderr = proc.communicate()
@@ -1296,7 +1298,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_D) as file2:
                 proc = subprocess.Popen(
-                    " ".join(["locust", "-f", f"{file1},{file2}"]), stdout=PIPE, stderr=PIPE, text=True, shell=True
+                    shell_str(["locust", "-f", f"{file1},{file2}"]),
+                    stdout=PIPE,
+                    stderr=PIPE,
+                    text=True,
+                    shell=use_shell(),
                 )
                 gevent.sleep(1)
                 stdout, stderr = proc.communicate()
@@ -1315,17 +1321,15 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with mock_locustfile(content=content) as mocked:
             out = self.assert_run(
-                " ".join(
-                    [
-                        "locust",
-                        "-f",
-                        mocked.file_path,
-                        "--run-time=1s",
-                        "--headless",
-                        "--exit-code-on-error",
-                        "0",
-                    ]
-                )
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--run-time=1s",
+                    "--headless",
+                    "--exit-code-on-error",
+                    "0",
+                ]
             )
 
             self.assertIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", out.stderr)
@@ -1343,17 +1347,15 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with mock_locustfile(content=content) as mocked:
             out = self.assert_run(
-                " ".join(
-                    [
-                        "locust",
-                        "--headless",
-                        "-f",
-                        mocked.file_path,
-                        "--exit-code-on-error=0",
-                        "--users=1",
-                        "--spawn-rate=1",
-                    ]
-                )
+                [
+                    "locust",
+                    "--headless",
+                    "-f",
+                    mocked.file_path,
+                    "--exit-code-on-error=0",
+                    "--users=1",
+                    "--spawn-rate=1",
+                ]
             )
             self.assertIn("Shape test starting.", out.stderr)
             self.assertIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", out.stderr)
@@ -1373,18 +1375,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with mock_locustfile(content=content) as mocked:
             out = self.assert_run(
-                " ".join(
-                    [
-                        "locust",
-                        "-f",
-                        mocked.file_path,
-                        "--run-time=1s",
-                        "--users=1",
-                        "--spawn-rate=1",
-                        "--headless",
-                        "--exit-code-on-error=0",
-                    ]
-                )
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--run-time=1s",
+                    "--users=1",
+                    "--spawn-rate=1",
+                    "--headless",
+                    "--exit-code-on-error=0",
+                ]
             )
             self.assertIn("Shape test starting.", out.stderr)
             self.assertNotIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", out.stderr)
@@ -1393,7 +1393,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_error_when_locustfiles_directory_is_empty(self):
         with TemporaryDirectory() as temp_dir:
             proc = subprocess.Popen(
-                " ".join(["locust", "-f", temp_dir]), stdout=PIPE, stderr=PIPE, text=True, shell=True
+                shell_str(["locust", "-f", temp_dir]), stdout=PIPE, stderr=PIPE, text=True, shell=use_shell()
             )
             gevent.sleep(1)
             stdout, stderr = proc.communicate()
@@ -1414,7 +1414,7 @@ class MyUser(HttpUser):
     """
         with mock_locustfile(content=content) as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1429,7 +1429,7 @@ class MyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             stdout, stderr = proc.communicate()
             self.assertIn("MyUser had no tasks left after filtering", stderr)
@@ -1463,18 +1463,15 @@ class MyUser(HttpUser):
             )
         ) as mocked:
             proc = subprocess.Popen(
-                " ".join(
-                    [
-                        "locust",
-                        "-f",
-                        mocked,
-                        "--headless",
-                    ]
-                ),
+                [
+                    "locust",
+                    "-f",
+                    mocked,
+                    "--headless",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
             )
             gevent.sleep(1.9)
             proc.send_signal(signal.SIGINT)
@@ -1507,7 +1504,7 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
     def test_expect_workers(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1523,7 +1520,7 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             _, stderr = proc.communicate()
             self.assertIn("Waiting for workers to be ready, 0 of 2 connected", stderr)
@@ -1554,7 +1551,7 @@ def on_test_stop(environment, **kwargs):
         )
         with mock_locustfile(content=content) as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1574,10 +1571,10 @@ def on_test_stop(environment, **kwargs):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             proc_worker = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1590,7 +1587,7 @@ def on_test_stop(environment, **kwargs):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             stdout, stderr = proc.communicate()
             stdout_worker, stderr_worker = proc_worker.communicate()
@@ -1621,7 +1618,7 @@ class SecondUser(HttpUser):
 """
         with mock_locustfile(content=content) as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1645,10 +1642,10 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             proc_worker = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1661,7 +1658,7 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             stdout, stderr = proc.communicate()
             stdout_worker, stderr_worker = proc_worker.communicate()
@@ -1688,7 +1685,7 @@ class SecondUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1706,10 +1703,10 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             proc_worker = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1720,7 +1717,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             stdout = proc.communicate()[0]
             proc_worker.communicate()
@@ -1749,7 +1746,7 @@ class SecondUser(HttpUser):
             patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.01") as _,
         ):
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1767,10 +1764,10 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             proc_worker = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1781,7 +1778,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             stdout = proc.communicate()[0]
             proc_worker.communicate()
@@ -1810,7 +1807,7 @@ class SecondUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1826,10 +1823,10 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             proc_worker = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1840,7 +1837,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             gevent.sleep(2)
             # modify the locustfile to trigger warning about file change when the second worker connects
@@ -1849,7 +1846,7 @@ class SecondUser(HttpUser):
                 locustfile.write("\n# New comment\n")
             gevent.sleep(2)
             proc_worker2 = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1860,7 +1857,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             stdout = proc.communicate()[0]
             stdout_worker = proc_worker.communicate()[0]
@@ -1891,7 +1888,7 @@ class SecondUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             proc_worker = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1902,11 +1899,11 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             gevent.sleep(2)
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -1922,7 +1919,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
 
             stdout = proc.communicate()[0]
@@ -1935,7 +1932,6 @@ class SecondUser(HttpUser):
             self.assertEqual(0, proc_worker.returncode)
             self.assertIn("hello", worker_stdout)
 
-    @unittest.skipIf(os.name == "nt", reason="Process hangs on Windows")
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
@@ -1951,12 +1947,15 @@ class SecondUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with mock_locustfile() as mocked2:
+                # file_paths = f"{mocked.file_path}, {mocked2.file_path}"
+                # if use_shell():
+                #     file_paths = f"'{mocked.file_path}, {mocked2.file_path}'"
                 proc = subprocess.Popen(
-                    " ".join(
+                    shell_str(
                         [
                             "locust",
                             "-f",
-                            f"'{mocked.file_path}, {mocked2.file_path}'",
+                            f"{mocked.file_path}, {mocked2.file_path}",
                             "--headless",
                             "--master",
                             "-L",
@@ -1966,11 +1965,10 @@ class SecondUser(HttpUser):
                     stderr=STDOUT,
                     stdout=PIPE,
                     text=True,
-                    shell=True,
-                    start_new_session=True,
+                    shell=use_shell(),
                 )
                 proc_worker = subprocess.Popen(
-                    " ".join(
+                    shell_str(
                         [
                             "locust",
                             "-f",
@@ -1981,8 +1979,7 @@ class SecondUser(HttpUser):
                     stderr=STDOUT,
                     stdout=PIPE,
                     text=True,
-                    shell=True,
-                    start_new_session=True,
+                    shell=use_shell(),
                 )
 
                 try:
@@ -1991,22 +1988,14 @@ class SecondUser(HttpUser):
                         "Got error from master: locustfile must be a full path to a single locustfile for file distribution to work",
                         stdout,
                     )
-                    # Remove if we bring this test back in on Windows
-                    if os.name == "nt":
-                        os.kill(proc.pid, signal.CTRL_C_EVENT)
-                    else:
-                        os.killpg(proc.pid, signal.SIGTERM)
+                    proc.kill()
                     master_stdout = proc.communicate()[0]
                     self.assertIn(
                         "--locustfile must be a full path to a single locustfile for file distribution", master_stdout
                     )
                 except Exception:
-                    if os.name == "nt":
-                        os.kill(proc.pid, signal.CTRL_C_EVENT)
-                        os.kill(proc_worker.pid, signal.CTRL_C_EVENT)
-                    else:
-                        os.killpg(proc.pid, signal.SIGTERM)
-                        os.killpg(proc_worker.pid, signal.SIGTERM)
+                    proc.kill()
+                    proc_worker.kill()
                     stdout, worker_stderr = proc_worker.communicate()
                     assert False, f"worker never finished: {stdout}"
 
@@ -2026,7 +2015,7 @@ class SecondUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             proc = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -2044,7 +2033,7 @@ class SecondUser(HttpUser):
                 stderr=DEVNULL,
                 stdout=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             stdout, stderr = proc.communicate()
 
@@ -2081,7 +2070,7 @@ class AnyUser(HttpUser):
 """
         with mock_locustfile(content=content) as mocked:
             master = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -2101,10 +2090,10 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             proc_worker_1 = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -2117,10 +2106,10 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             proc_worker_2 = subprocess.Popen(
-                " ".join(
+                shell_str(
                     [
                         "locust",
                         "-f",
@@ -2133,7 +2122,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
+                shell=use_shell(),
             )
             stdout, stderr = master.communicate()
             self.assertNotIn("Traceback", stderr)
@@ -2254,23 +2243,19 @@ class AnyUser(HttpUser):
     def test_processes_ctrl_c(self):
         with mock_locustfile() as mocked:
             proc = psutil.Popen(  # use psutil.Popen instead of subprocess.Popen to use extra features
-                " ".join(
-                    [
-                        "locust",
-                        "-f",
-                        mocked.file_path,
-                        "--processes",
-                        "4",
-                        "--headless",
-                        "-L",
-                        "DEBUG",
-                    ]
-                ),
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--processes",
+                    "4",
+                    "--headless",
+                    "-L",
+                    "DEBUG",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
-                start_new_session=True,
             )
             gevent.sleep(3)
             children = proc.children(recursive=True)
@@ -2311,40 +2296,34 @@ class AnyUser(HttpUser):
 """
         with mock_locustfile(content=content) as mocked:
             master_proc = subprocess.Popen(
-                " ".join(
-                    [
-                        "locust",
-                        "-f",
-                        mocked.file_path,
-                        "--master",
-                        "--headless",
-                        "--expect-workers",
-                        "2",
-                    ]
-                ),
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--master",
+                    "--headless",
+                    "--expect-workers",
+                    "2",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
             )
 
             worker_parent_proc = subprocess.Popen(
-                " ".join(
-                    [
-                        "locust",
-                        "-f",
-                        mocked.file_path,
-                        "--worker",
-                        "--processes",
-                        "2",
-                        "--headless",
-                    ]
-                ),
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--worker",
+                    "--processes",
+                    "2",
+                    "--headless",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
                 start_new_session=True,
-                shell=True,
             )
             gevent.sleep(2)
             master_proc.kill()
@@ -2364,22 +2343,19 @@ class AnyUser(HttpUser):
     def test_processes_error_doesnt_blow_up_completely(self):
         with mock_locustfile() as mocked:
             proc = subprocess.Popen(
-                " ".join(
-                    [
-                        "locust",
-                        "-f",
-                        mocked.file_path,
-                        "--processes",
-                        "4",
-                        "-L",
-                        "DEBUG",
-                        "UserThatDoesntExist",
-                    ]
-                ),
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--processes",
+                    "4",
+                    "-L",
+                    "DEBUG",
+                    "UserThatDoesntExist",
+                ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
             )
             _, stderr = proc.communicate()
             self.assertIn("Unknown User(s): UserThatDoesntExist", stderr)
@@ -2407,18 +2383,16 @@ class AnyUser(User):
 """
         with mock_locustfile(content=content) as mocked:
             worker_proc = subprocess.Popen(
-                " ".join(["locust", "-f", mocked.file_path, "--processes", "2", "--worker"]),
+                ["locust", "-f", mocked.file_path, "--processes", "2", "--worker"],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
             )
             master_proc = subprocess.Popen(
-                " ".join(["locust", "-f", mocked.file_path, "--master", "--headless", "-t", "5"]),
+                ["locust", "-f", mocked.file_path, "--master", "--headless", "-t", "5"],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                shell=True,
             )
             try:
                 _, stderr = worker_proc.communicate(timeout=3)
