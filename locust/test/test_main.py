@@ -264,6 +264,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             stdout, stderr = proc.communicate()
             self.assertIn("Starting web interface at", stderr)
 
+    # TODO: test on windows
+    @unittest.skipIf(os.name == "nt", reason="doesn't currently work with windows shell")
     def test_percentiles_to_statistics(self):
         port = get_free_tcp_port()
         with temporary_file(
