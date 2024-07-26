@@ -1953,7 +1953,8 @@ class SecondUser(HttpUser):
                         [
                             "locust",
                             "-f",
-                            f"{mocked.file_path}, {mocked2.file_path}" "--headless",
+                            f"{mocked.file_path}, {mocked2.file_path}",
+                            "--headless",
                             "--master",
                             "-L",
                             "debug",
