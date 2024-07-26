@@ -1207,6 +1207,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("https://test.com/", html_report_content)
         self.assertIn('"show_download_link": false', html_report_content)
 
+    # TODO: test on windows
+    @unittest.skipIf(os.name == "nt", reason="doesn't currently work with windows shell")
     def test_run_with_userclass_picker(self):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_B) as file2:
