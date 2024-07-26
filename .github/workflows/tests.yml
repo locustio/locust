@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {name: Windows, python: '3.12', os: windows-latest, tox: fail_fast_test_main }
+          - {name: Windows, python: '3.11', os: windows-latest, tox: fail_fast_test_main }
 
     steps:
       - uses: actions/checkout@v4
