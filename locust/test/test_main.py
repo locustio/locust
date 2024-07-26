@@ -1931,6 +1931,8 @@ class SecondUser(HttpUser):
             self.assertEqual(0, proc_worker.returncode)
             self.assertIn("hello", worker_stdout)
 
+    # TODO: test on windows
+    @unittest.skipIf(os.name == "nt", reason="doesn't currently work with windows shell")
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
@@ -1946,16 +1948,12 @@ class SecondUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with mock_locustfile() as mocked2:
-                file_paths = f"{mocked.file_path}, {mocked2.file_path}"
-                if use_shell():
-                    file_paths = f"'{mocked.file_path}, {mocked2.file_path}'"
                 proc = subprocess.Popen(
                     shell_str(
                         [
                             "locust",
                             "-f",
-                            file_paths,
-                            "--headless",
+                            f"{mocked.file_path}, {mocked2.file_path}" "--headless",
                             "--master",
                             "-L",
                             "debug",
@@ -1965,7 +1963,6 @@ class SecondUser(HttpUser):
                     stdout=PIPE,
                     text=True,
                     shell=use_shell(),
-                    start_new_session=True,
                 )
                 proc_worker = subprocess.Popen(
                     shell_str(
@@ -1980,7 +1977,6 @@ class SecondUser(HttpUser):
                     stdout=PIPE,
                     text=True,
                     shell=use_shell(),
-                    start_new_session=True,
                 )
 
                 try:
