@@ -232,6 +232,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, proc.returncode)
 
+    # TODO: test on windows
+    @unittest.skipIf(os.name == "nt", reason="doesn't currently work with windows shell")
     def test_percentile_parameter(self):
         port = get_free_tcp_port()
         with temporary_file(
