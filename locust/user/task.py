@@ -1,7 +1,8 @@
 from __future__ import annotations
-from itertools import accumulate
+from itertools import accumulate, cycle
 
-from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleTask, RescheduleTaskImmediately, StopUser
+from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleTask, RescheduleTaskImmediately, \
+    StopUser, LocustError
 
 import logging
 import random
@@ -145,25 +146,27 @@ def get_tasks_from_base_classes(bases, class_dict):
         if hasattr(base, "tasks") and base.tasks:
             new_tasks += base.tasks
 
-    if "tasks" in class_dict and class_dict["tasks"] is not None:
-        tasks = class_dict["tasks"]
-        if isinstance(tasks, dict):
-            tasks = tasks.items()
-
-        for task in tasks:
-            if isinstance(task, tuple):
-                task, count = task
-                for _ in range(count):
-                    task.locust_task_weight = count
+    for key, value in class_dict.items():
+        if key == "tasks":
+            # we want to insert tasks from the tasks attribute at the point of it's declaration
+            # compared to methods declared with @task
+            tasks = value
+            if isinstance(tasks, dict):
+                tasks = tasks.items()
+            for task in tasks:
+                if isinstance(task, tuple):
+                    task, count = task
+                    for _ in range(count):
+                        task.locust_task_weight = count
+                        new_tasks.append(task)
+                else:
+                    task.locust_task_weight = 1
                     new_tasks.append(task)
-            else:
-                task.locust_task_weight = 1
-                new_tasks.append(task)
 
-    for item in class_dict.values():
-        if "locust_task_weight" in dir(item):
-            for i in range(item.locust_task_weight):
-                new_tasks.append(item)
+        if "locust_task_weight" in dir(value):
+            # method decorated with @task
+            for _ in range(value.locust_task_weight):
+                new_tasks.append(value)
 
     return new_tasks
 
@@ -494,3 +497,27 @@ class DefaultTaskSet(TaskSet):
         else:
             # task is a function
             task(self.user)
+
+
+class SequentialTaskSet(TaskSet):
+    """
+    Class defining a sequence of tasks that a User will execute.
+
+    Works like TaskSet, but The order of declaration decides the order of execution.
+    Tasks can either be specified by setting the *tasks* attribute to a list of tasks, or by declaring tasks
+    as methods using the @task decorator. Weight determines the repetition of the task.
+
+    It's possible to combine the *tasks* attribute, with some tasks declared using
+    the @task decorator. The order of declaration is respected also in that case.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._task_cycle = cycle(self.tasks)
+
+    def get_next_task(self):
+        if not self.tasks:
+            raise LocustError(
+                "No tasks defined. Use the @task decorator or set the 'tasks' attribute of the SequentialTaskSet"
+            )
+        return next(self._task_cycle)
