@@ -1,4 +1,5 @@
 from __future__ import annotations
+from itertools import accumulate
 
 from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleTask, RescheduleTaskImmediately, StopUser
 
@@ -153,8 +154,10 @@ def get_tasks_from_base_classes(bases, class_dict):
             if isinstance(task, tuple):
                 task, count = task
                 for _ in range(count):
+                    task.locust_task_weight = count
                     new_tasks.append(task)
             else:
+                task.locust_task_weight = 1
                 new_tasks.append(task)
 
     for item in class_dict.values():
@@ -279,6 +282,9 @@ class TaskSet(metaclass=TaskSetMeta):
     def __init__(self, parent: User) -> None:
         self._task_queue: deque = deque()
         self._time_start = time()
+        tasks_dict = {t: t.locust_task_weight for t in self.tasks}
+        self._task_list = list(tasks_dict.keys())
+        self._task_weights = list(accumulate(tasks_dict.values()))
 
         if isinstance(parent, TaskSet):
             self._user = parent.user
@@ -405,7 +411,7 @@ class TaskSet(metaclass=TaskSetMeta):
             raise Exception(
                 f"No tasks defined on {self.__class__.__name__}{extra_message} use the @task decorator or set the 'tasks' attribute of the TaskSet"
             )
-        return random.choice(self.tasks)
+        return random.choices(self._task_list, cum_weights=self._task_weights)[0]
 
     def wait_time(self):
         """
@@ -479,7 +485,7 @@ class DefaultTaskSet(TaskSet):
             raise Exception(
                 f"No tasks defined on {self.user.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
             )
-        return random.choice(self.user.tasks)
+        return random.choices(self.user._task_list, cum_weights=self.user._task_weights)[0]
 
     def execute_task(self, task):
         if hasattr(task, "tasks") and issubclass(task, TaskSet):
