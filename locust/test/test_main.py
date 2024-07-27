@@ -80,7 +80,7 @@ class ProcessIntegrationTest(TestCase):
 
 
 class StandaloneIntegrationTests(ProcessIntegrationTest):
-    def windows(self):
+    def test_windows(self):
         env = os.environ.copy()
         print(env)
         env["PATH"] = r"D:\a\locust\locust\.tox\fail_fast_test_main\Scripts"
