@@ -7,6 +7,7 @@ from locust.exception import (
     RescheduleTaskImmediately,
     ResponseError,
     StopUser,
+    LocustError
 )
 
 import gevent
@@ -42,27 +43,25 @@ class TestTaskSet(LocustTestCase):
 
     def test_tasks_missing_gives_user_friendly_exception(self):
         class MyTasks(TaskSet):
-            tasks = None
+            tasks = []
 
         class MyUser(User):
             wait_time = constant(0.5)
             tasks = [MyTasks]
 
         l = MyTasks(MyUser(self.environment))
-        self.assertRaisesRegex(Exception, "No tasks defined on MyTasks.*", l.run)
-        l.tasks = []
-        self.assertRaisesRegex(Exception, "No tasks defined on MyTasks.*", l.run)
+        self.assertRaisesRegex(LocustError, "No tasks defined on MyTasks.*", l.run)
         MyTasks.task = object()
-        self.assertRaisesRegex(Exception, ".*but you have set a 'task' attribute.*", l.run)
+        self.assertRaisesRegex(LocustError, ".*but you have set a 'task' attribute.*", l.run)
 
     def test_tasks_missing_from_user_gives_user_friendly_exception(self):
         class MyUser(User):
             wait_time = constant(0.5)
 
         l = MyUser(self.environment)
-        self.assertRaisesRegex(Exception, "No tasks defined on MyUser.*", l.run)
+        self.assertRaisesRegex(LocustError, "No tasks defined on MyUser.*", l.run)
         MyUser.task = object()
-        self.assertRaisesRegex(Exception, ".*but you have set a 'task' attribute.*", l.run)
+        self.assertRaisesRegex(LocustError, ".*but you have set a 'task' attribute.*", l.run)
 
     def test_task_decorator_ratio(self):
         t1 = lambda l: None

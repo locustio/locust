@@ -152,6 +152,8 @@ def get_tasks_from_base_classes(bases, class_dict):
             # we want to insert tasks from the tasks attribute at the point of it's declaration
             # compared to methods declared with @task
             tasks = value
+            if not (isinstance(tasks, dict) or isinstance(tasks, list)):
+                raise LocustError("'tasks' attribute must be list or dict")
             if isinstance(tasks, dict):
                 tasks = tasks.items()
             for task in tasks:
@@ -338,6 +340,19 @@ class AbstractTaskSet(ABC, metaclass=TaskSetMeta):
 
         while True:
             try:
+                if isinstance(self, DefaultTaskSet):
+                    if not self.user.tasks:
+                        extra_message = ", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?" if getattr(self.user, "task", None) else "."
+                        raise LocustError(
+                            f"No tasks defined on {self.user.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
+                        )
+                else:
+                    if not self.tasks:
+                        extra_message = ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?" if getattr(self, "task", None) else "."
+                        raise LocustError(
+                            f"No tasks defined on {self.__class__.__name__}{extra_message} use the @task decorator or set the 'tasks' attribute."
+                        )
+
                 if not self._task_queue:
                     self.schedule_task(self.get_next_task())
 
@@ -473,14 +488,6 @@ class TaskSet(AbstractTaskSet):
         self._task_weights = list(accumulate(tasks_dict.values()))
 
     def get_next_task(self):
-        if not self.tasks:
-            if getattr(self, "task", None):
-                extra_message = ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?"
-            else:
-                extra_message = "."
-            raise LocustError(
-                f"No tasks defined on {self.__class__.__name__}{extra_message} use the @task decorator or set the 'tasks' attribute of the TaskSet"
-            )
         return random.choices(self._task_list, cum_weights=self._task_weights)[0]
 
 
@@ -491,14 +498,6 @@ class DefaultTaskSet(AbstractTaskSet):
     """
 
     def get_next_task(self):
-        if not self.user.tasks:
-            if getattr(self.user, "task", None):
-                extra_message = ", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?"
-            else:
-                extra_message = "."
-            raise Exception(
-                f"No tasks defined on {self.user.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
-            )
         return random.choices(self.user._task_list, cum_weights=self.user._task_weights)[0]
 
     def execute_task(self, task):
@@ -527,8 +526,4 @@ class SequentialTaskSet(TaskSet):
         self._task_cycle = cycle(self.tasks)
 
     def get_next_task(self):
-        if not self.tasks:
-            raise LocustError(
-                "No tasks defined. Use the @task decorator or set the 'tasks' attribute of the SequentialTaskSet"
-            )
         return next(self._task_cycle)
