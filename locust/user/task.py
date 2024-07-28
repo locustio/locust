@@ -491,24 +491,6 @@ class TaskSet(AbstractTaskSet):
         return random.choices(self._task_list, cum_weights=self._task_weights)[0]
 
 
-class DefaultTaskSet(AbstractTaskSet):
-    """
-    Default root TaskSet that executes tasks in User.tasks.
-    It executes tasks declared directly on the Locust with the user instance as the task argument.
-    """
-
-    def get_next_task(self):
-        return random.choices(self.user._task_list, cum_weights=self.user._task_weights)[0]
-
-    def execute_task(self, task):
-        if hasattr(task, "tasks") and issubclass(task, TaskSet):
-            # task is  (nested) TaskSet class
-            task(self.user).run()
-        else:
-            # task is a function
-            task(self.user)
-
-
 class SequentialTaskSet(TaskSet):
     """
     Class defining a sequence of tasks that a User will execute.
@@ -527,3 +509,21 @@ class SequentialTaskSet(TaskSet):
 
     def get_next_task(self):
         return next(self._task_cycle)
+
+
+class DefaultTaskSet(AbstractTaskSet):
+    """
+    Default root TaskSet that executes tasks in User.tasks.
+    It executes tasks declared directly on the Locust with the user instance as the task argument.
+    """
+
+    def get_next_task(self):
+        return random.choices(self.user._task_list, cum_weights=self.user._task_weights)[0]
+
+    def execute_task(self, task):
+        if hasattr(task, "tasks") and issubclass(task, TaskSet):
+            # task is  (nested) TaskSet class
+            task(self.user).run()
+        else:
+            # task is a function
+            task(self.user)
