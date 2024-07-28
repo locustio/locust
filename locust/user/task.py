@@ -43,10 +43,10 @@ def task(weight: TaskT) -> TaskT: ...
 
 
 @overload
-def task(weight: int) -> Callable[[TaskT], TaskT]: ...
+def task(weight: int | float) -> Callable[[TaskT], TaskT]: ...
 
 
-def task(weight: TaskT | int = 1) -> TaskT | Callable[[TaskT], TaskT]:
+def task(weight: TaskT | int | float = 1) -> TaskT | Callable[[TaskT], TaskT]:
     """
     Used as a convenience decorator to be able to declare tasks for a User or a TaskSet
     inline in the class. Example::
