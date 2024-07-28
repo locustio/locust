@@ -157,19 +157,13 @@ def get_tasks_from_base_classes(bases, class_dict):
             if isinstance(tasks, dict):
                 tasks = tasks.items()
             for task in tasks:
-                if isinstance(task, tuple):
-                    task, count = task
-                    for _ in range(count):
-                        task.locust_task_weight = count
-                        new_tasks.append(task)
-                else:
-                    task.locust_task_weight = 1
-                    new_tasks.append(task)
+                task, count = task if isinstance(task, tuple) else task, 1
+                task.locust_task_weight = count
+                new_tasks.append(task)
 
         if "locust_task_weight" in dir(value):
             # method decorated with @task
-            for _ in range(value.locust_task_weight):
-                new_tasks.append(value)
+            new_tasks.append(value)
 
     return new_tasks
 
@@ -178,7 +172,6 @@ def filter_tasks_by_tags(
     task_holder: type[TaskHolder],
     tags: set[str] | None = None,
     exclude_tags: set[str] | None = None,
-    checked: dict[TaskT, bool] | None = None,
 ):
     """
     Function used by Environment to recursively remove any tasks/TaskSets from a TaskSet/User that
@@ -186,17 +179,10 @@ def filter_tasks_by_tags(
     """
 
     new_tasks = []
-    if checked is None:
-        checked = {}
     for task in task_holder.tasks:
-        if task in checked:
-            if checked[task]:
-                new_tasks.append(task)
-            continue
-
         passing = True
         if hasattr(task, "tasks"):
-            filter_tasks_by_tags(task, tags, exclude_tags, checked)
+            filter_tasks_by_tags(task, tags, exclude_tags)
             passing = len(task.tasks) > 0
         else:
             if tags is not None:
@@ -206,7 +192,6 @@ def filter_tasks_by_tags(
 
         if passing:
             new_tasks.append(task)
-        checked[task] = passing
 
     task_holder.tasks = new_tasks
     if not new_tasks:
@@ -328,8 +313,13 @@ class AbstractTaskSet(ABC, metaclass=TaskSetMeta):
         """
         pass
 
+    @abstractmethod
+    def _setup_tasks(self):
+        pass
+
     @final
     def run(self):
+        self._setup_tasks()
         try:
             self.on_start()
         except InterruptTaskSet as e:
@@ -481,14 +471,11 @@ class AbstractTaskSet(ABC, metaclass=TaskSetMeta):
 
 class TaskSet(AbstractTaskSet):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        tasks_dict = {t: t.locust_task_weight for t in self.tasks}
-        self._task_list = list(tasks_dict.keys())
-        self._task_weights = list(accumulate(tasks_dict.values()))
+    def _setup_tasks(self):
+        self._task_weights = list(accumulate(map(lambda x: x.locust_task_weight, self.tasks)))
 
     def get_next_task(self):
-        return random.choices(self._task_list, cum_weights=self._task_weights)[0]
+        return random.choices(self.tasks, cum_weights=self._task_weights)[0]
 
 
 class SequentialTaskSet(TaskSet):
@@ -503,9 +490,12 @@ class SequentialTaskSet(TaskSet):
     the @task decorator. The order of declaration is respected also in that case.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._task_cycle = cycle(self.tasks)
+    def _setup_tasks(self):
+        task_cycle = []
+        for t in self.tasks:
+            for _ in range(t.locust_task_weight):
+                task_cycle.append(t)
+        self._task_cycle = cycle(task_cycle)
 
     def get_next_task(self):
         return next(self._task_cycle)
@@ -517,8 +507,11 @@ class DefaultTaskSet(AbstractTaskSet):
     It executes tasks declared directly on the Locust with the user instance as the task argument.
     """
 
+    def _setup_tasks(self):
+        self._task_weights = list(accumulate(map(lambda x: x.locust_task_weight, self.user.tasks)))
+
     def get_next_task(self):
-        return random.choices(self.user._task_list, cum_weights=self.user._task_weights)[0]
+        return random.choices(self.user.tasks, cum_weights=self._task_weights)[0]
 
     def execute_task(self, task):
         if hasattr(task, "tasks") and issubclass(task, TaskSet):

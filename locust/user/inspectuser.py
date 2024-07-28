@@ -65,14 +65,11 @@ def get_ratio(user_classes: list[type[User]], user_spawned: dict[str, int], tota
 
 def _get_task_ratio(tasks, total, parent_ratio):
     parent_ratio = parent_ratio if total else 1.0
-    ratio = defaultdict(int)
-    for task in tasks:
-        ratio[task] += 1
-
-    ratio_percent = {t: r * parent_ratio / len(tasks) for t, r in ratio.items()}
+    total_weight = sum(map(lambda x: x.locust_task_weight if 'locust_task_weight' in dir(x) else 1.0, tasks))
 
     task_dict = {}
-    for t, r in ratio_percent.items():
+    for t in tasks:
+        r = (t.locust_task_weight if 'locust_task_weight' in dir(t) else 1.0) * parent_ratio / total_weight
         d = {"ratio": r}
         if inspect.isclass(t) and issubclass(t, TaskSet):
             d["tasks"] = _get_task_ratio(t.tasks, total, r)

@@ -233,37 +233,24 @@ class TestTags(LocustTestCase):
             def dont_include_5_times(self):
                 pass
 
-        self.assertListEqual(
-            MyTaskSet.tasks,
-            [
+        self.assertSetEqual(
+            set(MyTaskSet.tasks),
+            {
                 MyTaskSet.include_twice,
-                MyTaskSet.include_twice,
-                MyTaskSet.include_3_times,
-                MyTaskSet.include_3_times,
                 MyTaskSet.include_3_times,
                 MyTaskSet.dont_include_4_times,
-                MyTaskSet.dont_include_4_times,
-                MyTaskSet.dont_include_4_times,
-                MyTaskSet.dont_include_4_times,
                 MyTaskSet.dont_include_5_times,
-                MyTaskSet.dont_include_5_times,
-                MyTaskSet.dont_include_5_times,
-                MyTaskSet.dont_include_5_times,
-                MyTaskSet.dont_include_5_times,
-            ],
+            },
         )
 
         filter_tasks_by_tags(MyTaskSet, tags={"included"})
 
-        self.assertListEqual(
-            MyTaskSet.tasks,
-            [
+        self.assertSetEqual(
+            set(MyTaskSet.tasks),
+            {
                 MyTaskSet.include_twice,
-                MyTaskSet.include_twice,
                 MyTaskSet.include_3_times,
-                MyTaskSet.include_3_times,
-                MyTaskSet.include_3_times,
-            ],
+            },
         )
 
     def test_excluding_tags_with_weights(self):
@@ -287,37 +274,24 @@ class TestTags(LocustTestCase):
             def exclude_5_times(self):
                 pass
 
-        self.assertListEqual(
-            MyTaskSet.tasks,
-            [
+        self.assertSetEqual(
+            set(MyTaskSet.tasks),
+            {
                 MyTaskSet.dont_exclude_twice,
-                MyTaskSet.dont_exclude_twice,
-                MyTaskSet.dont_exclude_3_times,
-                MyTaskSet.dont_exclude_3_times,
                 MyTaskSet.dont_exclude_3_times,
                 MyTaskSet.exclude_4_times,
-                MyTaskSet.exclude_4_times,
-                MyTaskSet.exclude_4_times,
-                MyTaskSet.exclude_4_times,
-                MyTaskSet.exclude_5_times,
-                MyTaskSet.exclude_5_times,
-                MyTaskSet.exclude_5_times,
-                MyTaskSet.exclude_5_times,
-                MyTaskSet.exclude_5_times,
-            ],
+                MyTaskSet.exclude_5_times
+            },
         )
 
         filter_tasks_by_tags(MyTaskSet, exclude_tags={"excluded"})
 
-        self.assertListEqual(
-            MyTaskSet.tasks,
-            [
+        self.assertSetEqual(
+            set(MyTaskSet.tasks),
+            {
                 MyTaskSet.dont_exclude_twice,
-                MyTaskSet.dont_exclude_twice,
-                MyTaskSet.dont_exclude_3_times,
-                MyTaskSet.dont_exclude_3_times,
-                MyTaskSet.dont_exclude_3_times,
-            ],
+                MyTaskSet.dont_exclude_3_times
+            },
         )
 
     def test_tagged_tasks_shared_across_tasksets(self):

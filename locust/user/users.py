@@ -126,9 +126,6 @@ class User(metaclass=UserMeta):
         self._group: Group
         self._taskset_instance: TaskSet | None = None
         self._cp_last_run = time.time()  # used by constant_pacing wait_time
-        tasks_dict = {t: t.locust_task_weight for t in self.tasks}
-        self._task_list = list(tasks_dict.keys())
-        self._task_weights = list(accumulate(tasks_dict.values()))
 
     def on_start(self) -> None:
         """
