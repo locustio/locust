@@ -1,5 +1,6 @@
 from __future__ import annotations
 from itertools import accumulate, cycle
+from abc import ABC, ABCMeta, abstractmethod
 
 from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleTask, RescheduleTaskImmediately, \
     StopUser, LocustError
@@ -210,7 +211,7 @@ def filter_tasks_by_tags(
         logging.warning(f"{task_holder.__name__} had no tasks left after filtering, instantiating it will fail!")
 
 
-class TaskSetMeta(type):
+class TaskSetMeta(ABCMeta):
     """
     Meta class for the main User class. It's used to allow User classes to specify task execution
     ratio using an {task:int} dict, or a [(task0,int), ..., (taskN,int)] list.
@@ -218,10 +219,10 @@ class TaskSetMeta(type):
 
     def __new__(mcs, classname, bases, class_dict):
         class_dict["tasks"] = get_tasks_from_base_classes(bases, class_dict)
-        return type.__new__(mcs, classname, bases, class_dict)
+        return super().__new__(mcs, classname, bases, class_dict)
 
 
-class TaskSet(metaclass=TaskSetMeta):
+class AbstractTaskSet(ABC, metaclass=TaskSetMeta):
     """
     Class defining a set of tasks that a User will execute.
 
@@ -285,11 +286,8 @@ class TaskSet(metaclass=TaskSetMeta):
     def __init__(self, parent: User) -> None:
         self._task_queue: deque = deque()
         self._time_start = time()
-        tasks_dict = {t: t.locust_task_weight for t in self.tasks}
-        self._task_list = list(tasks_dict.keys())
-        self._task_weights = list(accumulate(tasks_dict.values()))
 
-        if isinstance(parent, TaskSet):
+        if isinstance(parent, AbstractTaskSet):
             self._user = parent.user
         else:
             self._user = parent
@@ -405,16 +403,9 @@ class TaskSet(metaclass=TaskSetMeta):
         else:
             self._task_queue.append(task_callable)
 
+    @abstractmethod
     def get_next_task(self):
-        if not self.tasks:
-            if getattr(self, "task", None):
-                extra_message = ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?"
-            else:
-                extra_message = "."
-            raise Exception(
-                f"No tasks defined on {self.__class__.__name__}{extra_message} use the @task decorator or set the 'tasks' attribute of the TaskSet"
-            )
-        return random.choices(self._task_list, cum_weights=self._task_weights)[0]
+        pass
 
     def wait_time(self):
         """
@@ -473,7 +464,27 @@ class TaskSet(metaclass=TaskSetMeta):
         return self.user.client
 
 
-class DefaultTaskSet(TaskSet):
+class TaskSet(AbstractTaskSet):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        tasks_dict = {t: t.locust_task_weight for t in self.tasks}
+        self._task_list = list(tasks_dict.keys())
+        self._task_weights = list(accumulate(tasks_dict.values()))
+
+    def get_next_task(self):
+        if not self.tasks:
+            if getattr(self, "task", None):
+                extra_message = ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?"
+            else:
+                extra_message = "."
+            raise LocustError(
+                f"No tasks defined on {self.__class__.__name__}{extra_message} use the @task decorator or set the 'tasks' attribute of the TaskSet"
+            )
+        return random.choices(self._task_list, cum_weights=self._task_weights)[0]
+
+
+class DefaultTaskSet(AbstractTaskSet):
     """
     Default root TaskSet that executes tasks in User.tasks.
     It executes tasks declared directly on the Locust with the user instance as the task argument.
