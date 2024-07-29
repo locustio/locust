@@ -1,5 +1,4 @@
 from __future__ import annotations
-from itertools import accumulate
 
 from locust.clients import HttpSession
 from locust.exception import LocustError, StopUser

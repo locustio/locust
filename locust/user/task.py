@@ -1,14 +1,20 @@
 from __future__ import annotations
-from itertools import accumulate, cycle
-from abc import ABC, ABCMeta, abstractmethod
 
-from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleTask, RescheduleTaskImmediately, \
-    StopUser, LocustError
+from locust.exception import (
+    InterruptTaskSet,
+    LocustError,
+    MissingWaitTimeError,
+    RescheduleTask,
+    RescheduleTaskImmediately,
+    StopUser,
+)
 
 import logging
 import random
 import traceback
+from abc import ABC, ABCMeta, abstractmethod
 from collections import deque
+from itertools import accumulate, cycle
 from time import time
 from typing import (
     TYPE_CHECKING,
@@ -332,13 +338,21 @@ class AbstractTaskSet(ABC, metaclass=TaskSetMeta):
             try:
                 if isinstance(self, DefaultTaskSet):
                     if not self.user.tasks:
-                        extra_message = ", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?" if getattr(self.user, "task", None) else "."
+                        extra_message = (
+                            ", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?"
+                            if getattr(self.user, "task", None)
+                            else "."
+                        )
                         raise LocustError(
                             f"No tasks defined on {self.user.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
                         )
                 else:
                     if not self.tasks:
-                        extra_message = ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?" if getattr(self, "task", None) else "."
+                        extra_message = (
+                            ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?"
+                            if getattr(self, "task", None)
+                            else "."
+                        )
                         raise LocustError(
                             f"No tasks defined on {self.__class__.__name__}{extra_message} use the @task decorator or set the 'tasks' attribute."
                         )
@@ -470,7 +484,6 @@ class AbstractTaskSet(ABC, metaclass=TaskSetMeta):
 
 
 class TaskSet(AbstractTaskSet):
-
     def _setup_tasks(self):
         self._task_weights = list(accumulate(map(lambda x: x.locust_task_weight, self.tasks)))
 

@@ -27,7 +27,7 @@ from .debug import run_single_user
 from .event import Events
 from .shape import LoadTestShape
 from .user import wait_time
-from .user.task import TaskSet, tag, task, SequentialTaskSet
+from .user.task import SequentialTaskSet, TaskSet, tag, task
 from .user.users import HttpUser, User
 from .user.wait_time import between, constant, constant_pacing, constant_throughput
 

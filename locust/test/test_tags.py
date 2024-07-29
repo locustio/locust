@@ -280,7 +280,7 @@ class TestTags(LocustTestCase):
                 MyTaskSet.dont_exclude_twice,
                 MyTaskSet.dont_exclude_3_times,
                 MyTaskSet.exclude_4_times,
-                MyTaskSet.exclude_5_times
+                MyTaskSet.exclude_5_times,
             },
         )
 
@@ -288,10 +288,7 @@ class TestTags(LocustTestCase):
 
         self.assertSetEqual(
             set(MyTaskSet.tasks),
-            {
-                MyTaskSet.dont_exclude_twice,
-                MyTaskSet.dont_exclude_3_times
-            },
+            {MyTaskSet.dont_exclude_twice, MyTaskSet.dont_exclude_3_times},
         )
 
     def test_tagged_tasks_shared_across_tasksets(self):

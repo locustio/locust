@@ -3,11 +3,11 @@ from locust.env import Environment
 from locust.exception import (
     CatchResponseError,
     InterruptTaskSet,
+    LocustError,
     RescheduleTask,
     RescheduleTaskImmediately,
     ResponseError,
     StopUser,
-    LocustError
 )
 
 import gevent
