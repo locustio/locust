@@ -101,6 +101,9 @@ __version_tuple__ = (0, 0, 0)
 version_tuple = __version_tuple__
 """
 
+[tool.poetry-pyinstaller-plugin.scripts]
+locust = { source = "locust/main.py", type = "onefile", bundle = false }
+
 [tool.poetry.dependencies]
 python = ">=3.9"
 
