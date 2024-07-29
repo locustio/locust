@@ -29,14 +29,13 @@
     "test": "vitest --silent=false"
   },
   "peerDependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.14.9",
+    "@mui/material": "^5.14.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^8.0.5"
-  },
-  "peerDependenciesMeta": {
-    "react-redux": {
-      "optional": true
-    }
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",

@@ -31,7 +31,15 @@ export default defineConfig((config: UserConfig) => ({
       fileName: () => 'webui.js',
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react-redux'],
+      external: [
+        'react',
+        'react-dom',
+        'react-redux',
+        '@emotion/react',
+        '@emotion/styled',
+        '@mui/icons-material',
+        '@mui/material',
+      ],
     },
   },
 }));
