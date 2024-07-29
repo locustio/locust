@@ -3,7 +3,10 @@ import { useEffect, useRef } from 'react';
 export default function useInterval(
   callback: () => void,
   delay: number,
-  { shouldRunInterval } = { shouldRunInterval: true },
+  { shouldRunInterval, immediate }: { shouldRunInterval?: boolean; immediate?: boolean } = {
+    shouldRunInterval: true,
+    immediate: false,
+  },
 ) {
   const savedCallback = useRef(callback);
 
@@ -14,6 +17,10 @@ export default function useInterval(
   useEffect(() => {
     if (!shouldRunInterval) {
       return;
+    }
+
+    if (immediate) {
+      savedCallback.current();
     }
 
     const interval = setInterval(() => savedCallback.current(), delay);
