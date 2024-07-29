@@ -18,21 +18,16 @@ interface ILine<ChartType> {
   key: keyof ChartType;
 }
 
-interface ICreateOptions<ChartType> {
-  title: string;
-  seriesData: EChartsOption['Series'][];
+export interface ILineChart<ChartType> {
   charts: ChartType;
-  colors?: string[];
-}
-
-export interface ILineChartProps<ChartType = ICharts> {
   title: string;
   lines: ILine<ChartType>[];
   colors?: string[];
+  chartValueFormatter?: (value: string | number) => number;
 }
 
-interface ILineChart<ChartType> extends ILineChartProps<ChartType> {
-  charts: ChartType;
+interface ICreateOptions<ChartType> extends Omit<ILineChart<ChartType>, 'lines'> {
+  seriesData: EChartsOption['Series'][];
 }
 
 interface ILineChartZoomEvent {
@@ -44,6 +39,7 @@ const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
   title,
   seriesData,
   colors,
+  chartValueFormatter,
 }: ICreateOptions<ChartType>) => ({
   title: {
     text: title,
@@ -72,7 +68,7 @@ const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
           ${tooltipText}
           <br>
           <span style="color:${color};">
-            ${seriesName}:&nbsp${value}
+            ${seriesName}:&nbsp${chartValueFormatter ? chartValueFormatter(value) : value}
           </span>
         `,
           '',
@@ -155,6 +151,7 @@ export default function LineChart<ChartType extends Pick<ICharts, 'time' | 'mark
   title,
   lines,
   colors,
+  chartValueFormatter,
 }: ILineChart<ChartType>) {
   const [chart, setChart] = useState<ECharts | null>(null);
   const isDarkMode = useSelector(({ theme: { isDarkMode } }) => isDarkMode);
@@ -167,12 +164,14 @@ export default function LineChart<ChartType extends Pick<ICharts, 'time' | 'mark
     }
 
     const initChart = init(chartContainer.current, 'locust');
+
     initChart.setOption(
       createOptions<ChartType>({
         charts,
         title,
         seriesData: getSeriesData<ChartType>({ charts, lines }),
         colors,
+        chartValueFormatter,
       }),
     );
     initChart.on('datazoom', datazoom => {

@@ -11,6 +11,7 @@ export { default as Table } from 'components/Table/Table';
 export { default as LineChart } from 'components/LineChart/LineChart';
 export { baseTabs } from 'components/Tabs/Tabs.constants';
 export { default as useInterval } from 'hooks/useInterval';
+export { roundToDecimalPlaces } from 'utils/number';
 export type { IRootState } from 'redux/store';
 
 export type { ITab } from 'types/tab.types';

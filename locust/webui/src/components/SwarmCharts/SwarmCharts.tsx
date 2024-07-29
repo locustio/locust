@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 
-import LineChart, { ILineChartProps } from 'components/LineChart/LineChart';
+import LineChart, { ILineChart } from 'components/LineChart/LineChart';
 import { swarmTemplateArgs } from 'constants/swarm';
 import { IRootState } from 'redux/store';
 import { ICharts } from 'types/ui.types';
@@ -22,7 +22,7 @@ const percentileColors = [
   '#E6E6FA',
 ];
 
-const availableSwarmCharts: ILineChartProps[] = [
+const availableSwarmCharts: Omit<ILineChart<ICharts>, 'charts'>[] = [
   {
     title: 'Total Requests per Second',
     lines: [
