@@ -15,12 +15,8 @@ def build() -> None:
         exit(1)
     print("Building front end...")
     try:
-        if os.name == "nt":
-            subprocess.check_output(" ".join(["yarn", "webui:install"]), shell=True)
-            subprocess.check_output(" ".join(["yarn", "webui:build"]), shell=True)
-        else:
-            subprocess.run(["yarn", "webui:install"])
-            subprocess.run(["yarn", "webui:build"])
+        subprocess.check_output(" ".join(["yarn", "webui:install"]), shell=True)
+        subprocess.check_output(" ".join(["yarn", "webui:build"]), shell=True)
     except subprocess.CalledProcessError as e:
         raise AssertionError(f"Building front end with yarn failed with:\n\n{e.stdout}") from e
 
