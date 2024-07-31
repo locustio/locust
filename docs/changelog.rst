@@ -9,7 +9,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 * FastHttpSession: Enable passing json as a positional argument for post() and stop converting response times to int https://github.com/locustio/locust/pull/2772
 * New events for heartbeat and usage monitor https://github.com/locustio/locust/pull/2777
 * SequentialTaskSet: Allow weighted tasks and dict in .tasks (experimental) https://github.com/locustio/locust/pull/2742
-* Implement Poetry build system (mainly so we don't have to commit the built frontend resources to git) https://github.com/locustio/locust/pull/2725, https://github.com/locustio/locust/pull/2791, https://github.com/locustio/locust/pull/2801, https://github.com/locustio/locust/pull/2803, https://github.com/locustio/locust/pull/2821
+* Implement Poetry build system (mainly so we don't have to commit the built frontend resources to git) https://github.com/locustio/locust/pull/2725
 * UI: Replace total avg response time with 50 percentile (avg was broken) https://github.com/locustio/locust/pull/2806
 * Avoid deadlock in gevent/urllib3 connection pool (fixes occasional worker heartbeat timeouts) https://github.com/locustio/locust/pull/2813
 
