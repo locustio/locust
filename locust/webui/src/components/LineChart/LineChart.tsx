@@ -23,7 +23,7 @@ export interface ILineChart<ChartType> {
   title: string;
   lines: ILine<ChartType>[];
   colors?: string[];
-  chartValueFormatter?: (value: string | number) => number;
+  chartValueFormatter?: (value: string | number | string[] | number[]) => string | number;
 }
 
 interface ICreateOptions<ChartType> extends Omit<ILineChart<ChartType>, 'lines'> {
