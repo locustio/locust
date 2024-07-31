@@ -6,7 +6,6 @@ For full details of the Locust changelog, please see https://github.com/locustio
 
 2.30.0
 ======
-## What's Changed
 * FastHttpSession: Enable passing json as a positional argument for post() and stop converting response times to int https://github.com/locustio/locust/pull/2772, add type hints https://github.com/locustio/locust/pull/2775
 * New events for heartbeat and usage monitor https://github.com/locustio/locust/pull/2777
 * SequentialTaskSet: Allow weighted tasks and dict in .tasks (experimental) https://github.com/locustio/locust/pull/2742
