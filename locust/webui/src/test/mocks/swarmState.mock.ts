@@ -22,6 +22,7 @@ export const swarmStateMock = {
   showUserclassPicker: false,
   spawnRate: null,
   state: 'ready',
+  startTime: '',
   percentilesToChart: percentilesToChart,
   statsHistoryEnabled: false,
   tasks: '{}',

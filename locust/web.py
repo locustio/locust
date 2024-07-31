@@ -39,6 +39,7 @@ from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
 from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
+from .util.date import format_utc_timestamp
 from .util.timespan import parse_timespan
 
 if TYPE_CHECKING:
@@ -617,6 +618,8 @@ class WebUI:
             else None
         )
 
+        start_time = format_utc_timestamp(stats.start_time)
+
         self.template_args = {
             "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
@@ -634,6 +637,7 @@ class WebUI:
                 and not (self.userclass_picker_is_active or self.environment.shape_class.use_common_options)
             ),
             "stats_history_enabled": options and options.stats_history_enabled,
+            "start_time": start_time,
             "tasks": dumps({}),
             "extra_options": extra_options,
             "run_time": options and options.run_time,
