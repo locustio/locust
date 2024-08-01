@@ -49,7 +49,7 @@ export interface ISwarmWorker {
   userCount: number;
 }
 
-interface NullChartValue {
+export interface NullChartValue {
   value: null;
 }
 

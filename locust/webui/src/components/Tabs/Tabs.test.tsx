@@ -2,7 +2,7 @@ import { act } from '@testing-library/react';
 import { test, describe, expect } from 'vitest';
 
 import Tabs from 'components/Tabs/Tabs';
-import { baseTabs, conditionalTabs } from 'components/Tabs/Tabs.constants';
+import { baseTabs } from 'components/Tabs/Tabs.constants';
 import { renderWithProvider } from 'test/testUtils';
 import { getUrlParams } from 'utils/url';
 
@@ -10,9 +10,11 @@ describe('Tabs', () => {
   test('renders the component with base tabs', () => {
     const { getByText } = renderWithProvider(<Tabs />);
 
-    baseTabs.forEach(({ title }) => {
-      expect(getByText(title)).toBeTruthy();
-    });
+    baseTabs
+      .filter(({ shouldDisplayTab }) => !shouldDisplayTab)
+      .forEach(({ title }) => {
+        expect(getByText(title)).toBeTruthy();
+      });
   });
 
   test('renders the component with conditional tabs based on state', () => {
@@ -20,9 +22,11 @@ describe('Tabs', () => {
       swarm: { isDistributed: true },
     });
 
-    conditionalTabs.forEach(({ title }) => {
-      expect(getByText(title)).toBeTruthy();
-    });
+    baseTabs
+      .filter(({ shouldDisplayTab }) => shouldDisplayTab)
+      .forEach(({ title }) => {
+        expect(getByText(title)).toBeTruthy();
+      });
   });
 
   test('does not render the conditional tabs when condition is falsy', () => {
@@ -30,9 +34,11 @@ describe('Tabs', () => {
       swarm: { isDistributed: false },
     });
 
-    conditionalTabs.forEach(({ title }) => {
-      expect(queryByText(title)).toBeNull();
-    });
+    baseTabs
+      .filter(({ shouldDisplayTab }) => shouldDisplayTab)
+      .forEach(({ title }) => {
+        expect(queryByText(title)).toBeNull();
+      });
   });
 
   test('renders the component with extended tabs', () => {
