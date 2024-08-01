@@ -1047,21 +1047,18 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             proc = subprocess.Popen(
-                " ".join(
-                    [
-                        "locust",
-                        "-f",
-                        mocked.file_path,
-                        "--headless",
-                        "--run-time",
-                        "1s",
-                        "-u",
-                        "3",
-                    ]
-                ),
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--run-time",
+                    "1s",
+                    "-u",
+                    "3",
+                ],
                 stderr=STDOUT,
                 stdout=PIPE,
-                shell=True,
                 text=True,
             )
 
