@@ -4,6 +4,8 @@ The Locust UI is used for viewing stats, reports, and information on your curren
 
 ## Locust UI as a Library
 
+**Using the Locust UI as a library should be considered an experimental feature**
+
 The Locust UI may be extended to fit your needs. If you only need limited extensibility, you may do so in your Locustfile, see the [extend_web_ui example](https://github.com/locustio/locust/blob/master/examples/extend_web_ui.py). 
 
 However, you may want to further extend certain functionalities. To do so, you may replace the default Locust UI with your own React application. Start by installing the locust-ui in your React application:
@@ -60,6 +62,11 @@ For Locust to be able to pass data to your React frontend, place the following s
 <script>
     window.templateArgs = {{ template_args|tojson }}
 </script>
+```
+
+To load the favicon, place the link in your head:
+```html
+<link rel="icon" href="./assets/favicon.ico" />
 ```
 
 Lastly, you must configure Locust to point to your own React build output. To achieve this, you can use the flag `--build-path` and provide the **absolute** path to your build directory.
