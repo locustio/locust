@@ -679,7 +679,10 @@ class StatsEntry:
             "max_response_time": proper_round(self.max_response_time),
             "current_rps": self.current_rps,
             "current_fail_per_sec": self.current_fail_per_sec,
+            "avg_response_time": self.avg_response_time,
             "median_response_time": self.median_response_time,
+            "total_rps": self.total_rps,
+            "total_fail_per_sec": self.total_fail_per_sec,
             **response_time_percentiles,
             "avg_content_length": self.avg_content_length,
         }
