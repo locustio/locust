@@ -32,6 +32,8 @@ from .exception import RPCError, RPCReceiveError, RPCSendError
 from .log import get_logs, greenlet_exception_logger
 from .rpc import Message, rpc
 from .stats import RequestStats, StatsError, setup_distributed_stats_event_listeners
+from .util.directory import get_abspaths_in
+from .util.url import is_url
 
 if TYPE_CHECKING:
     from . import User
@@ -1024,33 +1026,45 @@ class MasterRunner(DistributedRunner):
                 # if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
             elif msg.type == "locustfile":
-                logging.debug("Worker requested locust file")
-                assert self.environment.parsed_options
-                filename = self.environment.parsed_options.locustfile
-                try:
-                    with open(filename) as f:
-                        file_contents = f.read()
-                except Exception as e:
-                    logger.error(
-                        f"--locustfile must be a full path to a single locustfile for file distribution to work {e}"
+                if msg.data["version"][0:4] == __version__[0:4]:
+                    logger.debug(
+                        f"A worker ({msg.node_id}) running a different patch version ({msg.data['version']}) connected, master version is {__version__}"
                     )
+
+                logging.debug("Worker requested locust file")
+                assert self.environment.parsed_locustfiles
+                locustfile_options = self.environment.parsed_locustfiles
+                locustfile_list = [f.strip() for f in locustfile_options if not os.path.isdir(f)]
+
+                for locustfile_option in locustfile_options:
+                    if os.path.isdir(locustfile_option):
+                        locustfile_list.extend(get_abspaths_in(locustfile_option, extension=".py"))
+
+                try:
+                    locustfiles: list[str | dict[str, str]] = []
+
+                    for filename in locustfile_list:
+                        if is_url(filename):
+                            locustfiles.append(filename)
+                        else:
+                            with open(filename) as f:
+                                filename = os.path.basename(filename)
+                                file_contents = f.read()
+
+                            locustfiles.append({"filename": filename, "contents": file_contents})
+                except Exception as e:
+                    error_message = "locustfile must be a full path to a single locustfile, a comma-separated list of .py files, or a URL for file distribution to work"
+                    logger.error(f"{error_message} {e}")
                     self.send_message(
                         "locustfile",
                         client_id=client_id,
-                        data={
-                            "error": f"locustfile must be a full path to a single locustfile for file distribution to work (was '{filename}')"
-                        },
+                        data={"error": f"{error_message} (was '{filename}')"},
                     )
                 else:
-                    if getattr(self, "_old_file_contents", file_contents) != file_contents:
-                        logger.warning(
-                            "Locustfile contents changed on disk after first worker requested locustfile, sending new content. If you make any major changes (like changing User class names) you need to restart master."
-                        )
-                    self._old_file_contents = file_contents
                     self.send_message(
                         "locustfile",
                         client_id=client_id,
-                        data={"filename": os.path.basename(filename), "contents": file_contents},
+                        data={"locustfiles": locustfiles},
                     )
                 continue
             elif msg.type == "client_stopped":
