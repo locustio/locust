@@ -33,6 +33,7 @@ class Environment:
         stop_timeout: float | None = None,
         catch_exceptions=True,
         parsed_options: Namespace | None = None,
+        parsed_locustfiles: list[str] | None = None,
         available_user_classes: dict[str, User] | None = None,
         available_shape_classes: dict[str, LoadTestShape] | None = None,
         available_user_tasks: dict[str, list[TaskSet | Callable]] | None = None,
@@ -91,6 +92,8 @@ class Environment:
         """
         self.parsed_options = parsed_options
         """Reference to the parsed command line options (used to pre-populate fields in Web UI). When using Locust as a library, this should either be `None` or an object created by `argument_parser.parse_args()`"""
+        self.parsed_locustfiles = parsed_locustfiles
+        """A list of all locustfiles for the test"""
         self.available_user_classes = available_user_classes
         """List of the available User Classes to pick from in the UserClass Picker"""
         self.available_shape_classes = available_shape_classes

@@ -59,6 +59,7 @@ def create_environment(
     events=None,
     shape_class=None,
     locustfile=None,
+    parsed_locustfiles=None,
     available_user_classes=None,
     available_shape_classes=None,
     available_user_tasks=None,
@@ -74,6 +75,7 @@ def create_environment(
         host=options.host,
         reset_stats=options.reset_stats,
         parsed_options=options,
+        parsed_locustfiles=parsed_locustfiles,
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
         available_user_tasks=available_user_tasks,
@@ -211,7 +213,8 @@ def main():
             sys.exit(1)
         # Optimize copy-on-write-behavior to save some memory (aprx 26MB -> 15MB rss) in child processes
         gc.collect()  # avoid freezing garbage
-        gc.freeze()  # move all objects to perm gen so ref counts dont get updated
+        if hasattr(gc, "freeze"):
+            gc.freeze()  # move all objects to perm gen so ref counts dont get updated
         for _ in range(options.processes):
             if child_pid := gevent.fork():
                 children.append(child_pid)
@@ -354,6 +357,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         events=locust.events,
         shape_class=shape_class,
         locustfile=locustfile_path,
+        parsed_locustfiles=locustfiles,
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
         available_user_tasks=available_user_tasks,

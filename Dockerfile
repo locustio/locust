@@ -1,5 +1,5 @@
 # Stage 1: Build web front end
-FROM node:18.0.0-alpine as webui-builder
+FROM node:18.0.0-alpine AS webui-builder
 
 ADD locust/webui locust/webui
 ADD package.json .
@@ -9,9 +9,9 @@ RUN yarn webui:install --production --network-timeout 60000
 RUN yarn webui:build
 
 # Stage 2: Build Locust package
-FROM python:3.11-slim as base
+FROM python:3.11-slim AS base
 
-FROM base as builder
+FROM base AS builder
 RUN apt-get update && apt-get install -y git 
 # there are no wheels for some packages (geventhttpclient?) for arm64/aarch64, so we need some build dependencies there
 RUN if [ -n "$(arch | grep 'arm64\|aarch64')" ]; then apt install -y --no-install-recommends gcc python3-dev; fi
@@ -41,3 +41,4 @@ USER locust
 WORKDIR /home/locust
 EXPOSE 8089 5557
 ENTRYPOINT ["locust"]
+

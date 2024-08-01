@@ -112,8 +112,6 @@ def locust_init(environment, **kwargs):
             """
             # ensure the template_args are up to date before using them
             environment.web_ui.update_template_args()
-            # set the static paths to use the modern ui
-            environment.web_ui.set_static_modern_ui()
 
             return render_template(
                 "index.html",

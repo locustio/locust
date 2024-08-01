@@ -42,17 +42,13 @@ The following screenshots show what it might look like when running this test us
 
 | Under the *Charts* tab you'll find things like requests per second (RPS), response times and number of running users:
 
-.. image:: images/total_requests_per_second.png
-
-.. image:: images/response_times.png
-
-.. image:: images/number_of_users.png
+.. image:: images/bottlenecked_server.png
 
 .. note::
 
     Interpreting performance test results is quite complex (and mostly out of scope for this manual), but if your graphs start looking like this, the target service/system cannot handle the load and you have found a bottleneck.
 
-    When we get to around 9 users, response times start increasing so fast that even though Locust is still spawning more users, the number of requests per second is no longer increasing. The target service is "overloaded" or "saturated".
+    When we get to around 20 users, response times start increasing so fast that even though Locust is still spawning more users, the number of requests per second is no longer increasing. The target service is "overloaded" or "saturated".
 
     If your response times are *not* increasing then add even more users until you find the service's breaking point, or celebrate that your service is already performant enough for your expected load.
 
