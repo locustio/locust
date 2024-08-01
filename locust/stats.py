@@ -4,6 +4,7 @@ import csv
 import hashlib
 import json
 import logging
+import math
 import os
 import signal
 import time
@@ -55,6 +56,7 @@ class StatsEntryDict(StatsBaseDict):
     num_none_requests: int
     num_failures: int
     total_response_time: int
+    total_sum_of_squres: int
     max_response_time: int
     min_response_time: int | None
     total_content_length: int
@@ -293,6 +295,8 @@ class StatsEntry:
         """ Number of failed request """
         self.total_response_time: int = 0
         """ Total sum of the response times """
+        self.total_sum_of_squares: int = 0
+        """ Total sum of the squares of the response times (to calculate the standard deviation) """
         self.min_response_time: int | None = None
         """ Minimum response time """
         self.max_response_time: int = 0
@@ -330,6 +334,7 @@ class StatsEntry:
         self.num_none_requests = 0
         self.num_failures = 0
         self.total_response_time = 0
+        self.total_sum_of_squares = 0
         self.response_times = defaultdict(int)
         self.min_response_time = None
         self.max_response_time = 0
@@ -368,6 +373,7 @@ class StatsEntry:
             return
 
         self.total_response_time += response_time
+        self.total_sum_of_squares += response_time * response_time
 
         if self.min_response_time is None:
             self.min_response_time = response_time
@@ -409,6 +415,15 @@ class StatsEntry:
     def avg_response_time(self) -> float:
         try:
             return float(self.total_response_time) / (self.num_requests - self.num_none_requests)
+        except ZeroDivisionError:
+            return 0.0
+
+    @property
+    def standard_deviation(self) -> float:
+        try:
+            mean = self.avg_response_time
+            n = self.num_requests - self.num_none_requests
+            return math.sqrt((self.total_sum_of_squares - n * mean * mean) / (n - 1) )
         except ZeroDivisionError:
             return 0.0
 
@@ -494,6 +509,7 @@ class StatsEntry:
         self.num_none_requests += other.num_none_requests
         self.num_failures += other.num_failures
         self.total_response_time += other.total_response_time
+        self.total_sum_of_squares += other.total_sum_of_squares
         self.max_response_time = max(self.max_response_time, other.max_response_time)
         if self.min_response_time is not None and other.min_response_time is not None:
             self.min_response_time = min(self.min_response_time, other.min_response_time)
@@ -944,6 +960,7 @@ class StatsCSV:
             "Failure Count",
             "Median Response Time",
             "Average Response Time",
+            "Standard Deviation of Response Time",
             "Min Response Time",
             "Max Response Time",
             "Average Content Size",
@@ -991,6 +1008,7 @@ class StatsCSV:
                         stats_entry.num_failures,
                         stats_entry.median_response_time,
                         stats_entry.avg_response_time,
+                        stats_entry.standard_deviation,
                         stats_entry.min_response_time or 0,
                         stats_entry.max_response_time,
                         stats_entry.avg_content_length,
@@ -1068,6 +1086,7 @@ class StatsCSVFileWriter(StatsCSV):
             "Total Failure Count",
             "Total Median Response Time",
             "Total Average Response Time",
+            "Standard Deviation",
             "Total Min Response Time",
             "Total Max Response Time",
             "Total Average Content Size",
