@@ -1,5 +1,5 @@
 # Stage 1: Build web front end
-FROM node:18.0.0-alpine AS webui-builder
+FROM node:20.0.0-alpine AS webui-builder
 
 ADD locust/webui locust/webui
 ADD package.json .
