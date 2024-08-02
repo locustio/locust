@@ -36,9 +36,13 @@ from .user.inspectuser import print_task_ratio, print_task_ratio_json
 from .util.load_locustfile import load_locustfile
 from .util.timespan import parse_timespan
 
+# import external plugins if  installed to allow for registering custom arguments etc
 try:
-    # import locust_plugins if it is installed, to allow it to register custom arguments etc
     import locust_plugins  # pyright: ignore[reportMissingImports]
+except ModuleNotFoundError:
+    pass
+try:
+    import locust_cloud  # pyright: ignore[reportMissingImports]
 except ModuleNotFoundError:
     pass
 
