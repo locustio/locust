@@ -1023,6 +1023,48 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shutting down (exit code 0)", output)
                 self.assertEqual(0, proc.returncode)
 
+    def test_warning_with_lower_user_count_than_fixed_count(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+        from locust import User, task, constant
+
+        class User1(User):
+            fixed_count = 2
+            wait_time = constant(1)
+
+            @task
+            def t(self):
+                pass
+
+        class User2(User):
+            fixed_count = 2
+            wait_time = constant(1)
+
+            @task
+            def t(self):
+                pass
+        """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--run-time",
+                    "1s",
+                    "-u",
+                    "3",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+
+            output = proc.communicate()[0]
+            self.assertIn("Total fixed_count of User classes (4) is greater than ", output)
+
     def test_with_package_as_locustfile(self):
         with TemporaryDirectory() as temp_dir:
             with open(f"{temp_dir}/__init__.py", mode="w"):
@@ -1612,6 +1654,14 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
             )
+            try:
+                stdout = proc.communicate(timeout=9)[0]
+            except Exception:
+                proc.kill()
+                proc_worker.kill()
+                stdout = proc.communicate()[0]
+                worker_stdout = proc_worker.communicate()[0]
+                assert False, f"master never finished: {stdout}, worker output: {worker_stdout}"
             stdout = proc.communicate()[0]
             proc_worker.communicate()
 
