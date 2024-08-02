@@ -1654,6 +1654,14 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
             )
+            try:
+                stdout = proc.communicate(timeout=9)[0]
+            except Exception:
+                proc.kill()
+                proc_worker.kill()
+                stdout = proc.communicate()[0]
+                worker_stdout = proc_worker.communicate()[0]
+                assert False, f"master never finished: {stdout}, worker output: {worker_stdout}"
             stdout = proc.communicate()[0]
             proc_worker.communicate()
 
