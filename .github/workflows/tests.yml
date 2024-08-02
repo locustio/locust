@@ -67,10 +67,10 @@ jobs:
         # See https://pre-commit.com/#github-actions-example
         run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
       # Install node and yarn in order to build the front end during packaging  
-      - name: Set Node.js 18.x
+      - name: Set Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 20.x
       - name: Install Yarn
         run: npm install -g yarn
       - name: Run tox tests
@@ -80,10 +80,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set Node.js 18.x
+      - name: Set Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 20.x
       - uses: borales/actions-yarn@v3
         with:
           cmd: webui:install
