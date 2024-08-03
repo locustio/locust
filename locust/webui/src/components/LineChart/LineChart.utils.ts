@@ -12,7 +12,6 @@ export const getSeriesData = <ChartType>({
 }: Pick<ILineChart<ChartType>, 'charts' | 'lines'>) =>
   lines.map(({ key, name }) => ({
     type: 'line',
-    symbol: 'none',
     name,
     data: charts[key],
   }));

@@ -7,7 +7,12 @@ import {
   ILineChart,
   ILineChartMarkers,
 } from 'components/LineChart/LineChart.types';
-import { createMarkLine, createOptions, onChartZoom } from 'components/LineChart/LineChart.utils';
+import {
+  createMarkLine,
+  createOptions,
+  getSeriesData,
+  onChartZoom,
+} from 'components/LineChart/LineChart.utils';
 import { useSelector } from 'redux/hooks';
 
 interface IBaseChartType extends ILineChartTimeAxis, ILineChartMarkers {}
@@ -99,6 +104,14 @@ export default function LineChart<ChartType extends IBaseChartType>({
       });
     }
   }, [chart, isDarkMode]);
+
+  useEffect(() => {
+    if (chart) {
+      chart.setOption({
+        series: getSeriesData<ChartType>({ charts, lines }),
+      });
+    }
+  }, [lines]);
 
   return <div ref={chartContainer} style={{ width: '100%', height: '300px' }}></div>;
 }

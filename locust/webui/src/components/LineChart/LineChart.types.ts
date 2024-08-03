@@ -1,9 +1,9 @@
-import { EChartsOption } from 'echarts';
-
-export interface ILine<ChartType> extends EChartsOption {
+export interface ILine<ChartType> {
   name: string;
   key: keyof ChartType;
-  yAxisIndex?: string;
+  stack?: string;
+  areaStyle?: { [key: string]: any };
+  yAxisIndex?: number;
 }
 
 export interface ILineChart<ChartType> {
