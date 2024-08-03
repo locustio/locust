@@ -12,9 +12,34 @@ export const getSeriesData = <ChartType>({
 }: Pick<ILineChart<ChartType>, 'charts' | 'lines'>) =>
   lines.map(({ key, name }) => ({
     type: 'line',
+    symbol: 'none',
     name,
     data: charts[key],
   }));
+
+const Y_AXIS_CONFIG = {
+  type: 'value',
+  boundaryGap: [0, '5%'],
+};
+
+const createYAxis = <ChartType>({
+  splitAxis,
+  yAxisLabels,
+}: Pick<ILineChart<ChartType>, 'splitAxis' | 'yAxisLabels'>) => {
+  if (splitAxis && (!yAxisLabels || Array.isArray(yAxisLabels))) {
+    return Array(2)
+      .fill(Y_AXIS_CONFIG)
+      .map((config, index) => ({
+        ...config,
+        ...(yAxisLabels ? { name: yAxisLabels[index] } : {}),
+      }));
+  }
+
+  return {
+    ...Y_AXIS_CONFIG,
+    ...(yAxisLabels ? { name: yAxisLabels } : {}),
+  };
+};
 
 export const createOptions = <ChartType extends ILineChartTimeAxis>({
   charts,
@@ -22,6 +47,8 @@ export const createOptions = <ChartType extends ILineChartTimeAxis>({
   lines,
   colors,
   chartValueFormatter,
+  splitAxis,
+  yAxisLabels,
 }: ILineChart<ChartType>) => ({
   title: {
     text: title,
@@ -61,10 +88,7 @@ export const createOptions = <ChartType extends ILineChartTimeAxis>({
     axisLabel: { formatter: formatLocaleTime },
     data: charts.time,
   },
-  yAxis: {
-    type: 'value',
-    boundaryGap: [0, '5%'],
-  },
+  yAxis: createYAxis({ splitAxis, yAxisLabels }),
   series: getSeriesData<ChartType>({ charts, lines }),
   grid: { x: 60, y: 70, x2: 40, y2: 40 },
   color: colors,

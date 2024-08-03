@@ -1,6 +1,9 @@
-export interface ILine<ChartType> {
+import { EChartsOption } from 'echarts';
+
+export interface ILine<ChartType> extends EChartsOption {
   name: string;
   key: keyof ChartType;
+  yAxisIndex?: string;
 }
 
 export interface ILineChart<ChartType> {
@@ -9,6 +12,8 @@ export interface ILineChart<ChartType> {
   lines: ILine<ChartType>[];
   colors?: string[];
   chartValueFormatter?: (value: string | number | string[] | number[]) => string | number;
+  splitAxis?: boolean;
+  yAxisLabels?: string | [string, string];
 }
 
 export interface ILineChartZoomEvent {

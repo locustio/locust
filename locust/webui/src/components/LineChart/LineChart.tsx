@@ -18,6 +18,8 @@ export default function LineChart<ChartType extends IBaseChartType>({
   lines,
   colors,
   chartValueFormatter,
+  splitAxis,
+  yAxisLabels,
 }: ILineChart<ChartType>) {
   const [chart, setChart] = useState<ECharts | null>(null);
   const isDarkMode = useSelector(({ theme: { isDarkMode } }) => isDarkMode);
@@ -38,6 +40,8 @@ export default function LineChart<ChartType extends IBaseChartType>({
         lines,
         colors,
         chartValueFormatter,
+        splitAxis,
+        yAxisLabels,
       }),
     );
     initChart.on('datazoom', onChartZoom(initChart));
@@ -61,8 +65,10 @@ export default function LineChart<ChartType extends IBaseChartType>({
     if (chart && isChartDataDefined) {
       chart.setOption({
         xAxis: { data: charts.time },
-        series: lines.map(({ key }, index) => ({
+        series: lines.map(({ key, yAxisIndex, ...echartsOptions }, index) => ({
+          ...echartsOptions,
           data: charts[key],
+          ...(splitAxis ? { yAxisIndex: yAxisIndex || index } : {}),
           ...(index === 0 ? { markLine: createMarkLine<ChartType>(charts, isDarkMode) } : {}),
         })),
       });
