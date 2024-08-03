@@ -1,6 +1,7 @@
 import { connect } from 'react-redux';
 
-import LineChart, { ILineChart } from 'components/LineChart/LineChart';
+import LineChart from 'components/LineChart/LineChart';
+import { ILineChart } from 'components/LineChart/LineChart.types';
 import { swarmTemplateArgs } from 'constants/swarm';
 import { IRootState } from 'redux/store';
 import { ICharts } from 'types/ui.types';
@@ -47,7 +48,7 @@ export function SwarmCharts({ charts }: { charts: ICharts }) {
   return (
     <div>
       {availableSwarmCharts.map((lineChartProps, index) => (
-        <LineChart key={`swarm-chart-${index}`} {...lineChartProps} charts={charts} />
+        <LineChart<ICharts> key={`swarm-chart-${index}`} {...lineChartProps} charts={charts} />
       ))}
     </div>
   );

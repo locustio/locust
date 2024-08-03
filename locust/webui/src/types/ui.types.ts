@@ -1,3 +1,4 @@
+import { ILineChartTimeAxis, ILineChartMarkers } from 'components/LineChart/LineChart.types';
 import { SWARM_STATE } from 'constants/swarm';
 
 export type SwarmState = (typeof SWARM_STATE)[keyof typeof SWARM_STATE];
@@ -53,14 +54,12 @@ export interface NullChartValue {
   value: null;
 }
 
-export interface ICharts {
+export interface ICharts extends ILineChartTimeAxis, ILineChartMarkers {
   currentRps: (number | NullChartValue)[];
   currentFailPerSec: (number | NullChartValue)[];
   [key: `responseTimePercentile${number}`]: (number | null | NullChartValue)[];
   totalAvgResponseTime: (number | NullChartValue)[];
   userCount: (number | NullChartValue)[];
-  time: string[];
-  markers?: string[];
 }
 
 export interface IClassRatio {
