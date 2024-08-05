@@ -6,7 +6,7 @@ Read the instruction below for your specific database
 ### How to run the test
 - Prerequisites:
     If you do not have them installed already
-    - `pip3 install psycopg2` - https://pypi.org/project/psycopg2/
+    - `pip3 install psycopg3` - https://www.psycopg.org/psycopg3/docs/basic/install.html
 
     - `pip3 install locust` - https://docs.locust.io/en/stable/installation.html
 

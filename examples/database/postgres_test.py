@@ -1,6 +1,9 @@
-import psycopg2
-from locust import User, TaskSet, task, between, events
-import random, time
+import random
+import time
+
+import psycopg
+
+from locust import TaskSet, User, between, events, task
 
 
 def create_conn(conn_string):
