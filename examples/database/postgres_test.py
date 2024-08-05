@@ -65,7 +65,6 @@ class UserTasks(TaskSet):
         )
 
 
-
 class PostgresLocust(User):
     tasks = [UserTasks]
     min_wait = 0
