@@ -10,7 +10,10 @@ Read the instruction below for your specific database
 
     - `pip3 install locust` - https://docs.locust.io/en/stable/installation.html
 
-- Update line 47 of the `postgres_test.py` file, you can change `postgresql://postgres:postgres@localhost:5432/loadtesting_db` to the connection string for your database
+- Update `line 50` in the UserTasks class of the `postgres_test.py` file, you can change `postgresql://postgres:postgres@localhost:5432/loadtesting_db` to the connection string for your database
+
+- Also, update the methods of the UserTasks class to run queries that will hit your database.
+
 #### Run test from browser:
 - Open the terminal and run `locust -f postgres_test.py` this will give you a URL to follow. Likely `http://0.0.0.0:8089` from here, you can put in custom parameters to run your test
 
