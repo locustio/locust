@@ -1,6 +1,32 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.31.1](https://github.com/locustio/locust/tree/2.31.1) (2024-08-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.0...2.31.1)
+
+**Merged pull requests:**
+
+- Fix issue with downloading HTML report, update package.json for webui build [\#2834](https://github.com/locustio/locust/pull/2834) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
+## [2.31.0](https://github.com/locustio/locust/tree/2.31.0) (2024-08-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.30.0...2.31.0)
+
+**Merged pull requests:**
+
+- Fix docker build for release [\#2830](https://github.com/locustio/locust/pull/2830) ([cyberw](https://github.com/cyberw))
+- Github Actions: Use node 20.x \(fix PyPI Release and pre-Release Steps\) [\#2828](https://github.com/locustio/locust/pull/2828) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Improve Echarts and Expose Line and Axis Configuration [\#2826](https://github.com/locustio/locust/pull/2826) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Bump Node [\#2825](https://github.com/locustio/locust/pull/2825) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Integrations for Locust Cloud [\#2824](https://github.com/locustio/locust/pull/2824) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Fix HTML Report Stats Table [\#2817](https://github.com/locustio/locust/pull/2817) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Locust UI Charts Should Change Color Based on Theme [\#2815](https://github.com/locustio/locust/pull/2815) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Locust UI as a Module [\#2804](https://github.com/locustio/locust/pull/2804) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Log a message if total fixed\_count is higher than number of users to spawn [\#2793](https://github.com/locustio/locust/pull/2793) ([cyberw](https://github.com/cyberw))
+- Simplify fixed\_count Users generation in UsersDispatcher.\_user\_gen [\#2783](https://github.com/locustio/locust/pull/2783) ([tdadela](https://github.com/tdadela))
+- URL Directory, and Multi-File Support for Locustfile Distribution [\#2766](https://github.com/locustio/locust/pull/2766) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.30.0](https://github.com/locustio/locust/tree/2.30.0) (2024-07-31)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.29.1...2.30.0)
