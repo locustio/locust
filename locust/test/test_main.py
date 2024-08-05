@@ -75,7 +75,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             timeout=5,
             text=True,
         ).strip()
-        self.assertTrue(output.startswith("Usage: locust [options] [UserClass"))
+        self.assertTrue(output.startswith("Usage: locust [options]"))
         self.assertIn("Common options:", output)
         self.assertIn("-f <filename>, --locustfile <filename>", output)
         self.assertIn("Logging options:", output)
@@ -1129,6 +1129,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         "5",
                         "-r",
                         "10",
+                        "--user-classes",
                         "User2",
                         "User3",
                     ]
@@ -2242,6 +2243,7 @@ class AnyUser(HttpUser):
                     "4",
                     "-L",
                     "DEBUG",
+                    "--user-classes",
                     "UserThatDoesntExist",
                 ],
                 stdout=PIPE,

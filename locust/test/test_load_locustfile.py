@@ -166,9 +166,8 @@ class TestLoadLocustfile(LocustTestCase):
             textwrap.dedent(
                 """
             host = localhost  # With "="
-            u 100             # Short form
-            spawn-rate 5      # long form
-                              # boolean
+            users 100
+            spawn-rate 5
             headless
             # (for some reason an inline comment makes boolean values fail in configargparse nowadays)
         """

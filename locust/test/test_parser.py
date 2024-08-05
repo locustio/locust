@@ -111,6 +111,7 @@ class TestArgumentParser(LocustTestCase):
                 "--reset-stats",
                 "--stop-timeout",
                 "5",
+                "--user-classes",
                 "MyUserClass",
             ]
         )
@@ -167,6 +168,7 @@ class TestArgumentParser(LocustTestCase):
                     "--reset-stats",
                     "--stop-timeout",
                     "5",
+                    "--user-classes",
                     "MyUserClass",
                 ]
             )

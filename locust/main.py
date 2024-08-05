@@ -317,16 +317,27 @@ def main():
         sys.exit(1)
 
     # make sure specified User exists
+    names = set()
     if options.user_classes:
         if missing := set(options.user_classes) - set(user_classes.keys()):
             logger.error(f"Unknown User(s): {', '.join(missing)}\n")
             sys.exit(1)
         else:
-            names = set(options.user_classes) & set(user_classes.keys())
-            user_classes = [user_classes[n] for n in names]
-    else:
-        # list() call is needed to consume the dict_view object in Python 3
-        user_classes = list(user_classes.values())
+            names |= set(options.user_classes)
+    if options.old_user_classes:
+        # TODO deprecate in future release
+        # warnings.warn(
+        #    "Specifying users at the end of the command is deprecated. Use --run-users parameter instead",
+        #     DeprecationWarning,
+        # )
+        if missing := set(options.old_user_classes) - set(user_classes.keys()):
+            logger.error(f"Unknown User(s): {', '.join(missing)}\n")
+            sys.exit(1)
+        else:
+            names |= set(options.old_user_classes)
+    if not (options.old_user_classes or options.user_classes):
+        names = set(user_classes.keys())
+    user_classes = [user_classes[n] for n in names]
 
     if not shape_class and options.num_users:
         fixed_count_total = sum([user_class.fixed_count for user_class in user_classes])
