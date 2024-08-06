@@ -36,9 +36,13 @@ from .user.inspectuser import print_task_ratio, print_task_ratio_json
 from .util.load_locustfile import load_locustfile
 from .util.timespan import parse_timespan
 
+# import external plugins if  installed to allow for registering custom arguments etc
 try:
-    # import locust_plugins if it is installed, to allow it to register custom arguments etc
     import locust_plugins  # pyright: ignore[reportMissingImports]
+except ModuleNotFoundError:
+    pass
+try:
+    import locust_cloud  # pyright: ignore[reportMissingImports]
 except ModuleNotFoundError:
     pass
 
@@ -59,6 +63,7 @@ def create_environment(
     events=None,
     shape_class=None,
     locustfile=None,
+    parsed_locustfiles=None,
     available_user_classes=None,
     available_shape_classes=None,
     available_user_tasks=None,
@@ -74,6 +79,7 @@ def create_environment(
         host=options.host,
         reset_stats=options.reset_stats,
         parsed_options=options,
+        parsed_locustfiles=parsed_locustfiles,
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
         available_user_tasks=available_user_tasks,
@@ -211,7 +217,8 @@ def main():
             sys.exit(1)
         # Optimize copy-on-write-behavior to save some memory (aprx 26MB -> 15MB rss) in child processes
         gc.collect()  # avoid freezing garbage
-        gc.freeze()  # move all objects to perm gen so ref counts dont get updated
+        if hasattr(gc, "freeze"):
+            gc.freeze()  # move all objects to perm gen so ref counts dont get updated
         for _ in range(options.processes):
             if child_pid := gevent.fork():
                 children.append(child_pid)
@@ -321,6 +328,13 @@ def main():
         # list() call is needed to consume the dict_view object in Python 3
         user_classes = list(user_classes.values())
 
+    if not shape_class and options.num_users:
+        fixed_count_total = sum([user_class.fixed_count for user_class in user_classes])
+        if fixed_count_total > options.num_users:
+            logger.info(
+                f"Total fixed_count of User classes ({fixed_count_total}) is greater than the specified number of users ({options.num_users}), so not all will be spawned."
+            )
+
     if os.name != "nt" and not options.master:
         try:
             import resource
@@ -348,6 +362,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         events=locust.events,
         shape_class=shape_class,
         locustfile=locustfile_path,
+        parsed_locustfiles=locustfiles,
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
         available_user_tasks=available_user_tasks,
@@ -478,6 +493,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             stats_csv_writer=stats_csv_writer,
             delayed_start=True,
             userclass_picker_is_active=options.class_picker,
+            build_path=options.build_path,
         )
     else:
         web_ui = None

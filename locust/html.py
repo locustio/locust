@@ -5,7 +5,8 @@ from html import escape
 from itertools import chain
 from json import dumps
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment as JinjaEnvironment
+from jinja2 import FileSystemLoader
 
 from . import stats as stats_module
 from .runners import STATE_STOPPED, STATE_STOPPING, MasterRunner
@@ -14,13 +15,11 @@ from .user.inspectuser import get_ratio
 from .util.date import format_utc_timestamp
 
 PERCENTILES_FOR_HTML_REPORT = [0.50, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
-ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
-BUILD_PATH = os.path.join(ROOT_PATH, "webui", "dist")
-STATIC_PATH = os.path.join(BUILD_PATH, "assets")
+DEFAULT_BUILD_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui", "dist")
 
 
-def render_template(file, **kwargs):
-    env = Environment(loader=FileSystemLoader(BUILD_PATH), extensions=["jinja2.ext.do"])
+def render_template_from(file, build_path=DEFAULT_BUILD_PATH, **kwargs):
+    env = JinjaEnvironment(loader=FileSystemLoader(build_path))
     template = env.get_template(file)
     return template.render(**kwargs)
 
@@ -56,16 +55,6 @@ def get_html_report(
     update_stats_history(environment.runner)
     history = stats.history
 
-    static_js = []
-    js_files = [os.path.basename(filepath) for filepath in glob.glob(os.path.join(STATIC_PATH, "*.js"))]
-
-    for js_file in js_files:
-        path = os.path.join(STATIC_PATH, js_file)
-        static_js.append("// " + js_file + "\n")
-        with open(path, encoding="utf8") as f:
-            static_js.append(f.read())
-        static_js.extend(["", ""])
-
     is_distributed = isinstance(environment.runner, MasterRunner)
     user_spawned = (
         environment.runner.reported_user_classes_count if is_distributed else environment.runner.user_classes_count
@@ -79,7 +68,7 @@ def get_html_report(
         "total": get_ratio(environment.user_classes, user_spawned, True),
     }
 
-    return render_template(
+    return render_template_from(
         "report.html",
         template_args={
             "is_report": True,
@@ -107,5 +96,4 @@ def get_html_report(
             "percentiles_to_chart": stats_module.PERCENTILES_TO_CHART,
         },
         theme=theme,
-        static_js="\n".join(static_js),
     )

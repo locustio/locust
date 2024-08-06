@@ -45,9 +45,6 @@ export const baseTabs = [
     key: LOG_VIEWER_KEY,
     title: 'Logs',
   },
-];
-
-export const conditionalTabs = [
   {
     component: WorkersTable,
     key: 'workers',

@@ -19,15 +19,12 @@ export default defineConfig((config: UserConfig) => ({
   ],
   base: './',
   build: {
+    emptyOutDir: false,
     chunkSizeWarningLimit: 2000,
     rollupOptions: {
       input: {
         index: './index.html',
         auth: './auth.html',
-      },
-      output: {
-        // disable code-splitting so we can load the build in script tags
-        manualChunks: () => 'app',
       },
     },
     sourcemap: config.mode !== 'production',

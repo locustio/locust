@@ -15,7 +15,7 @@ describe('Dashboard', () => {
     expect(heading).toBeTruthy();
     expect(heading.getAttribute('href')).toEqual('/');
     expect(logo).toBeTruthy();
-    expect(logo.getAttribute('src')).toEqual('./assets/logo.png');
+    expect(logo.getAttribute('src')).toEqual('/src/assets/logo.png');
   });
 
   test('renders the swarm form by default', () => {

@@ -17,7 +17,7 @@ const mockChart = {
 describe('LineChart', () => {
   test('renders LineChart with charts and lines', () => {
     const { container } = renderWithProvider(
-      <LineChart
+      <LineChart<ICharts>
         charts={statsResponseTransformed.charts}
         colors={mockChart.colors}
         lines={mockChart.lines}

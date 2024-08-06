@@ -33,12 +33,13 @@ from gevent import pywsgi
 from . import __version__ as version
 from . import argument_parser
 from . import stats as stats_module
-from .html import BUILD_PATH, ROOT_PATH, STATIC_PATH, get_html_report
+from .html import DEFAULT_BUILD_PATH, get_html_report, render_template_from
 from .log import get_logs, greenlet_exception_logger
 from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
 from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
+from .util.date import format_utc_timestamp
 from .util.timespan import parse_timespan
 
 if TYPE_CHECKING:
@@ -96,6 +97,7 @@ class WebUI:
         stats_csv_writer: StatsCSV | None = None,
         delayed_start=False,
         userclass_picker_is_active=False,
+        build_path: str | None = None,
     ):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
@@ -124,14 +126,11 @@ class WebUI:
         self.app = app
         app.jinja_env.add_extension("jinja2.ext.do")
         app.debug = True
-        app.root_path = ROOT_PATH
-        self.webui_build_path = BUILD_PATH
         self.greenlet: gevent.Greenlet | None = None
         self._swarm_greenlet: gevent.Greenlet | None = None
         self.template_args = {}
         self.auth_args = {}
-        self.app.template_folder = BUILD_PATH
-        self.app.static_folder = STATIC_PATH
+        self.app.template_folder = build_path or DEFAULT_BUILD_PATH
         self.app.static_url_path = "/assets/"
         # ensures static js files work on Windows
         mimetypes.add_type("application/javascript", ".js")
@@ -152,13 +151,19 @@ class WebUI:
             error_code = getattr(error, "code", 500)
             logger.log(
                 logging.INFO if error_code <= 404 else logging.ERROR,
-                f"UI got request for {request.path}, but it resulted in a {error.code}: {error.name}",
+                f"UI got request for {request.path}, but it resulted in a {error_code}: {error.name}",
             )
             return make_response(error_message, error_code)
 
         @app.route("/assets/<path:path>")
         def send_assets(path):
-            return send_from_directory(os.path.join(self.webui_build_path, "assets"), path)
+            directory = (
+                os.path.join(self.app.template_folder, "assets")
+                if os.path.exists(os.path.join(app.template_folder, "assets", path))
+                else os.path.join(DEFAULT_BUILD_PATH, "assets")
+            )
+
+            return send_from_directory(directory, path)
 
         @app.route("/")
         @self.auth_required_if_enabled
@@ -499,7 +504,7 @@ class WebUI:
             if not self.web_login:
                 return redirect(url_for("index"))
 
-            return render_template(
+            return render_template_from(
                 "auth.html",
                 auth_args=self.auth_args,
             )
@@ -613,6 +618,8 @@ class WebUI:
             else None
         )
 
+        start_time = format_utc_timestamp(stats.start_time)
+
         self.template_args = {
             "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
@@ -630,6 +637,7 @@ class WebUI:
                 and not (self.userclass_picker_is_active or self.environment.shape_class.use_common_options)
             ),
             "stats_history_enabled": options and options.stats_history_enabled,
+            "start_time": start_time,
             "tasks": dumps({}),
             "extra_options": extra_options,
             "run_time": options and options.run_time,

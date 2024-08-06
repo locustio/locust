@@ -1,179 +1,33 @@
 import { useEffect, useState, useRef } from 'react';
+import { init, dispose, ECharts, connect } from 'echarts';
+
+import { CHART_THEME } from 'components/LineChart/LineChart.constants';
 import {
-  init,
-  registerTheme,
-  dispose,
-  ECharts,
-  EChartsOption,
-  DefaultLabelFormatterCallbackParams,
-  connect,
-  TooltipComponentOption,
-} from 'echarts';
+  ILineChartTimeAxis,
+  ILineChart,
+  ILineChartMarkers,
+} from 'components/LineChart/LineChart.types';
+import {
+  createMarkLine,
+  createOptions,
+  getSeriesData,
+  onChartZoom,
+} from 'components/LineChart/LineChart.utils';
+import { useSelector } from 'redux/hooks';
 
-import { IUiState } from 'redux/slice/ui.slice';
-import { ICharts } from 'types/ui.types';
-import { formatLocaleString, formatLocaleTime } from 'utils/date';
+interface IBaseChartType extends ILineChartTimeAxis, ILineChartMarkers {}
 
-interface ILine {
-  name: string;
-  key: keyof ICharts;
-}
-
-interface ICreateOptions {
-  title: string;
-  seriesData: EChartsOption['Series'][];
-  charts: ICharts;
-  colors?: string[];
-}
-
-export interface ILineChartProps {
-  title: string;
-  lines: ILine[];
-  colors?: string[];
-}
-
-interface ILineChart extends ILineChartProps {
-  charts: ICharts;
-}
-
-interface ILineChartZoomEvent {
-  batch?: { start: number; end: number }[];
-}
-
-const CHART_TEXT_COLOR = '#b3c3bc';
-const CHART_AXIS_COLOR = '#5b6f66';
-
-registerTheme('locust', {
-  backgroundColor: '#27272a',
-  textStyle: { color: CHART_TEXT_COLOR },
-  title: {
-    textStyle: { color: CHART_TEXT_COLOR },
-  },
-});
-
-const createOptions = ({ charts, title, seriesData, colors }: ICreateOptions) => ({
-  legend: {
-    icon: 'circle',
-    inactiveColor: CHART_TEXT_COLOR,
-    textStyle: {
-      color: CHART_TEXT_COLOR,
-    },
-  },
-  title: {
-    text: title,
-    x: 10,
-    y: 10,
-  },
-  dataZoom: [
-    {
-      type: 'inside',
-      start: 0,
-      end: 100,
-    },
-  ],
-  tooltip: {
-    trigger: 'axis',
-    formatter: (params: TooltipComponentOption) => {
-      if (
-        !!params &&
-        Array.isArray(params) &&
-        params.length > 0 &&
-        params.some(param => !!param.value)
-      ) {
-        return params.reduce(
-          (tooltipText, { axisValue, color, seriesName, value }, index) => `
-          ${index === 0 ? formatLocaleString(axisValue) : ''}
-          ${tooltipText}
-          <br>
-          <span style="color:${color};">
-            ${seriesName}:&nbsp${value}
-          </span>
-        `,
-          '',
-        );
-      } else {
-        return 'No data';
-      }
-    },
-    axisPointer: {
-      animation: true,
-    },
-    textStyle: {
-      color: CHART_TEXT_COLOR,
-      fontSize: 13,
-    },
-    backgroundColor: 'rgba(21,35,28, 0.93)',
-    borderWidth: 0,
-    extraCssText: 'z-index:1;',
-  },
-  xAxis: {
-    type: 'category',
-    splitLine: {
-      show: false,
-    },
-    axisLine: {
-      lineStyle: {
-        color: CHART_AXIS_COLOR,
-      },
-    },
-    axisLabel: {
-      formatter: formatLocaleTime,
-    },
-    data: charts.time,
-  },
-  yAxis: {
-    type: 'value',
-    boundaryGap: [0, '5%'],
-    splitLine: {
-      show: false,
-    },
-    axisLine: {
-      lineStyle: {
-        color: CHART_AXIS_COLOR,
-      },
-    },
-  },
-  series: seriesData,
-  grid: { x: 60, y: 70, x2: 40, y2: 40 },
-  color: colors,
-  toolbox: {
-    feature: {
-      restore: {
-        show: false,
-        title: 'Reset',
-      },
-      saveAsImage: {
-        name: title.replace(/\s+/g, '_').toLowerCase() + '_' + new Date().getTime() / 1000,
-        title: 'Download as PNG',
-        emphasis: {
-          iconStyle: {
-            textPosition: 'left',
-          },
-        },
-      },
-    },
-  },
-});
-
-const getSeriesData = ({ charts, lines }: { charts: IUiState['charts']; lines: ILine[] }) =>
-  lines.map(({ key, name }) => ({
-    name,
-    type: 'line',
-    showSymbol: true,
-    data: charts[key],
-  }));
-
-const createMarkLine = (charts: ICharts) => ({
-  symbol: 'none',
-  label: {
-    formatter: (params: DefaultLabelFormatterCallbackParams) => `Run #${params.dataIndex + 1}`,
-  },
-  lineStyle: { color: CHART_AXIS_COLOR },
-  data: (charts.markers || []).map((timeMarker: string) => ({ xAxis: timeMarker })),
-});
-
-export default function LineChart({ charts, title, lines, colors }: ILineChart) {
+export default function LineChart<ChartType extends IBaseChartType>({
+  charts,
+  title,
+  lines,
+  colors,
+  chartValueFormatter,
+  splitAxis,
+  yAxisLabels,
+}: ILineChart<ChartType>) {
   const [chart, setChart] = useState<ECharts | null>(null);
+  const isDarkMode = useSelector(({ theme: { isDarkMode } }) => isDarkMode);
 
   const chartContainer = useRef<HTMLDivElement | null>(null);
 
@@ -182,66 +36,20 @@ export default function LineChart({ charts, title, lines, colors }: ILineChart) 
       return;
     }
 
-    const initChart = init(chartContainer.current, 'locust');
+    const initChart = init(chartContainer.current);
+
     initChart.setOption(
-      createOptions({ charts, title, seriesData: getSeriesData({ charts, lines }), colors }),
+      createOptions<ChartType>({
+        charts,
+        title,
+        lines,
+        colors,
+        chartValueFormatter,
+        splitAxis,
+        yAxisLabels,
+      }),
     );
-    initChart.on('datazoom', datazoom => {
-      const { batch } = datazoom as ILineChartZoomEvent;
-      if (!batch) {
-        return;
-      }
-
-      const [{ start, end }] = batch;
-
-      if (start > 0 && end < 100) {
-        initChart.setOption({
-          toolbox: {
-            feature: {
-              restore: {
-                show: true,
-              },
-            },
-          },
-          dataZoom: [
-            {
-              type: 'inside',
-              start,
-              end,
-            },
-            {
-              type: 'slider',
-              show: true,
-              start,
-              end,
-            },
-          ],
-        });
-      } else {
-        initChart.setOption({
-          toolbox: {
-            feature: {
-              restore: {
-                show: false,
-              },
-            },
-          },
-          dataZoom: [
-            {
-              type: 'inside',
-              start,
-              end,
-            },
-            {
-              type: 'slider',
-              show: false,
-              start,
-              end,
-            },
-          ],
-        });
-      }
-    });
+    initChart.on('datazoom', onChartZoom(initChart));
 
     const handleChartResize = () => initChart.resize();
     window.addEventListener('resize', handleChartResize);
@@ -262,13 +70,48 @@ export default function LineChart({ charts, title, lines, colors }: ILineChart) 
     if (chart && isChartDataDefined) {
       chart.setOption({
         xAxis: { data: charts.time },
-        series: lines.map(({ key }, index) => ({
+        series: lines.map(({ key, yAxisIndex, ...echartsOptions }, index) => ({
+          ...echartsOptions,
           data: charts[key],
-          ...(index === 0 ? { markLine: createMarkLine(charts) } : {}),
+          ...(splitAxis ? { yAxisIndex: yAxisIndex || index } : {}),
+          ...(index === 0 ? { markLine: createMarkLine<ChartType>(charts, isDarkMode) } : {}),
         })),
       });
     }
-  }, [charts, chart, lines]);
+  }, [charts, chart, lines, isDarkMode]);
+
+  useEffect(() => {
+    if (chart) {
+      const { textColor, axisColor, backgroundColor, splitLine } = isDarkMode
+        ? CHART_THEME.DARK
+        : CHART_THEME.LIGHT;
+
+      chart.setOption({
+        backgroundColor,
+        textStyle: { color: textColor },
+        title: { textStyle: { color: textColor } },
+        legend: {
+          icon: 'circle',
+          inactiveColor: textColor,
+          textStyle: { color: textColor },
+        },
+        tooltip: { backgroundColor, textStyle: { color: textColor } },
+        xAxis: { axisLine: { lineStyle: { color: axisColor } } },
+        yAxis: {
+          axisLine: { lineStyle: { color: axisColor } },
+          splitLine: { lineStyle: { color: splitLine } },
+        },
+      });
+    }
+  }, [chart, isDarkMode]);
+
+  useEffect(() => {
+    if (chart) {
+      chart.setOption({
+        series: getSeriesData<ChartType>({ charts, lines }),
+      });
+    }
+  }, [lines]);
 
   return <div ref={chartContainer} style={{ width: '100%', height: '300px' }}></div>;
 }

@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import App from 'App';
 import FallbackRender from 'components/FallbackRender/FallbackRender';
-import * as swarmConstants from 'constants/swarm';
+import * as authConstants from 'constants/auth';
 import { renderWithProvider } from 'test/testUtils';
 
 describe('Fallback', () => {
@@ -24,7 +24,7 @@ describe('Fallback', () => {
 
   it('renders the FallbackRender when something unexpected happens', () => {
     // break the app
-    (vi.mocked(swarmConstants) as any).htmlReportProps = {};
+    (vi.mocked(authConstants) as any).authArgs = { authProviders: {} };
 
     const { getByText } = renderWithProvider(
       <ErrorBoundary fallbackRender={FallbackRender}>

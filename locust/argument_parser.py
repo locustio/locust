@@ -15,7 +15,6 @@ import tempfile
 import textwrap
 from collections import OrderedDict
 from typing import Any, NamedTuple
-from urllib.parse import urlparse
 from uuid import uuid4
 
 if sys.version_info >= (3, 11):
@@ -26,6 +25,9 @@ else:
 import configargparse
 import gevent
 import requests
+
+from .util.directory import get_abspaths_in
+from .util.url import is_url
 
 version = locust.__version__
 
@@ -125,14 +127,7 @@ def _parse_locustfile_path(path: str) -> list[str]:
         parsed_paths.append(download_locustfile_from_url(path))
     elif os.path.isdir(path):
         # Find all .py files in directory tree
-        for root, _dirs, fs in os.walk(path):
-            parsed_paths.extend(
-                [
-                    os.path.abspath(os.path.join(root, f))
-                    for f in fs
-                    if os.path.isfile(os.path.join(root, f)) and f.endswith(".py") and not f.startswith("_")
-                ]
-            )
+        parsed_paths.extend(get_abspaths_in(path, extension=".py"))
         if not parsed_paths:
             sys.stderr.write(f"Could not find any locustfiles in directory '{path}'")
             sys.exit(1)
@@ -146,20 +141,6 @@ def _parse_locustfile_path(path: str) -> list[str]:
             sys.exit(1)
 
     return parsed_paths
-
-
-def is_url(url: str) -> bool:
-    """
-    Check if path is an url
-    """
-    try:
-        result = urlparse(url)
-        if result.scheme == "https" or result.scheme == "http":
-            return True
-        else:
-            return False
-    except ValueError:
-        return False
 
 
 def download_locustfile_from_url(url: str) -> str:
@@ -238,7 +219,7 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
 
     def ask_for_locustfile():
         while not got_reply:
-            tempclient.send(Message("locustfile", None, client_id))
+            tempclient.send(Message("locustfile", {"version": version}, client_id))
             gevent.sleep(1)
 
     def log_warning():
@@ -271,14 +252,26 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
         sys.stderr.write(f"Got error from master: {msg.data['error']}\n")
         sys.exit(1)
 
-    filename = msg.data["filename"]
-    with open(os.path.join(tempfile.gettempdir(), filename), "w", encoding="utf-8") as locustfile:
-        locustfile.write(msg.data["contents"])
-
-    atexit.register(exit_handler, locustfile.name)
-
     tempclient.close()
-    return locustfile.name
+    return msg.data.get("locustfiles", [])
+
+
+def parse_locustfiles_from_master(locustfile_sources) -> list[str]:
+    locustfiles = []
+
+    for source in locustfile_sources:
+        if "contents" in source:
+            filename = source["filename"]
+            file_contents = source["contents"]
+
+            with open(os.path.join(tempfile.gettempdir(), filename), "w", encoding="utf-8") as locustfile:
+                locustfile.write(file_contents)
+
+            locustfiles.append(locustfile.name)
+        else:
+            locustfiles.append(source)
+
+    return locustfiles
 
 
 def parse_locustfile_option(args=None) -> list[str]:
@@ -339,10 +332,11 @@ def parse_locustfile_option(args=None) -> list[str]:
             )
             sys.exit(1)
         # having this in argument_parser module is a bit weird, but it needs to be done early
-        filename = download_locustfile_from_master(options.master_host, options.master_port)
-        return [filename]
+        locustfile_sources = download_locustfile_from_master(options.master_host, options.master_port)
+        locustfile_list = parse_locustfiles_from_master(locustfile_sources)
+    else:
+        locustfile_list = [f.strip() for f in options.locustfile.split(",")]
 
-    locustfile_list = [f.strip() for f in options.locustfile.split(",")]
     parsed_paths = parse_locustfile_paths(locustfile_list)
 
     if not parsed_paths:
@@ -501,6 +495,13 @@ def setup_parser_arguments(parser):
         action="store_true",
         help="Enable select boxes in the web interface to choose from all available User classes and Shape classes",
         env_var="LOCUST_USERCLASS_PICKER",
+    )
+    web_ui_group.add_argument(
+        "--build-path",
+        type=str,
+        default="",
+        help=configargparse.SUPPRESS,
+        env_var="LOCUST_BUILD_PATH",
     )
     web_ui_group.add_argument(
         "--legacy-ui",

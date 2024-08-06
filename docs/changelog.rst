@@ -4,6 +4,27 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.31.1
+======
+* Fix issue with downloading HTML report https://github.com/locustio/locust/pull/2834
+
+2.31.0
+======
+* Fix HTML Report Stats Table https://github.com/locustio/locust/pull/2817
+* URL Directory, and Multi-File Support for Locustfile Distribution https://github.com/locustio/locust/pull/2766
+* Various UI improvements https://github.com/locustio/locust/pull/2815, https://github.com/locustio/locust/pull/2804, https://github.com/locustio/locust/pull/2824, https://github.com/locustio/locust/pull/2825, https://github.com/locustio/locust/pull/2826, https://github.com/locustio/locust/pull/2828
+* Fix docker image build https://github.com/locustio/locust/pull/2830
+
+2.30.0
+======
+* FastHttpSession: Enable passing json as a positional argument for post() and stop converting response times to int https://github.com/locustio/locust/pull/2772
+* New events for heartbeat and usage monitor https://github.com/locustio/locust/pull/2777
+* SequentialTaskSet: Allow weighted tasks and dict in .tasks (experimental) https://github.com/locustio/locust/pull/2742
+* Implement Poetry build system (mainly so we don't have to commit the built frontend resources to git) https://github.com/locustio/locust/pull/2725
+* UI: Replace total avg response time with 50 percentile (avg was broken) https://github.com/locustio/locust/pull/2806
+* Avoid deadlock in gevent/urllib3 connection pool (fixes occasional worker heartbeat timeouts) https://github.com/locustio/locust/pull/2813
+* This release got no docker image due to a build error
+
 2.29.1
 ======
 * Add option to Skip Monkey Patching with LOCUST_SKIP_MONKEY_PATCH https://github.com/locustio/locust/pull/2765

@@ -1023,6 +1023,48 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shutting down (exit code 0)", output)
                 self.assertEqual(0, proc.returncode)
 
+    def test_warning_with_lower_user_count_than_fixed_count(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+        from locust import User, task, constant
+
+        class User1(User):
+            fixed_count = 2
+            wait_time = constant(1)
+
+            @task
+            def t(self):
+                pass
+
+        class User2(User):
+            fixed_count = 2
+            wait_time = constant(1)
+
+            @task
+            def t(self):
+                pass
+        """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--run-time",
+                    "1s",
+                    "-u",
+                    "3",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+
+            output = proc.communicate()[0]
+            self.assertIn("Total fixed_count of User classes (4) is greater than ", output)
+
     def test_with_package_as_locustfile(self):
         with TemporaryDirectory() as temp_dir:
             with open(f"{temp_dir}/__init__.py", mode="w"):
@@ -1612,6 +1654,14 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
             )
+            try:
+                stdout = proc.communicate(timeout=9)[0]
+            except Exception:
+                proc.kill()
+                proc_worker.kill()
+                stdout = proc.communicate()[0]
+                worker_stdout = proc_worker.communicate()[0]
+                assert False, f"master never finished: {stdout}, worker output: {worker_stdout}"
             stdout = proc.communicate()[0]
             proc_worker.communicate()
 
@@ -1721,11 +1771,6 @@ class SecondUser(HttpUser):
                 text=True,
             )
             gevent.sleep(2)
-            # modify the locustfile to trigger warning about file change when the second worker connects
-            with open(mocked.file_path, "w") as locustfile:
-                locustfile.write(LOCUSTFILE_CONTENT)
-                locustfile.write("\n# New comment\n")
-            gevent.sleep(2)
             proc_worker2 = subprocess.Popen(
                 [
                     "locust",
@@ -1742,7 +1787,6 @@ class SecondUser(HttpUser):
             stdout_worker2 = proc_worker2.communicate()[0]
 
             self.assertIn('All users spawned: {"User1": 1} (1 total users)', stdout)
-            self.assertIn("Locustfile contents changed on disk after first worker requested locustfile", stdout)
             self.assertIn("Shutting down (exit code 0)", stdout)
             self.assertNotIn("Traceback", stdout)
             self.assertNotIn("Traceback", stdout_worker)
@@ -1818,49 +1862,45 @@ class SecondUser(HttpUser):
             """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            with mock_locustfile() as mocked2:
-                proc = subprocess.Popen(
-                    [
-                        "locust",
-                        "-f",
-                        f"{mocked.file_path}, {mocked2.file_path}",
-                        "--headless",
-                        "--master",
-                        "-L",
-                        "debug",
-                    ],
-                    stderr=STDOUT,
-                    stdout=PIPE,
-                    text=True,
-                )
-                proc_worker = subprocess.Popen(
-                    [
-                        "locust",
-                        "-f",
-                        "-",
-                        "--worker",
-                    ],
-                    stderr=STDOUT,
-                    stdout=PIPE,
-                    text=True,
-                )
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    f"{mocked.file_path},{mocked.file_path}",
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "1",
+                    "-t",
+                    "1s",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            gevent.sleep(2)
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    "-",
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
 
-                try:
-                    stdout = proc_worker.communicate(timeout=5)[0]
-                    self.assertIn(
-                        "Got error from master: locustfile must be a full path to a single locustfile for file distribution to work",
-                        stdout,
-                    )
-                    proc.kill()
-                    master_stdout = proc.communicate()[0]
-                    self.assertIn(
-                        "--locustfile must be a full path to a single locustfile for file distribution", master_stdout
-                    )
-                except Exception:
-                    proc.kill()
-                    proc_worker.kill()
-                    stdout, worker_stderr = proc_worker.communicate()
-                    assert False, f"worker never finished: {stdout}"
+            stdout = proc.communicate()[0]
+            stdout_worker = proc_worker.communicate()[0]
+
+            self.assertIn('All users spawned: {"User1": 1} (1 total users)', stdout)
+            self.assertIn("Shutting down (exit code 0)", stdout)
+            self.assertNotIn("Traceback", stdout)
+            self.assertNotIn("Traceback", stdout_worker)
+
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
 
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(

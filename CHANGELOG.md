@@ -1,6 +1,70 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.31.1](https://github.com/locustio/locust/tree/2.31.1) (2024-08-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.0...2.31.1)
+
+**Merged pull requests:**
+
+- Fix issue with downloading HTML report, update package.json for webui build [\#2834](https://github.com/locustio/locust/pull/2834) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
+## [2.31.0](https://github.com/locustio/locust/tree/2.31.0) (2024-08-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.30.0...2.31.0)
+
+**Merged pull requests:**
+
+- Fix docker build for release [\#2830](https://github.com/locustio/locust/pull/2830) ([cyberw](https://github.com/cyberw))
+- Github Actions: Use node 20.x \(fix PyPI Release and pre-Release Steps\) [\#2828](https://github.com/locustio/locust/pull/2828) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Improve Echarts and Expose Line and Axis Configuration [\#2826](https://github.com/locustio/locust/pull/2826) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Bump Node [\#2825](https://github.com/locustio/locust/pull/2825) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Integrations for Locust Cloud [\#2824](https://github.com/locustio/locust/pull/2824) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Fix HTML Report Stats Table [\#2817](https://github.com/locustio/locust/pull/2817) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Locust UI Charts Should Change Color Based on Theme [\#2815](https://github.com/locustio/locust/pull/2815) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Locust UI as a Module [\#2804](https://github.com/locustio/locust/pull/2804) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Log a message if total fixed\_count is higher than number of users to spawn [\#2793](https://github.com/locustio/locust/pull/2793) ([cyberw](https://github.com/cyberw))
+- Simplify fixed\_count Users generation in UsersDispatcher.\_user\_gen [\#2783](https://github.com/locustio/locust/pull/2783) ([tdadela](https://github.com/tdadela))
+- URL Directory, and Multi-File Support for Locustfile Distribution [\#2766](https://github.com/locustio/locust/pull/2766) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
+## [2.30.0](https://github.com/locustio/locust/tree/2.30.0) (2024-07-31)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.29.1...2.30.0)
+
+**Fixed bugs:**
+
+- Locust / pypy fails with "AttributeError: module 'gc' has no attribute 'freeze'" error. [\#2818](https://github.com/locustio/locust/issues/2818)
+- Worker sometimes fails to send heartbeat after upgrade to urllib3\>=1.26.16 [\#2812](https://github.com/locustio/locust/issues/2812)
+- Web UI lacking asset [\#2781](https://github.com/locustio/locust/issues/2781)
+
+**Closed issues:**
+
+- Charts Update Is Delayed [\#2771](https://github.com/locustio/locust/issues/2771)
+- Use `itertools.cycle` in `SequentialTaskSet` [\#2740](https://github.com/locustio/locust/issues/2740)
+- `SequentialTaskSet` handles task weights in an inconsistent way [\#2739](https://github.com/locustio/locust/issues/2739)
+
+**Merged pull requests:**
+
+- Update poetry windows tests [\#2821](https://github.com/locustio/locust/pull/2821) ([mquinnfd](https://github.com/mquinnfd))
+- Fix pypy gc.freeze\(\) AttributeError [\#2819](https://github.com/locustio/locust/pull/2819) ([jimoleary](https://github.com/jimoleary))
+- Fix Dockerfile style warning [\#2814](https://github.com/locustio/locust/pull/2814) ([mehrdadbn9](https://github.com/mehrdadbn9))
+- Avoid deadlock in gevent/urllib3 connection pool \(fixes occasional worker heartbeat timeouts\) [\#2813](https://github.com/locustio/locust/pull/2813) ([tdadela](https://github.com/tdadela))
+- Replace total avg response time with 50 percentile \(avg was broken\) [\#2806](https://github.com/locustio/locust/pull/2806) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add example of a bottlenecked server and use that test to make a new graph for the docs [\#2805](https://github.com/locustio/locust/pull/2805) ([cyberw](https://github.com/cyberw))
+- Fix tests on windows [\#2803](https://github.com/locustio/locust/pull/2803) ([mquinnfd](https://github.com/mquinnfd))
+- Provide warning for local installs where yarn is not present [\#2801](https://github.com/locustio/locust/pull/2801) ([mquinnfd](https://github.com/mquinnfd))
+- Fix Extend Webui Example [\#2800](https://github.com/locustio/locust/pull/2800) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Correctly set version from Poetry in published builds [\#2791](https://github.com/locustio/locust/pull/2791) ([mquinnfd](https://github.com/mquinnfd))
+- Fix StatsEntry docstring [\#2784](https://github.com/locustio/locust/pull/2784) ([tdadela](https://github.com/tdadela))
+- dispatch benchmark test improvements [\#2780](https://github.com/locustio/locust/pull/2780) ([tdadela](https://github.com/tdadela))
+- Typing: strict optional in dispatch.py [\#2779](https://github.com/locustio/locust/pull/2779) ([tdadela](https://github.com/tdadela))
+- new events for heartbeat and usage monitor [\#2777](https://github.com/locustio/locust/pull/2777) ([mgor](https://github.com/mgor))
+- FastHttpSession requests typing  [\#2775](https://github.com/locustio/locust/pull/2775) ([tdadela](https://github.com/tdadela))
+- Remove Line Chart Default Zoom [\#2774](https://github.com/locustio/locust/pull/2774) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- FastHttpSession: Enable passing json as a positional argument for post\(\) and stop converting response times to int [\#2772](https://github.com/locustio/locust/pull/2772) ([tdadela](https://github.com/tdadela))
+- SequentialTaskSet: Allow weighted tasks and dict in .tasks [\#2742](https://github.com/locustio/locust/pull/2742) ([bakhtos](https://github.com/bakhtos))
+- Implement Poetry build system \(mainly so we don't have to commit dynamically generated front end bundles to git\) [\#2725](https://github.com/locustio/locust/pull/2725) ([mquinnfd](https://github.com/mquinnfd))
+
 ## [2.29.1](https://github.com/locustio/locust/tree/2.29.1) (2024-06-25)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.29.0...2.29.1)
