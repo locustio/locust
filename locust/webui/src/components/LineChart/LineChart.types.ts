@@ -11,7 +11,7 @@ export interface ILineChart<ChartType> {
   title: string;
   lines: ILine<ChartType>[];
   colors?: string[];
-  chartValueFormatter?: (value: string | number | string[] | number[]) => string | number;
+  chartValueFormatter?: (value?: any) => string | number;
   splitAxis?: boolean;
   yAxisLabels?: string | [string, string];
 }
@@ -26,4 +26,11 @@ export interface ILineChartTimeAxis {
 
 export interface ILineChartMarkers {
   markers?: string[];
+}
+
+export interface ILineChartTooltipFormatterParams {
+  axisValue: string;
+  color: string;
+  seriesName: string;
+  value: number;
 }
