@@ -12,6 +12,18 @@ from locust.argument_parser import get_empty_argument_parser, setup_parser_argum
 import os
 import subprocess
 
+# Add fixes for RTD deprecation
+# https://about.readthedocs.com/blog/2024/07/addons-by-default/
+
+# Define the canonical URL if you are using a custom domain on Read the Docs
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "")
+
+# Tell Jinja2 templates the build is running on Read the Docs
+if os.environ.get("READTHEDOCS", "") == "True":
+    if "html_context" not in globals():
+        html_context = {}
+    html_context["READTHEDOCS"] = True
+
 
 # Run command `locust --help` and store output in cli-help-output.txt which is included in the docs
 def save_locust_help_output():
