@@ -13,6 +13,7 @@ import {
   mockChartLines,
   mockCharts,
   MockChartType,
+  mockScatterplotSeriesData,
   mockSeriesData,
   mockTooltipParams,
 } from 'components/LineChart/tests/LineChart.mocks';
@@ -28,6 +29,16 @@ describe('getSeriesData', () => {
     });
 
     expect(options).toEqual(mockSeriesData);
+  });
+
+  test('should adapt a scatterplot', () => {
+    const options = getSeriesData<Partial<MockChartType>>({
+      charts: mockCharts,
+      lines: mockChartLines,
+      scatterplot: true,
+    });
+
+    expect(options).toEqual(mockScatterplotSeriesData);
   });
 });
 
@@ -158,6 +169,19 @@ describe('createOptions', () => {
       { ...defaultYAxis, name: yAxisLabels[0] },
       { ...defaultYAxis, name: yAxisLabels[1] },
     ]);
+  });
+
+  test('should create a scatterplot series', () => {
+    const options = createOptions<MockChartType>({
+      ...createOptionsDefaultProps,
+      scatterplot: true,
+    });
+
+    expect(options.title.text).toBe('Test Chart');
+    expect(options.xAxis.data).toEqual(mockCharts.time);
+    expect(options.yAxis).toEqual(defaultYAxis);
+    expect(options.series).toEqual(mockScatterplotSeriesData);
+    expect(options.color).toEqual(['#fff']);
   });
 });
 

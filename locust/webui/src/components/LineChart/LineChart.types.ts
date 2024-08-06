@@ -14,6 +14,7 @@ export interface ILineChart<ChartType> {
   chartValueFormatter?: (value?: any) => string | number;
   splitAxis?: boolean;
   yAxisLabels?: string | [string, string];
+  scatterplot?: boolean;
 }
 
 export interface ILineChartZoomEvent {

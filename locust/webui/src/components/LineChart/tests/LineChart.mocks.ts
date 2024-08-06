@@ -23,8 +23,13 @@ export const mockCharts = {
 export const mockFormattedTimeAxis = mockCharts.time.map(formatLocaleTime);
 
 export const mockSeriesData = [
-  { type: 'line', name: 'RPS', data: mockCharts.currentRps },
-  { type: 'line', name: 'Failures/s', data: mockCharts.currentFailPerSec },
+  { type: 'line', name: 'RPS', data: mockCharts.currentRps, symbolSize: 4 },
+  { type: 'line', name: 'Failures/s', data: mockCharts.currentFailPerSec, symbolSize: 4 },
+];
+
+export const mockScatterplotSeriesData = [
+  { ...mockSeriesData[0], type: 'scatter' },
+  { ...mockSeriesData[1], type: 'scatter' },
 ];
 
 export const mockTooltipParams = [
