@@ -3,6 +3,7 @@ import {
   DefaultLabelFormatterCallbackParams,
   LineSeriesOption,
   YAXisComponentOption,
+  ScatterSeriesOption,
 } from 'echarts';
 
 import { CHART_THEME } from 'components/LineChart/LineChart.constants';
@@ -18,9 +19,13 @@ import { formatLocaleString, formatLocaleTime } from 'utils/date';
 export const getSeriesData = <ChartType>({
   charts,
   lines,
-}: Pick<ILineChart<ChartType>, 'charts' | 'lines'>): LineSeriesOption[] =>
+  scatterplot,
+}: Pick<ILineChart<ChartType>, 'charts' | 'lines' | 'scatterplot'>):
+  | LineSeriesOption[]
+  | ScatterSeriesOption[] =>
   lines.map(({ key, name }) => ({
-    type: 'line',
+    symbolSize: 4,
+    type: (scatterplot ? 'scatter' : 'line') as any,
     name,
     data: charts[key] as LineSeriesOption['data'],
   }));
@@ -59,6 +64,7 @@ export const createOptions = <ChartType extends ILineChartTimeAxis>({
   chartValueFormatter,
   splitAxis,
   yAxisLabels,
+  scatterplot,
 }: ILineChart<ChartType>) => ({
   title: { text: title },
   dataZoom: [
@@ -97,7 +103,7 @@ export const createOptions = <ChartType extends ILineChartTimeAxis>({
   },
   grid: { left: 40, right: splitAxis ? 40 : 10 },
   yAxis: createYAxis({ splitAxis, yAxisLabels }),
-  series: getSeriesData<ChartType>({ charts, lines }),
+  series: getSeriesData<ChartType>({ charts, lines, scatterplot }),
   color: colors,
   toolbox: {
     feature: {

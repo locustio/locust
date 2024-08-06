@@ -25,6 +25,7 @@ export default function LineChart<ChartType extends IBaseChartType>({
   chartValueFormatter,
   splitAxis,
   yAxisLabels,
+  scatterplot,
 }: ILineChart<ChartType>) {
   const [chart, setChart] = useState<ECharts | null>(null);
   const isDarkMode = useSelector(({ theme: { isDarkMode } }) => isDarkMode);
@@ -47,6 +48,7 @@ export default function LineChart<ChartType extends IBaseChartType>({
         chartValueFormatter,
         splitAxis,
         yAxisLabels,
+        scatterplot,
       }),
     );
     initChart.on('datazoom', onChartZoom(initChart));
@@ -108,7 +110,7 @@ export default function LineChart<ChartType extends IBaseChartType>({
   useEffect(() => {
     if (chart) {
       chart.setOption({
-        series: getSeriesData<ChartType>({ charts, lines }),
+        series: getSeriesData<ChartType>({ charts, lines, scatterplot }),
       });
     }
   }, [lines]);
