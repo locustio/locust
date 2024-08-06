@@ -25,4 +25,18 @@ describe('LineChart', () => {
 
     expect(container.querySelector('canvas')).toBeTruthy();
   });
+
+  test('renders LineChart with charts and lines as a scatterplot', () => {
+    const { container } = renderWithProvider(
+      <LineChart<ICharts>
+        charts={statsResponseTransformed.charts}
+        colors={mockChart.colors}
+        lines={mockChart.lines}
+        scatterplot
+        title={mockChart.title}
+      />,
+    );
+
+    expect(container.querySelector('canvas')).toBeTruthy();
+  });
 });
