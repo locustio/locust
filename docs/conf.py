@@ -12,7 +12,6 @@ from locust.argument_parser import get_empty_argument_parser, setup_parser_argum
 import os
 import subprocess
 
-
 # Add fixes for RTD deprecation
 # https://about.readthedocs.com/blog/2024/07/addons-by-default/
 
