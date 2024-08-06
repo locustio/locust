@@ -95,7 +95,7 @@ export const createOptions = <ChartType extends ILineChartTimeAxis>({
     axisLabel: { formatter: formatLocaleTime },
     data: charts.time,
   },
-  grid: { x: 60, y: 70, x2: 40, y2: 40 },
+  grid: { left: 40, right: splitAxis ? 40 : 10 },
   yAxis: createYAxis({ splitAxis, yAxisLabels }),
   series: getSeriesData<ChartType>({ charts, lines }),
   color: colors,
