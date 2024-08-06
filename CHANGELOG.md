@@ -1,6 +1,16 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.31.2](https://github.com/locustio/locust/tree/2.31.2) (2024-08-06)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.1...2.31.2)
+
+**Merged pull requests:**
+
+- Prebuild UI in PyPi publish steps so that even source distributions contain web UI code [\#2839](https://github.com/locustio/locust/pull/2839) ([mquinnfd](https://github.com/mquinnfd))
+- Add Tests for Web UI Line Chart [\#2838](https://github.com/locustio/locust/pull/2838) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Documentation: Configure html\_baseurl and jinja on RTD [\#2837](https://github.com/locustio/locust/pull/2837) ([plaindocs](https://github.com/plaindocs))
+
 ## [2.31.1](https://github.com/locustio/locust/tree/2.31.1) (2024-08-05)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.31.0...2.31.1)
