@@ -197,14 +197,21 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20.x
+      - name: Install Yarn
+        run: npm install -g yarn
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip poetry
           python -m poetry config virtualenvs.create false
           python -m poetry self add "poetry-dynamic-versioning[plugin]"
+      # Pre-build the UI bundle and don't repeat it on the build step to allow sdist to find the files
+      - name: Prebuild UI
+        run: |
+          yarn webui:install
+          yarn webui:build
       - name: Build + set TAG env var for later use
         run: |
-          python -m poetry build
+          SKIP_PRE_BUILD=true python -m poetry build
           ./rename-wheel.sh
           echo "TAG=$(poetry version -s)" | tee -a $GITHUB_ENV
       - name: Publish tagged version to PyPI
@@ -240,6 +247,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20.x
+      - name: Install Yarn
+        run: npm install -g yarn
       - run: git rev-parse HEAD^2 2>/dev/null >/dev/null || echo NOT_MERGE_COMMIT=1 | tee -a $GITHUB_ENV
       - name: Install dependencies
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
@@ -247,10 +256,15 @@ jobs:
           python -m pip install --upgrade pip poetry
           python -m poetry config virtualenvs.create false
           python -m poetry self add "poetry-dynamic-versioning[plugin]"
+      # Pre-build the UI bundle and don't repeat it on the build step to allow sdist to find the files
+      - name: Prebuild UI
+        run: |
+          yarn webui:install
+          yarn webui:build
       - name: Build
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
         run: |
-          python -m poetry build
+          SKIP_PRE_BUILD=true python -m poetry build
           ./rename-wheel.sh
       - name: Publish prerelease version to PyPI
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
