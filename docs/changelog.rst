@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.31.2
+======
+* Prebuild UI in PyPi publish steps so that even source distributions contain web UI code https://github.com/locustio/locust/pull/2839
+
 2.31.1
 ======
 * Fix issue with downloading HTML report https://github.com/locustio/locust/pull/2834
