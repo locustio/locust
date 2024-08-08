@@ -9,7 +9,7 @@ export default function Navbar() {
   return (
     <AppBar position='static'>
       <Container maxWidth='xl'>
-        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Toolbar disableGutters sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Link
             color='inherit'
             href='/'
