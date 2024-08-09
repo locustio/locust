@@ -1,11 +1,14 @@
-import { AppBar, Box, Container, Link, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Container, Link, Toolbar } from '@mui/material';
 
-import Logo from 'assets/logo.png';
+import Logo from 'assets/Logo';
 import DarkLightToggle from 'components/Layout/Navbar/DarkLightToggle';
 import SwarmMonitor from 'components/Layout/Navbar/SwarmMonitor';
 import StateButtons from 'components/StateButtons/StateButtons';
+import { useSelector } from 'redux/hooks';
 
 export default function Navbar() {
+  const isDarkMode = useSelector(({ theme }) => theme.isDarkMode);
+
   return (
     <AppBar position='static'>
       <Container maxWidth='xl'>
@@ -16,19 +19,7 @@ export default function Navbar() {
             sx={{ display: 'flex', alignItems: 'center', columnGap: 2 }}
             underline='none'
           >
-            <img height='52' src={Logo} width='52' />
-            <Typography
-              component='h1'
-              noWrap
-              sx={{
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-              }}
-              variant='h3'
-            >
-              Locust
-            </Typography>
+            <Logo isDarkMode={isDarkMode} />
           </Link>
           <Box sx={{ display: 'flex', columnGap: 6 }}>
             <SwarmMonitor />

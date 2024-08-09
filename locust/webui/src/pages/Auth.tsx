@@ -2,13 +2,13 @@ import { Alert, Box, Button, IconButton, TextField, Typography } from '@mui/mate
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
 
-import Logo from 'assets/logo.png';
+import Logo from 'assets/Logo';
 import DarkLightToggle from 'components/Layout/Navbar/DarkLightToggle';
 import useTheme from 'hooks/useTheme';
 import { IAuthArgs } from 'types/auth.types';
 
 export default function Auth({ authProviders, error, usernamePasswordCallback }: IAuthArgs) {
-  const theme = useTheme();
+  const { theme, isDarkMode } = useTheme();
 
   return (
     <ThemeProvider theme={theme}>
@@ -34,19 +34,7 @@ export default function Auth({ authProviders, error, usernamePasswordCallback }:
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'center', columnGap: 2 }}>
-          <img height='52' src={Logo} width='52' />
-          <Typography
-            component='h1'
-            noWrap
-            sx={{
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-            variant='h3'
-          >
-            Locust
-          </Typography>
+          <Logo isDarkMode={isDarkMode} lightModeBackgroundColor='#fff' />
         </Box>
         {usernamePasswordCallback && (
           <form action={usernamePasswordCallback}>

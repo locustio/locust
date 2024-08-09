@@ -9,13 +9,12 @@ describe('Dashboard', () => {
   test('renders the layout', () => {
     const { getByRole } = renderWithProvider(<Dashboard />);
 
-    const logo = getByRole('img');
+    const logo = getByRole('img', { name: 'Locust' });
     const heading = getByRole('link', { name: 'Locust' });
 
     expect(heading).toBeTruthy();
     expect(heading.getAttribute('href')).toEqual('/');
     expect(logo).toBeTruthy();
-    expect(logo.getAttribute('src')).toEqual('/src/assets/logo.png');
   });
 
   test('renders the swarm form by default', () => {
