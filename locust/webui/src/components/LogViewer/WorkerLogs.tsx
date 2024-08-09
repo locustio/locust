@@ -23,7 +23,9 @@ export default function WorkerLogs({ workerId, logs }: { workerId: string; logs:
   return (
     <Accordion>
       <AccordionSummary expandIcon={<ExpandMoreIcon />} onClick={onExpandLogs}>
-        {hasImportantLog && <PriorityHighIcon color='secondary' />}
+        {hasImportantLog && (
+          <PriorityHighIcon color='secondary' data-testid='worker-notification' />
+        )}
         {workerId}
       </AccordionSummary>
       <AccordionDetails>
