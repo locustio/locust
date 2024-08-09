@@ -12,5 +12,5 @@ export default function useTheme() {
     [isDarkMode],
   );
 
-  return theme;
+  return { theme, isDarkMode };
 }

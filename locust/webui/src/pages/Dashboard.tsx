@@ -24,7 +24,7 @@ function Dashboard({ swarmState, tabs, extendedTabs }: IDashboard) {
   useSwarmUi();
   useLogViewer();
 
-  const theme = useTheme();
+  const { theme } = useTheme();
 
   return (
     <ThemeProvider theme={theme}>

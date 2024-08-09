@@ -15,7 +15,7 @@ export default function StateButtons() {
   }
 
   return (
-    <Box sx={{ display: 'flex', columnGap: 2 }}>
+    <Box sx={{ display: 'flex', columnGap: 2, marginY: 'auto', height: '50px' }}>
       {swarmState === SWARM_STATE.STOPPED ? (
         <NewTestButton />
       ) : (
