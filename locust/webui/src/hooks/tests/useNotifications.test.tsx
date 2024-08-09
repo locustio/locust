@@ -3,14 +3,13 @@ import { afterEach, describe, expect, test } from 'vitest';
 import useNotifications from 'hooks/useNotifications';
 import { IRootState } from 'redux/store';
 import { renderWithProvider } from 'test/testUtils';
-import { objectLength } from 'utils/object';
 
 function MockHook({
   data,
   notificaitonKey,
   shouldNotify,
 }: {
-  data: any[] | Record<string, any>;
+  data: any[];
   notificaitonKey: string;
   shouldNotify?: () => boolean;
 }) {
@@ -45,16 +44,12 @@ describe('useNotifications', () => {
     localStorage = {} as typeof localStorage;
 
     const testArrayKey = 'testArray';
-    const testObjectKey = 'testObject';
 
     const mockArray = [1, 2, 3];
-    const mockObject = { key1: 1, key2: 2 };
 
     renderWithProvider(<MockHook data={[1, 2, 3]} notificaitonKey={testArrayKey} />);
-    renderWithProvider(<MockHook data={{ key1: 1, key2: 2 }} notificaitonKey={testObjectKey} />);
 
-    expect(localStorage[`${testArrayKey}Notification`]).toBe(objectLength(mockArray));
-    expect(localStorage[`${testObjectKey}Notification`]).toBe(objectLength(mockObject));
+    expect(localStorage[`${testArrayKey}Notification`]).toBe(mockArray.length);
 
     localStorage = temp;
   });

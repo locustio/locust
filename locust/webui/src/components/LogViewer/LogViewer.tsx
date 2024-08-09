@@ -13,7 +13,7 @@ import { red, amber, blue } from '@mui/material/colors';
 
 import { isImportantLog } from 'components/LogViewer/logUtils';
 import { useSelector } from 'redux/hooks';
-import { objectLength } from 'utils/object';
+import { isEmpty } from 'utils/object';
 
 const getLogColor = (log: string) => {
   if (log.includes('CRITICAL')) {
@@ -80,7 +80,7 @@ export default function LogViewer() {
           ))}
         </Paper>
       </Box>
-      {!!objectLength(workerLogs) && (
+      {!isEmpty(workerLogs) && (
         <Box>
           <Typography sx={{ mb: 2 }} variant='h5'>
             Worker Logs
