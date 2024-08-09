@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { isImportantLog } from 'components/LogViewer/logUtils';
+import { isImportantLog } from 'components/LogViewer/LogViewer.utils';
 import { LOG_VIEWER_KEY } from 'constants/logs';
 import { SWARM_STATE } from 'constants/swarm';
 import useInterval from 'hooks/useInterval';
