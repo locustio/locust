@@ -1,5 +1,5 @@
 export const isEmpty = <T extends Record<string, any> | any[]>(object: T) =>
-  Array.isArray(object) ? object.length : Object.keys(object).length === 0;
+  (Array.isArray(object) ? object.length : Object.keys(object).length) === 0;
 
 export function shallowMerge<ObjectA, ObjectB>(objectA: ObjectA, objectB: ObjectB) {
   return {
