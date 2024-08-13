@@ -1,7 +1,4 @@
-const isDate = (timestamp: string) => !isNaN(Date.parse(timestamp));
+const isDate = (timestamp: string) => !isNaN(new Date(timestamp).getTime());
 
 export const formatLocaleString = (utcTimestamp: string) =>
   utcTimestamp && isDate(utcTimestamp) ? new Date(utcTimestamp).toLocaleString() : '';
-
-export const formatLocaleTime = (utcTimestamp: string) =>
-  utcTimestamp && isDate(utcTimestamp) ? new Date(utcTimestamp).toLocaleTimeString() : '';

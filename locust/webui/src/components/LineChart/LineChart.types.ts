@@ -33,5 +33,5 @@ export interface ILineChartTooltipFormatterParams {
   axisValue: string;
   color: string;
   seriesName: string;
-  value: number;
+  value: string | number | string[];
 }

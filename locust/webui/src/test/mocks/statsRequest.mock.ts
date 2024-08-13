@@ -147,13 +147,12 @@ export const statsResponseTransformed = {
   exceptions: exceptionsResponseMock.exceptions,
   extendedStats: undefined,
   charts: {
-    'responseTimePercentile0.5': [2],
-    'responseTimePercentile0.95': [2],
-    currentRps: [1932.5],
-    currentFailPerSec: [1932.5],
-    userCount: [1],
-    totalAvgResponseTime: [0.41],
-    time: [mockDate.toUTCString()],
+    'responseTimePercentile0.5': [[mockDate.toISOString(), 2]],
+    'responseTimePercentile0.95': [[mockDate.toISOString(), 2]],
+    currentRps: [[mockDate.toISOString(), 1932.5]],
+    currentFailPerSec: [[mockDate.toISOString(), 1932.5]],
+    userCount: [[mockDate.toISOString(), 1]],
+    totalAvgResponseTime: [[mockDate.toISOString(), 0.41]],
   },
   ratios: {
     perClass: {

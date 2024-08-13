@@ -13,8 +13,10 @@ import {
   ILineChartZoomEvent,
   ILineChartTooltipFormatterParams,
 } from 'components/LineChart/LineChart.types';
+import { swarmTemplateArgs } from 'constants/swarm';
 import { ICharts } from 'types/ui.types';
-import { formatLocaleString, formatLocaleTime } from 'utils/date';
+import { formatLocaleString } from 'utils/date';
+import { padStart } from 'utils/number';
 
 export const getSeriesData = <ChartType>({
   charts,
@@ -56,6 +58,30 @@ const createYAxis = <ChartType>({
   } as YAXisComponentOption;
 };
 
+const formatTimeAxis = (value: string) => {
+  const date = new Date(value);
+
+  return [
+    padStart(date.getHours(), 2),
+    padStart(date.getMinutes(), 2),
+    padStart(date.getSeconds(), 2),
+  ].join(':');
+};
+
+const renderChartTooltipValue = <ChartType>({
+  chartValueFormatter,
+  value,
+}: {
+  chartValueFormatter: ILineChart<ChartType>['chartValueFormatter'];
+  value: string | number | string[];
+}) => {
+  if (chartValueFormatter) {
+    return chartValueFormatter(value);
+  }
+
+  return Array.isArray(value) ? value[1] : value;
+};
+
 export const createOptions = <ChartType extends ILineChartTimeAxis>({
   charts,
   title,
@@ -85,7 +111,10 @@ export const createOptions = <ChartType extends ILineChartTimeAxis>({
             ${tooltipText}
             <br>
             <span style="color:${color};">
-              ${seriesName}:&nbsp${chartValueFormatter ? chartValueFormatter(value) : value}
+              ${seriesName}:&nbsp${renderChartTooltipValue<ChartType>({
+                chartValueFormatter,
+                value,
+              })}
             </span>
           `,
           '',
@@ -97,15 +126,19 @@ export const createOptions = <ChartType extends ILineChartTimeAxis>({
     borderWidth: 0,
   },
   xAxis: {
-    type: 'category',
-    axisLabel: { formatter: formatLocaleTime },
+    type: 'time',
+    startValue: swarmTemplateArgs.startTime,
+    axisLabel: {
+      formatter: formatTimeAxis,
+    },
     data: charts.time,
   },
-  grid: { left: 40, right: splitAxis ? 40 : 10 },
+  grid: { left: 50, right: 10 },
   yAxis: createYAxis({ splitAxis, yAxisLabels }),
   series: getSeriesData<ChartType>({ charts, lines, scatterplot }),
   color: colors,
   toolbox: {
+    right: 10,
     feature: {
       dataZoom: {
         show: true,

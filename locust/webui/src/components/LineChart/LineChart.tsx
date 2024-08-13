@@ -71,7 +71,6 @@ export default function LineChart<ChartType extends IBaseChartType>({
     const isChartDataDefined = lines.every(({ key }) => !!charts[key]);
     if (chart && isChartDataDefined) {
       chart.setOption({
-        xAxis: { data: charts.time },
         series: lines.map(({ key, yAxisIndex, ...echartsOptions }, index) => ({
           ...echartsOptions,
           data: charts[key],

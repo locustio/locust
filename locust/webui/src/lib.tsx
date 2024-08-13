@@ -13,6 +13,7 @@ export { baseTabs } from 'components/Tabs/Tabs.constants';
 export { default as useInterval } from 'hooks/useInterval';
 export { roundToDecimalPlaces } from 'utils/number';
 export { SWARM_STATE } from 'constants/swarm';
+export { default as Select } from 'components/Form/Select';
 export type { IRootState } from 'redux/store';
 
 export type { ITab } from 'types/tab.types';

@@ -1,5 +1,4 @@
 import { ICharts } from 'types/ui.types';
-import { formatLocaleTime } from 'utils/date';
 
 export type MockChartType = Pick<ICharts, 'currentRps' | 'currentFailPerSec' | 'time'>;
 
@@ -19,8 +18,6 @@ export const mockCharts = {
     'Tue, 06 Aug 2024 11:33:14 GMT',
   ],
 };
-
-export const mockFormattedTimeAxis = mockCharts.time.map(formatLocaleTime);
 
 export const mockSeriesData = [
   { type: 'line', name: 'RPS', data: mockCharts.currentRps, symbolSize: 4 },

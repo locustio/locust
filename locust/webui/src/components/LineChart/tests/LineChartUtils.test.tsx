@@ -17,7 +17,7 @@ import {
   mockSeriesData,
   mockTooltipParams,
 } from 'components/LineChart/tests/LineChart.mocks';
-import { formatLocaleString, formatLocaleTime } from 'utils/date';
+import { formatLocaleString } from 'utils/date';
 
 const removeWhitespace = (string: string) => string.replace(/\s+/g, '');
 
@@ -78,10 +78,7 @@ describe('createOptions', () => {
   test('xAxis should be formatted as expected', () => {
     const options = createOptions<MockChartType>(createOptionsDefaultProps);
 
-    expect(options.xAxis.axisLabel.formatter(mockCharts.time[0])).toBe(
-      formatLocaleTime(mockCharts.time[0]),
-    );
-    expect(options.xAxis.axisLabel.formatter('undefined')).toBe('');
+    expect(options.xAxis.axisLabel.formatter(mockCharts.time[0])).toBe('07:33:02');
   });
 
   test('should format the tooltip as expected', () => {
