@@ -19,14 +19,13 @@ export interface IExtraOptions {
 }
 
 export interface IHistory {
-  currentRps: number;
-  currentFailPerSec: number;
-  userCount: number;
-  time: string;
+  currentRps: [string, number];
+  currentFailPerSec: [string, number];
+  userCount: [string, number];
   currentResponseTimePercentiles: {
-    [key: `responseTimePercentile${number}`]: number | null;
+    [key: `responseTimePercentile${number}`]: [string, number | null];
   };
-  totalAvgResponseTime: number;
+  totalAvgResponseTime: [string, number];
 }
 
 export interface IReport {

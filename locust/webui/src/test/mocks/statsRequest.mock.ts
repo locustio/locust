@@ -1,3 +1,5 @@
+import { ICharts } from 'types/ui.types';
+
 export const statsResponseMock = {
   current_response_time_percentiles: {
     'response_time_percentile_0.5': 2,
@@ -153,7 +155,7 @@ export const statsResponseTransformed = {
     currentFailPerSec: [[mockDate.toISOString(), 1932.5]],
     userCount: [[mockDate.toISOString(), 1]],
     totalAvgResponseTime: [[mockDate.toISOString(), 0.41]],
-  },
+  } as ICharts,
   ratios: {
     perClass: {
       Example: {

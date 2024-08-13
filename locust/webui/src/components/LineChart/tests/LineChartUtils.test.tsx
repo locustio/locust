@@ -15,8 +15,10 @@ import {
   MockChartType,
   mockScatterplotSeriesData,
   mockSeriesData,
+  mockTimestamps,
   mockTooltipParams,
 } from 'components/LineChart/tests/LineChart.mocks';
+import { swarmStateMock } from 'test/mocks/swarmState.mock';
 import { formatLocaleString } from 'utils/date';
 
 const removeWhitespace = (string: string) => string.replace(/\s+/g, '');
@@ -57,7 +59,8 @@ describe('createOptions', () => {
     const options = createOptions<MockChartType>(createOptionsDefaultProps);
 
     expect(options.title.text).toBe('Test Chart');
-    expect(options.xAxis.data).toEqual(mockCharts.time);
+    expect(options.xAxis.type).toBe('time');
+    expect(options.xAxis.startValue).toBe(swarmStateMock.startTime);
     expect(options.yAxis).toEqual(defaultYAxis);
     expect(options.series).toEqual(mockSeriesData);
     expect(options.color).toEqual(['#fff']);
@@ -78,7 +81,15 @@ describe('createOptions', () => {
   test('xAxis should be formatted as expected', () => {
     const options = createOptions<MockChartType>(createOptionsDefaultProps);
 
-    expect(options.xAxis.axisLabel.formatter(mockCharts.time[0])).toBe('07:33:02');
+    const formattedValue = options.xAxis.axisLabel.formatter(mockTimestamps[0]);
+
+    expect(formattedValue.split(':').length).toBe(3);
+
+    const [hours, minutes, seconds] = formattedValue.split(':');
+
+    expect(hours.length).toBe(2);
+    expect(minutes.length).toBe(2);
+    expect(seconds.length).toBe(2);
   });
 
   test('should format the tooltip as expected', () => {
@@ -90,7 +101,7 @@ describe('createOptions', () => {
 
       <br>
       <span style="color:${mockTooltipParams[0].color};">
-        ${mockTooltipParams[0].seriesName}:&nbsp${mockTooltipParams[0].value}
+        ${mockTooltipParams[0].seriesName}:&nbsp${mockTooltipParams[0].value[1]}
       </span>
     `),
     );
@@ -106,11 +117,11 @@ describe('createOptions', () => {
       ${formatLocaleString(mockTooltipParams[0].axisValue)}
       <br>
       <span style="color:${mockTooltipParams[0].color};">
-        ${mockTooltipParams[0].seriesName}:&nbsp${mockTooltipParams[0].value}
+        ${mockTooltipParams[0].seriesName}:&nbsp${mockTooltipParams[0].value[1]}
       </span>
       <br>
       <span style="color:${mockTooltipParams[1].color};">
-        ${mockTooltipParams[1].seriesName}:&nbsp${mockTooltipParams[1].value}
+        ${mockTooltipParams[1].seriesName}:&nbsp${mockTooltipParams[1].value[1]}
       </span>
     `),
     );
@@ -175,8 +186,9 @@ describe('createOptions', () => {
     });
 
     expect(options.title.text).toBe('Test Chart');
-    expect(options.xAxis.data).toEqual(mockCharts.time);
     expect(options.yAxis).toEqual(defaultYAxis);
+    expect(options.xAxis.type).toBe('time');
+    expect(options.xAxis.startValue).toBe(swarmStateMock.startTime);
     expect(options.series).toEqual(mockScatterplotSeriesData);
     expect(options.color).toEqual(['#fff']);
   });
@@ -186,7 +198,7 @@ describe('createMarkLine', () => {
   test('should create a mark line', () => {
     const markChartsWithMarkers = {
       ...mockCharts,
-      markers: [mockCharts.time[1]],
+      markers: [mockTimestamps[1]],
     };
 
     const options = createMarkLine(markChartsWithMarkers, false);
@@ -199,7 +211,7 @@ describe('createMarkLine', () => {
   test('should create multiple mark lines', () => {
     const markChartsWithMarkers = {
       ...mockCharts,
-      markers: [mockCharts.time[1], mockCharts.time[3]],
+      markers: [mockTimestamps[1], mockTimestamps[3]],
     };
 
     const options = createMarkLine(markChartsWithMarkers, false);
@@ -213,7 +225,7 @@ describe('createMarkLine', () => {
   test('should format mark line label', () => {
     const markChartsWithMarkers = {
       ...mockCharts,
-      markers: [mockCharts.time[1]],
+      markers: [mockTimestamps[1]],
     };
     const options = createMarkLine(markChartsWithMarkers, false);
 
@@ -225,7 +237,7 @@ describe('createMarkLine', () => {
   test('should use dark mode when isDarkMode', () => {
     const markChartsWithMarkers = {
       ...mockCharts,
-      markers: [mockCharts.time[1]],
+      markers: [mockTimestamps[1]],
     };
     const options = createMarkLine(markChartsWithMarkers, true);
 

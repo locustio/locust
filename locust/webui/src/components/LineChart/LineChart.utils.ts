@@ -8,7 +8,6 @@ import {
 
 import { CHART_THEME } from 'components/LineChart/LineChart.constants';
 import {
-  ILineChartTimeAxis,
   ILineChart,
   ILineChartZoomEvent,
   ILineChartTooltipFormatterParams,
@@ -73,7 +72,7 @@ const renderChartTooltipValue = <ChartType>({
   value,
 }: {
   chartValueFormatter: ILineChart<ChartType>['chartValueFormatter'];
-  value: string | number | string[];
+  value: ILineChartTooltipFormatterParams['value'];
 }) => {
   if (chartValueFormatter) {
     return chartValueFormatter(value);
@@ -82,7 +81,7 @@ const renderChartTooltipValue = <ChartType>({
   return Array.isArray(value) ? value[1] : value;
 };
 
-export const createOptions = <ChartType extends ILineChartTimeAxis>({
+export const createOptions = <ChartType>({
   charts,
   title,
   lines,
@@ -131,7 +130,6 @@ export const createOptions = <ChartType extends ILineChartTimeAxis>({
     axisLabel: {
       formatter: formatTimeAxis,
     },
-    data: charts.time,
   },
   grid: { left: 50, right: 10 },
   yAxis: createYAxis({ splitAxis, yAxisLabels }),

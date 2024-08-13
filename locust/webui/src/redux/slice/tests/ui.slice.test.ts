@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import uiSlice, { IUiState, UiAction, uiActions } from 'redux/slice/ui.slice';
-import { percentilesToChart } from 'test/mocks/swarmState.mock';
+import { percentilesToChart, swarmStateMock } from 'test/mocks/swarmState.mock';
 import { ICharts, ISwarmRatios } from 'types/ui.types';
 
 const responseTimePercentileKey1 =
@@ -22,7 +22,6 @@ const initialState = {
     currentFailPerSec: [],
     totalAvgResponseTime: [],
     userCount: [],
-    time: [],
   },
   ratios: {} as ISwarmRatios,
   userCount: 0,
@@ -49,7 +48,6 @@ describe('uiSlice', () => {
       [responseTimePercentileKey1]: 0.4,
       [responseTimePercentileKey2]: 0.2,
       userCount: 2,
-      time: '10:10:10',
     });
 
     const nextState = uiSlice(initialState, action);
@@ -60,7 +58,6 @@ describe('uiSlice', () => {
     expect(charts[responseTimePercentileKey1][0]).toBe(0.4);
     expect(charts[responseTimePercentileKey2][0]).toBe(0.2);
     expect(charts.userCount[0]).toBe(2);
-    expect(charts.time[0]).toBe('10:10:10');
   });
 
   test('should continue to extend the corresponding array of charts in UI state', () => {
@@ -70,7 +67,6 @@ describe('uiSlice', () => {
       [responseTimePercentileKey1]: 0.4,
       [responseTimePercentileKey2]: 0.2,
       userCount: 2,
-      time: '10:10:10',
     });
 
     const updatedState = uiSlice(initialState, action);
@@ -83,7 +79,6 @@ describe('uiSlice', () => {
     expect(charts[responseTimePercentileKey1]).toEqual([0.4, 0.4]);
     expect(charts[responseTimePercentileKey2]).toEqual([0.2, 0.2]);
     expect(charts.userCount).toEqual([2, 2]);
-    expect(charts.time).toEqual(['10:10:10', '10:10:10']);
   });
 
   test('should update chart markers in UI state', () => {
@@ -93,7 +88,6 @@ describe('uiSlice', () => {
         ...initialState,
         charts: {
           ...initialState.charts,
-          time: ['10:10:10'],
         },
       },
       action,
@@ -101,7 +95,7 @@ describe('uiSlice', () => {
 
     const charts = nextState.charts as ICharts;
 
-    expect(charts.markers).toEqual(['10:10:10', '20:20:20']);
+    expect(charts.markers).toEqual([swarmStateMock.startTime, '20:20:20']);
 
     // Add space between runs
     expect(charts.currentRps[0]).toEqual({ value: null });
