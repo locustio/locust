@@ -131,7 +131,7 @@ export const createOptions = <ChartType>({
       formatter: formatTimeAxis,
     },
   },
-  grid: { left: 50, right: 10 },
+  grid: { left: 60, right: 40 },
   yAxis: createYAxis({ splitAxis, yAxisLabels }),
   series: getSeriesData<ChartType>({ charts, lines, scatterplot }),
   color: colors,
@@ -165,6 +165,7 @@ export const createMarkLine = <ChartType extends Pick<ICharts, 'markers'>>(
   symbol: 'none',
   label: {
     formatter: (params: DefaultLabelFormatterCallbackParams) => `Run #${params.dataIndex + 1}`,
+    padding: [0, 0, 8, 0],
   },
   lineStyle: { color: isDarkMode ? CHART_THEME.DARK.axisColor : CHART_THEME.LIGHT.axisColor },
   data: (charts.markers || []).map((timeMarker: string) => ({ xAxis: timeMarker })),
