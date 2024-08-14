@@ -16,19 +16,19 @@ export default function Logo({
       xmlns='http://www.w3.org/2000/svg'
     >
       <path
-        clip-rule='evenodd'
+        clipRule='evenodd'
         d='M36.6942 18.9754L48.9434 6.62621L47.341 5.01205L35.0918 17.3612L36.6942 18.9754Z'
         fill='#B8EE4B'
-        fill-rule='evenodd'
+        fillRule='evenodd'
       />
       <path
-        clip-rule='evenodd'
+        clipRule='evenodd'
         d='M40.954 20.093L53.0301 8.01687L51.4159 6.40271L39.3398 18.4788L40.954 20.093Z'
         fill='#B8EE4B'
         fillRule='evenodd'
       />
       <path
-        clip-rule='evenodd'
+        clipRule='evenodd'
         d='M0 28.1761L39.9453 9.82391L43.7047 9.82392L47.4641 13.5833V19.9629L43.819 23.608L39.2012 18.9279L38.0252 20.0882L47.7932 29.988H41.7525L35.4796 23.7151L20.9615 29.988H0V28.1761Z'
         fill='#B8EE4B'
         fillRule='evenodd'

@@ -16,6 +16,7 @@ export default function Select({
   multiple = false,
   defaultValue,
   sx,
+  ...inputProps
 }: ISelect) {
   return (
     <FormControl sx={sx}>
@@ -23,6 +24,7 @@ export default function Select({
         {label}
       </InputLabel>
       <MuiSelect
+        {...inputProps}
         defaultValue={defaultValue || (multiple && options) || options[0]}
         id={name}
         label={label}

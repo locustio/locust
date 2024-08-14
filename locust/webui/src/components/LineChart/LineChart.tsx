@@ -2,11 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { init, dispose, ECharts, connect } from 'echarts';
 
 import { CHART_THEME } from 'components/LineChart/LineChart.constants';
-import {
-  ILineChartTimeAxis,
-  ILineChart,
-  ILineChartMarkers,
-} from 'components/LineChart/LineChart.types';
+import { ILineChart, ILineChartMarkers } from 'components/LineChart/LineChart.types';
 import {
   createMarkLine,
   createOptions,
@@ -15,7 +11,7 @@ import {
 } from 'components/LineChart/LineChart.utils';
 import { useSelector } from 'redux/hooks';
 
-interface IBaseChartType extends ILineChartTimeAxis, ILineChartMarkers {}
+interface IBaseChartType extends ILineChartMarkers {}
 
 export default function LineChart<ChartType extends IBaseChartType>({
   charts,
@@ -71,7 +67,6 @@ export default function LineChart<ChartType extends IBaseChartType>({
     const isChartDataDefined = lines.every(({ key }) => !!charts[key]);
     if (chart && isChartDataDefined) {
       chart.setOption({
-        xAxis: { data: charts.time },
         series: lines.map(({ key, yAxisIndex, ...echartsOptions }, index) => ({
           ...echartsOptions,
           data: charts[key],

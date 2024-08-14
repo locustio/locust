@@ -21,10 +21,6 @@ export interface ILineChartZoomEvent {
   batch?: { start: number; end: number }[];
 }
 
-export interface ILineChartTimeAxis {
-  time: string[];
-}
-
 export interface ILineChartMarkers {
   markers?: string[];
 }
@@ -33,5 +29,5 @@ export interface ILineChartTooltipFormatterParams {
   axisValue: string;
   color: string;
   seriesName: string;
-  value: number;
+  value: string | number | [string, number];
 }

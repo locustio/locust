@@ -37,16 +37,13 @@ describe('useSwarmUi', () => {
 
   test('should fetch request stats, ratios, and exceptions and update UI accordingly', async () => {
     vi.useFakeTimers();
-
     vi.setSystemTime(mockDate);
 
     const { store } = renderWithProvider(<MockHook />);
 
-    await act(async () => {
-      await vi.runAllTimersAsync();
+    waitFor(() => {
+      expect(store.getState().ui).toEqual(statsResponseTransformed);
     });
-
-    expect(store.getState().ui).toEqual(statsResponseTransformed);
 
     vi.useRealTimers();
   });

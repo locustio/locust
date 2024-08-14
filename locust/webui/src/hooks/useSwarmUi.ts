@@ -45,7 +45,7 @@ export default function useSwarmUi() {
       totalAvgResponseTime,
     } = statsData;
 
-    const time = new Date().toUTCString();
+    const time = new Date().toISOString();
 
     if (shouldAddMarker) {
       setShouldAddMarker(false);
@@ -56,13 +56,20 @@ export default function useSwarmUi() {
     const totalFailPerSecRounded = roundToDecimalPlaces(totalFailPerSec, 2);
     const totalFailureRatioRounded = roundToDecimalPlaces(failRatio * 100);
 
+    const percentilesWithTime = Object.entries(currentResponseTimePercentiles).reduce(
+      (percentiles, [key, value]) => ({
+        ...percentiles,
+        [key]: [time, value],
+      }),
+      {},
+    );
+
     const newChartEntry = {
-      ...currentResponseTimePercentiles,
-      currentRps: totalRpsRounded,
-      currentFailPerSec: totalFailPerSecRounded,
-      totalAvgResponseTime: roundToDecimalPlaces(totalAvgResponseTime, 2),
-      userCount: userCount,
-      time,
+      ...percentilesWithTime,
+      currentRps: [time, totalRpsRounded],
+      currentFailPerSec: [time, totalFailPerSecRounded],
+      totalAvgResponseTime: [time, roundToDecimalPlaces(totalAvgResponseTime, 2)],
+      userCount: [time, userCount],
     };
 
     setUi({
