@@ -12,11 +12,11 @@ export default function Navbar() {
   return (
     <AppBar position='static'>
       <Container maxWidth='xl'>
-        <Toolbar disableGutters sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Toolbar disableGutters sx={{ display: 'flex', justifyContent: 'space-between', columnGap: 2 }}>
           <Link
             color='inherit'
             href='/'
-            sx={{ display: 'flex', alignItems: 'center', columnGap: 2 }}
+            sx={{ display: 'flex', alignItems: 'center' }}
             underline='none'
           >
             <Logo isDarkMode={isDarkMode} />
