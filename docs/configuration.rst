@@ -228,6 +228,10 @@ To configure multiple users you pass multiple arguments to ``--config-users``, o
 
 When using this way to configure your users, you can set any attribute.
 
+.. note::
+    
+    ``--config-users`` is a somewhat experimental feature and the json format may change even between minor Locust revisions.
+
 Custom arguments
 ================
 
