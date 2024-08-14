@@ -391,8 +391,16 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                     ensure_user_class_name(user_config)
 
                     environment.update_user_class(user_config)
-            except Exception as e:
+            except json.decoder.JSONDecodeError as e:
                 logger.error(f"The --config-users argument must be in valid JSON string or file: {e}")
+                sys.exit(-1)
+            except KeyError as e:
+                logger.error(
+                    f"Error applying user config, probably you tried to specify config for a User not present in your locustfile: {e}"
+                )
+                sys.exit(-1)
+            except Exception as e:
+                logger.exception(e)
                 sys.exit(-1)
 
     if (
