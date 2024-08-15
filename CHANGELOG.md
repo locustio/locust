@@ -1,6 +1,27 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.31.3](https://github.com/locustio/locust/tree/2.31.3) (2024-08-15)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.2...2.31.3)
+
+**Fixed bugs:**
+
+- Brew installed locust missing UI assets [\#2831](https://github.com/locustio/locust/issues/2831)
+- response avg time is NaN [\#2829](https://github.com/locustio/locust/issues/2829)
+- Windows Action Runs Wrong Version of Locust [\#2796](https://github.com/locustio/locust/issues/2796)
+
+**Merged pull requests:**
+
+- Web UI Remove Echarts startValue [\#2855](https://github.com/locustio/locust/pull/2855) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Update GitHub action versions [\#2853](https://github.com/locustio/locust/pull/2853) ([cyberw](https://github.com/cyberw))
+- Improve docs for --class-picker/--config-users and give better error messages if json is bad [\#2851](https://github.com/locustio/locust/pull/2851) ([cyberw](https://github.com/cyberw))
+- Add missing margin between Logo and Host in Navbar [\#2850](https://github.com/locustio/locust/pull/2850) ([heyman](https://github.com/heyman))
+- Web UI Should use Built-In Echarts Time Axis [\#2847](https://github.com/locustio/locust/pull/2847) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Webui Notification Improvements [\#2846](https://github.com/locustio/locust/pull/2846) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Use new logo in web UI + some minor improvements [\#2844](https://github.com/locustio/locust/pull/2844) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Webui Add Scatterplot Support [\#2840](https://github.com/locustio/locust/pull/2840) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.31.2](https://github.com/locustio/locust/tree/2.31.2) (2024-08-06)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.31.1...2.31.2)
