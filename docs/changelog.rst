@@ -6,7 +6,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 
 2.31.3
 ======
-* Use new logo in web UI + some minor improvements https://github.com/locustio/locust/pull/2844, https://github.com/locustio/locust/pull/2840, https://github.com/locustio/locust/pull/2846, https://github.com/locustio/locust/pull/2850, https://github.com/locustio/locust/pull/2847
+* Use new logo in web UI + some minor improvements https://github.com/locustio/locust/pull/2844, https://github.com/locustio/locust/pull/2840, https://github.com/locustio/locust/pull/2846, https://github.com/locustio/locust/pull/2850, https://github.com/locustio/locust/pull/2847, https://github.com/locustio/locust/pull/2855
 * Update GitHub action versions https://github.com/locustio/locust/pull/2853
 
 2.31.2
