@@ -12,7 +12,6 @@ import {
   ILineChartZoomEvent,
   ILineChartTooltipFormatterParams,
 } from 'components/LineChart/LineChart.types';
-import { swarmTemplateArgs } from 'constants/swarm';
 import { ICharts } from 'types/ui.types';
 import { formatLocaleString } from 'utils/date';
 import { padStart } from 'utils/number';
@@ -81,7 +80,7 @@ const renderChartTooltipValue = <ChartType>({
   return Array.isArray(value) ? value[1] : value;
 };
 
-export const createOptions = <ChartType>({
+export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
   charts,
   title,
   lines,
@@ -126,7 +125,7 @@ export const createOptions = <ChartType>({
   },
   xAxis: {
     type: 'time',
-    startValue: swarmTemplateArgs.startTime,
+    startValue: charts.time[0],
     axisLabel: {
       formatter: formatTimeAxis,
     },

@@ -22,7 +22,6 @@ export const swarmStateMock = {
   showUserclassPicker: false,
   spawnRate: null,
   state: 'ready',
-  startTime: '10:10:10',
   percentilesToChart: percentilesToChart,
   statsHistoryEnabled: false,
   tasks: '{}',
@@ -48,5 +47,6 @@ export const swarmReportMock: IReport = {
     currentFailPerSec: [['', 0]],
     totalAvgResponseTime: [['', 0]],
     userCount: [['', 0]],
+    time: [],
   },
 };

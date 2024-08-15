@@ -18,7 +18,6 @@ import {
   mockTimestamps,
   mockTooltipParams,
 } from 'components/LineChart/tests/LineChart.mocks';
-import { swarmStateMock } from 'test/mocks/swarmState.mock';
 import { formatLocaleString } from 'utils/date';
 
 const removeWhitespace = (string: string) => string.replace(/\s+/g, '');
@@ -60,7 +59,7 @@ describe('createOptions', () => {
 
     expect(options.title.text).toBe('Test Chart');
     expect(options.xAxis.type).toBe('time');
-    expect(options.xAxis.startValue).toBe(swarmStateMock.startTime);
+    expect(options.xAxis.startValue).toBe(mockCharts.time[0]);
     expect(options.yAxis).toEqual(defaultYAxis);
     expect(options.series).toEqual(mockSeriesData);
     expect(options.color).toEqual(['#fff']);
@@ -188,7 +187,7 @@ describe('createOptions', () => {
     expect(options.title.text).toBe('Test Chart');
     expect(options.yAxis).toEqual(defaultYAxis);
     expect(options.xAxis.type).toBe('time');
-    expect(options.xAxis.startValue).toBe(swarmStateMock.startTime);
+    expect(options.xAxis.startValue).toBe(mockCharts.time[0]);
     expect(options.series).toEqual(mockScatterplotSeriesData);
     expect(options.color).toEqual(['#fff']);
   });

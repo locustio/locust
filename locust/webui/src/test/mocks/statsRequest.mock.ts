@@ -155,6 +155,7 @@ export const statsResponseTransformed = {
     currentFailPerSec: [[mockDate.toISOString(), 1932.5]],
     userCount: [[mockDate.toISOString(), 1]],
     totalAvgResponseTime: [[mockDate.toISOString(), 0.41]],
+    time: [],
   } as ICharts,
   ratios: {
     perClass: {
