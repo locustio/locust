@@ -17,6 +17,7 @@ export interface IUiState {
   extendedStats?: IExtendedStat[];
   totalRps: number;
   failRatio: number;
+  startTime: string;
   stats: ISwarmStat[];
   errors: ISwarmError[];
   workers?: ISwarmWorker[];
@@ -31,6 +32,7 @@ export type UiAction = PayloadAction<Partial<IUiState>>;
 const initialState = {
   totalRps: 0,
   failRatio: 0,
+  startTime: '',
   stats: [] as ISwarmStat[],
   errors: [] as ISwarmError[],
   exceptions: [] as ISwarmException[],
@@ -54,6 +56,7 @@ const addSpaceToChartsBetweenTests = (charts: ICharts) => {
     currentFailPerSec: { value: null },
     totalAvgResponseTime: { value: null },
     userCount: { value: null },
+    time: '',
   });
 };
 
@@ -73,7 +76,7 @@ const uiSlice = createSlice({
           ...addSpaceToChartsBetweenTests(state.charts as ICharts),
           markers: (state.charts as ICharts).markers
             ? [...((state.charts as ICharts).markers as string[]), payload]
-            : [swarmTemplateArgs.startTime, payload],
+            : [state.charts.time[0], payload],
         },
       };
     },

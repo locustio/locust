@@ -25,6 +25,10 @@ export interface ILineChartMarkers {
   markers?: string[];
 }
 
+export interface ILineChartTimeAxis {
+  time: string[];
+}
+
 export interface ILineChartTooltipFormatterParams {
   axisValue: string;
   color: string;

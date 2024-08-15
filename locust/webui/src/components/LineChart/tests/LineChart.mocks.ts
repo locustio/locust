@@ -1,6 +1,6 @@
 import { ICharts } from 'types/ui.types';
 
-export type MockChartType = Pick<ICharts, 'currentRps' | 'currentFailPerSec'>;
+export type MockChartType = Pick<ICharts, 'currentRps' | 'currentFailPerSec' | 'time'>;
 
 export const mockChartLines = [
   { name: 'RPS', key: 'currentRps' as keyof MockChartType },
@@ -21,6 +21,13 @@ export const mockCharts: MockChartType = {
     ['Tue, 06 Aug 2024 11:33:10 GMT', 0],
     ['Tue, 06 Aug 2024 11:33:12 GMT', 0],
     ['Tue, 06 Aug 2024 11:33:14 GMT', 0],
+  ],
+  time: [
+    'Tue, 06 Aug 2024 11:33:02 GMT',
+    'Tue, 06 Aug 2024 11:33:08 GMT',
+    'Tue, 06 Aug 2024 11:33:10 GMT',
+    'Tue, 06 Aug 2024 11:33:12 GMT',
+    'Tue, 06 Aug 2024 11:33:14 GMT',
   ],
 };
 

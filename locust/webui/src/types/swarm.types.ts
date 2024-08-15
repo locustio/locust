@@ -26,6 +26,7 @@ export interface IHistory {
     [key: `responseTimePercentile${number}`]: [string, number | null];
   };
   totalAvgResponseTime: [string, number];
+  time: string;
 }
 
 export interface IReport {

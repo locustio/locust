@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import uiSlice, { IUiState, UiAction, uiActions } from 'redux/slice/ui.slice';
-import { percentilesToChart, swarmStateMock } from 'test/mocks/swarmState.mock';
+import { percentilesToChart } from 'test/mocks/swarmState.mock';
 import { ICharts, ISwarmRatios } from 'types/ui.types';
 
 const responseTimePercentileKey1 =
@@ -12,6 +12,7 @@ const responseTimePercentileKey2 =
 const initialState = {
   totalRps: 0,
   failRatio: 0,
+  startTime: '',
   stats: [],
   errors: [],
   exceptions: [],
@@ -22,6 +23,7 @@ const initialState = {
     currentFailPerSec: [],
     totalAvgResponseTime: [],
     userCount: [],
+    time: [],
   },
   ratios: {} as ISwarmRatios,
   userCount: 0,
@@ -88,6 +90,7 @@ describe('uiSlice', () => {
         ...initialState,
         charts: {
           ...initialState.charts,
+          time: ['10:10:10'],
         },
       },
       action,
@@ -95,7 +98,7 @@ describe('uiSlice', () => {
 
     const charts = nextState.charts as ICharts;
 
-    expect(charts.markers).toEqual([swarmStateMock.startTime, '20:20:20']);
+    expect(charts.markers).toEqual(['10:10:10', '20:20:20']);
 
     // Add space between runs
     expect(charts.currentRps[0]).toEqual({ value: null });
