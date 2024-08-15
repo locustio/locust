@@ -54,6 +54,7 @@ const addSpaceToChartsBetweenTests = (charts: ICharts) => {
     currentFailPerSec: { value: null },
     totalAvgResponseTime: { value: null },
     userCount: { value: null },
+    time: '',
   });
 };
 
@@ -73,7 +74,7 @@ const uiSlice = createSlice({
           ...addSpaceToChartsBetweenTests(state.charts as ICharts),
           markers: (state.charts as ICharts).markers
             ? [...((state.charts as ICharts).markers as string[]), payload]
-            : [swarmTemplateArgs.startTime, payload],
+            : [state.charts.time[0], payload],
         },
       };
     },

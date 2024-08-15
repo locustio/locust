@@ -70,6 +70,7 @@ export default function useSwarmUi() {
       currentFailPerSec: [time, totalFailPerSecRounded],
       totalAvgResponseTime: [time, roundToDecimalPlaces(totalAvgResponseTime, 2)],
       userCount: [time, userCount],
+      time: time,
     };
 
     setUi({

@@ -60,6 +60,7 @@ export interface ICharts extends ILineChartMarkers {
   [key: `responseTimePercentile${number}`]: ([string, number | null] | NullChartValue)[];
   totalAvgResponseTime: ([string, number] | NullChartValue)[];
   userCount: ([string, number] | NullChartValue)[];
+  time: string[];
 }
 
 export interface IClassRatio {
