@@ -4,7 +4,7 @@
 Your first test
 ===============
 
-A Locust test is essentially just a Python program making requests to the system you want to test. This makes it very flexible and particularly good at implementing complex user flows. But it can do simple tests as well, so let's start with that:
+A Locust test is just a Python program making requests to the system you're testing. This makes it very flexible and particularly good at implementing complex user flows. But it can do simple tests as well, so let's start with one of those:
 
 .. code-block:: python
 
@@ -16,9 +16,15 @@ A Locust test is essentially just a Python program making requests to the system
             self.client.get("/hello")
             self.client.get("/world")
 
-This user will make an HTTP request to ``/hello``, then to ``/world``, and then repeat. For a full explanation and a more realistic example see :ref:`writing-a-locustfile`.
+This user will make an HTTP request to ``/hello``, then to ``/world``, and then repeat. By feault, Locust repeats tasks indefinitely.
 
-Change ``/hello`` and ``/world`` to some actual paths on the website/service you want to test, put the code in a file named ``locustfile.py`` in your current directory and then run ``locust``:
+.. TODO suprisingly hard to find the source of this repetition, needs link / definition
+
+For a full explanation and a more realistic example see :ref:`writing-a-locustfile`.
+
+Change ``/hello`` and ``/world`` in the previous code block to two endpoints on the service you want to test, put the code in a file named ``locustfile.py`` in your current directory and then run ``locust``:
+
+.. TODO would it make sense to include a few lines of python you can run to serve two endpoints to test this with? Or do we assume that everyone who gets here can do that if they need to. `python3 -m http.server 9000` and empty `hello` and `world` files does the trick, not sure if you can make that a oneliner`
 
 .. code-block:: console
     :substitutions:
@@ -27,22 +33,34 @@ Change ``/hello`` and ``/world`` to some actual paths on the website/service you
     [2021-07-24 09:58:46,215] .../INFO/locust.main: Starting web interface at http://0.0.0.0:8089
     [2021-07-24 09:58:46,285] .../INFO/locust.main: Starting Locust |version|
 
+Congratulations, you've run a Locust test!
+
+.. TODO you can't run a test first, and open the web interface to connect to that right? You either need to run it from the web interface, or specify the details and run in headless
+
+Open the :ref:`web interface <interface>` to view the test results, or restart locust with the ``--headless`` parameter to view them on the :ref:`command line <headless>`.
+
+.. _interface:
+
 Locust's web interface
 ======================
 
-Open http://localhost:8089
+Locust's web interface is available by default on http://localhost:8089 . Specify some basic test parameters and a host to test, and once it's started, get reports on the running tests.
 
 .. image:: images/webui-splash-screenshot.png
-
-| Provide the host name of your server and try it out!
+    :alt: Screenshot of the starting page of the Locust web interface
 
 The following screenshots show what it might look like when running this test using 50 concurrent users, with a ramp up rate of 1 user/s
 
 .. image:: images/webui-running-statistics.png
+    :alt: Screenshot of the Locust web interface statistics page
 
 | Under the *Charts* tab you'll find things like requests per second (RPS), response times and number of running users:
 
 .. image:: images/bottlenecked_server.png
+    :alt: Screenshot of the Locust web interface charts page
+
+
+.. TODO can we at least point folks to external references on interpreting these graphs?
 
 .. note::
 
@@ -53,6 +71,8 @@ The following screenshots show what it might look like when running this test us
     If your response times are *not* increasing then add even more users until you find the service's breaking point, or celebrate that your service is already performant enough for your expected load.
 
     If you're having trouble generating enough load to saturate your system, take a look at :ref:`increaserr`.
+
+.. _headless:
 
 Direct command line usage / headless
 ====================================
@@ -80,6 +100,8 @@ See :ref:`running-without-web-ui` for more details.
 
 More options
 ============
+
+.. TODO I suspect talking about distributed locust is overkill for the first test, and can safely bump it to writing a locustfile?
 
 To run Locust distributed across multiple Python processes or machines, you start a single Locust master process
 with the ``--master`` command line parameter, and then any number of Locust worker processes using the ``--worker``
