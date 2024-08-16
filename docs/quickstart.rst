@@ -16,7 +16,7 @@ A Locust test is just a Python program making requests to the system you're test
             self.client.get("/hello")
             self.client.get("/world")
 
-This user will make an HTTP request to ``/hello``, then to ``/world``, and then repeat. By feault, Locust repeats tasks indefinitely.
+This user will make an HTTP request to ``/hello``, then to ``/world``, and then repeat. By default, Locust repeats tasks indefinitely.
 
 .. TODO suprisingly hard to find the source of this repetition, needs link / definition
 
