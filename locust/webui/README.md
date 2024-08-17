@@ -6,7 +6,7 @@ The Locust UI is used for viewing stats, reports, and information on your curren
 
 **Using the Locust UI as a library should be considered an experimental feature**
 
-The Locust UI may be extended to fit your needs. If you only need limited extensibility, you may do so in your Locustfile, see the [extend_web_ui example](https://github.com/locustio/locust/blob/master/examples/extend_web_ui.py). 
+The Locust UI may be extended to fit your needs. If you only need limited extensibility, you may do so in your Locustfile, see the [extend_web_ui example](https://github.com/locustio/locust/blob/master/examples/extend_web_ui.py).
 
 However, you may want to further extend certain functionalities. To do so, you may replace the default Locust UI with your own React application. Start by installing the locust-ui in your React application:
 ```sh
