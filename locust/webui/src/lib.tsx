@@ -22,7 +22,8 @@ export { default as useFetchExceptions } from 'hooks/useFetchExceptions';
 export { default as useFetchTasks } from 'hooks/useFetchTasks';
 export { default as useFetchStats } from 'hooks/useFetchStats';
 export { default as Navbar } from 'components/Layout/Navbar/Navbar';
-export { default as useTheme } from 'hooks/useTheme';
+export { default as useCreateTheme } from 'hooks/useCreateTheme';
+export { tabConfig } from 'components/Tabs/Tabs.constants';
 export { store as locustStore } from 'redux/store';
 
 export type { IRootState } from 'redux/store';

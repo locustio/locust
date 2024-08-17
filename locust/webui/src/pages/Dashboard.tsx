@@ -7,10 +7,10 @@ import useLogViewer from 'components/LogViewer/useLogViewer';
 import SwarmForm from 'components/SwarmForm/SwarmForm';
 import Tabs from 'components/Tabs/Tabs';
 import { SWARM_STATE } from 'constants/swarm';
+import useCreateTheme from 'hooks/useCreateTheme';
 import useFetchExceptions from 'hooks/useFetchExceptions';
 import useFetchStats from 'hooks/useFetchStats';
 import useFetchTasks from 'hooks/useFetchTasks';
-import useTheme from 'hooks/useTheme';
 import { IRootState } from 'redux/store';
 import { ITab } from 'types/tab.types';
 import { SwarmState } from 'types/ui.types';
@@ -28,7 +28,7 @@ function Dashboard({ swarmState, tabs, extendedTabs }: IDashboard) {
   useFetchTasks();
   useLogViewer();
 
-  const { theme } = useTheme();
+  const theme = useCreateTheme();
 
   return (
     <ThemeProvider theme={theme}>

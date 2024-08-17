@@ -6,7 +6,7 @@ The Locust UI is used for viewing stats, reports, and information on your curren
 
 **Using the Locust UI as a library should be considered an experimental feature**
 
-The Locust UI may be extended to fit your needs. If you only need limited extensibility, you may do so in your Locustfile, see the [extend_web_ui example](https://github.com/locustio/locust/blob/master/examples/extend_web_ui.py).
+The Locust UI may be extended to fit your needs. If you only need limited extensibility, you may do so in your Locustfile, see the [extend_web_ui example](https://github.com/locustio/locust/blob/master/examples/extend_web_ui.py). 
 
 However, you may want to further extend certain functionalities. To do so, you may replace the default Locust UI with your own React application. Start by installing the locust-ui in your React application:
 ```sh
@@ -66,7 +66,7 @@ For Locust to be able to pass data to your React frontend, place the following s
 
 To load the favicon, place the link in your head:
 ```html
-<link rel="icon" href="./assets/favicon.ico" />
+<link rel="icon" href="./assets/favicon.png" />
 ```
 
 Lastly, you must configure Locust to point to your own React build output. To achieve this, you can use the flag `--build-path` and provide the **absolute** path to your build directory.
@@ -108,14 +108,17 @@ function App() {
 
 The `tabs` prop allows for complete control of which tabs are rendered. You can then customize which base tabs are shown or where your new tab should be placed:
 ```js
-import LocustUi, { baseTabs } from "locust-ui";
+import LocustUi, { tabConfig } from "locust-ui";
 
-const tabs = [...baseTabs];
-tabs.splice(2, 0, {
-  title: "Custom Tab",
-  key: "custom-tab",
-  component: MyCustomTab,
-});
+const tabs = [
+    tabConfig.stats,
+    tabConfig.charts,
+    {
+        title: "Custom Tab",
+        key: "custom-tab",
+        component: MyCustomTab,
+    },
+]
 
 function App() {
     return (
@@ -164,6 +167,3 @@ function App() {
     tabs={/* Optional array of tabs that will take precedence over extendedTabs */}
 />
 ```
-
-
-
