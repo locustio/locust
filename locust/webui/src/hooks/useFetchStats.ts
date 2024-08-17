@@ -10,7 +10,7 @@ import { roundToDecimalPlaces } from 'utils/number';
 
 const STATS_REFETCH_INTERVAL = 2000;
 
-export default function useSwarmUi() {
+export default function useFetchStats() {
   const setSwarm = useAction(swarmActions.setSwarm);
   const setUi = useAction(uiActions.setUi);
   const updateCharts = useAction(uiActions.updateCharts);
@@ -25,7 +25,7 @@ export default function useSwarmUi() {
   const shouldRunRefetchInterval =
     swarm.state === SWARM_STATE.SPAWNING || swarm.state == SWARM_STATE.RUNNING;
 
-  const updateStatsUi = () => {
+  const updateStats = () => {
     if (!statsData) {
       return;
     }
@@ -93,14 +93,14 @@ export default function useSwarmUi() {
     if (statsData) {
       if (!hasSetInitStats.current) {
         // handle setting stats on first load
-        updateStatsUi();
+        updateStats();
       }
 
       hasSetInitStats.current = true;
     }
   }, [statsData]);
 
-  useInterval(updateStatsUi, STATS_REFETCH_INTERVAL, {
+  useInterval(updateStats, STATS_REFETCH_INTERVAL, {
     shouldRunInterval: !!statsData && shouldRunRefetchInterval,
   });
 
