@@ -4,7 +4,7 @@ from shutil import which
 from sys import exit
 
 
-def build() -> None:
+def main() -> None:
     if os.environ.get("SKIP_PRE_BUILD", "") == "true":
         print("Skipping front end build...")
         return
@@ -19,7 +19,9 @@ def build() -> None:
         subprocess.check_output(" ".join(["yarn", "webui:build"]), shell=True)
     except subprocess.CalledProcessError as e:
         raise AssertionError(f"Building front end with yarn failed with:\n\n{e.stdout}") from e
+    except Exception as e:
+        print(f"Error encountered during pre-build: {e}")
 
 
 if __name__ == "__main__":
-    build()
+    main()

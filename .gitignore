@@ -17,7 +17,7 @@ dist/**
 *.iml
 *.ipr
 .vagrant
-build/
+.build/
 .coverage
 .tox/
 docs/env-options.rst

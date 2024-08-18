@@ -23,6 +23,7 @@ Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then run
     $ python -m pip install poetry 
 
     # install the dynamic versioning plugin for poetry
+    $ poetry self add "poethepoet[poetry_plugin]"
     $ poetry self add "poetry-dynamic-versioning[plugin]"
 
     # perform an editable install of the "locust" package
