@@ -186,7 +186,7 @@ jobs:
           tags: locustio/locust:${{ env.TAG }}${{ ( env.BRANCH == 'master' && ',locustio/locust:latest') || '' }}
 
   publish:
-    name: PyPI - Publish if this is a tagged commit
+    name: Publish release on tag
     needs: [verify_docker_build, tests]
     if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
     runs-on: ubuntu-latest
@@ -243,7 +243,7 @@ jobs:
     #       access_token_secret: ${{ secrets.TWITTER_API_ACCESS_TOKEN_SECRET }}
 
   publish_prerelease:
-    name: PyPI - Publish prerelease on merge commit on master
+    name: Publish prerelease on merge commit to master
     needs: tests
     if: github.ref == 'refs/heads/master' && github.repository_owner == 'locustio'
     runs-on: ubuntu-latest
@@ -251,17 +251,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # asking github if something was not a merge commit is surprisingly difficult
+      - run: git rev-parse HEAD^2 2>/dev/null >/dev/null || echo NOT_MERGE_COMMIT=1 | tee -a $GITHUB_ENV
       - name: Set up Python
+        if: ${{ env.NOT_MERGE_COMMIT == '' }}
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - name: Set Node.js 20.x
+        if: ${{ env.NOT_MERGE_COMMIT == '' }}
         uses: actions/setup-node@v4
         with:
           node-version: 20.x
       - name: Install Yarn
+        if: ${{ env.NOT_MERGE_COMMIT == '' }}
         run: npm install -g yarn
-      - run: git rev-parse HEAD^2 2>/dev/null >/dev/null || echo NOT_MERGE_COMMIT=1 | tee -a $GITHUB_ENV
       - name: Install dependencies
         if: ${{ env.NOT_MERGE_COMMIT == '' }}
         run: |
@@ -270,6 +274,7 @@ jobs:
           python -m poetry self add "poetry-dynamic-versioning[plugin]"
       # Pre-build the UI bundle and don't repeat it on the build step to allow sdist to find the files
       - name: Prebuild UI
+        if: ${{ env.NOT_MERGE_COMMIT == '' }}
         run: |
           yarn webui:install
           yarn webui:build
