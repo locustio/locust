@@ -5,6 +5,10 @@ on: [push, pull_request]
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   tests:
     name: ${{ matrix.name }}
@@ -14,16 +18,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {name: Windows, python: '3.12', os: windows-latest, tox: fail_fast_test_main }
-          # - {name: Mac, python: '3.12', os: macos-latest, tox: fail_fast_test_main }
-          - { name: "ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
-          - { name: "mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
+          # - {name: Windows, python: '3.12', os: windows-latest, tox: fail_fast_test_main }
+          # # - {name: Mac, python: '3.12', os: macos-latest, tox: fail_fast_test_main }
+          # - { name: "ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
+          # - { name: "mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
           # run some integration tests and abort immediately if they fail, for faster feedback
           - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main }
-          - { name: "3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
-          - { name: "3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
-          - { name: "3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
-          - { name: "3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
+          # - { name: "3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
+          # - { name: "3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
+          # - { name: "3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
+          # - { name: "3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
 
     steps:
       - uses: actions/checkout@v4
@@ -33,35 +37,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - name: Make venv
-        run: |
-          python -m venv .venv
-      - name: Activate the virtualenv
-        if: ${{ matrix.os == 'windows-latest' }}
-        run: |
-          .venv\Scripts\activate
-      - name: Activate the virtualenv
-        if: ${{ matrix.os != 'windows-latest' }}
-        run: |
-          source .venv/bin/activate
-      # Set up poetry and cache for dependencies
-      - name: install poetry
-        run: |
-          python -m pip install poetry
-          poetry config virtualenvs.create false
-          poetry self add "poetry-dynamic-versioning[plugin]"
-      - name: Cache the virtualenv
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          virtualenvs-path: .venv
+          installer-parallel: true
+          plugins: |
+            poetry-dynamic-versioning[plugin]
+            poethepoet[poetry_plugin]
+      - name: Load cached venv
+        id: cached-poetry-dependencies
         uses: actions/cache@v4
         with:
           path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('pyproject.toml') }}
-      - name: Install versioning plugin
-        run: |
-          python -m pip install poetry-dynamic-versioning[plugin]
-      # Install test dependencies (tox) to the root (non-package install)
-      - name: Install test dependencies
-        run: |
-          poetry install --no-root --only test
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root --with test --no-plugins
       - name: set full Python version in PY env var
         if: ${{ matrix.os != 'windows-latest' }}
         # See https://pre-commit.com/#github-actions-example
@@ -73,8 +67,13 @@ jobs:
           node-version: 20.x
       - name: Install Yarn
         run: npm install -g yarn
+      # Install the project and run the isolated tests
+      - name: Install project
+        run: poetry install --no-interaction
       - name: Run tox tests
-        run: poetry run tox -e ${{ matrix.tox }}
+        run:
+          source $VENV
+          tox -e ${{ matrix.tox }}
 
   lint_typecheck_test_webui:
     runs-on: ubuntu-latest

@@ -59,7 +59,7 @@ pre_build = "pre-build"
 pre_install = "pre-build"
 
 [tool.poe.tasks.pre-build]
-script = "locust.build.pre_build:main"
+script = "pre_build:main"
 help = "Run the front end build required for package creation"
 
 [tool.poetry.urls]
