@@ -1,10 +1,14 @@
-export default function Logo({
-  isDarkMode,
-  lightModeBackgroundColor = '#15803d',
-}: {
-  isDarkMode: boolean;
-  lightModeBackgroundColor?: string;
-}) {
+import { useTheme } from '@mui/material/styles';
+
+import { THEME_MODE } from 'constants/theme';
+
+export default function Logo({ lightModeBackgroundColor }: { lightModeBackgroundColor?: string }) {
+  const theme = useTheme();
+  const strokeColor =
+    theme.palette.mode === THEME_MODE.DARK
+      ? theme.palette.background.default
+      : lightModeBackgroundColor || theme.palette.primary.main;
+
   return (
     <svg
       aria-label='Locust'
@@ -37,7 +41,7 @@ export default function Logo({
       <path
         d='M11.279 5.80442L10.9321 5.97319L10.8347 6.34649L4.72023 29.7764L4.44626 30.8262H5.53125H6.94682H10.2332H10.8805L11.0442 30.1999L15.3834 13.5938L32.3703 30.5807L32.6158 30.8262H32.963H39.4073H41.4309L40 29.3953L15.1525 4.54779L14.7302 4.12549L14.1931 4.38675L11.279 5.80442Z'
         fill='#B8EE4B'
-        stroke={isDarkMode ? '#0B2406' : lightModeBackgroundColor}
+        stroke={strokeColor}
         strokeWidth='1.67636'
       />
       <path

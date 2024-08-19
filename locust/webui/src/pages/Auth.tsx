@@ -4,11 +4,11 @@ import { ThemeProvider } from '@mui/material/styles';
 
 import Logo from 'assets/Logo';
 import DarkLightToggle from 'components/Layout/Navbar/DarkLightToggle';
-import useTheme from 'hooks/useTheme';
+import useCreateTheme from 'hooks/useCreateTheme';
 import { IAuthArgs } from 'types/auth.types';
 
 export default function Auth({ authProviders, error, usernamePasswordCallback }: IAuthArgs) {
-  const { theme, isDarkMode } = useTheme();
+  const theme = useCreateTheme();
 
   return (
     <ThemeProvider theme={theme}>
@@ -34,7 +34,7 @@ export default function Auth({ authProviders, error, usernamePasswordCallback }:
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'center', columnGap: 2 }}>
-          <Logo isDarkMode={isDarkMode} lightModeBackgroundColor='#fff' />
+          <Logo lightModeBackgroundColor='#fff' />
         </Box>
         {usernamePasswordCallback && (
           <form action={usernamePasswordCallback}>

@@ -1,6 +1,5 @@
 {
   "name": "locust-ui",
-  "version": "1.0.0",
   "license": "MIT",
   "type": "module",
   "main": "./lib/webui.js",
@@ -14,7 +13,6 @@
     "type": "git",
     "url": "https://github.com/locustio/locust/tree/master/locust/webui"
   },
-  "prepack": "json -f package.json -I -e \"delete this.devDependencies; delete this.dependencies; delete this.scripts\"",
   "scripts": {
     "dev": "vite",
     "watch": "npm-run-all --parallel watch:ui watch:report",
@@ -23,7 +21,7 @@
     "build:report": "vite build --config vite.report.config.ts",
     "watch:ui": "vite build --watch",
     "watch:report": "vite build --config vite.lib.config.ts --watch",
-    "build": "yarn clean && npm-run-all --parallel build:ui build:report build:lib",
+    "build": "yarn clean && npm-run-all --parallel build:ui build:report",
     "clean": "rimraf dist",
     "lint": "eslint './src/**/*.{ts,tsx}'",
     "format": "prettier --write '**/**/*.{ts,tsx}'",

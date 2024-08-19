@@ -146,7 +146,6 @@ export const statsResponseTransformed = {
       occurrences: 12652,
     },
   ],
-  exceptions: exceptionsResponseMock.exceptions,
   extendedStats: undefined,
   charts: {
     'responseTimePercentile0.5': [[mockDate.toISOString(), 2]],
@@ -157,20 +156,21 @@ export const statsResponseTransformed = {
     totalAvgResponseTime: [[mockDate.toISOString(), 0.41]],
     time: [],
   } as ICharts,
-  ratios: {
-    perClass: {
-      Example: {
-        ratio: 1,
-        tasks: { ExampleTest: { ratio: 1, tasks: { example: { ratio: 1 } } } },
-      },
-    },
-    total: {
-      Example: {
-        ratio: 1,
-        tasks: { ExampleTest: { ratio: 1, tasks: { example: { ratio: 1 } } } },
-      },
-    },
-  },
   userCount: 1,
   workers: undefined,
+};
+
+export const tasksResponseTransformed = {
+  perClass: {
+    Example: {
+      ratio: 1,
+      tasks: { ExampleTest: { ratio: 1, tasks: { example: { ratio: 1 } } } },
+    },
+  },
+  total: {
+    Example: {
+      ratio: 1,
+      tasks: { ExampleTest: { ratio: 1, tasks: { example: { ratio: 1 } } } },
+    },
+  },
 };
