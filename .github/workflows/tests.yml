@@ -286,7 +286,7 @@ jobs:
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip_existing: true
       - name: Set locust version tag
-        run: echo "TAG=$(poetry version -s | cut -d '.' -f1-3)" |  | tee -a $GITHUB_ENV
+        run: echo "TAG=$(poetry version -s | cut -d '.' -f1-3)" | tee -a $GITHUB_ENV
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
         with:
