@@ -86,19 +86,24 @@ jobs:
           node-version: 20.x
       - uses: borales/actions-yarn@v5
         with:
-          cmd: webui:install
+          cmd: install
+          dir: locust/webui
       - uses: borales/actions-yarn@v5
         with:
-          cmd: webui:build
+          cmd: build
+          dir: locust/webui
       - uses: borales/actions-yarn@v5
         with:
-          cmd: webui:test
+          cmd: test
+          dir: locust/webui
       - uses: borales/actions-yarn@v5
         with:
-          cmd: webui:lint
+          cmd: lint
+          dir: locust/webui
       - uses: borales/actions-yarn@v5
         with:
-          cmd: webui:type-check
+          cmd: type-check
+          dir: locust/webui
 
   verify_docker_build:
     name: Always - Docker verify, push to tag 'master' if on master
@@ -224,6 +229,7 @@ jobs:
         name: Publish package on NPM
         with:
           cmd: publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
+          dir: locust/webui
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     # The following is disabled because it has stopped working.
@@ -285,5 +291,6 @@ jobs:
         name: Publish package on NPM
         with:
           cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ env.TAG }}-next-${{ github.run_id }}
+          dir: locust/webui
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

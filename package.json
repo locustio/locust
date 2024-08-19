@@ -1,6 +1,5 @@
 {
   "name": "locust",
-  "private": true,
   "license": "MIT",
   "scripts": {
     "webui:install": "cd locust/webui && yarn install",
