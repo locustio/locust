@@ -7,6 +7,7 @@ interface ISelect extends SelectProps {
   multiple?: boolean;
   defaultValue?: string | string[];
   sx?: SxProps;
+  onChange?: SelectProps['onChange'];
 }
 
 export default function Select({

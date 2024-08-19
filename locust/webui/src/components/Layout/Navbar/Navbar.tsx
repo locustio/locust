@@ -4,11 +4,8 @@ import Logo from 'assets/Logo';
 import DarkLightToggle from 'components/Layout/Navbar/DarkLightToggle';
 import SwarmMonitor from 'components/Layout/Navbar/SwarmMonitor';
 import StateButtons from 'components/StateButtons/StateButtons';
-import { useSelector } from 'redux/hooks';
 
 export default function Navbar() {
-  const isDarkMode = useSelector(({ theme }) => theme.isDarkMode);
-
   return (
     <AppBar position='static'>
       <Container maxWidth='xl'>
@@ -19,7 +16,7 @@ export default function Navbar() {
             sx={{ display: 'flex', alignItems: 'center' }}
             underline='none'
           >
-            <Logo isDarkMode={isDarkMode} />
+            <Logo />
           </Link>
           <Box sx={{ display: 'flex', columnGap: 6 }}>
             <SwarmMonitor />

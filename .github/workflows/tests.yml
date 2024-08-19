@@ -220,6 +220,12 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip_existing: true
+      - uses: borales/actions-yarn@v5
+        name: Publish package on NPM
+        with:
+          cmd: publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     # The following is disabled because it has stopped working.
     #   - name: Tweet on release
     #     uses: infraway/tweet-action@v1.0.1
@@ -273,3 +279,11 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip_existing: true
+      - name: Set locust version tag
+        run: echo "TAG=$(poetry version -s)" | tee -a $GITHUB_ENV
+      - uses: borales/actions-yarn@v5
+        name: Publish package on NPM
+        with:
+          cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ env.TAG }}-next-${{ github.run_id }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
