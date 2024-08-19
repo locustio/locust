@@ -124,7 +124,7 @@ jobs:
     #       python -m poetry config virtualenvs.create false
     #       python -m poetry self add "poetry-dynamic-versioning[plugin]"
     #   - run: echo "TAG=$(poetry version -s)" | tee -a $GITHUB_ENV
-      - uses: docker/login-action@v1
+      - uses: docker/login-action@v3
         if: github.repository_owner == 'locustio'
         with:
           username: locustbuild
@@ -165,7 +165,7 @@ jobs:
           python -m poetry self add "poetry-dynamic-versioning[plugin]"
       - run: echo "TAG=$(poetry version -s)" | tee -a $GITHUB_ENV
       - run: echo "BRANCH=$(git branch -a --contains ${{ env.TAG }} | grep -v HEAD | cut -d '/' -f3)" | tee -a $GITHUB_ENV
-      - uses: docker/login-action@v1
+      - uses: docker/login-action@v3
         with:
           username: locustbuild
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
@@ -224,7 +224,7 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          skip_existing: true
+          skip-existing: true
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
         with:
@@ -289,7 +289,7 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          skip_existing: true
+          skip-existing: true
       - name: Set locust version tag
         run: echo "TAG=$(poetry version -s | cut -d '.' -f1-3)" | tee -a $GITHUB_ENV
       - uses: borales/actions-yarn@v5
