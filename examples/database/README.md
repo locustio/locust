@@ -10,7 +10,14 @@ Read the instruction below for your specific database
 
     - `pip3 install locust` - https://docs.locust.io/en/stable/installation.html
 
-- Update `line 50` in the UserTasks class of the `postgres_test.py` file, you can change `postgresql://postgres:postgres@localhost:5432/loadtesting_db` to the connection string for your database
+- Set your environment variables for: 
+    - PGHOST
+    - PGPORT
+    - PGDATABASE
+    - PGUSER
+    - PGPASSWORD
+
+    so they can be picked up from `postgres_test.py`
 
 - Also, update the methods of the UserTasks class to run queries that will hit your database.
 
@@ -19,6 +26,6 @@ Read the instruction below for your specific database
 
 #### Run test from terminal:
 
-- Insert this into your terminal `locust -f postgres_test.py --users=500 --spawn-rate=10 --run-time='15s' --autostart --autoquit 3`
+- Insert this into your terminal `locust -f name_of_test_file.py --users=500 --spawn-rate=10 --run-time='15s' --autostart --autoquit 3`
 - For a full list of all the configuration options that can be used run `locust --help` and visit https://docs.locust.io/en/stable/configuration.html#configuration
 
