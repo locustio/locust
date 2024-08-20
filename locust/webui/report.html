@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+  {% raw %}
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="./assets/favicon.ico" />
+    <link rel="icon" href="../../assets/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
 
     <title>Locust</title>
   </head>
+  {% endraw %}
   <body>
     <div id="root"></div>
 
@@ -16,8 +18,6 @@
       window.theme = "{{theme}}"
     </script>
     
-    <script>
-      {{ static_js|safe }}
-    </script>
+    <script type="module" src="./src/HtmlReport.tsx"></script>
   </body>
 </html>

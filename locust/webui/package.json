@@ -1,39 +1,68 @@
 {
-  "name": "webui",
-  "version": "1.0.0",
-  "private": true,
+  "name": "locust-ui",
   "license": "MIT",
+  "type": "module",
+  "main": "./lib/webui.js",
+  "types": "./lib/types/lib.d.ts",
+  "files": [
+    "lib",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/locustio/locust/tree/master/locust/webui"
+  },
   "scripts": {
     "dev": "vite",
-    "dev:watch": "vite build --watch",
-    "build": "vite build",
+    "watch": "npm-run-all --parallel watch:ui watch:report",
+    "build:ui": "vite build",
+    "build:lib": "vite build --config vite.lib.config.ts",
+    "build:report": "vite build --config vite.report.config.ts",
+    "watch:ui": "vite build --watch",
+    "watch:report": "vite build --config vite.lib.config.ts --watch",
+    "build": "yarn clean && npm-run-all --parallel build:ui build:report",
+    "clean": "rimraf dist",
     "lint": "eslint './src/**/*.{ts,tsx}'",
     "format": "prettier --write '**/**/*.{ts,tsx}'",
     "type-check": "tsc",
     "test": "vitest --silent=false"
+  },
+  "peerDependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.14.9",
+    "@mui/material": "^5.14.10",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-redux": "^8.0.5"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.14.9",
     "@mui/material": "^5.14.10",
-    "@reduxjs/toolkit": "^1.9.3",
-    "@vitejs/plugin-react-swc": "^3.3.2",
-    "echarts": "^5.4.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-error-boundary": "^4.0.12",
-    "react-markdown": "^9.0.0",
-    "react-redux": "^8.0.5",
-    "vite": "^4.5.1",
-    "vite-plugin-checker": "^0.6.2",
-    "vite-tsconfig-paths": "^4.2.1"
-  },
-  "devDependencies": {
-    "@testing-library/react": "^14.1.0",
+    "@reduxjs/toolkit": "^2.2.6",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "@types/react-redux": "^7.1.25",
+    "@vitejs/plugin-react-swc": "^3.7.0",
+    "echarts": "^5.4.1",
+    "npm-run-all": "^4.1.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-error-boundary": "^4.0.12",
+    "react-markdown": "^9.0.0",
+    "react-redux": "^9.1.2",
+    "rimraf": "^6.0.1",
+    "vite": "^5.3.5",
+    "vite-plugin-checker": "^0.7.2",
+    "vite-plugin-dts": "^3.9.1",
+    "vite-plugin-singlefile": "^2.0.2",
+    "vite-tsconfig-paths": "^4.3.2"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^14.1.0",
     "@typescript-eslint/eslint-plugin": "^6.7.2",
     "@typescript-eslint/parser": "^6.7.2",
     "eslint": "^8.50.0",
@@ -50,6 +79,6 @@
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

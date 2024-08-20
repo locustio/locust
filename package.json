@@ -1,13 +1,12 @@
 {
   "name": "locust",
-  "version": "2.16.1",
-  "private": true,
   "license": "MIT",
   "scripts": {
     "webui:install": "cd locust/webui && yarn install",
     "webui:dev:watch": "cd locust/webui && yarn dev:watch",
     "webui:dev": "cd locust/webui && yarn dev",
     "webui:build": "cd locust/webui && yarn build",
+    "webui:build:lib": "cd locust/webui && yarn build:lib",
     "webui:test": "cd locust/webui && yarn test",
     "webui:lint": "cd locust/webui && yarn lint",
     "webui:format": "cd locust/webui && yarn format",

@@ -12,6 +12,7 @@ const responseTimePercentileKey2 =
 const initialState = {
   totalRps: 0,
   failRatio: 0,
+  startTime: '',
   stats: [],
   errors: [],
   exceptions: [],
@@ -49,7 +50,6 @@ describe('uiSlice', () => {
       [responseTimePercentileKey1]: 0.4,
       [responseTimePercentileKey2]: 0.2,
       userCount: 2,
-      time: '10:10:10',
     });
 
     const nextState = uiSlice(initialState, action);
@@ -60,7 +60,6 @@ describe('uiSlice', () => {
     expect(charts[responseTimePercentileKey1][0]).toBe(0.4);
     expect(charts[responseTimePercentileKey2][0]).toBe(0.2);
     expect(charts.userCount[0]).toBe(2);
-    expect(charts.time[0]).toBe('10:10:10');
   });
 
   test('should continue to extend the corresponding array of charts in UI state', () => {
@@ -70,7 +69,6 @@ describe('uiSlice', () => {
       [responseTimePercentileKey1]: 0.4,
       [responseTimePercentileKey2]: 0.2,
       userCount: 2,
-      time: '10:10:10',
     });
 
     const updatedState = uiSlice(initialState, action);
@@ -83,7 +81,6 @@ describe('uiSlice', () => {
     expect(charts[responseTimePercentileKey1]).toEqual([0.4, 0.4]);
     expect(charts[responseTimePercentileKey2]).toEqual([0.2, 0.2]);
     expect(charts.userCount).toEqual([2, 2]);
-    expect(charts.time).toEqual(['10:10:10', '10:10:10']);
   });
 
   test('should update chart markers in UI state', () => {

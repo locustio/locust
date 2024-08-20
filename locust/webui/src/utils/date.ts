@@ -1,5 +1,4 @@
-export const formatLocaleString = (utcTimestamp: string) =>
-  utcTimestamp ? new Date(utcTimestamp).toLocaleString() : '';
+const isDate = (timestamp: string) => !isNaN(new Date(timestamp).getTime());
 
-export const formatLocaleTime = (utcTimestamp: string) =>
-  utcTimestamp ? new Date(utcTimestamp).toLocaleTimeString() : '';
+export const formatLocaleString = (utcTimestamp: string) =>
+  utcTimestamp && isDate(utcTimestamp) ? new Date(utcTimestamp).toLocaleString() : '';

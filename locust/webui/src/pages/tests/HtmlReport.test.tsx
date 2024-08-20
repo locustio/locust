@@ -1,13 +1,13 @@
-import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import HtmlReport from 'pages/HtmlReport';
 import { swarmReportMock } from 'test/mocks/swarmState.mock';
+import { renderWithProvider } from 'test/testUtils';
 import { formatLocaleString } from 'utils/date';
 
 describe('HtmlReport', () => {
   test('renders a report', () => {
-    const { getByRole, getByText } = render(<HtmlReport {...swarmReportMock} />);
+    const { getByRole, getByText } = renderWithProvider(<HtmlReport {...swarmReportMock} />);
 
     expect(getByRole('heading', { name: 'Locust Test Report' })).toBeTruthy();
     expect(getByRole('heading', { name: 'Request Statistics' })).toBeTruthy();
@@ -20,7 +20,7 @@ describe('HtmlReport', () => {
   });
 
   test('formats the start and end time as expected', () => {
-    const { getByText } = render(<HtmlReport {...swarmReportMock} />);
+    const { getByText } = renderWithProvider(<HtmlReport {...swarmReportMock} />);
 
     expect(
       getByText(
@@ -32,7 +32,9 @@ describe('HtmlReport', () => {
   });
 
   test('does not render the download link when showDownloadLink is false', () => {
-    const { queryByRole } = render(<HtmlReport {...swarmReportMock} showDownloadLink={false} />);
+    const { queryByRole } = renderWithProvider(
+      <HtmlReport {...swarmReportMock} showDownloadLink={false} />,
+    );
 
     expect(queryByRole('link', { name: 'Download the Report' })).toBeNull();
   });
@@ -45,7 +47,7 @@ describe('HtmlReport', () => {
       traceback: '',
     };
 
-    const { getByRole, getByText } = render(
+    const { getByRole, getByText } = renderWithProvider(
       <HtmlReport {...swarmReportMock} exceptionsStatistics={[exception]} />,
     );
 

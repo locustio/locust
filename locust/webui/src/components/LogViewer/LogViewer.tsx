@@ -1,69 +1,9 @@
-import { useEffect, useState } from 'react';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Box,
-  Paper,
-  Typography,
-} from '@mui/material';
-import { red, amber, blue } from '@mui/material/colors';
+import { Box, Paper, Typography } from '@mui/material';
 
-import { isImportantLog } from 'components/LogViewer/logUtils';
+import LogDisplay from 'components/LogViewer/LogDisplay';
+import WorkerLogs from 'components/LogViewer/WorkerLogs';
 import { useSelector } from 'redux/hooks';
-import { objectLength } from 'utils/object';
-
-const getLogColor = (log: string) => {
-  if (log.includes('CRITICAL')) {
-    return red[900];
-  }
-  if (log.includes('ERROR')) {
-    return red[700];
-  }
-  if (log.includes('WARNING')) {
-    return amber[900];
-  }
-  if (log.includes('DEBUG')) {
-    return blue[700];
-  }
-  return 'text.primary';
-};
-
-function LogDisplay({ log }: { log: string }) {
-  return (
-    <Typography color={getLogColor(log)} fontFamily={'monospace'} variant='body2'>
-      {log}
-    </Typography>
-  );
-}
-
-function WorkerLogs({ workerId, logs }: { workerId: string; logs: string[] }) {
-  const [hasImportantLog, setHasImportantLog] = useState(false);
-
-  useEffect(() => {
-    if (logs.some(isImportantLog)) {
-      setHasImportantLog(true);
-    }
-  }, [logs]);
-
-  return (
-    <Accordion>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} onClick={() => setHasImportantLog(false)}>
-        {hasImportantLog && <PriorityHighIcon color='secondary' />}
-        {workerId}
-      </AccordionSummary>
-      <AccordionDetails>
-        <Paper elevation={3} sx={{ p: 2 }}>
-          {logs.map((log, index) => (
-            <LogDisplay key={`worker-${workerId}-log-${index}`} log={log} />
-          ))}
-        </Paper>
-      </AccordionDetails>
-    </Accordion>
-  );
-}
+import { isEmpty } from 'utils/object';
 
 export default function LogViewer() {
   const { master: masterLogs, workers: workerLogs } = useSelector(({ logViewer }) => logViewer);
@@ -80,7 +20,7 @@ export default function LogViewer() {
           ))}
         </Paper>
       </Box>
-      {!!objectLength(workerLogs) && (
+      {!isEmpty(workerLogs) && (
         <Box>
           <Typography sx={{ mb: 2 }} variant='h5'>
             Worker Logs

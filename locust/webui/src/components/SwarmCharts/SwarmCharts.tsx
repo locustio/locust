@@ -1,6 +1,7 @@
 import { connect } from 'react-redux';
 
-import LineChart, { ILineChartProps } from 'components/LineChart/LineChart';
+import LineChart from 'components/LineChart/LineChart';
+import { ILineChart } from 'components/LineChart/LineChart.types';
 import { swarmTemplateArgs } from 'constants/swarm';
 import { IRootState } from 'redux/store';
 import { ICharts } from 'types/ui.types';
@@ -12,9 +13,17 @@ const percentilesToChartLines = swarmTemplateArgs.percentilesToChart
     }))
   : [];
 
-const percentileColors = ['#9966CC', '#8A2BE2', '#8E4585', '#E0B0FF', '#C8A2C8', '#E6E6FA'];
+const percentileColors = [
+  '#ff9f00',
+  '#9966CC',
+  '#8A2BE2',
+  '#8E4585',
+  '#E0B0FF',
+  '#C8A2C8',
+  '#E6E6FA',
+];
 
-const availableSwarmCharts: ILineChartProps[] = [
+const availableSwarmCharts: Omit<ILineChart<ICharts>, 'charts'>[] = [
   {
     title: 'Total Requests per Second',
     lines: [
@@ -39,7 +48,7 @@ export function SwarmCharts({ charts }: { charts: ICharts }) {
   return (
     <div>
       {availableSwarmCharts.map((lineChartProps, index) => (
-        <LineChart key={`swarm-chart-${index}`} {...lineChartProps} charts={charts} />
+        <LineChart<ICharts> key={`swarm-chart-${index}`} {...lineChartProps} charts={charts} />
       ))}
     </div>
   );

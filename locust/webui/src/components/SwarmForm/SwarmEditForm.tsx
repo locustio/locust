@@ -3,21 +3,23 @@ import { connect } from 'react-redux';
 
 import Form from 'components/Form/Form';
 import { useStartSwarmMutation } from 'redux/api/swarm';
-import { ISwarmState } from 'redux/slice/swarm.slice';
+import { ISwarmState, swarmActions } from 'redux/slice/swarm.slice';
 import { IRootState } from 'redux/store';
 
-type ISwarmFormInput = Pick<ISwarmState, 'spawnRate' | 'numUsers'>;
+type ISwarmFormInput = Pick<ISwarmState, 'spawnRate' | 'userCount'>;
 
 interface ISwarmForm extends ISwarmFormInput {
   onSubmit: () => void;
+  setSwarm: (swarmPayload: Partial<ISwarmState>) => void;
 }
 
-function SwarmEditForm({ onSubmit, numUsers, spawnRate }: ISwarmForm) {
+function SwarmEditForm({ onSubmit, userCount, spawnRate, setSwarm }: ISwarmForm) {
   const [startSwarm] = useStartSwarmMutation();
 
   const onEditSwarm = (inputData: ISwarmFormInput) => {
     onSubmit();
     startSwarm(inputData);
+    setSwarm(inputData);
   };
 
   return (
@@ -28,7 +30,7 @@ function SwarmEditForm({ onSubmit, numUsers, spawnRate }: ISwarmForm) {
       <Form<ISwarmFormInput> onSubmit={onEditSwarm}>
         <Box sx={{ my: 2, display: 'flex', flexDirection: 'column', rowGap: 4 }}>
           <TextField
-            defaultValue={numUsers || 1}
+            defaultValue={userCount || 1}
             label='Number of users (peak concurrency)'
             name='userCount'
           />
@@ -48,9 +50,13 @@ function SwarmEditForm({ onSubmit, numUsers, spawnRate }: ISwarmForm) {
   );
 }
 
-const storeConnector = ({ swarm: { spawnRate, numUsers } }: IRootState) => ({
+const storeConnector = ({ swarm: { spawnRate, userCount } }: IRootState) => ({
   spawnRate,
-  numUsers,
+  userCount,
 });
 
-export default connect(storeConnector)(SwarmEditForm);
+const actionCreator = {
+  setSwarm: swarmActions.setSwarm,
+};
+
+export default connect(storeConnector, actionCreator)(SwarmEditForm);

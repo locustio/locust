@@ -22,21 +22,27 @@ export default function About() {
           </Typography>
           <Typography component='p' variant='subtitle1'>
             Locust is free and open source software released under the{' '}
-            <Link href={`https://github.com/locustio/locust/blob/master/LICENSE`}>MIT License</Link>
+            <Link href='https://github.com/locustio/locust/blob/master/LICENSE'>MIT License</Link>
           </Typography>
           <Typography component='p' sx={{ mt: 2 }} variant='subtitle1'>
             It was originally developed by Carl Byström and{' '}
-            <Link href={`https://twitter.com/jonatanheyman/`}>Jonatan Heyman</Link>. Since 2019, it
-            is primarily maintained by <Link href={`https://github.com/cyberw`}>Lars Holmberg</Link>
-            .
+            <Link href='https://twitter.com/jonatanheyman'>Jonatan Heyman</Link>. Since 2019, it is
+            primarily maintained by <Link href='https://github.com/cyberw'>Lars Holmberg</Link>.
           </Typography>
           <Typography component='p' sx={{ mt: 2 }} variant='subtitle1'>
             Many thanks to all our wonderful{' '}
-            <Link href={`https://github.com/locustio/locust/graphs/contributors`}>
-              contributors
-            </Link>
-            !
+            <Link href='https://github.com/locustio/locust/graphs/contributors'>contributors</Link>!
           </Typography>
+        </div>
+
+        <div>
+          <Typography component='h2' mb={1} variant='h4'>
+            Need help getting started?
+          </Typography>
+          <Link href='https://locust.cloud'>Locust Cloud</Link> gives you access to hosted, easily
+          scalable, and distributed load generation, as well as advanced reporting — all while
+          preserving the flexible “it’s just Python” approach to load test scripting that Locust
+          provides
         </div>
 
         <div>
@@ -54,7 +60,10 @@ export default function About() {
             <Link href='https://github.com/locustio/locust'>GitHub</Link>
           </Typography>
           <Typography component='p' variant='subtitle1'>
-            <Link href='https://docs.locust.io/en/stable/'>Documentation</Link>
+            <Link href='https://docs.locust.io/en/stable'>Documentation</Link>
+          </Typography>
+          <Typography component='p' variant='subtitle1'>
+            <Link href='https://medium.com/locust-cloud'>Blog</Link>
           </Typography>
         </div>
       </Modal>

@@ -1,4 +1,4 @@
-import { Box, Divider, Typography } from '@mui/material';
+import { Box, Divider, Tooltip, Typography } from '@mui/material';
 import { connect } from 'react-redux';
 
 import { SWARM_STATE } from 'constants/swarm';
@@ -23,7 +23,18 @@ function SwarmMonitor({
     <Box sx={{ display: 'flex', columnGap: 2 }}>
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <Typography variant='button'>Host</Typography>
-        <Typography>{host}</Typography>
+        <Tooltip title={host}>
+          <Typography
+            noWrap
+            sx={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '400px',
+            }}
+          >
+            {host}
+          </Typography>
+        </Tooltip>
       </Box>
       <Divider flexItem orientation='vertical' />
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -35,7 +46,9 @@ function SwarmMonitor({
           <Divider flexItem orientation='vertical' />
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Typography variant='button'>Users</Typography>
-            <Typography variant='button'>{userCount}</Typography>
+            <Typography noWrap variant='button'>
+              {userCount}
+            </Typography>
           </Box>
         </>
       )}
@@ -44,19 +57,23 @@ function SwarmMonitor({
           <Divider flexItem orientation='vertical' />
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Typography variant='button'>Workers</Typography>
-            <Typography variant='button'>{workerCount}</Typography>
+            <Typography noWrap variant='button'>
+              {workerCount}
+            </Typography>
           </Box>
         </>
       )}
       <Divider flexItem orientation='vertical' />
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Typography variant='button'>RPS</Typography>
-        <Typography variant='button'>{totalRps}</Typography>
+        <Typography noWrap variant='button'>
+          {totalRps}
+        </Typography>
       </Box>
       <Divider flexItem orientation='vertical' />
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Typography variant='button'>Failures</Typography>
-        <Typography variant='button'>{`${failRatio}%`}</Typography>
+        <Typography noWrap variant='button'>{`${failRatio}%`}</Typography>
       </Box>
     </Box>
   );

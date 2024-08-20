@@ -618,14 +618,34 @@ requests.Session's trust_env attribute to ``False``. If you don't want this, you
 ``locust_instance.client.trust_env`` to ``True``. For further details, refer to the
 `documentation of requests <https://requests.readthedocs.io/en/master/api/#requests.Session.trust_env>`_.
 
+Connection reuse
+----------------
+
+By default, connections are reused by an HttpUser, even across tasks runs. To avoid connection reuse you can do:
+
+.. code-block:: python
+    
+    self.client.get("/", headers={"Connection": "close"})
+    self.client.get("/new_connection_here")
+
+Or you can close the entire requests.Session object (this also deletes cookies, closes the SSL session etc). This has some CPU overhead 
+(and the response time of the next request will be higher due to SSL renegotiation etc), so dont use this unless you really need it.
+
+.. code-block:: python
+    
+    self.client.get("/")
+    self.client.close()
+    self.client.get("/new_connection_here")
+
+
 Connection pooling
 ------------------
 
 As every :py:class:`HttpUser <locust.HttpUser>` creates new :py:class:`HttpSession <locust.clients.HttpSession>`,
-every user instance has its own connection pools. This is similar to how real users would interact with a web server.
+every user instance has its own connection pool. This is similar to how real users (browsers) would interact with a web server.
 
-However, if you want to share connections among all users, you can use a single pool manager. To do this, set
-:py:attr:`pool_manager <locust.HttpUser.pool_manager>` class attribute to an instance of :py:class:`urllib3.PoolManager`.
+If you instead want to share connections, you can use a single pool manager. To do this, set :py:attr:`pool_manager <locust.HttpUser.pool_manager>` 
+class attribute to an instance of :py:class:`urllib3.PoolManager`.
 
 .. code-block:: python
 
@@ -633,7 +653,7 @@ However, if you want to share connections among all users, you can use a single 
     from urllib3 import PoolManager
 
     class MyUser(HttpUser):
-        # All users will be limited to 10 concurrent connections at most.
+        # All instances of this class will be limited to 10 concurrent connections at most.
         pool_manager = PoolManager(maxsize=10, block=True)
 
 For more configuration options, refer to the
