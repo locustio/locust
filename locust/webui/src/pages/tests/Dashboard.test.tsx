@@ -7,9 +7,9 @@ import { renderWithProvider } from 'test/testUtils';
 
 describe('Dashboard', () => {
   test('renders the layout', () => {
-    const { getByRole } = renderWithProvider(<Dashboard />);
+    const { getByRole, getByTitle } = renderWithProvider(<Dashboard />);
 
-    const logo = getByRole('img', { name: 'Locust' });
+    const logo = getByTitle('Locust');
     const heading = getByRole('link', { name: 'Locust' });
 
     expect(heading).toBeTruthy();
