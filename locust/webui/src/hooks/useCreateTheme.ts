@@ -4,7 +4,7 @@ import { THEME_MODE } from 'constants/theme';
 import { useSelector } from 'redux/hooks';
 import createTheme from 'styles/theme';
 
-export default function useTheme() {
+export default function useCreateTheme() {
   const isDarkMode = useSelector(({ theme: { isDarkMode } }) => isDarkMode);
 
   const theme = useMemo(

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { SWARM_STATE } from 'constants/swarm';
 import useInterval from 'hooks/useInterval';
-import { useGetExceptionsQuery, useGetStatsQuery, useGetTasksQuery } from 'redux/api/swarm';
+import { useGetStatsQuery } from 'redux/api/swarm';
 import { useAction, useSelector } from 'redux/hooks';
 import { swarmActions } from 'redux/slice/swarm.slice';
 import { uiActions } from 'redux/slice/ui.slice';
@@ -10,7 +10,7 @@ import { roundToDecimalPlaces } from 'utils/number';
 
 const STATS_REFETCH_INTERVAL = 2000;
 
-export default function useSwarmUi() {
+export default function useFetchStats() {
   const setSwarm = useAction(swarmActions.setSwarm);
   const setUi = useAction(uiActions.setUi);
   const updateCharts = useAction(uiActions.updateCharts);
@@ -21,13 +21,11 @@ export default function useSwarmUi() {
   const [shouldAddMarker, setShouldAddMarker] = useState(false);
 
   const { data: statsData, refetch: refetchStats } = useGetStatsQuery();
-  const { data: tasksData, refetch: refetchTasks } = useGetTasksQuery();
-  const { data: exceptionsData, refetch: refetchExceptions } = useGetExceptionsQuery();
 
   const shouldRunRefetchInterval =
     swarm.state === SWARM_STATE.SPAWNING || swarm.state == SWARM_STATE.RUNNING;
 
-  const updateStatsUi = () => {
+  const updateStats = () => {
     if (!statsData) {
       return;
     }
@@ -45,7 +43,7 @@ export default function useSwarmUi() {
       totalAvgResponseTime,
     } = statsData;
 
-    const time = new Date().toUTCString();
+    const time = new Date().toISOString();
 
     if (shouldAddMarker) {
       setShouldAddMarker(false);
@@ -56,12 +54,20 @@ export default function useSwarmUi() {
     const totalFailPerSecRounded = roundToDecimalPlaces(totalFailPerSec, 2);
     const totalFailureRatioRounded = roundToDecimalPlaces(failRatio * 100);
 
+    const percentilesWithTime = Object.entries(currentResponseTimePercentiles).reduce(
+      (percentiles, [key, value]) => ({
+        ...percentiles,
+        [key]: [time, value],
+      }),
+      {},
+    );
+
     const newChartEntry = {
-      ...currentResponseTimePercentiles,
-      currentRps: totalRpsRounded,
-      currentFailPerSec: totalFailPerSecRounded,
-      totalAvgResponseTime: roundToDecimalPlaces(totalAvgResponseTime, 2),
-      userCount: userCount,
+      ...percentilesWithTime,
+      currentRps: [time, totalRpsRounded],
+      currentFailPerSec: [time, totalFailPerSecRounded],
+      totalAvgResponseTime: [time, roundToDecimalPlaces(totalAvgResponseTime, 2)],
+      userCount: [time, userCount],
       time,
     };
 
@@ -87,36 +93,18 @@ export default function useSwarmUi() {
     if (statsData) {
       if (!hasSetInitStats.current) {
         // handle setting stats on first load
-        updateStatsUi();
+        updateStats();
       }
 
       hasSetInitStats.current = true;
     }
   }, [statsData]);
 
-  useInterval(updateStatsUi, STATS_REFETCH_INTERVAL, {
+  useInterval(updateStats, STATS_REFETCH_INTERVAL, {
     shouldRunInterval: !!statsData && shouldRunRefetchInterval,
   });
 
-  useEffect(() => {
-    if (tasksData) {
-      setUi({ ratios: tasksData });
-    }
-  }, [tasksData]);
-
-  useEffect(() => {
-    if (exceptionsData) {
-      setUi({ exceptions: exceptionsData.exceptions });
-    }
-  }, [exceptionsData]);
-
   useInterval(refetchStats, STATS_REFETCH_INTERVAL, {
-    shouldRunInterval: shouldRunRefetchInterval,
-  });
-  useInterval(refetchTasks, 5000, {
-    shouldRunInterval: shouldRunRefetchInterval,
-  });
-  useInterval(refetchExceptions, 5000, {
     shouldRunInterval: shouldRunRefetchInterval,
   });
 

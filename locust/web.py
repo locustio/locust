@@ -564,7 +564,7 @@ class WebUI:
                 try:
                     return login_required(view_func)(*args, **kwargs)
                 except Exception as e:
-                    return f"Locust auth exception: {e} See https://docs.locust.io/en/stable/extending-locust.html#authentication for configuring authentication."
+                    return f"Locust auth exception: {e} See https://docs.locust.io/en/stable/extending-locust.html#adding-authentication-to-the-web-ui for configuring authentication."
             else:
                 return view_func(*args, **kwargs)
 
@@ -618,8 +618,6 @@ class WebUI:
             else None
         )
 
-        start_time = format_utc_timestamp(stats.start_time)
-
         self.template_args = {
             "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
@@ -637,7 +635,6 @@ class WebUI:
                 and not (self.userclass_picker_is_active or self.environment.shape_class.use_common_options)
             ),
             "stats_history_enabled": options and options.stats_history_enabled,
-            "start_time": start_time,
             "tasks": dumps({}),
             "extra_options": extra_options,
             "run_time": options and options.run_time,

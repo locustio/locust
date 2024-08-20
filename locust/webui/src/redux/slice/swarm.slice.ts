@@ -26,7 +26,6 @@ export interface ISwarmState {
   runTime?: string | number;
   showUserclassPicker: boolean;
   spawnRate: number | null;
-  startTime: string;
   state: string;
   statsHistoryEnabled: boolean;
   tasks: string;

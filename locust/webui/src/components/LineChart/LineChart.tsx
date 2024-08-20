@@ -3,9 +3,9 @@ import { init, dispose, ECharts, connect } from 'echarts';
 
 import { CHART_THEME } from 'components/LineChart/LineChart.constants';
 import {
-  ILineChartTimeAxis,
   ILineChart,
   ILineChartMarkers,
+  ILineChartTimeAxis,
 } from 'components/LineChart/LineChart.types';
 import {
   createMarkLine,
@@ -15,7 +15,9 @@ import {
 } from 'components/LineChart/LineChart.utils';
 import { useSelector } from 'redux/hooks';
 
-interface IBaseChartType extends ILineChartTimeAxis, ILineChartMarkers {}
+interface IBaseChartType extends ILineChartMarkers, ILineChartTimeAxis {
+  [key: string]: any;
+}
 
 export default function LineChart<ChartType extends IBaseChartType>({
   charts,
@@ -25,6 +27,7 @@ export default function LineChart<ChartType extends IBaseChartType>({
   chartValueFormatter,
   splitAxis,
   yAxisLabels,
+  scatterplot,
 }: ILineChart<ChartType>) {
   const [chart, setChart] = useState<ECharts | null>(null);
   const isDarkMode = useSelector(({ theme: { isDarkMode } }) => isDarkMode);
@@ -47,6 +50,7 @@ export default function LineChart<ChartType extends IBaseChartType>({
         chartValueFormatter,
         splitAxis,
         yAxisLabels,
+        scatterplot,
       }),
     );
     initChart.on('datazoom', onChartZoom(initChart));
@@ -69,7 +73,6 @@ export default function LineChart<ChartType extends IBaseChartType>({
     const isChartDataDefined = lines.every(({ key }) => !!charts[key]);
     if (chart && isChartDataDefined) {
       chart.setOption({
-        xAxis: { data: charts.time },
         series: lines.map(({ key, yAxisIndex, ...echartsOptions }, index) => ({
           ...echartsOptions,
           data: charts[key],
@@ -108,7 +111,7 @@ export default function LineChart<ChartType extends IBaseChartType>({
   useEffect(() => {
     if (chart) {
       chart.setOption({
-        series: getSeriesData<ChartType>({ charts, lines }),
+        series: getSeriesData<ChartType>({ charts, lines, scatterplot }),
       });
     }
   }, [lines]);

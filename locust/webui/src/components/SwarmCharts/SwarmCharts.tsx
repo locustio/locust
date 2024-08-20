@@ -14,7 +14,7 @@ const percentilesToChartLines = swarmTemplateArgs.percentilesToChart
   : [];
 
 const percentileColors = [
-  '#eeff00',
+  '#ff9f00',
   '#9966CC',
   '#8A2BE2',
   '#8E4585',

@@ -904,18 +904,22 @@ def sort_stats(stats: dict[Any, S]) -> list[S]:
 
 def update_stats_history(runner: Runner) -> None:
     stats = runner.stats
+    timestamp = format_utc_timestamp(time.time())
     current_response_time_percentiles = {
-        f"response_time_percentile_{percentile}": stats.total.get_current_response_time_percentile(percentile) or 0
+        f"response_time_percentile_{percentile}": [
+            timestamp,
+            stats.total.get_current_response_time_percentile(percentile) or 0,
+        ]
         for percentile in PERCENTILES_TO_CHART
     }
 
     r = {
         **current_response_time_percentiles,
-        "time": format_utc_timestamp(time.time()),
-        "current_rps": stats.total.current_rps or 0,
-        "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
-        "total_avg_response_time": proper_round(stats.total.avg_response_time, digits=2),
-        "user_count": runner.user_count or 0,
+        "current_rps": [timestamp, stats.total.current_rps or 0],
+        "current_fail_per_sec": [timestamp, stats.total.current_fail_per_sec or 0],
+        "total_avg_response_time": [timestamp, proper_round(stats.total.avg_response_time, digits=2)],
+        "user_count": [timestamp, runner.user_count or 0],
+        "time": timestamp,
     }
     stats.history.append(r)
 

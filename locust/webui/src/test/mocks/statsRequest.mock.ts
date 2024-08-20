@@ -1,3 +1,5 @@
+import { ICharts } from 'types/ui.types';
+
 export const statsResponseMock = {
   current_response_time_percentiles: {
     'response_time_percentile_0.5': 2,
@@ -144,31 +146,31 @@ export const statsResponseTransformed = {
       occurrences: 12652,
     },
   ],
-  exceptions: exceptionsResponseMock.exceptions,
   extendedStats: undefined,
   charts: {
-    'responseTimePercentile0.5': [2],
-    'responseTimePercentile0.95': [2],
-    currentRps: [1932.5],
-    currentFailPerSec: [1932.5],
-    userCount: [1],
-    totalAvgResponseTime: [0.41],
-    time: [mockDate.toUTCString()],
-  },
-  ratios: {
-    perClass: {
-      Example: {
-        ratio: 1,
-        tasks: { ExampleTest: { ratio: 1, tasks: { example: { ratio: 1 } } } },
-      },
-    },
-    total: {
-      Example: {
-        ratio: 1,
-        tasks: { ExampleTest: { ratio: 1, tasks: { example: { ratio: 1 } } } },
-      },
-    },
-  },
+    'responseTimePercentile0.5': [[mockDate.toISOString(), 2]],
+    'responseTimePercentile0.95': [[mockDate.toISOString(), 2]],
+    currentRps: [[mockDate.toISOString(), 1932.5]],
+    currentFailPerSec: [[mockDate.toISOString(), 1932.5]],
+    userCount: [[mockDate.toISOString(), 1]],
+    totalAvgResponseTime: [[mockDate.toISOString(), 0.41]],
+    time: [],
+  } as ICharts,
   userCount: 1,
   workers: undefined,
+};
+
+export const tasksResponseTransformed = {
+  perClass: {
+    Example: {
+      ratio: 1,
+      tasks: { ExampleTest: { ratio: 1, tasks: { example: { ratio: 1 } } } },
+    },
+  },
+  total: {
+    Example: {
+      ratio: 1,
+      tasks: { ExampleTest: { ratio: 1, tasks: { example: { ratio: 1 } } } },
+    },
+  },
 };

@@ -66,7 +66,7 @@ For Locust to be able to pass data to your React frontend, place the following s
 
 To load the favicon, place the link in your head:
 ```html
-<link rel="icon" href="./assets/favicon.ico" />
+<link rel="icon" href="./assets/favicon.png" />
 ```
 
 Lastly, you must configure Locust to point to your own React build output. To achieve this, you can use the flag `--build-path` and provide the **absolute** path to your build directory.
@@ -108,14 +108,17 @@ function App() {
 
 The `tabs` prop allows for complete control of which tabs are rendered. You can then customize which base tabs are shown or where your new tab should be placed:
 ```js
-import LocustUi, { baseTabs } from "locust-ui";
+import LocustUi, { tabConfig } from "locust-ui";
 
-const tabs = [...baseTabs];
-tabs.splice(2, 0, {
-  title: "Custom Tab",
-  key: "custom-tab",
-  component: MyCustomTab,
-});
+const tabs = [
+    tabConfig.stats,
+    tabConfig.charts,
+    {
+        title: "Custom Tab",
+        key: "custom-tab",
+        component: MyCustomTab,
+    },
+]
 
 function App() {
     return (
@@ -164,6 +167,3 @@ function App() {
     tabs={/* Optional array of tabs that will take precedence over extendedTabs */}
 />
 ```
-
-
-
