@@ -1,9 +1,8 @@
 from locust import TaskSet, between, task
+from locust.contrib.postgres import PostgresUser
 
 import os
 import random
-
-from base_postgres_user import PostgresUser
 
 
 class UserTasks(TaskSet):

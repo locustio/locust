@@ -43,7 +43,7 @@ class PostgresClient:
 
 class PostgresUser(User):
     abstract = True
-    client_class = PostgresClient
 
     def __init__(self, *args, **kwargs):
-        self.client = self.client_class()
+        super().__init__(*args, **kwargs)
+        self.client = PostgresClient()
