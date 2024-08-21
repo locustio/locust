@@ -9,7 +9,6 @@ class UserTasks(TaskSet):
     @task
     def run_select_query(self):
         self.client.execute_query(
-            self.user.conn_string,
             "SELECT * FROM loadtesting.invoice WHERE amount > 500",
         )
 
@@ -17,7 +16,6 @@ class UserTasks(TaskSet):
     def run_update_query(self):
         random_amount = random.randint(1, 12)
         self.client.execute_query(
-            self.user.conn_string,
             f"UPDATE loadtesting.invoice SET amount={random_amount} WHERE amount < 10",
         )
 
@@ -31,7 +29,7 @@ class PostgresLocust(PostgresUser):
     # Use environment variables or default values
     PGHOST = os.getenv("PGHOST", "localhost")
     PGPORT = os.getenv("PGPORT", "5432")
-    PGDATABASE = os.getenv("PGDATABASE", "loadtesting_db")
+    PGDATABASE = os.getenv("PGDATABASE", "postgres")
     PGUSER = os.getenv("PGUSER", "postgres")
     PGPASSWORD = os.getenv("PGPASSWORD", "postgres")
 
