@@ -214,12 +214,13 @@ jobs:
   publish_prerelease:
     name: Publish prerelease on merge commit to master
     needs: tox_tests
-    if: github.ref == 'refs/heads/master' && github.repository_owner == 'locustio' && ${{ env.NOT_MERGE_COMMIT == '' }}
+    if: github.ref == 'refs/heads/master' && github.repository_owner == 'locustio'
     runs-on: ubuntu-latest
     steps:
       # asking github if something was not a merge commit is surprisingly difficult
-      - run: git rev-parse HEAD^2 2>/dev/null >/dev/null || echo NOT_MERGE_COMMIT=1 | tee -a $GITHUB_ENV
+      - run: git rev-parse HEAD^2 2>/dev/null >/dev/null && echo MERGE_COMMIT=1 | tee -a $GITHUB_ENV || true
       - name: Publish prerelease version to PyPI
+        if: env.MERGE_COMMIT
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
@@ -227,6 +228,7 @@ jobs:
           skip-existing: true
       # TODO: Get from initial build
       - uses: borales/actions-yarn@v5
+        if: env.MERGE_COMMIT
         name: Publish package on NPM
         with:
           cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ env.TAG }}-next-${{ github.run_id }}
