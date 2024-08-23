@@ -65,7 +65,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: webui-package-dist
-          path: locust/webui
+          path: locust/webui/lib
 
   #### Testing
 
@@ -74,6 +74,7 @@ jobs:
   tox_tests:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    needs: build_package
 
     strategy:
       # Maybe true?
@@ -241,7 +242,7 @@ jobs:
       # asking github if something was not a merge commit is surprisingly difficult
       - run: git rev-parse HEAD^2 2>/dev/null >/dev/null && echo MERGE_COMMIT=1 | tee -a $GITHUB_ENV || true
       # Download Python dist and publish it
-      - name: Download package
+      - name: Download Python dist 
         if: env.MERGE_COMMIT
         uses: actions/download-artifact@v4
         with:
@@ -255,12 +256,12 @@ jobs:
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
       # Download Web UI lib and publish it
-      - name: Download package
+      - name: Download UI lib
         if: env.MERGE_COMMIT
         uses: actions/download-artifact@v4
         with:
           name: webui-package-dist
-          path: locust/webui
+          path: locust/webui/lib
       - uses: borales/actions-yarn@v5
         if: env.MERGE_COMMIT
         name: Publish package on NPM
@@ -277,7 +278,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Download python dist for publishing
-      - name: Download package
+      - name: Download Python dist
         if: env.MERGE_COMMIT
         uses: actions/download-artifact@v4
         with:
@@ -289,12 +290,12 @@ jobs:
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
       # Download Web UI lib and publish it
-      - name: Download package
+      - name: Download UI lib
         if: env.MERGE_COMMIT
         uses: actions/download-artifact@v4
         with:
           name: webui-package-dist
-          path: locust/webui
+          path: locust/webui/lib
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
         with:
