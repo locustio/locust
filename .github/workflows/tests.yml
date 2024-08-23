@@ -9,16 +9,68 @@ defaults:
   run:
     shell: bash
 
-# TODO:
-
-# in the publish workflow, build the package once, up front and add it as a shared artifact
-
-# https://tox.wiki/en/latest/config.html#external-package-builder
-
-# check if docker image has to be built twice
-# consider splitting out workflows into different files
-
 jobs:
+
+  ### Building
+
+  build_package:
+    name: "Build distribution :package:"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Set up Python, Poetry and virtual environment
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          virtualenvs-path: .venv
+          installer-parallel: true
+          plugins: |
+            poetry-dynamic-versioning[plugin]
+            poethepoet[poetry_plugin]
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root --no-plugins
+      # Install node and yarn in order to build the front end during packaging  
+      - name: Set Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install Yarn
+        run: npm install -g yarn
+      # Build and upload the project artifacts
+      - name: Build project
+        run: poetry build --no-interaction
+      - name: Upload Python dist as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-dist
+          path: dist
+      - name: Build UI library
+        run: yarn webui:build:lib
+      - name: Upload web UI library as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webui-package-dist
+          path: locust/webui
+
+  #### Testing
+
+  # https://tox.wiki/en/latest/config.html#external-package-builder
+
   tox_tests:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
@@ -47,7 +99,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # Set up Python and virtual environment
+      # Set up Python and Poetry
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
@@ -61,6 +113,7 @@ jobs:
           plugins: |
             poetry-dynamic-versioning[plugin]
             poethepoet[poetry_plugin]
+      # Install and cache test-only dependencies
       - name: Load cached venv
         id: cached-poetry-dependencies
         uses: actions/cache@v4
@@ -70,24 +123,18 @@ jobs:
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root --with test --no-plugins
-      - name: set full Python version in PY env var
-        if: ${{ matrix.os != 'windows-latest' }}
-        # See https://pre-commit.com/#github-actions-example
-        run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
-      # Install node and yarn in order to build the front end during packaging  
-      - name: Set Node.js 20.x
-        uses: actions/setup-node@v4
+      # Grab the built package to ensure we're testing what we publish
+      - name: Download package
+        if: env.MERGE_COMMIT
+        uses: actions/download-artifact@v4
         with:
-          node-version: 20.x
-      - name: Install Yarn
-        run: npm install -g yarn
-      # Install the project and run the isolated tests
-      # - name: Install project
-      #   run: poetry install --no-interaction
+          name: python-package-dist
+          path: dist
+      # Run tests!
       - name: Run tox tests
         run: |
           source $VENV
-          tox -e ${{ matrix.tox }}
+          tox -e ${{ matrix.tox }} --installpkg dist/*.whl
 
   lint_typecheck_test_webui:
     runs-on: ubuntu-latest
@@ -118,6 +165,8 @@ jobs:
           cmd: type-check
           dir: locust/webui
 
+# TODO: check if docker image has to be built twice
+
   verify_docker_build:
     name: Always - Docker verify, push to tag 'master' if on master
     runs-on: ubuntu-latest
@@ -146,10 +195,12 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.ref == 'refs/heads/master' && github.repository_owner == 'locustio' }}
           tags: locustio/locust:master
+  
+  ### Publishing
 
   docker_tagged:
     name: Tagged - Docker push to tag based on git tag. Also push 'latest' if on master
-    needs: [tox_tests, lint_typecheck_test_webui]
+    needs: [tox_tests, lint_typecheck_test_webui, verify_docker_build]
     runs-on: ubuntu-latest
     if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
     steps:
@@ -181,44 +232,21 @@ jobs:
           push: true
           tags: locustio/locust:${{ env.TAG }}${{ ( env.BRANCH == 'master' && ',locustio/locust:latest') || '' }}
 
-  publish:
-    name: Publish release on tag
-    needs: [verify_docker_build, tox_tests, lint_typecheck_test_webui]
-    if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Publish tagged version to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          skip-existing: true
-      - uses: borales/actions-yarn@v5
-        name: Publish package on NPM
-        with:
-          cmd: publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
-          dir: locust/webui
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-    # The following is disabled because it has stopped working.
-    #   - name: Tweet on release
-    #     uses: infraway/tweet-action@v1.0.1
-    #     with:
-    #       status: "New release: ${{ env.TAG }} https://github.com/locustio/locust/releases/tag/${{ env.TAG }}"
-    #       api_key: ${{ secrets.TWITTER_API_CONSUMER_KEY }}
-    #       api_key_secret: ${{ secrets.TWITTER_API_CONSUMER_SECRET }}
-    #       access_token: ${{ secrets.TWITTER_API_ACCESS_TOKEN_KEY }}
-    #       access_token_secret: ${{ secrets.TWITTER_API_ACCESS_TOKEN_SECRET }}
-
-  # TODO: Grab the built artifact instead of checking it out
   publish_prerelease:
     name: Publish prerelease on merge commit to master
-    needs: tox_tests
+    needs: [build_package, tox_tests]
     if: github.ref == 'refs/heads/master' && github.repository_owner == 'locustio'
     runs-on: ubuntu-latest
     steps:
       # asking github if something was not a merge commit is surprisingly difficult
       - run: git rev-parse HEAD^2 2>/dev/null >/dev/null && echo MERGE_COMMIT=1 | tee -a $GITHUB_ENV || true
+      # Download Python dist and publish it
+      - name: Download package
+        if: env.MERGE_COMMIT
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-dist
+          path: dist
       - name: Publish prerelease version to PyPI
         if: env.MERGE_COMMIT
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -226,12 +254,51 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
-      # TODO: Get from initial build
+      # Download Web UI lib and publish it
+      - name: Download package
+        if: env.MERGE_COMMIT
+        uses: actions/download-artifact@v4
+        with:
+          name: webui-package-dist
+          path: locust/webui
       - uses: borales/actions-yarn@v5
         if: env.MERGE_COMMIT
         name: Publish package on NPM
         with:
           cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ env.TAG }}-next-${{ github.run_id }}
+          dir: locust/webui
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+
+  publish:
+    name: Publish release on tag
+    needs: [build_package, verify_docker_build, tox_tests, lint_typecheck_test_webui]
+    if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
+    runs-on: ubuntu-latest
+    steps:
+      # Download python dist for publishing
+      - name: Download package
+        if: env.MERGE_COMMIT
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-dist
+      - name: Publish tagged version to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip-existing: true
+      # Download Web UI lib and publish it
+      - name: Download package
+        if: env.MERGE_COMMIT
+        uses: actions/download-artifact@v4
+        with:
+          name: webui-package-dist
+          path: locust/webui
+      - uses: borales/actions-yarn@v5
+        name: Publish package on NPM
+        with:
+          cmd: publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
           dir: locust/webui
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

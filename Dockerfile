@@ -23,8 +23,9 @@ WORKDIR /build
 # bring in the prebuilt front-end before package installation
 COPY --from=webui-builder locust/webui/dist locust/webui/dist
 RUN pip install poetry && \
-    poetry config virtualenvs.create false && \
+    # poetry config virtualenvs.create false && \
     poetry self add "poetry-dynamic-versioning[plugin]" && \
+    poetry self add "poethepoet[poetry_plugin]" && \
     poetry build -f wheel && \
     pip install dist/*.whl
 
