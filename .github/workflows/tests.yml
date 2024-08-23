@@ -9,19 +9,24 @@ defaults:
   run:
     shell: bash
 
+# TODO: Make sure downloaded files are found
+
 jobs:
 
-  ### Building
+  #-------------------------
+  #       Building
+  #-------------------------
 
   build_package:
-    name: "Build distribution :package:"
+    name: Build and Cache Packages
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # Set up Python, Poetry and virtual environment
+
+      # Set up Python and Poetry and cache build dependencies
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
@@ -35,6 +40,8 @@ jobs:
           plugins: |
             poetry-dynamic-versioning[plugin]
             poethepoet[poetry_plugin]
+    
+      # Install and cache full build dependencies
       - name: Load cached venv
         id: cached-poetry-dependencies
         uses: actions/cache@v4
@@ -44,13 +51,17 @@ jobs:
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root --no-plugins
+
       # Install node and yarn in order to build the front end during packaging  
       - name: Set Node.js 20.x
         uses: actions/setup-node@v4
         with:
           node-version: 20.x
+          cache: 'yarn'
+          cache-dependency-path: locust/webui/yarn.lock
       - name: Install Yarn
         run: npm install -g yarn
+
       # Build and upload the project artifacts
       - name: Build project
         run: poetry build --no-interaction
@@ -59,6 +70,7 @@ jobs:
         with:
           name: python-package-dist
           path: dist
+  
       - name: Build UI library
         run: yarn webui:build:lib
       - name: Upload web UI library as Artifact
@@ -67,7 +79,9 @@ jobs:
           name: webui-package-dist
           path: locust/webui/lib
 
-  #### Testing
+  #-------------------------
+  #       Testing
+  #-------------------------
 
   # https://tox.wiki/en/latest/config.html#external-package-builder
 
@@ -100,6 +114,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       # Set up Python and Poetry
       - uses: actions/setup-python@v5
         with:
@@ -114,6 +129,7 @@ jobs:
           plugins: |
             poetry-dynamic-versioning[plugin]
             poethepoet[poetry_plugin]
+
       # Install and cache test-only dependencies
       - name: Load cached venv
         id: cached-poetry-dependencies
@@ -123,183 +139,196 @@ jobs:
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --with test --no-plugins
-      # Grab the built package to ensure we're testing what we publish
+        run: poetry install --no-interaction --no-root --only test --no-plugins
+
+      # Grab the built package to ensure we're testing what we eventually publish
       - name: Download package
         if: env.MERGE_COMMIT
         uses: actions/download-artifact@v4
         with:
           name: python-package-dist
           path: dist
+
       # Run tests!
       - name: Run tox tests
         run: |
           source $VENV
           tox -e ${{ matrix.tox }} --installpkg dist/*.whl
 
-  lint_typecheck_test_webui:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: install
-          dir: locust/webui
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: build
-          dir: locust/webui
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: test
-          dir: locust/webui
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: lint
-          dir: locust/webui
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: type-check
-          dir: locust/webui
 
-# TODO: check if docker image has to be built twice
 
-  verify_docker_build:
-    name: Always - Docker verify, push to tag 'master' if on master
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' # PR build doesnt get proper version, so dont try to build it
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: docker/login-action@v3
-        if: github.repository_owner == 'locustio'
-        with:
-          username: locustbuild
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: build and publish image
-        id: docker_build
-        uses: docker/build-push-action@v5
-        with:
-          build-args: |
-            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.ref == 'refs/heads/master' && github.repository_owner == 'locustio' }}
-          tags: locustio/locust:master
+
+
+#   lint_typecheck_test_webui:
+#     name: Web UI Lint and Type Check
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - name: Set Node.js 20.x
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: 20.x
+#           cache: 'yarn'
+#           cache-dependency-path: locust/webui/yarn.lock
+#       - uses: borales/actions-yarn@v5
+#         with:
+#           cmd: install
+#           dir: locust/webui
+#       - uses: borales/actions-yarn@v5
+#         with:
+#           cmd: build
+#           dir: locust/webui
+#       - uses: borales/actions-yarn@v5
+#         with:
+#           cmd: test
+#           dir: locust/webui
+#       - uses: borales/actions-yarn@v5
+#         with:
+#           cmd: lint
+#           dir: locust/webui
+#       - uses: borales/actions-yarn@v5
+#         with:
+#           cmd: type-check
+#           dir: locust/webui
+
+# # TODO: check if docker image has to be built twice
+
+#   verify_docker_build:
+#     # Always - Docker verify, push to tag 'master' if on master
+#     name: Verify Docker Build
+#     runs-on: ubuntu-latest
+#     if: github.event_name != 'pull_request' # PR build doesnt get proper version, so dont try to build it
+#     steps:
+#       - uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+#       - uses: docker/login-action@v3
+#         if: github.repository_owner == 'locustio'
+#         with:
+#           username: locustbuild
+#           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+#       - name: Set up QEMU
+#         uses: docker/setup-qemu-action@v3
+#       - name: Set up Docker Buildx
+#         uses: docker/setup-buildx-action@v3
+#       - name: build and publish image
+#         id: docker_build
+#         uses: docker/build-push-action@v5
+#         with:
+#           build-args: |
+#             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
+#           context: .
+#           file: ./Dockerfile
+#           platforms: linux/amd64,linux/arm64
+#           push: ${{ github.ref == 'refs/heads/master' && github.repository_owner == 'locustio' }}
+#           tags: locustio/locust:master
   
-  ### Publishing
+  #-------------------------
+  #       Publishing
+  #-------------------------
 
-  docker_tagged:
-    name: Tagged - Docker push to tag based on git tag. Also push 'latest' if on master
-    needs: [tox_tests, lint_typecheck_test_webui, verify_docker_build]
-    runs-on: ubuntu-latest
-    if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-      - run: echo "BRANCH=$(git branch -a --contains ${{ env.TAG }} | grep -v HEAD | cut -d '/' -f3)" | tee -a $GITHUB_ENV
-      - uses: docker/login-action@v3
-        with:
-          username: locustbuild
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: build and publish image
-        id: docker_build
-        uses: docker/build-push-action@v5
-        with:
-          build-args: |
-            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: locustio/locust:${{ env.TAG }}${{ ( env.BRANCH == 'master' && ',locustio/locust:latest') || '' }}
+#   docker_tagged:
+#     #  Tagged - Docker push to tag based on git tag. Also push 'latest' if on master
+#     name: Create Tagged Docker Image
+#     needs: [tox_tests, lint_typecheck_test_webui, verify_docker_build]
+#     runs-on: ubuntu-latest
+#     if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
+#     steps:
+#       - uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: "3.x"
+#       - run: echo "BRANCH=$(git branch -a --contains ${{ env.TAG }} | grep -v HEAD | cut -d '/' -f3)" | tee -a $GITHUB_ENV
+#       - uses: docker/login-action@v3
+#         with:
+#           username: locustbuild
+#           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+#       - name: Set up QEMU
+#         uses: docker/setup-qemu-action@v3
+#       - name: Set up Docker Buildx
+#         uses: docker/setup-buildx-action@v3
+#       - name: build and publish image
+#         id: docker_build
+#         uses: docker/build-push-action@v5
+#         with:
+#           build-args: |
+#             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
+#           context: .
+#           file: ./Dockerfile
+#           platforms: linux/amd64,linux/arm64
+#           push: true
+#           tags: locustio/locust:${{ env.TAG }}${{ ( env.BRANCH == 'master' && ',locustio/locust:latest') || '' }}
 
-  publish_prerelease:
-    name: Publish prerelease on merge commit to master
-    needs: [build_package, tox_tests]
-    if: github.ref == 'refs/heads/master' && github.repository_owner == 'locustio'
-    runs-on: ubuntu-latest
-    steps:
-      # asking github if something was not a merge commit is surprisingly difficult
-      - run: git rev-parse HEAD^2 2>/dev/null >/dev/null && echo MERGE_COMMIT=1 | tee -a $GITHUB_ENV || true
-      # Download Python dist and publish it
-      - name: Download Python dist 
-        if: env.MERGE_COMMIT
-        uses: actions/download-artifact@v4
-        with:
-          name: python-package-dist
-          path: dist
-      - name: Publish prerelease version to PyPI
-        if: env.MERGE_COMMIT
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          skip-existing: true
-      # Download Web UI lib and publish it
-      - name: Download UI lib
-        if: env.MERGE_COMMIT
-        uses: actions/download-artifact@v4
-        with:
-          name: webui-package-dist
-          path: locust/webui/lib
-      - uses: borales/actions-yarn@v5
-        if: env.MERGE_COMMIT
-        name: Publish package on NPM
-        with:
-          cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ env.TAG }}-next-${{ github.run_id }}
-          dir: locust/webui
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+#   publish_prerelease:
+#     name: Publish prerelease on merge commit to master
+#     needs: [build_package, tox_tests]
+#     if: github.ref == 'refs/heads/master' && github.repository_owner == 'locustio'
+#     runs-on: ubuntu-latest
+#     steps:
+#       # asking github if something was not a merge commit is surprisingly difficult
+#       - run: git rev-parse HEAD^2 2>/dev/null >/dev/null && echo MERGE_COMMIT=1 | tee -a $GITHUB_ENV || true
+#       # Download Python dist and publish it
+#       - name: Download Python dist 
+#         if: env.MERGE_COMMIT
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: python-package-dist
+#           path: dist
+#       - name: Publish prerelease version to PyPI
+#         if: env.MERGE_COMMIT
+#         uses: pypa/gh-action-pypi-publish@release/v1
+#         with:
+#           user: __token__
+#           password: ${{ secrets.PYPI_API_TOKEN }}
+#           skip-existing: true
+#       # Download Web UI lib and publish it
+#       - name: Download UI lib
+#         if: env.MERGE_COMMIT
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: webui-package-dist
+#           path: locust/webui/lib
+#       - uses: borales/actions-yarn@v5
+#         if: env.MERGE_COMMIT
+#         name: Publish package on NPM
+#         with:
+#           cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ env.TAG }}-next-${{ github.run_id }}
+#           dir: locust/webui
+#         env:
+#           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
-  publish:
-    name: Publish release on tag
-    needs: [build_package, verify_docker_build, tox_tests, lint_typecheck_test_webui]
-    if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
-    runs-on: ubuntu-latest
-    steps:
-      # Download python dist for publishing
-      - name: Download Python dist
-        if: env.MERGE_COMMIT
-        uses: actions/download-artifact@v4
-        with:
-          name: python-package-dist
-      - name: Publish tagged version to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          skip-existing: true
-      # Download Web UI lib and publish it
-      - name: Download UI lib
-        if: env.MERGE_COMMIT
-        uses: actions/download-artifact@v4
-        with:
-          name: webui-package-dist
-          path: locust/webui/lib
-      - uses: borales/actions-yarn@v5
-        name: Publish package on NPM
-        with:
-          cmd: publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
-          dir: locust/webui
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+#   publish:
+#     name: Publish release on tag
+#     needs: [build_package, verify_docker_build, tox_tests, lint_typecheck_test_webui]
+#     if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
+#     runs-on: ubuntu-latest
+#     steps:
+#       # Download python dist for publishing
+#       - name: Download Python dist
+#         if: env.MERGE_COMMIT
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: python-package-dist
+#       - name: Publish tagged version to PyPI
+#         uses: pypa/gh-action-pypi-publish@release/v1
+#         with:
+#           user: __token__
+#           password: ${{ secrets.PYPI_API_TOKEN }}
+#           skip-existing: true
+#       # Download Web UI lib and publish it
+#       - name: Download UI lib
+#         if: env.MERGE_COMMIT
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: webui-package-dist
+#           path: locust/webui/lib
+#       - uses: borales/actions-yarn@v5
+#         name: Publish package on NPM
+#         with:
+#           cmd: publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
+#           dir: locust/webui
+#         env:
+#           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
