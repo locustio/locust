@@ -75,7 +75,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: webui-package-dist
-          path: locust/webui/lib/*
+          path: locust/webui/lib
 
   #-------------------------
   #       Testing
@@ -141,21 +141,16 @@ jobs:
 
       # Grab the built package to ensure we're testing what we eventually publish
       - name: Download package
-        if: env.MERGE_COMMIT
         uses: actions/download-artifact@v4
         with:
           name: python-dist
-          path: ./dist
+          path: dist
 
       # Run tests!
       - name: Run tox tests
         run: |
           source $VENV
-          echo ### curr folder
-          ls -la
-          echo ### show dist
-          ls -la ./dist
-          tox -e ${{ matrix.tox }} --installpkg ./dist/*.whl
+          tox -e ${{ matrix.tox }} --installpkg dist/*.whl
 
 
 
@@ -310,7 +305,6 @@ jobs:
 #     steps:
 #       # Download python dist for publishing
 #       - name: Download Python dist
-#         if: env.MERGE_COMMIT
 #         uses: actions/download-artifact@v4
 #         with:
 #           name: python-package-dist
@@ -322,7 +316,6 @@ jobs:
 #           skip-existing: true
 #       # Download Web UI lib and publish it
 #       - name: Download UI lib
-#         if: env.MERGE_COMMIT
 #         uses: actions/download-artifact@v4
 #         with:
 #           name: webui-package-dist
