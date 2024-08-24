@@ -151,6 +151,10 @@ jobs:
       - name: Run tox tests
         run: |
           source $VENV
+          echo ### curr folder
+          ls -la
+          echo ### show dist
+          ls -la ./dist
           tox -e ${{ matrix.tox }} --installpkg ./dist/*.whl
 
 
