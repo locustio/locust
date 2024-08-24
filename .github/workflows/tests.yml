@@ -9,6 +9,11 @@ defaults:
   run:
     shell: bash
 
+# Notes:
+# - Split docker build and publish steps
+# - Should the docker image build use the prebuilt assets? (probably)
+# -  How should this be done locally? 
+
 jobs:
 
   #-------------------------
@@ -97,7 +102,7 @@ jobs:
       - id: set_branch
         run: echo "branch=$(git branch -a --contains $(poetry version -s) | grep -v HEAD | cut -d '/' -f3)" >> "$GITHUB_OUTPUT"
       - id: set_is_merge_commit
-        run: echo "is_merge_commit=$( [ $(git rev-list --count $GITHUB_SHA^@) -eq 2 ] && echo "true" || echo "false" ) >> "$GITHUB_OUTPUT"
+        run: echo "is_merge_commit=$( [ $(git rev-list --count $GITHUB_SHA^@) -eq 2 ] && echo 'true' || echo 'false' )" >> "$GITHUB_OUTPUT"
       - id: set_python_version
         run: echo "python_version=$(python -VV | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
@@ -106,7 +111,7 @@ jobs:
   #-------------------------
 
   tox_tests:
-    name: ${{ matrix.name }}
+    name: Tests - ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     needs: build_package
 
