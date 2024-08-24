@@ -12,7 +12,9 @@ defaults:
 # Notes:
 # - Split docker build and publish steps
 # - Should the docker image build use the prebuilt assets? (probably)
-# -  How should this be done locally? 
+# -  How should this be done locally?
+# -  Should some test run against the Docker container?
+# - Should there be a tox test for building the docs?
 
 jobs:
 
@@ -111,7 +113,7 @@ jobs:
   #-------------------------
 
   tox_tests:
-    name: Tests - ${{ matrix.name }}
+    name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     needs: build_package
 
