@@ -279,8 +279,8 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v5
         env:
-          TAG: ${{needs.build_package.outputs.tag}}
-          BRANCH: ${{needs.build_package.outputs.branch}}
+          TAG: ${{ needs.build_package.outputs.tag }}
+          BRANCH: ${{ needs.build_package.outputs.branch }}
         with:
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
@@ -319,12 +319,11 @@ jobs:
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
         env:
-          TAG: ${{needs.build_package.outputs.tag}}
+          TAG: ${{ needs.build_package.outputs.tag }}
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         with:
           cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ env.TAG }}-next-${{ github.run_id }}
           dir: locust/webui
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
   publish:
     name: Publish Release on Tag
