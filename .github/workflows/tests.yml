@@ -9,8 +9,6 @@ defaults:
   run:
     shell: bash
 
-# TODO: Make sure downloaded files are found
-
 jobs:
 
   #-------------------------
@@ -68,8 +66,8 @@ jobs:
       - name: Upload Python dist as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: python-package-dist
-          path: dist
+          name: python-dist
+          path: dist/*
   
       - name: Build UI library
         run: yarn webui:build:lib
@@ -77,7 +75,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: webui-package-dist
-          path: locust/webui/lib
+          path: locust/webui/lib/*
 
   #-------------------------
   #       Testing
@@ -100,7 +98,7 @@ jobs:
           # - { name: "mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
 
           # OS Integration tests 
-          - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main }
+          - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
           # - {name: Windows, python: '3.12', os: windows-latest, tox: fail_fast_test_main }
           # # - {name: Mac, python: '3.12', os: macos-latest, tox: fail_fast_test_main }
           
@@ -139,21 +137,21 @@ jobs:
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --only test --no-plugins
+        run: poetry install --no-interaction --no-root --with test --no-plugins
 
       # Grab the built package to ensure we're testing what we eventually publish
       - name: Download package
         if: env.MERGE_COMMIT
         uses: actions/download-artifact@v4
         with:
-          name: python-package-dist
-          path: dist
+          name: python-dist
+          path: ./dist
 
       # Run tests!
       - name: Run tox tests
         run: |
           source $VENV
-          tox -e ${{ matrix.tox }} --installpkg dist/*.whl
+          tox -e ${{ matrix.tox }} --installpkg ./dist/*.whl
 
 
 
