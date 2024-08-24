@@ -102,8 +102,8 @@ jobs:
 
           # OS Integration tests 
           - { name: "Integration Tests: Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
-          # - {name: "Integration Tests: Windows", python: '3.12', os: windows-latest, tox: fail_fast_test_main_external_package }
-          # # - {name: "Integration Tests: MacOS", python: '3.12', os: macos-latest, tox: fail_fast_test_main_external_package }
+          - {name: "Integration Tests: Windows", python: '3.12', os: windows-latest, tox: fail_fast_test_main_external_package }
+          - {name: "Integration Tests: MacOS", python: '3.12', os: macos-latest, tox: fail_fast_test_main_external_package }
           
           # Unit tests on Python versions
           - { name: "Unit Tests: Python 3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
