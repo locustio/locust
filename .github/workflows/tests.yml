@@ -81,32 +81,29 @@ jobs:
   #       Testing
   #-------------------------
 
-  # https://tox.wiki/en/latest/config.html#external-package-builder
-
   tox_tests:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     needs: build_package
 
     strategy:
-      # Maybe true?
       fail-fast: false
       matrix:
         include:
           # Static analysis
-          # - { name: "ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
-          # - { name: "mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
+          - { name: "ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
+          - { name: "mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
 
           # OS Integration tests 
           - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
-          # - {name: Windows, python: '3.12', os: windows-latest, tox: fail_fast_test_main }
-          # # - {name: Mac, python: '3.12', os: macos-latest, tox: fail_fast_test_main }
+          # - {name: Windows, python: '3.12', os: windows-latest, tox: fail_fast_test_main_external_package }
+          # # - {name: Mac, python: '3.12', os: macos-latest, tox: fail_fast_test_main_external_package }
           
           # Unit tests on Python versions
-          # - { name: "3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
-          # - { name: "3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
-          # - { name: "3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
-          # - { name: "3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
+          - { name: "3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
+          - { name: "3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
+          - { name: "3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
+          - { name: "3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
 
     steps:
       - uses: actions/checkout@v4
@@ -151,10 +148,6 @@ jobs:
         run: |
           source $VENV
           tox -e ${{ matrix.tox }} --installpkg dist/*.whl
-
-
-
-
 
 #   lint_typecheck_test_webui:
 #     name: Web UI Lint and Type Check
