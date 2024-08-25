@@ -11,8 +11,8 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install the built Python dist
-COPY dist dist
-RUN pip install dist/*.whl
+COPY dist .
+RUN pip install *.whl
 
 # Stage 2: Runtime image
 FROM base
