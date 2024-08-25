@@ -292,10 +292,14 @@ jobs:
   #       Publishing
   # -------------------------
 
+  publish_checkpoint:
+    name: [tox_tests, docker_image_test, lint_typecheck_test_webui] 
+    run: echo hi
+
   # On merge commits to `master`
   publish_prerelease:
     name: Publish prerelease on merge commit to master
-    needs: [build_package, tox_tests, docker_build, lint_typecheck_test_webui]
+    needs: publish_checkpoint
     if: github.ref == 'refs/heads/master' && github.repository_owner == 'locustio' && needs.build_package.outputs.git_is_merge_commit == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -351,7 +355,7 @@ jobs:
   # On tag builds
   publish:
     name: Publish Release on Tag
-    needs: [build_package, docker_build, tox_tests, lint_typecheck_test_webui]
+    needs: publish_checkpoint
     if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
     runs-on: ubuntu-latest
     steps:
