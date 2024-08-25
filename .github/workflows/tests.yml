@@ -293,8 +293,9 @@ jobs:
   # -------------------------
 
   publish_checkpoint:
-    name: [tox_tests, docker_image_test, lint_typecheck_test_webui] 
-    run: echo hi
+    name: Publishing Gate
+    needs: [tox_tests, docker_image_test, lint_typecheck_test_webui] 
+    run: echo Publishing
 
   # On merge commits to `master`
   publish_prerelease:
