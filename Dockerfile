@@ -1,3 +1,5 @@
+# This is a local-use Docker image which illustrates the end-to-end build process for Locust
+
 # Stage 1: Build web front end
 FROM node:20.0.0-alpine AS webui-builder
 
@@ -41,4 +43,4 @@ RUN chown -R locust /opt/venv
 USER locust
 WORKDIR /home/locust
 EXPOSE 8089 5557
-ENTRYPOINT ["locust"]
+# ENTRYPOINT ["locust"]
