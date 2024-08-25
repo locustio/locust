@@ -93,7 +93,7 @@ jobs:
       - name: Upload web UI library as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: webui-package-dist
+          name: webui-lib-dist
           path: locust/webui/lib
       
       # Set workflow metadata in one place so we can pull it out later
@@ -121,7 +121,7 @@ jobs:
       - name: Download Python dist
         uses: actions/download-artifact@v4
         with:
-          name: python-package-dist
+          name: python-dist
           path: dist
       
       # Set up Docker daemon dependencies for building and publishing
@@ -311,7 +311,7 @@ jobs:
       - name: Download Python dist 
         uses: actions/download-artifact@v4
         with:
-          name: python-package-dist
+          name: python-dist
           path: dist
       - name: Publish prerelease version to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -324,7 +324,7 @@ jobs:
       - name: Download UI lib
         uses: actions/download-artifact@v4
         with:
-          name: webui-package-dist
+          name: webui-lib-dist
           path: locust/webui/lib
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
@@ -367,7 +367,8 @@ jobs:
       - name: Download Python dist
         uses: actions/download-artifact@v4
         with:
-          name: python-package-dist
+          name: python-dist
+          path: dist
       - name: Publish tagged version to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -379,7 +380,7 @@ jobs:
       - name: Download UI lib
         uses: actions/download-artifact@v4
         with:
-          name: webui-package-dist
+          name: webui-lib-dist
           path: locust/webui/lib
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
