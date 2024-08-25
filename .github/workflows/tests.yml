@@ -142,7 +142,7 @@ jobs:
           context: .
           file: ./Dockerfile.ci
           tags: locustio/locust:latest
-          outputs: type=docker,dest=/tmp/locust-docker.tar
+          outputs: type=image,dest=/tmp/locust-docker.tar
           platforms: linux/amd64,linux/arm64
 
       - name: Upload artifact
