@@ -135,9 +135,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # TODO: remove
-      - run: ls -la
-    
       # Build and cache Docker image
       - name: Build and push
         uses: docker/build-push-action@v6
