@@ -294,8 +294,9 @@ jobs:
 
   publish_checkpoint:
     name: Publishing Gate
-    needs: [tox_tests, docker_image_test, lint_typecheck_test_webui] 
-    run: echo Publishing
+    needs: [tox_tests, docker_image_test, lint_typecheck_test_webui]
+    steps:
+      - run: echo Publishing
 
   # On merge commits to `master`
   publish_prerelease:
