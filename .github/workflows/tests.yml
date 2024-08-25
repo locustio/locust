@@ -295,6 +295,7 @@ jobs:
   publish_checkpoint:
     name: Publishing Gate
     needs: [tox_tests, docker_image_test, lint_typecheck_test_webui]
+    runs-on: ubuntu-latest
     steps:
       - run: echo Publishing
 
