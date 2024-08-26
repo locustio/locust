@@ -189,6 +189,10 @@ jobs:
     needs: build_package
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+  
       # Grab the built artifacts to ensure we're testing what we eventually publish
       - name: Download Python dist
         uses: actions/download-artifact@v4
