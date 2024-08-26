@@ -59,10 +59,10 @@ describe('Auth', () => {
 
     expect(googleLink).toBeTruthy();
     expect(googleLink.getAttribute('href')).toEqual(googleProvider.callbackUrl);
-    expect(icons[1].getAttribute('src')).toEqual(googleProvider.iconUrl);
+    expect(icons[0].getAttribute('src')).toEqual(googleProvider.iconUrl);
 
     expect(githubLink).toBeTruthy();
     expect(githubLink.getAttribute('href')).toEqual(githubProvider.callbackUrl);
-    expect(icons[2].getAttribute('src')).toEqual(githubProvider.iconUrl);
+    expect(icons[1].getAttribute('src')).toEqual(githubProvider.iconUrl);
   });
 });

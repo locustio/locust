@@ -34,7 +34,7 @@ export default function Auth({ authProviders, error, usernamePasswordCallback }:
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'center', columnGap: 2 }}>
-          <Logo lightModeBackgroundColor='#fff' />
+          <Logo />
         </Box>
         {usernamePasswordCallback && (
           <form action={usernamePasswordCallback}>
