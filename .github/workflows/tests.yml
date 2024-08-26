@@ -114,14 +114,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Static analysis
-          - { name: "Static Analysis: Ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
-          - { name: "Static Analysis: MyPy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
+          # Static analysis and utilities
+          - { name: "Verification Tests: Ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
+          - { name: "Verification Tests: Mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
+          - { name: "Verification Tests: Docs", python: "3.10", os: ubuntu-latest, tox: "docs" }
 
           # OS Integration tests 
           - { name: "Integration Tests: Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
-          - {name: "Integration Tests: Windows", python: '3.12', os: windows-latest, tox: fail_fast_test_main_external_package }
-          - {name: "Integration Tests: MacOS", python: '3.12', os: macos-latest, tox: fail_fast_test_main_external_package }
+          - { name: "Integration Tests: Windows", python: '3.12', os: windows-latest, tox: fail_fast_test_main_external_package }
+          - { name: "Integration Tests: MacOS", python: '3.12', os: macos-latest, tox: fail_fast_test_main_external_package }
           
           # Unit tests on Python versions
           - { name: "Unit Tests: Python 3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
@@ -158,7 +159,7 @@ jobs:
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --with test --no-plugins
+        run: poetry install --no-interaction --no-root --with test,docs --no-plugins
 
       # Grab the built artifacts to ensure we're testing what we eventually publish
       - name: Download Python dist
@@ -257,46 +258,46 @@ jobs:
           cmd: type-check
           dir: locust/webui
       
-  test_docs_build:
-    name: Test Docs Build
-    runs-on: ubuntu-latest
+  # test_docs_build:
+  #   name: Test Docs Build
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
 
-      # Set up Python and Poetry
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          virtualenvs-path: .venv
-          installer-parallel: true
-          plugins: |
-            poetry-dynamic-versioning[plugin]
-            poethepoet[poetry_plugin]
+  #     # Set up Python and Poetry
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: ${{ matrix.python }}
+  #     - name: Install Poetry
+  #       uses: snok/install-poetry@v1
+  #       with:
+  #         virtualenvs-create: true
+  #         virtualenvs-in-project: true
+  #         virtualenvs-path: .venv
+  #         installer-parallel: true
+  #         plugins: |
+  #           poetry-dynamic-versioning[plugin]
+  #           poethepoet[poetry_plugin]
 
-      # Install and cache test-only dependencies
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}
-      - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --only docs --no-plugins
+  #     # Install and cache test-only dependencies
+  #     - name: Load cached venv
+  #       id: cached-poetry-dependencies
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: .venv
+  #         key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+  #     - name: Install dependencies
+  #       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+  #       run: poetry install --no-interaction --no-root --only docs --no-plugins
 
-      # Build the docs
-      - name: Build the Sphinx Docs
-        run: |
-          source $VENV
-          sphinx-build -b html docs/ docs/_build/
+  #     # Build the docs
+  #     - name: Build the Sphinx Docs
+  #       run: |
+  #         source $VENV
+  #         sphinx-build -b html docs/ docs/_build/
 
   # -------------------------
   #       Publishing
