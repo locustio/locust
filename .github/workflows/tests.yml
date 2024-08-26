@@ -9,10 +9,6 @@ defaults:
   run:
     shell: bash
 
-# Notes:
-# - Should there be a tox test for building the docs?
-# - Move docker build, test, push to the publish phase (multi arch problem)
-
 jobs:
 
   #-------------------------
