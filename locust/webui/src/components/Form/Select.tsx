@@ -16,11 +16,12 @@ export default function Select({
   options,
   multiple = false,
   defaultValue,
+  size = 'medium',
   sx,
   ...inputProps
 }: ISelect) {
   return (
-    <FormControl sx={sx}>
+    <FormControl size={size} sx={sx}>
       <InputLabel htmlFor={name} shrink>
         {label}
       </InputLabel>
