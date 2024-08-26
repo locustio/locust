@@ -5,7 +5,7 @@ build-backend = "poetry_dynamic_versioning.backend"
 [tool.poetry]
 name = "locust"
 description = "Developer-friendly load testing framework"
-version = "2.31.4.dev1"
+version = "0.0.0"
 license = "MIT"
 readme = "README.md"
 authors = ["Jonatan Heyman", "Lars Holmberg"]

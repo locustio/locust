@@ -43,4 +43,4 @@ RUN chown -R locust /opt/venv
 USER locust
 WORKDIR /home/locust
 EXPOSE 8089 5557
-# ENTRYPOINT ["locust"]
+ENTRYPOINT ["locust"]
