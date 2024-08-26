@@ -20,6 +20,7 @@ dist/**
 .build/
 .coverage
 .tox/
+poetry.lock
 docs/env-options.rst
 .editorconfig
 __pycache__

@@ -66,7 +66,7 @@ jobs:
       - name: Install Yarn
         run: npm install -g yarn
 
-      # Build and upload the project artifacts
+      # Build and upload the project artifacts only once
       - name: Build Python dist and web UI
         run: poetry build --no-interaction
       - name: Upload Python dist as Artifact
