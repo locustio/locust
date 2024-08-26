@@ -223,7 +223,7 @@ jobs:
       # Run a basic test on the image
       - name: Test docker image
         run: |
-          docker run -it --rm locustio/locust:${{ github.sha }}-test --version
+          docker run --rm locustio/locust:${{ github.sha }}-test --version
 
   lint_typecheck_test_webui:
     name: Web UI Lint and Type Check
