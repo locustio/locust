@@ -105,49 +105,6 @@ jobs:
       - id: set_python_version
         run: echo "python_version=$(python -VV | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
-  docker_build:
-    name: Docker - Build
-    needs: build_package
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      # Grab built Python dist for the Docker CI image
-      - name: Download Python dist
-        uses: actions/download-artifact@v4
-        with:
-          name: python-dist
-          path: dist
-      
-      # Set up Docker daemon dependencies for building and publishing
-      - uses: docker/login-action@v3
-        if: github.repository_owner == 'locustio'
-        with:
-          username: locustbuild
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # Build and cache Docker image
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.ci
-          tags: locustio/locust:latest
-          outputs: type=image,dest=/tmp/locust-docker.tar
-          platforms: linux/amd64,linux/arm64
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: locust-docker
-          path: /tmp/locust-docker.tar
-
   #-------------------------
   #       Testing
   #-------------------------
@@ -258,53 +215,72 @@ jobs:
           cmd: type-check
           dir: locust/webui
       
-  docker_image_test:
-    name: Test Docker Image
-    runs-on: ubuntu-latest
-    needs: docker_build
-    steps:
-
-      # Set up Docker dependencies
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: locust-docker
-          path: /tmp
-
-      # TODO: Run some sort of basic headless test to make sure the binary is OK
-      - name: Test built Docker image
-        run: |
-          docker load --input /tmp/locust-docker.tar
-          docker run -it --rm locustio/locust:latest --version
-
   # -------------------------
   #       Publishing
   # -------------------------
 
-  publish_checkpoint:
-    name: Publishing Gate
-    needs: [tox_tests, docker_image_test, lint_typecheck_test_webui]
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo Publishing
-
-  # On merge commits to `master`
-  publish_prerelease:
+  publish:
     name: Publish prerelease on merge commit to master
-    needs: publish_checkpoint
-    if: github.ref == 'refs/heads/master' && github.repository_owner == 'locustio' && needs.build_package.outputs.git_is_merge_commit == 'true'
+    needs: [tox_tests, docker_image_test, lint_typecheck_test_webui]
+    if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
     runs-on: ubuntu-latest
     steps:
 
-      # Download Python dist and publish it
+      # Download Python dist artifact
       - name: Download Python dist 
         uses: actions/download-artifact@v4
         with:
           name: python-dist
           path: dist
+
+      # Download Web UI lib artifact
+      - name: Download UI lib
+        uses: actions/download-artifact@v4
+        with:
+          name: webui-lib-dist
+          path: locust/webui/lib
+
+      # Staged docker builds using exports/artifacts is currently difficult using multi-arch builds with buildx
+      # So let's just build it here
+
+      # Docker 
+      - name: Docker meta
+        id: docker_meta
+        uses: docker/metadata-action@v5
+        env:
+          TAG: ${{ needs.build_package.outputs.tag }}
+          BRANCH: ${{ needs.build_package.outputs.branch }}
+        with:
+          images: |
+            locust/locustio
+          tags: |
+            latest
+            {{ env.TAG }}
+            {{ env.branch }}
+            type=sha
+
+      # Set up Docker daemon dependencies for building and publishing
+      - uses: docker/login-action@v3
+        if: github.repository_owner == 'locustio'
+        with:
+          username: locustbuild
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build and push Docker image
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.ci
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.docker_meta.outputs.tags }}
+
+      # Publish Python package
       - name: Publish prerelease version to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -312,101 +288,25 @@ jobs:
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
 
-      # Download Web UI lib and publish it
-      - name: Download UI lib
-        uses: actions/download-artifact@v4
-        with:
-          name: webui-lib-dist
-          path: locust/webui/lib
+      # Publish UI lib
+      # On commits to trunk
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
+        if: github.ref == 'refs/heads/master'
         env:
           TAG: ${{ needs.build_package.outputs.tag }}
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         with:
           cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ env.TAG }}-next-${{ github.run_id }}
           dir: locust/webui
-
-      # Download Docker image, tag and push it
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      - uses: docker/login-action@v3
-        if: github.repository_owner == 'locustio'
-        with:
-          username: locustbuild
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: locust-docker
-          path: /tmp
-      - name: Load and push Docker image
-        run: |
-          docker load --input /tmp/locust-docker.tar
-          docker tag locustio/locust:latest locustio/locust:master
-          docker push locustio/locust:master 
-
-  # On tag builds
-  publish:
-    name: Publish Release on Tag
-    needs: publish_checkpoint
-    if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
-    runs-on: ubuntu-latest
-    steps:
-
-      # Download built Python dist and publish it
-      - name: Download Python dist
-        uses: actions/download-artifact@v4
-        with:
-          name: python-dist
-          path: dist
-      - name: Publish tagged version to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          skip-existing: true
-
-      # Download built Web UI lib and publish it
-      - name: Download UI lib
-        uses: actions/download-artifact@v4
-        with:
-          name: webui-lib-dist
-          path: locust/webui/lib
+      
+      # On tag builds
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
+        if: startsWith(github.event.ref, 'refs/tags')
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         with:
           cmd: publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
           dir: locust/webui
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
-      # Download Docker image, tag and push it
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      - uses: docker/login-action@v3
-        if: github.repository_owner == 'locustio'
-        with:
-          username: locustbuild
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: locust-docker
-          path: /tmp
-
-      - name: Load and push tagged Docker image
-        env:
-          TAG: ${{ needs.build_package.outputs.tag }}
-        run: |
-          docker load --input /tmp/locust-docker.tar
-          docker tag locustio/locust:latest locustio/locust:${{ env.TAG }}
-          docker push locustio/locust:${{ env.TAG }}
-      - name: Load and push latest Docker image on master 
-        if: needs.build_package.outputs.branch == 'master'
-        env:
-          BRANCH: ${{ needs.build_package.outputs.branch }}
-        run: |
-          docker push locustio/locust:latest
