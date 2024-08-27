@@ -204,7 +204,7 @@ jobs:
         id: docker_meta
         uses: docker/metadata-action@v5
         with:
-          images: locust/locustio
+          images: locustio/locust
           tags: latest
 
       # Set up Docker daemon dependencies for building and publishing
@@ -296,7 +296,7 @@ jobs:
           TAG: ${{ needs.build_package.outputs.tag }}
           BRANCH: ${{ needs.build_package.outputs.branch }}
         with:
-          images: locust/locustio
+          images: locustio/locust
           tags: |
             latest
             {{ env.TAG }}
@@ -305,7 +305,6 @@ jobs:
 
       # Set up Docker daemon dependencies for building and publishing
       - uses: docker/login-action@v3
-        if: github.repository_owner == 'locustio'
         with:
           username: locustbuild
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
