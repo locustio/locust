@@ -76,7 +76,7 @@ const uiSlice = createSlice({
           ...addSpaceToChartsBetweenTests(state.charts as ICharts),
           markers: (state.charts as ICharts).markers
             ? [...((state.charts as ICharts).markers as string[]), payload]
-            : [state.charts.time[0], payload],
+            : [(state.charts.time || [''])[0], payload],
         },
       };
     },

@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.31.4
+======
+* Publish UI NPM package to simplify use from custom UIs (https://locust.cloud)
+* Some tiny UI fixes
+
 2.31.3
 ======
 * Use new logo in web UI + some minor improvements https://github.com/locustio/locust/pull/2844, https://github.com/locustio/locust/pull/2840, https://github.com/locustio/locust/pull/2846, https://github.com/locustio/locust/pull/2850, https://github.com/locustio/locust/pull/2847, https://github.com/locustio/locust/pull/2855

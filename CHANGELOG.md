@@ -1,6 +1,24 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.31.4](https://github.com/locustio/locust/tree/2.31.4) (2024-08-26)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.3...2.31.4)
+
+**Merged pull requests:**
+
+- Webui Allow changing select input size [\#2871](https://github.com/locustio/locust/pull/2871) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Webui Replace Logo SVG [\#2867](https://github.com/locustio/locust/pull/2867) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add favicon that looks good in light color theme [\#2866](https://github.com/locustio/locust/pull/2866) ([heyman](https://github.com/heyman))
+- Webui Add build lib command to package.json [\#2865](https://github.com/locustio/locust/pull/2865) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Web UI Github Action Publish steps must Build lib [\#2864](https://github.com/locustio/locust/pull/2864) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Fix npm publish issue [\#2863](https://github.com/locustio/locust/pull/2863) ([cyberw](https://github.com/cyberw))
+- GH actions: Update names of publish steps. Don't run prerelease steps when no prerelease is actually going to be published [\#2862](https://github.com/locustio/locust/pull/2862) ([cyberw](https://github.com/cyberw))
+- Webui Fix Version Tag in NPM Prerelease Step [\#2861](https://github.com/locustio/locust/pull/2861) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Webui Fix NPM Publish Step [\#2860](https://github.com/locustio/locust/pull/2860) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Web UI as a Library NPM Release [\#2858](https://github.com/locustio/locust/pull/2858) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add PostgresUser to examples [\#2836](https://github.com/locustio/locust/pull/2836) ([guel-codes](https://github.com/guel-codes))
+
 ## [2.31.3](https://github.com/locustio/locust/tree/2.31.3) (2024-08-15)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.31.2...2.31.3)
