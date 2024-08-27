@@ -1,6 +1,9 @@
+from locust import TaskSet, User, between, events, task
+
+import random
+import time
+
 import psycopg2
-from locust import User, TaskSet, task, between, events
-import random, time
 
 
 def create_conn(conn_string):
@@ -38,7 +41,7 @@ class PostgresClient:
                     exception=e,
                 )
 
-                print("error {}".format(e))
+                print(f"error {e}")
 
         return request_handler
 
@@ -46,11 +49,11 @@ class PostgresClient:
 class UserTasks(TaskSet):
     conn_string = "postgresql://postgres:postgres@localhost:5432/loadtesting_db"
 
-    @task 
+    @task
     def run_select_query(self):
         self.client.execute_query(
             self.conn_string,
-            f"SELECT * FROM loadtesting.invoice WHERE amount > 500",
+            "SELECT * FROM loadtesting.invoice WHERE amount > 500",
         )
 
     @task(3)
@@ -60,7 +63,6 @@ class UserTasks(TaskSet):
             self.conn_string,
             f"UPDATE loadtesting.invoice SET amount={random_amount} WHERE amount < 10",
         )
-
 
 
 class PostgresLocust(User):
