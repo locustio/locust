@@ -1,14 +1,13 @@
 import { SxProps, FormControl, InputLabel, Select as MuiSelect, SelectProps } from '@mui/material';
 
-interface ISelect extends SelectProps {
+type ISelect = SelectProps & {
   label: string;
   name: string;
   options: string[];
   multiple?: boolean;
   defaultValue?: string | string[];
   sx?: SxProps;
-  onChange?: SelectProps['onChange'];
-}
+};
 
 export default function Select({
   label,
@@ -16,11 +15,12 @@ export default function Select({
   options,
   multiple = false,
   defaultValue,
+  size = 'medium',
   sx,
   ...inputProps
 }: ISelect) {
   return (
-    <FormControl sx={sx}>
+    <FormControl size={size} sx={sx}>
       <InputLabel htmlFor={name} shrink>
         {label}
       </InputLabel>
