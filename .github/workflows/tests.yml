@@ -23,6 +23,7 @@ jobs:
       tag_short: ${{ steps.set_tag_short.outputs.tag_short }}
       branch: ${{ steps.set_branch.outputs.branch }}
       is_merge_commit: ${{ steps.set_is_merge_commit.outputs.is_merge_commit }}
+      is_tag_build: ${{ steps.set_is_tag_build.outputs.is_tag_build }}
       python_version: ${{ steps.set_python_version.outputs.python_version }}
     
     steps:
@@ -100,8 +101,23 @@ jobs:
         run: echo "branch=${{ github.head_ref || github.ref_name }}" >> "$GITHUB_OUTPUT"
       - id: set_is_merge_commit
         run: echo "is_merge_commit=$( [ $(git rev-list --count $GITHUB_SHA^@) -eq 2 ] && echo 'true' || echo 'false' )" >> "$GITHUB_OUTPUT"
+      - id: set_is_tag_build
+        run: echo "is_tag_build=${{ startsWith(github.event.ref, 'refs/tags') }}" >> "$GITHUB_OUTPUT"
       - id: set_python_version
         run: echo "python_version=$(python -VV | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+  print_metadata:
+    name: Display metadata for build
+    runs-on: ubuntu-latest
+    needs: build_package
+    steps:
+       - run: |
+          echo "tag: ${{ needs.build_package.outputs.tag }}"
+          echo "tag_short: ${{ needs.build_package.outputs.tag_short }}"
+          echo "branch: ${{ needs.build_package.outputs.branch }}"
+          echo "is_merge_commit: ${{ needs.build_package.outputs.is_merge_commit }}"
+          echo "is_tag_build: ${{ needs.build_package.outputs.is_tag_build }}"
+          echo "python_version: ${{ needs.build_package.outputs.python_version }}"
 
   #-------------------------
   #       Testing
@@ -203,14 +219,6 @@ jobs:
           name: python-dist
           path: dist
 
-      # Set image and tag values
-      - name: Docker meta
-        id: docker_meta
-        uses: docker/metadata-action@v5
-        with:
-          images: locustio/locust
-          tags: latest
-
       # Set up Docker daemon dependencies for building and publishing
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -303,10 +311,9 @@ jobs:
         with:
           images: locustio/locust
           tags: |
-            latest
-            ${{ needs.build_package.outputs.tag }}
-            ${{ needs.build_package.outputs.branch }}
-            type=sha
+            type=raw,value=latest,enable=${{ needs.build_package.outputs.is_tag_build }}
+            type=raw,value=${{ needs.build_package.outputs.tag }}
+            type=raw,value=${{ needs.build_package.outputs.branch }}
 
       # Set up Docker daemon dependencies for building and publishing
       - uses: docker/login-action@v3
