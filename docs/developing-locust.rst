@@ -91,7 +91,7 @@ The documentation source is in the `docs/ <https://github.com/locustio/locust/tr
 
     .. code-block:: console
 
-        $ poetry install --no-root --only docs
+        $ poetry install --with docs
 
 #. Build the documentation locally:
 

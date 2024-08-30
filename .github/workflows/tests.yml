@@ -117,20 +117,22 @@ jobs:
       matrix:
         include:
           # Static analysis and utilities
-          - { name: "Verification Tests: Ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
-          - { name: "Verification Tests: Mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
-          - { name: "Verification Tests: Docs", python: "3.10", os: ubuntu-latest, tox: "docs" }
+          - { name: "Ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
+          - { name: "Mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
+
+          # Verification of builds and other aspects          
+          - { name: "Docs Build", python: "3.10", os: ubuntu-latest, tox: "docs" }
 
           # OS Integration tests 
-          - { name: "Integration Tests: Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
-          - { name: "Integration Tests: Windows", python: '3.12', os: windows-latest, tox: fail_fast_test_main_external_package }
-          - { name: "Integration Tests: MacOS", python: '3.12', os: macos-latest, tox: fail_fast_test_main_external_package }
+          - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
+          - { name: "Windows", python: '3.12', os: windows-latest, tox: fail_fast_test_main_external_package }
+          - { name: "MacOS", python: '3.12', os: macos-latest, tox: fail_fast_test_main_external_package }
           
           # Unit tests on Python versions
-          - { name: "Unit Tests: Python 3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
-          - { name: "Unit Tests: Python 3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
-          - { name: "Unit Tests: Python 3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
-          - { name: "Unit Tests: Python 3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
+          - { name: "Python 3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
+          - { name: "Python 3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
+          - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
+          - { name: "Python 3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
 
     steps:
       - uses: actions/checkout@v4

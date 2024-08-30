@@ -22,6 +22,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 ENV SKIP_PRE_BUILD="true"
 COPY . /build
 WORKDIR /build
+# clear locally built assets, dist remains part of the docker context for CI purposes
+RUN rm -rf dist
 # bring in the prebuilt front-end before package installation
 COPY --from=webui-builder locust/webui/dist locust/webui/dist
 RUN pip install poetry && \
