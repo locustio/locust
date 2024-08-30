@@ -48,11 +48,19 @@ exclude = [
     "locust/webui/**",
     "locust/webui/node_modules",
     "locust/test",
+    "locust/build",
 ]
 
 [tool.poetry.build]
-script = "pre_build.py"
 generate-setup-file = false
+
+[tool.poe.poetry_hooks]
+pre_build = "pre-build"
+pre_install = "pre-build"
+
+[tool.poe.tasks.pre-build]
+script = "pre_build:main"
+help = "Run the front end build required for package creation"
 
 [tool.poetry.urls]
 "Help/Questions" = "https://github.com/orgs/locustio/discussions/"
