@@ -144,6 +144,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: 'pip'
+          cache-dependency-path: poetry.lock
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
