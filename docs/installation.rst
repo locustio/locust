@@ -17,10 +17,17 @@ Installation
     :substitutions:
 
     $ locust -V
-    locust |version| from /usr/local/lib/python3.10/site-packages/locust (python 3.10.6)
+    locust |version| from /usr/local/lib/python3.12/site-packages/locust (Python 3.12.5)
 
 3. Done! Now you can :ref:`create your first test <quickstart>`
 
+Or, using `uvx <https://github.com/astral-sh/uv?tab=readme-ov-file#installation>`_, you can run it in an ephemeral environment:
+
+.. code-block:: console
+    :substitutions:
+
+    $ uvx locust -V
+    locust |version| from /.../uv/.../python3.12/site-packages/locust (Python 3.12.5)
 
 Pre-release builds
 ------------------
