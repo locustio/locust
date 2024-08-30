@@ -44,7 +44,10 @@ Using uvx
 Done!
 -----
 
-3. Now you can :ref:`create and run your first test <quickstart>`
+Now you can :ref:`create and run your first test <quickstart>`
+
+-----------------
+
 
 Pre-release builds
 ------------------
