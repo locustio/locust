@@ -270,7 +270,7 @@ jobs:
 
   publish:
     name: Publish prerelease on merge commit to master
-    needs: [tox_tests, lint_typecheck_test_webui, test_docker_image]
+    needs: [tox_tests, lint_typecheck_test_webui, test_docker_image, build_package]
     if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
     runs-on: ubuntu-latest
     steps:
