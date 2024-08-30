@@ -18,7 +18,7 @@ export interface ILineChart<ChartType> {
 }
 
 export interface ILineChartZoomEvent {
-  batch?: { start: number; end: number }[];
+  batch?: { start: number; startValue: number; end: number }[];
 }
 
 export interface ILineChartMarkers {
