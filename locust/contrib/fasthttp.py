@@ -34,7 +34,7 @@ from requests.utils import get_encoding_from_headers
 if TYPE_CHECKING:
     import sys
     from collections.abc import Callable, Generator
-    from typing import TypedDict
+    from typing import Any, TypedDict
 
     if sys.version_info >= (3, 11):
         from typing import Unpack
@@ -51,14 +51,14 @@ if TYPE_CHECKING:
         context: dict
 
     class PutKwargs(PostKwargs, total=False):
-        json: dict | None
+        json: Any | None
 
     class PatchKwargs(PostKwargs, total=False):
-        json: dict | None
+        json: Any | None
 
     class RESTKwargs(PostKwargs, total=False):
         data: str | dict | None
-        json: dict | None
+        json: Any | None
 
 
 # Monkey patch geventhttpclient.useragent.CompatRequest so that Cookiejar works with Python >= 3.3
@@ -185,7 +185,7 @@ class FastHttpSession:
         stream: bool = False,
         headers: dict | None = None,
         auth: tuple[str | bytes, str | bytes] | None = None,
-        json: dict | None = None,
+        json: Any | None = None,
         allow_redirects: bool = True,
         context: dict = {},
         **kwargs,
@@ -205,9 +205,9 @@ class FastHttpSession:
             return a context manager to work as argument to a with statement. This will allow the
             request to be marked as a fail based on the content of the response, even if the response
             code is ok (2xx). The opposite also works, one can use catch_response to catch a request
-            and then mark it as successful even if the response code was not (i.e 500 or 404).
+            and then mark it as successful even if the response code was not (i.e. 500 or 404).
         :param data: (optional) String/bytes to send in the body of the request.
-        :param json: (optional) Dictionary to send in the body of the request.
+        :param json: (optional) Json to send in the body of the request.
             Automatically sets Content-Type and Accept headers to "application/json".
             Only used if data is not set.
         :param headers: (optional) Dictionary of HTTP Headers to send with the request.
@@ -316,7 +316,7 @@ class FastHttpSession:
         return self.request("PATCH", url, data=data, **kwargs)
 
     def post(
-        self, url: str, data: str | dict | None = None, json: dict | None = None, **kwargs: Unpack[PostKwargs]
+        self, url: str, data: str | dict | None = None, json: Any | None = None, **kwargs: Unpack[PostKwargs]
     ) -> ResponseContextManager | FastResponse:
         """Sends a POST request"""
         return self.request("POST", url, data=data, json=json, **kwargs)
