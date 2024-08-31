@@ -6,8 +6,9 @@ import os
 
 class MongoDBUser(MongoDBUser):
     conn_string = os.getenv("MONGODB_URI")
-    db_name = "test"
+    db_name = "test"  # change to your db name
 
     @task
     def db_query(self):
-        self.client.execute_query("collection", {"field": "value"})
+        # chanf
+        self.client.execute_query("collection", {"field": "value"})  # update to match your collection, field, and value
