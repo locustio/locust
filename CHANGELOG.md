@@ -1,6 +1,25 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.31.5](https://github.com/locustio/locust/tree/2.31.5) (2024-08-30)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.4...2.31.5)
+
+**Fixed bugs:**
+
+- Pressure testing is over, but RPS and Users still have data [\#2870](https://github.com/locustio/locust/issues/2870)
+
+**Merged pull requests:**
+
+- Ensure we don't accidentally hide errors while importing in locust-cloud or locust-plugins [\#2881](https://github.com/locustio/locust/pull/2881) ([cyberw](https://github.com/cyberw))
+- Add publishing dependency on build package step [\#2880](https://github.com/locustio/locust/pull/2880) ([mquinnfd](https://github.com/mquinnfd))
+- Build pipeline tweaks - docker tagging [\#2879](https://github.com/locustio/locust/pull/2879) ([mquinnfd](https://github.com/mquinnfd))
+- Webui Remove chart initial data fetch [\#2878](https://github.com/locustio/locust/pull/2878) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Document use with uvx and remove openssl version from  --version output [\#2877](https://github.com/locustio/locust/pull/2877) ([cyberw](https://github.com/cyberw))
+- Web UI Remove Scroll to Zoom [\#2876](https://github.com/locustio/locust/pull/2876) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Cleaning and improvements in the Build Pipeline [\#2873](https://github.com/locustio/locust/pull/2873) ([mquinnfd](https://github.com/mquinnfd))
+- WebUI: Correct types for form select [\#2872](https://github.com/locustio/locust/pull/2872) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.31.4](https://github.com/locustio/locust/tree/2.31.4) (2024-08-26)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.31.3...2.31.4)
