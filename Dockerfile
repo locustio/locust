@@ -1,3 +1,5 @@
+# This is a local-use Docker image which illustrates the end-to-end build process for Locust
+
 # Stage 1: Build web front end
 FROM node:20.0.0-alpine AS webui-builder
 
@@ -20,11 +22,14 @@ ENV PATH="/opt/venv/bin:$PATH"
 ENV SKIP_PRE_BUILD="true"
 COPY . /build
 WORKDIR /build
+# clear locally built assets, dist remains part of the docker context for CI purposes
+RUN rm -rf dist
 # bring in the prebuilt front-end before package installation
 COPY --from=webui-builder locust/webui/dist locust/webui/dist
 RUN pip install poetry && \
     poetry config virtualenvs.create false && \
     poetry self add "poetry-dynamic-versioning[plugin]" && \
+    poetry self add "poethepoet[poetry_plugin]" && \
     poetry build -f wheel && \
     pip install dist/*.whl
 
@@ -41,4 +46,3 @@ USER locust
 WORKDIR /home/locust
 EXPOSE 8089 5557
 ENTRYPOINT ["locust"]
-

@@ -65,16 +65,10 @@ describe('createOptions', () => {
     expect(options.color).toEqual(['#fff']);
   });
 
-  test('should not apply any default zoom', () => {
+  test('should not apply any scroll zoom by default', () => {
     const options = createOptions<MockChartType>(createOptionsDefaultProps);
 
-    expect(options.dataZoom).toEqual([
-      {
-        type: 'inside',
-        start: 0,
-        end: 100,
-      },
-    ]);
+    expect((options as any).dataZoom).toBe(undefined);
   });
 
   test('xAxis should be formatted as expected', () => {
@@ -255,10 +249,7 @@ describe('onChartZoom', () => {
     });
 
     expect(mockChart.setOption).toHaveBeenCalledWith({
-      dataZoom: [
-        { type: 'inside', start: 10, end: 90 },
-        { type: 'slider', show: true, start: 10, end: 90 },
-      ],
+      dataZoom: [{ type: 'slider', show: true }],
     });
   });
 
@@ -275,16 +266,10 @@ describe('onChartZoom', () => {
     });
 
     expect(mockChart.setOption).nthCalledWith(1, {
-      dataZoom: [
-        { type: 'inside', start: 50, end: 60 },
-        { type: 'slider', show: true, start: 50, end: 60 },
-      ],
+      dataZoom: [{ type: 'slider', show: true }],
     });
     expect(mockChart.setOption).nthCalledWith(2, {
-      dataZoom: [
-        { type: 'inside', start: 0, end: 100 },
-        { type: 'slider', show: false, start: 0, end: 100 },
-      ],
+      dataZoom: [{ type: 'slider', show: false }],
     });
   });
 });

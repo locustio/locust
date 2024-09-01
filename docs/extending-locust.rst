@@ -93,6 +93,9 @@ Context from a value in the response, using :ref:`catch_response <catch-response
     with self.client.get("/", catch_response=True) as resp:
         resp.request_meta["context"]["requestId"] = resp.json()["requestId"]
 
+.. note::
+
+    Request context doesn't change how Locust's regular statistics are calculated. Logging/reporting solutions like `locust.cloud <https://locust.cloud/>`_ use the above mechanic to save the context to a database.
 
 Adding Web Routes
 ==================

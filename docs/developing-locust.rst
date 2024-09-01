@@ -20,12 +20,18 @@ Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then run
     $ git clone git://github.com/<YourName>/locust.git
 
     # install the poetry build system
-    $ python -m pip install poetry 
+    # use your preferred method from the poetry docs
+    # https://python-poetry.org/docs/#installation
 
-    # install the dynamic versioning plugin for poetry
+    ...
+
+    # install the required poetry plugins
+    # https://python-poetry.org/docs/plugins/#using-plugins
+
+    $ poetry self add "poethepoet[poetry_plugin]"
     $ poetry self add "poetry-dynamic-versioning[plugin]"
 
-    # perform an editable install of the "locust" package
+    # perform an editable install of the "locust" package along with the dev and test packages
     $ poetry install --with dev,test
 
 Now the ``locust`` command will run *your* code with no need for reinstalling after making changes.
@@ -43,10 +49,7 @@ We use `tox <https://tox.readthedocs.io/en/stable/>`_ to automate tests across m
 
 .. code-block:: console
 
-    $ poetry run tox
-    ...
-    py39: install_deps> python -I -m pip install cryptography mock pyquery retry
-    py39: commands[0]> python3 -m pip install .
+    $ tox
     ...
     py39: commands[1]> python3 -m unittest discover
     ...
@@ -64,14 +67,14 @@ Locust uses `ruff <https://github.com/astral-sh/ruff/>`_ for formatting and lint
 
 .. code-block:: console
 
-    $ poetry run ruff --fix <file_or_folder_to_be_formatted>
-    $ poetry run ruff format <file_or_folder_to_be_formatted>
+    $ ruff --fix <file_or_folder_to_be_formatted>
+    $ ruff format <file_or_folder_to_be_formatted>
 
 You can validate the whole project using tox:
 
 .. code-block:: console
 
-    $ poetry run tox -e ruff
+    $ tox -e ruff
     ruff: install_deps> python -I -m pip install ruff==0.1.13
     ruff: commands[0]> ruff check .
     ruff: commands[1]> ruff format --check
