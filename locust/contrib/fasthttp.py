@@ -407,9 +407,7 @@ class FastHttpUser(User):
         """
 
     @contextmanager
-    def rest(
-        self, method, url, headers: dict | None = None, **kwargs
-    ) -> Generator[RestResponseContextManager, None, None]:
+    def rest(self, method, url, headers: dict | None = None, **kwargs) -> Generator[RestResponseContextManager]:
         """
         A wrapper for self.client.request that:
 
@@ -457,7 +455,7 @@ class FastHttpUser(User):
                     resp.failure(f"{e.__class__.__name__}: {e} at {', '.join(error_lines)}. Response was {short_resp}")
 
     @contextmanager
-    def rest_(self, method, url, name=None, **kwargs) -> Generator[RestResponseContextManager, None, None]:
+    def rest_(self, method, url, name=None, **kwargs) -> Generator[RestResponseContextManager]:
         """
         Some REST api:s use a timestamp as part of their query string (mainly to break through caches).
         This is a convenience method for that, appending a _=<timestamp> parameter automatically

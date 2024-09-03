@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     T = TypeVar("T")
 
 
-def _kl_generator(users: Iterable[tuple[T, float]]) -> Iterator[T | None]:
+def _kl_generator(users: Iterable[tuple[T, float]]) -> Generator[T | None]:
     """Generator based on Kullback-Leibler divergence
 
     For example, given users A, B with weights 5 and 1 respectively,
@@ -97,7 +97,7 @@ class UsersDispatcher(Iterator):
 
         self._current_user_count = self.get_current_user_count()
 
-        self._dispatcher_generator: Generator[dict[str, dict[str, int]], None, None] = None  # type: ignore
+        self._dispatcher_generator: Generator[dict[str, dict[str, int]]] = None  # type: ignore
         # a generator is assigned (in new_dispatch()) to _dispatcher_generator before it's used
 
         self._user_generator = self._user_gen()
@@ -149,7 +149,7 @@ class UsersDispatcher(Iterator):
         # Sort again, first by index within host, to ensure Users get started evenly across hosts
         self._worker_nodes = sorted(self._worker_nodes, key=lambda worker: (worker._index_within_host, worker.id))
 
-    def _dispatcher(self) -> Generator[dict[str, dict[str, int]], None, None]:
+    def _dispatcher(self) -> Generator[dict[str, dict[str, int]]]:
         self._dispatch_in_progress = True
 
         if self._rebalance:
@@ -268,7 +268,7 @@ class UsersDispatcher(Iterator):
         self._rebalance = True
 
     @contextlib.contextmanager
-    def _wait_between_dispatch_iteration_context(self) -> Generator[None, None, None]:
+    def _wait_between_dispatch_iteration_context(self) -> Generator[None]:
         t0_rel = time.perf_counter()
 
         # We don't use `try: ... finally: ...` because we don't want to sleep

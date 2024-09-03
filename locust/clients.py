@@ -122,7 +122,7 @@ class HttpSession(requests.Session):
             return f"{self.base_url}{path}"
 
     @contextmanager
-    def rename_request(self, name: str) -> Generator[None, None, None]:
+    def rename_request(self, name: str) -> Generator[None]:
         """Group requests using the "with" keyword"""
 
         self.request_name = name
