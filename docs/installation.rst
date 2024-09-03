@@ -3,9 +3,12 @@
 Installation
 ============
 
-0. `Install Python <https://docs.python-guide.org/starting/installation/>`_ (3.9 or later)
+Using system-installed Python and pip
+-------------------------------------
 
-1. Install the package (check `Troubleshooting Installation`_ if the installation fails)
+0. `Install Python <https://docs.python-guide.org/starting/installation/>`_ (if you dont already have it)
+
+1. Install Locust
 
 .. code-block:: console
 
@@ -17,9 +20,33 @@ Installation
     :substitutions:
 
     $ locust -V
-    locust |version| from /usr/local/lib/python3.10/site-packages/locust (python 3.10.6)
+    locust |version| from /usr/local/lib/python3.12/site-packages/locust (Python 3.12.5)
 
-3. Done! Now you can :ref:`create your first test <quickstart>`
+
+Using uvx
+---------
+
+0. `Install uv <https://github.com/astral-sh/uv?tab=readme-ov-file#installation>`_
+
+1. Install and run locust in an ephemeral environment
+
+.. code-block:: console
+    :substitutions:
+
+    $ uvx locust -V
+    locust |version| from /.../uv/.../locust (Python 3.12.5)
+
+.. note::
+
+    Check `Troubleshooting Installation`_ if you encounter issues.
+
+
+Done!
+-----
+
+Now you can :ref:`create and run your first test <quickstart>`
+
+-----------------
 
 
 Pre-release builds

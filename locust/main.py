@@ -39,12 +39,14 @@ from .util.timespan import parse_timespan
 # import external plugins if  installed to allow for registering custom arguments etc
 try:
     import locust_plugins  # pyright: ignore[reportMissingImports]
-except ModuleNotFoundError:
-    pass
+except ModuleNotFoundError as e:
+    if e.msg != "No module named 'locust_plugins'":
+        raise
 try:
     import locust_cloud  # pyright: ignore[reportMissingImports]
-except ModuleNotFoundError:
-    pass
+except ModuleNotFoundError as e:
+    if e.msg != "No module named 'locust_cloud'":
+        raise
 
 version = locust.__version__
 

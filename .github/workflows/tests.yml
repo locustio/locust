@@ -5,78 +5,243 @@ on: [push, pull_request]
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  tests:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - {name: Windows, python: '3.12', os: windows-latest, tox: fail_fast_test_main }
-          # - {name: Mac, python: '3.12', os: macos-latest, tox: fail_fast_test_main }
-          - { name: "ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
-          - { name: "mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
-          # run some integration tests and abort immediately if they fail, for faster feedback
-          - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main }
-          - { name: "3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
-          - { name: "3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
-          - { name: "3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
-          - { name: "3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
+  #-------------------------
+  #       Building
+  #-------------------------
 
+  build_package:
+    name: Build and Cache Packages
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.set_tag.outputs.tag }}
+      tag_short: ${{ steps.set_tag_short.outputs.tag_short }}
+      branch: ${{ steps.set_branch.outputs.branch }}
+      is_merge_commit: ${{ steps.set_is_merge_commit.outputs.is_merge_commit }}
+      is_tag_build: ${{ steps.set_is_tag_build.outputs.is_tag_build }}
+      python_version: ${{ steps.set_python_version.outputs.python_version }}
+    
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # Set up Python and virtual environment
+          fetch-tags: true 
+
+      # Set up Python and Poetry and cache build dependencies
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python }}
-      - name: Make venv
-        run: |
-          python -m venv .venv
-      - name: Activate the virtualenv
-        if: ${{ matrix.os == 'windows-latest' }}
-        run: |
-          .venv\Scripts\activate
-      - name: Activate the virtualenv
-        if: ${{ matrix.os != 'windows-latest' }}
-        run: |
-          source .venv/bin/activate
-      # Set up poetry and cache for dependencies
-      - name: install poetry
-        run: |
-          python -m pip install poetry
-          poetry config virtualenvs.create false
-          poetry self add "poetry-dynamic-versioning[plugin]"
-      - name: Cache the virtualenv
+          python-version: "3.x"
+          cache: 'pip'
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          virtualenvs-path: .venv
+          installer-parallel: true
+          plugins: |
+            poetry-dynamic-versioning[plugin]
+            poethepoet[poetry_plugin]
+    
+      # Install and cache full build dependencies
+      - name: Load cached venv
+        id: cached-poetry-dependencies
         uses: actions/cache@v4
         with:
           path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('pyproject.toml') }}
-      - name: Install versioning plugin
-        run: |
-          python -m pip install poetry-dynamic-versioning[plugin]
-      # Install test dependencies (tox) to the root (non-package install)
-      - name: Install test dependencies
-        run: |
-          poetry install --no-root --only test
-      - name: set full Python version in PY env var
-        if: ${{ matrix.os != 'windows-latest' }}
-        # See https://pre-commit.com/#github-actions-example
-        run: echo "PY=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root --no-plugins
+
       # Install node and yarn in order to build the front end during packaging  
       - name: Set Node.js 20.x
         uses: actions/setup-node@v4
         with:
           node-version: 20.x
+          cache: 'yarn'
+          cache-dependency-path: locust/webui/yarn.lock
       - name: Install Yarn
         run: npm install -g yarn
+
+      # Build and upload the project artifacts only once
+      - name: Build Python dist and web UI
+        run: poetry build --no-interaction
+      - name: Upload Python dist as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-dist
+          path: dist/*
+
+      - name: Upload Web UI as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webui-dist
+          path: locust/webui/dist/*
+  
+      - name: Build UI library
+        run: yarn webui:build:lib
+      - name: Upload web UI library as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webui-lib-dist
+          path: locust/webui/lib
+      
+      # Set workflow metadata in one place so we can pull it out later
+      - id: set_tag
+        run: echo "tag=$(poetry version -s)" >> "$GITHUB_OUTPUT"
+      - id: set_tag_short
+        run: echo "tag_short=$(poetry version -s | cut -d '.' -f1-3)" >> "$GITHUB_OUTPUT"
+      - id: set_branch
+        run: echo "branch=${{ github.head_ref || github.ref_name }}" >> "$GITHUB_OUTPUT"
+      - id: set_is_merge_commit
+        run: echo "is_merge_commit=$( [ $(git rev-list --count $GITHUB_SHA^@) -eq 2 ] && echo 'true' || echo 'false' )" >> "$GITHUB_OUTPUT"
+      - id: set_is_tag_build
+        run: echo "is_tag_build=${{ startsWith(github.event.ref, 'refs/tags') }}" >> "$GITHUB_OUTPUT"
+      - id: set_python_version
+        run: echo "python_version=$(python -VV | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+  print_metadata:
+    name: Display metadata for build
+    runs-on: ubuntu-latest
+    needs: build_package
+    steps:
+       - run: |
+          echo "tag: ${{ needs.build_package.outputs.tag }}"
+          echo "tag_short: ${{ needs.build_package.outputs.tag_short }}"
+          echo "branch: ${{ needs.build_package.outputs.branch }}"
+          echo "is_merge_commit: ${{ needs.build_package.outputs.is_merge_commit }}"
+          echo "is_tag_build: ${{ needs.build_package.outputs.is_tag_build }}"
+          echo "python_version: ${{ needs.build_package.outputs.python_version }}"
+
+  #-------------------------
+  #       Testing
+  #-------------------------
+
+  tox_tests:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    needs: build_package
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Static analysis and utilities
+          - { name: "Ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
+          - { name: "Mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
+
+          # Verification of builds and other aspects          
+          - { name: "Docs Build", python: "3.10", os: ubuntu-latest, tox: "docs" }
+
+          # OS Integration tests 
+          - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
+          - { name: "Windows", python: '3.12', os: windows-latest, tox: fail_fast_test_main_external_package }
+          - { name: "MacOS", python: '3.12', os: macos-latest, tox: fail_fast_test_main_external_package }
+          
+          # Unit tests on Python versions
+          - { name: "Python 3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
+          - { name: "Python 3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
+          - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
+          - { name: "Python 3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Set up Python and Poetry 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: 'pip'
+          cache-dependency-path: poetry.lock
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          virtualenvs-path: .venv
+          installer-parallel: true
+          plugins: |
+            poetry-dynamic-versioning[plugin]
+            poethepoet[poetry_plugin]
+
+      # Install and cache test-only dependencies
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-tox-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root --with test,docs --no-plugins
+
+      # Grab the built artifacts to ensure we're testing what we eventually publish
+      - name: Download Python dist
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist
+    
+      - name: Download WebUI dist
+        uses: actions/download-artifact@v4
+        with:
+          name: webui-dist
+          path: locust/webui/dist
+
+      # Run tests!
       - name: Run tox tests
-        run: poetry run tox -e ${{ matrix.tox }}
+        run: |
+          source $VENV
+          tox -e ${{ matrix.tox }} --installpkg dist/*.whl
+      
+  test_docker_image:
+    name: Test Docker Image
+    runs-on: ubuntu-latest
+    needs: build_package
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+  
+      # Grab the built artifacts to ensure we're testing what we eventually publish
+      - name: Download Python dist
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist
+
+      # Set up Docker daemon dependencies for building and publishing
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build and load Docker image to the local daemon
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.ci
+          platforms: linux/amd64
+          load: true
+          tags: locustio/locust:${{ github.sha }}-test
+
+      # Run a basic test on the image
+      - name: Test docker image
+        run: |
+          docker run --rm locustio/locust:${{ github.sha }}-test --version
 
   lint_typecheck_test_webui:
+    name: Web UI Lint and Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -84,6 +249,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20.x
+          cache: 'yarn'
+          cache-dependency-path: locust/webui/yarn.lock
       - uses: borales/actions-yarn@v5
         with:
           cmd: install
@@ -105,199 +272,94 @@ jobs:
           cmd: type-check
           dir: locust/webui
 
-  verify_docker_build:
-    name: Always - Docker verify, push to tag 'master' if on master
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' # PR build doesnt get proper version, so dont try to build it
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-    #   The following steps aren't needed, but if you want 100% guarantee the tagged/release build will work you can add them
-    #   - name: Set up Python
-    #     uses: actions/setup-python@v5
-    #     with:
-    #       python-version: "3.x"
-    #   - name: Install dependencies
-    #     run: |
-    #       python -m pip install --upgrade pip poetry
-    #       python -m poetry config virtualenvs.create false
-    #       python -m poetry self add "poetry-dynamic-versioning[plugin]"
-    #   - run: echo "TAG=$(poetry version -s)" | tee -a $GITHUB_ENV
-      - uses: docker/login-action@v3
-        if: github.repository_owner == 'locustio'
-        with:
-          username: locustbuild
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: build and publish image
-        id: docker_build
-        uses: docker/build-push-action@v5
-        with:
-          build-args: |
-            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.ref == 'refs/heads/master' && github.repository_owner == 'locustio' }}
-          tags: locustio/locust:master
-
-  docker_tagged:
-    name: Tagged - Docker push to tag based on git tag. Also push 'latest' if on master
-    needs: tests
-    runs-on: ubuntu-latest
-    if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip poetry
-          python -m poetry config virtualenvs.create false
-          python -m poetry self add "poetry-dynamic-versioning[plugin]"
-      - run: echo "TAG=$(poetry version -s)" | tee -a $GITHUB_ENV
-      - run: echo "BRANCH=$(git branch -a --contains ${{ env.TAG }} | grep -v HEAD | cut -d '/' -f3)" | tee -a $GITHUB_ENV
-      - uses: docker/login-action@v3
-        with:
-          username: locustbuild
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: build and publish image
-        id: docker_build
-        uses: docker/build-push-action@v5
-        with:
-          build-args: |
-            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: locustio/locust:${{ env.TAG }}${{ ( env.BRANCH == 'master' && ',locustio/locust:latest') || '' }}
+  # -------------------------
+  #       Publishing
+  # -------------------------
 
   publish:
-    name: Publish release on tag
-    needs: [verify_docker_build, tests]
-    if: startsWith(github.event.ref, 'refs/tags') && github.repository_owner == 'locustio'
+    name: Publish prerelease on merge commit to master
+    needs: [tox_tests, lint_typecheck_test_webui, test_docker_image, build_package]
+    if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
     runs-on: ubuntu-latest
     steps:
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v5
+
+      # Download Python dist artifact
+      - name: Download Python dist 
+        uses: actions/download-artifact@v4
         with:
-          python-version: "3.x"
-      - name: Set Node.js 20.x
-        uses: actions/setup-node@v4
+          name: python-dist
+          path: dist
+
+      # Download Web UI lib artifact
+      - name: Download UI lib
+        uses: actions/download-artifact@v4
         with:
-          node-version: 20.x
-      - name: Install Yarn
-        run: npm install -g yarn
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip poetry
-          python -m poetry config virtualenvs.create false
-          python -m poetry self add "poetry-dynamic-versioning[plugin]"
-      # Pre-build the UI bundle and don't repeat it on the build step to allow sdist to find the files
-      - name: Prebuild UI
-        run: |
-          yarn webui:install
-          yarn webui:build
-          yarn webui:build:lib
-      - name: Build + set TAG env var for later use
-        run: |
-          SKIP_PRE_BUILD=true python -m poetry build
-          ./rename-wheel.sh
-          echo "TAG=$(poetry version -s)" | tee -a $GITHUB_ENV
-      - name: Publish tagged version to PyPI
+          name: webui-lib-dist
+          path: locust/webui/lib
+
+      # Staged docker builds using exports/artifacts is currently difficult using multi-arch builds with buildx
+      # So let's just build it here
+
+      # Set docker image and tag values
+      - name: Docker meta
+        id: docker_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: locustio/locust
+          tags: |
+            type=raw,value=latest,enable=${{ needs.build_package.outputs.is_tag_build }}
+            type=raw,value=${{ needs.build_package.outputs.tag }}
+            type=raw,value=${{ needs.build_package.outputs.branch }}
+
+      # Set up Docker daemon dependencies for building and publishing
+      - uses: docker/login-action@v3
+        with:
+          username: locustbuild
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build and push Docker image
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.ci
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.docker_meta.outputs.tags }}
+
+      # Publish Python package
+      - name: Publish prerelease version to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
+
+      # Publish UI lib
+      # On commits to trunk
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
+        if: github.ref == 'refs/heads/master'
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+        with:
+          cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ needs.build_package.outputs.tag_short }}-next-${{ github.run_id }}
+          dir: locust/webui
+      
+      # On tag builds
+      - uses: borales/actions-yarn@v5
+        name: Publish package on NPM
+        if: startsWith(github.event.ref, 'refs/tags')
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         with:
           cmd: publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
           dir: locust/webui
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-    # The following is disabled because it has stopped working.
-    #   - name: Tweet on release
-    #     uses: infraway/tweet-action@v1.0.1
-    #     with:
-    #       status: "New release: ${{ env.TAG }} https://github.com/locustio/locust/releases/tag/${{ env.TAG }}"
-    #       api_key: ${{ secrets.TWITTER_API_CONSUMER_KEY }}
-    #       api_key_secret: ${{ secrets.TWITTER_API_CONSUMER_SECRET }}
-    #       access_token: ${{ secrets.TWITTER_API_ACCESS_TOKEN_KEY }}
-    #       access_token_secret: ${{ secrets.TWITTER_API_ACCESS_TOKEN_SECRET }}
-
-  publish_prerelease:
-    name: Publish prerelease on merge commit to master
-    needs: tests
-    if: github.ref == 'refs/heads/master' && github.repository_owner == 'locustio'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      # asking github if something was a merge commit is surprisingly difficult
-      - run: git rev-parse HEAD^2 2>/dev/null >/dev/null && echo MERGE_COMMIT=1 | tee -a $GITHUB_ENV || true
-      - name: Set up Python
-        if: env.MERGE_COMMIT
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-      - name: Set Node.js 20.x
-        if: env.MERGE_COMMIT
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-      - name: Install Yarn
-        if: env.MERGE_COMMIT
-        run: npm install -g yarn
-      - name: Install dependencies
-        if: env.MERGE_COMMIT
-        run: |
-          python -m pip install --upgrade pip poetry
-          python -m poetry config virtualenvs.create false
-          python -m poetry self add "poetry-dynamic-versioning[plugin]"
-      # Pre-build the UI bundle and don't repeat it on the build step to allow sdist to find the files
-      - name: Prebuild UI
-        if: env.MERGE_COMMIT
-        run: |
-          yarn webui:install
-          yarn webui:build
-          yarn webui:build:lib
-      - name: Build
-        if: env.MERGE_COMMIT
-        run: |
-          SKIP_PRE_BUILD=true python -m poetry build
-          ./rename-wheel.sh
-      - name: Publish prerelease version to PyPI
-        if: env.MERGE_COMMIT
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          skip-existing: true
-      - name: Set locust version tag
-        run: echo "TAG=$(poetry version -s | cut -d '.' -f1-3)" | tee -a $GITHUB_ENV
-      - uses: borales/actions-yarn@v5
-        name: Publish package on NPM
-        with:
-          cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ env.TAG }}-next-${{ github.run_id }}
-          dir: locust/webui
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

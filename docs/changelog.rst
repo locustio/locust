@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.31.5
+======
+* WebUI: Correct types for form select by @andrewbaldwin44 in https://github.com/locustio/locust/pull/2872
+* Web UI Remove Scroll to Zoom by @andrewbaldwin44 in https://github.com/locustio/locust/pull/2876
+* Webui Remove chart initial data fetch by @andrewbaldwin44 in https://github.com/locustio/locust/pull/2878
+* Improved Build Pipeline https://github.com/locustio/locust/pull/2873, https://github.com/locustio/locust/pull/2879, https://github.com/locustio/locust/pull/2880
+
 2.31.4
 ======
 * Publish UI NPM package to simplify use from custom UIs (https://locust.cloud)

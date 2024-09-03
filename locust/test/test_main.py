@@ -1931,7 +1931,7 @@ class SecondUser(HttpUser):
                     "2s",
                     "--json",
                 ],
-                stderr=DEVNULL,
+                stderr=PIPE,
                 stdout=PIPE,
                 text=True,
             )
@@ -1943,6 +1943,9 @@ class SecondUser(HttpUser):
                 self.fail(f"Trying to parse {stdout} as json failed")
 
             self.assertEqual(0, proc.returncode)
+
+            if not data:
+                self.fail(f"No data in json: {stdout}, stderr: {stderr}")
 
             result = data[0]
             self.assertEqual(float, type(result["last_request_timestamp"]))

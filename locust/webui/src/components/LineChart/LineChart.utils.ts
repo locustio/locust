@@ -91,13 +91,6 @@ export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
   scatterplot,
 }: ILineChart<ChartType>) => ({
   title: { text: title },
-  dataZoom: [
-    {
-      type: 'inside',
-      start: 0,
-      end: 100,
-    },
-  ],
   tooltip: {
     trigger: 'axis',
     formatter: (params?: ILineChartTooltipFormatterParams[] | null) => {
@@ -138,11 +131,11 @@ export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
     right: 10,
     feature: {
       dataZoom: {
-        show: true,
         title: {
           zoom: 'Zoom Select',
           back: 'Zoom Reset',
         },
+        yAxisIndex: false,
       },
       saveAsImage: {
         name: title.replace(/\s+/g, '_').toLowerCase() + '_' + new Date().getTime() / 1000,
@@ -176,21 +169,14 @@ export const onChartZoom = (chart: ECharts) => (datazoom: unknown) => {
     return;
   }
 
-  const [{ start, end }] = batch;
-  const isZoomed = start > 0 && end < 100;
+  const [{ start, startValue, end }] = batch;
+  const isZoomed = (start > 0 && end <= 100) || startValue > 0;
 
   chart.setOption({
     dataZoom: [
       {
-        type: 'inside',
-        start,
-        end,
-      },
-      {
         type: 'slider',
         show: isZoomed,
-        start,
-        end,
       },
     ],
   });

@@ -17,7 +17,6 @@ export default function useFetchStats() {
   const updateChartMarkers = useAction(uiActions.updateChartMarkers);
   const swarm = useSelector(({ swarm }) => swarm);
   const previousSwarmState = useRef(swarm.state);
-  const hasSetInitStats = useRef(false);
   const [shouldAddMarker, setShouldAddMarker] = useState(false);
 
   const { data: statsData, refetch: refetchStats } = useGetStatsQuery();
@@ -88,17 +87,6 @@ export default function useFetchStats() {
       setSwarm({ state: statsData.state });
     }
   }, [statsData && statsData.state]);
-
-  useEffect(() => {
-    if (statsData) {
-      if (!hasSetInitStats.current) {
-        // handle setting stats on first load
-        updateStats();
-      }
-
-      hasSetInitStats.current = true;
-    }
-  }, [statsData]);
 
   useInterval(updateStats, STATS_REFETCH_INTERVAL, {
     shouldRunInterval: !!statsData && shouldRunRefetchInterval,
