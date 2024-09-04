@@ -47,7 +47,7 @@ Locust makes it easy to run load tests distributed over multiple machines. It is
 
 Locust has a user friendly web interface that shows the progress of your test in real-time. You can even change the load while the test is running. It can also be run without the UI, making it easy to use for CI/CD testing.
 
-<img src="docs/images/total_requests_per_second.png" alt="Locust UI charts" width="200"/> <img src="docs/images/webui-running-statistics.png" alt="Locust UI stats" width="200"/> <img src="docs/images/locust_workers.png" alt="Locust UI workers" width="200"/> <img src="docs/images/webui-splash-screenshot.png" alt="Locust UI start test" width="200"/>
+<img src="docs/images/bottlenecked_server.png" alt="Locust UI charts" width="200"/> <img src="docs/images/webui-running-statistics.png" alt="Locust UI stats" width="200"/> <img src="docs/images/locust_workers.png" alt="Locust UI workers" width="200"/> <img src="docs/images/webui-splash-screenshot.png" alt="Locust UI start test" width="200"/>
 
 #### Can test any system
 
