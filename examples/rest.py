@@ -77,7 +77,7 @@ class RestUserThatLooksAtErrors(FastHttpUser):
     abstract = True
 
     @contextmanager
-    def rest(self, method, url, **kwargs) -> Generator[RestResponseContextManager, None, None]:
+    def rest(self, method, url, **kwargs) -> Generator[RestResponseContextManager]:
         extra_headers = {"my_header": "my_value"}
         with super().rest(method, url, headers=extra_headers, **kwargs) as resp:
             if resp.js and "error" in resp.js and resp.js["error"] is not None:
