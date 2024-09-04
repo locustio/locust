@@ -15,6 +15,7 @@ import tempfile
 import textwrap
 from collections import OrderedDict
 from typing import Any, NamedTuple
+from urllib.parse import urlparse
 from uuid import uuid4
 
 if sys.version_info >= (3, 11):
@@ -159,7 +160,7 @@ def download_locustfile_from_url(url: str) -> str:
         sys.stderr.write(f"Failed to get locustfile from: {url}. Response is not valid python code.")
         sys.exit(1)
 
-    with open(os.path.join(tempfile.gettempdir(), url.rsplit("/", 1)[-1]), "w") as locustfile:
+    with open(os.path.join(tempfile.gettempdir(), urlparse(url).path.split("/")[-1]), "w") as locustfile:
         locustfile.write(response.text)
 
     atexit.register(exit_handler, locustfile.name)
