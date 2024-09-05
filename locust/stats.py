@@ -739,7 +739,7 @@ class StatsError:
         return f"{self.method} {self.name}: {unwrapped_error}"
 
     def serialize(self) -> StatsErrorDict:
-        def _getattr(obj: StatsError, key: str, default: Any | None) -> Any | None:
+        def _getattr(obj: StatsError, key: str, default: Any) -> Any:
             value = getattr(obj, key, default)
 
             if key in ["error"]:

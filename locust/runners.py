@@ -305,7 +305,7 @@ class Runner:
     ) -> None: ...
 
     @abstractmethod
-    def send_message(self, msg_type: str, data: Any | None = None, client_id: str | None = None) -> None: ...
+    def send_message(self, msg_type: str, data: Any = None, client_id: str | None = None) -> None: ...
 
     def start_shape(self) -> None:
         """
@@ -550,7 +550,7 @@ class LocalRunner(Runner):
             return
         super().stop()
 
-    def send_message(self, msg_type: str, data: Any | None = None, client_id: str | None = None) -> None:
+    def send_message(self, msg_type: str, data: Any = None, client_id: str | None = None) -> None:
         """
         Emulates internodal messaging by calling registered listeners
 

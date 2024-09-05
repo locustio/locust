@@ -51,14 +51,14 @@ if TYPE_CHECKING:
         context: dict
 
     class PutKwargs(PostKwargs, total=False):
-        json: Any | None
+        json: Any
 
     class PatchKwargs(PostKwargs, total=False):
-        json: Any | None
+        json: Any
 
     class RESTKwargs(PostKwargs, total=False):
         data: str | dict | None
-        json: Any | None
+        json: Any
 
 
 # Monkey patch geventhttpclient.useragent.CompatRequest so that Cookiejar works with Python >= 3.3
@@ -185,7 +185,7 @@ class FastHttpSession:
         stream: bool = False,
         headers: dict | None = None,
         auth: tuple[str | bytes, str | bytes] | None = None,
-        json: Any | None = None,
+        json: Any = None,
         allow_redirects: bool = True,
         context: dict = {},
         **kwargs,
@@ -316,7 +316,7 @@ class FastHttpSession:
         return self.request("PATCH", url, data=data, **kwargs)
 
     def post(
-        self, url: str, data: str | dict | None = None, json: Any | None = None, **kwargs: Unpack[PostKwargs]
+        self, url: str, data: str | dict | None = None, json: Any = None, **kwargs: Unpack[PostKwargs]
     ) -> ResponseContextManager | FastResponse:
         """Sends a POST request"""
         return self.request("POST", url, data=data, json=json, **kwargs)
