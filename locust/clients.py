@@ -31,11 +31,11 @@ if TYPE_CHECKING:
     # Mypy underneath uses information from the https://github.com/python/typeshed repo.
 
     class RequestKwargs(TypedDict, total=False):
-        params: Any | None  # simplified signature
+        params: Any  # simplified signature
         headers: Mapping[str, str | bytes | None] | None
         cookies: RequestsCookieJar | MutableMapping[str, str] | None
-        files: Any | None  # simplified signature
-        auth: Any | None  # simplified signature
+        files: Any  # simplified signature
+        auth: Any  # simplified signature
         timeout: float | tuple[float, float] | tuple[float, None] | None
         allow_redirects: bool
         proxies: MutableMapping[str, str] | None
@@ -139,8 +139,8 @@ class HttpSession(requests.Session):
         catch_response: bool = False,
         context: dict = {},
         *,
-        data: Any | None = None,
-        json: Any | None = None,
+        data: Any = None,
+        json: Any = None,
         **kwargs: Unpack[RequestKwargs],
     ):
         """
@@ -245,7 +245,7 @@ class HttpSession(requests.Session):
             return r
 
     def get(
-        self, url: str | bytes, *, data: Any | None = None, json: Any | None = None, **kwargs: Unpack[RESTKwargs]
+        self, url: str | bytes, *, data: Any = None, json: Any = None, **kwargs: Unpack[RESTKwargs]
     ) -> ResponseContextManager | Response | LocustResponse:
         """Sends a GET request"""
         kwargs.setdefault("allow_redirects", True)
@@ -255,8 +255,8 @@ class HttpSession(requests.Session):
         self,
         url: str | bytes,
         *,
-        data: Any | None = None,
-        json: Any | None = None,
+        data: Any = None,
+        json: Any = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
         """Sends a OPTIONS request"""
@@ -267,8 +267,8 @@ class HttpSession(requests.Session):
         self,
         url: str | bytes,
         *,
-        data: Any | None = None,
-        json: Any | None = None,
+        data: Any = None,
+        json: Any = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
         """Sends a HEAD request"""
@@ -278,8 +278,8 @@ class HttpSession(requests.Session):
     def post(
         self,
         url: str | bytes,
-        data: Any | None = None,
-        json: Any | None = None,
+        data: Any = None,
+        json: Any = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
         """Sends a POST request"""
@@ -288,9 +288,9 @@ class HttpSession(requests.Session):
     def put(
         self,
         url: str | bytes,
-        data: Any | None = None,
+        data: Any = None,
         *,
-        json: Any | None = None,
+        json: Any = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
         """Sends a PUT request"""
@@ -299,9 +299,9 @@ class HttpSession(requests.Session):
     def patch(
         self,
         url: str | bytes,
-        data: Any | None = None,
+        data: Any = None,
         *,
-        json: Any | None = None,
+        json: Any = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
         """Sends a PATCH request"""
@@ -311,8 +311,8 @@ class HttpSession(requests.Session):
         self,
         url: str | bytes,
         *,
-        data: Any | None = None,
-        json: Any | None = None,
+        data: Any = None,
+        json: Any = None,
         **kwargs: Unpack[RESTKwargs],
     ) -> ResponseContextManager | Response | LocustResponse:
         """Sends a DELETE request"""
