@@ -29,7 +29,7 @@ def _kl_generator(users: Iterable[tuple[T, float]]) -> Generator[T | None]:
     For example, given users A, B with weights 5 and 1 respectively,
     this algorithm will yield AAABAAAAABAA.
     """
-    heap = [(x * log2(x / (x + 1.0)), x + 1.0, x, name) for name, x in users]
+    heap = [(x * log2(x / (x + 1.0)), x + 1.0, x, name) for name, x in users if x > 0]
     if not heap:
         while True:
             yield None
