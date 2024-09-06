@@ -9,10 +9,7 @@ You want to contribute to Locust? Great! Here is a list of `open bugs/feature re
 Install Locust for development
 ==============================
 
-Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then run
-
-.. note::
-    To build the Locust web UI, you must have `node` and `yarn` installed - see the *Making changes to Locust's Web UI* section below
+Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then
 
 .. code-block:: sh
 
@@ -34,7 +31,7 @@ Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then run
     # perform an editable install of the "locust" package along with the dev and test packages
     $ poetry install --with dev,test
 
-Now the ``locust`` command will run *your* code with no need for reinstalling after making changes.
+Now the ``locust`` command will run *your* code (with no need for reinstalling after making changes).
 
 To contribute your changes, push to a branch in your repo and then `open a PR on github <https://github.com/locustio/locust/compare>`_. 
 
