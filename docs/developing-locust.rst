@@ -25,7 +25,7 @@ Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then
     # perform an editable install of the "locust" package along with the dev and test packages:
     $ poetry install --with dev,test
 
-Now the ``locust`` command will run *your* code (with no need for reinstalling after making changes).
+Now the ``poetry run locust`` command will run *your* code (with no need for reinstalling after making changes).
 
 To contribute your changes, push to a branch in your repo and then `open a PR on github <https://github.com/locustio/locust/compare>`_. 
 
