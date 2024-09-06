@@ -13,22 +13,16 @@ Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then
 
 .. code-block:: sh
 
-    # clone the repo
+    # clone the repo:
     $ git clone git://github.com/<YourName>/locust.git
 
-    # install the poetry build system
-    # use your preferred method from the poetry docs
-    # https://python-poetry.org/docs/#installation
+    # install the poetry build system, see https://python-poetry.org/docs/#installation
 
-    ...
-
-    # install the required poetry plugins
-    # https://python-poetry.org/docs/plugins/#using-plugins
-
+    # install the required poetry plugins:
     $ poetry self add "poethepoet[poetry_plugin]"
     $ poetry self add "poetry-dynamic-versioning[plugin]"
 
-    # perform an editable install of the "locust" package along with the dev and test packages
+    # perform an editable install of the "locust" package along with the dev and test packages:
     $ poetry install --with dev,test
 
 Now the ``locust`` command will run *your* code (with no need for reinstalling after making changes).
