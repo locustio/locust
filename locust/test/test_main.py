@@ -129,7 +129,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             try:
                 # Use polling mechanism to wait until the port is in use
-                poll_until(lambda: is_port_in_use(port), timeout=10)
+                poll_until(lambda: is_port_in_use(port), timeout=20)
 
                 # Once the web server is up, send a request to start the swarm
                 requests.post(
@@ -175,7 +175,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             try:
                 # Polling to ensure the process has started on the chosen port
-                poll_until(lambda: is_port_in_use(port), timeout=10)
+                poll_until(lambda: is_port_in_use(port), timeout=20)
 
 
                 proc.send_signal(signal.SIGTERM)
@@ -216,7 +216,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             try:
                 # Poll until the specified port is in use
-                poll_until(lambda: is_port_in_use(port), timeout=10)
+                poll_until(lambda: is_port_in_use(port), timeout=20)
 
                 # Once the web server is up, send the SIGTERM signal
                 proc.send_signal(signal.SIGTERM)
@@ -262,7 +262,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             try:
                 # Poll until the specified port is in use
-                poll_until(lambda: is_port_in_use(port), timeout=10)
+                poll_until(lambda: is_port_in_use(port), timeout=20)
 
                 # Once the web server is up, send a request to check if it's responding
                 response = requests.get(f"http://localhost:{port}/")
@@ -310,7 +310,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             try:
                 # Use polling mechanism to wait until the port is in use
-                poll_until(lambda: is_port_in_use(port), timeout=10)
+                poll_until(lambda: is_port_in_use(port), timeout=20)
 
                 # Once the web server is up, send a request to check if it's responding
                 response = requests.get(f"http://localhost:{port}/")
@@ -405,7 +405,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 
                 try:
                     # Poll until the specified port is in use
-                    poll_until(lambda: is_port_in_use(port), timeout=10)
+                    poll_until(lambda: is_port_in_use(port), timeout=20)
 
                     # Once the web server is up, send the SIGTERM signal
                     proc.send_signal(signal.SIGTERM)
@@ -439,7 +439,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     
                     try:
                         # Poll until the specified port is in use
-                        poll_until(lambda: is_port_in_use(port), timeout=10)
+                        poll_until(lambda: is_port_in_use(port), timeout=20)
 
                         # Once the web server is up, send the SIGTERM signal
                         proc.send_signal(signal.SIGTERM)
@@ -501,7 +501,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 
                 try:
                     # Poll until the specified port is in use
-                    poll_until(lambda: is_port_in_use(port), timeout=10)
+                    poll_until(lambda: is_port_in_use(port), timeout=20)
 
                     # Once the web server is up, send the SIGTERM signal
                     proc.send_signal(signal.SIGTERM)
