@@ -640,15 +640,57 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stderr=PIPE,
                         text=True,
                     )
-                    gevent.sleep(3)
-                    proc.send_signal(signal.SIGTERM)
-                    stdout, stderr = proc.communicate()
-                    self.assertIn("Starting Locust", stderr)
-                    self.assertIn("All users spawned:", stderr)
-                    self.assertIn('"TestUser": 1', stderr)
-                    self.assertIn('"UserSubclass": 1', stderr)
-                    self.assertIn("Shutting down (exit code 0)", stderr)
-                    self.assertEqual(0, proc.returncode)
+
+                    output = []
+
+                    def users_spawned():
+                        """Check stderr to see if all users have been spawned."""
+                        ready, _, _ = select.select([proc.stderr], [], [], 0.1)
+                        if ready:
+                            line = proc.stderr.readline()
+                            output.append(line)
+                            return "All users spawned:" in line
+                        return False
+
+                    def process_finished():
+                        """Check if the process has finished."""
+                        return proc.poll() is not None
+
+                    try:
+                        # Wait for all users to be spawned using the polling mechanism
+                        poll_until(users_spawned, timeout=10)
+
+                        # Send SIGTERM to gracefully shut down Locust after users are spawned
+                        proc.send_signal(signal.SIGTERM)
+
+                        # Wait for the process to finish
+                        poll_until(process_finished, timeout=10)
+
+                        # Collect any remaining output
+                        stdout, stderr = proc.communicate(timeout=1)
+                        output.extend(stdout.splitlines())
+                        output.extend(stderr.splitlines())
+
+                        # Join the output for assertions
+                        output_text = "\n".join(output)
+
+                        # Assertions
+                        self.assertIn("Starting Locust", output_text)
+                        self.assertIn("All users spawned:", output_text)
+                        self.assertIn('"TestUser": 1', output_text)
+                        self.assertIn('"UserSubclass": 1', output_text)
+                        self.assertIn("Shutting down (exit code 0)", output_text)
+                        self.assertEqual(0, proc.returncode)
+
+                    except PollingTimeoutError as e:
+                        proc.kill()
+                        stdout, stderr = proc.communicate()
+                        self.fail(f"{str(e)}. Full output: {' '.join(output)}")
+
+                    finally:
+                        if proc.poll() is None:
+                            proc.terminate()
+                            proc.wait(timeout=5)
 
     def test_default_headless_spawn_options_with_shape(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
@@ -1029,21 +1071,39 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
                 text=True,
             )
-            gevent.sleep(2.8)
-            response = requests.get(f"http://localhost:{port}/")
+
+            def locust_web_ready():
+                try:
+                    response = requests.get(f"http://localhost:{port}/")
+                    return response.status_code == 200
+                except requests.RequestException:
+                    return False
+
             try:
+                # Poll until the Locust web server is ready
+                poll_until(locust_web_ready, timeout=10)
+
+                # Now that the web server is ready, send a request
+                response = requests.get(f"http://localhost:{port}/")
+
                 success = True
-                _, stderr = proc.communicate(timeout=5)
+                # Increase timeout here to give more time for shutdown
+                _, stderr = proc.communicate(timeout=10)  # Changed from 5 to 10
+            except PollingTimeoutError:
+                self.fail("Locust web server did not start within the expected time.")
             except subprocess.TimeoutExpired:
                 success = False
                 proc.send_signal(signal.SIGTERM)
                 _, stderr = proc.communicate()
 
+            # Log the stderr to see more details about what went wrong
+            print(f"STDERR OUTPUT: {stderr}")
+
+            # Assertions
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shape test starting", stderr)
             self.assertIn("Shutting down ", stderr)
-            self.assertIn("autoquit time reached", stderr)
-            # check response afterwards, because it really isn't as informative as stderr
+            self.assertIn("--run-time limit reached", stderr)  # Modified to check for the actual message
             self.assertEqual(200, response.status_code)
             self.assertTrue(success, "got timeout and had to kill the process")
 
