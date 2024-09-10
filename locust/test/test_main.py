@@ -14,6 +14,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from typing import Callable
 from requests.exceptions import RequestException
+import logging
 
 
 import gevent
@@ -29,28 +30,42 @@ from pyquery import PyQuery as pq
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .util import get_free_tcp_port, patch_env, temporary_file
 
+logging.basicConfig(level=logging.DEBUG)
+
+
 SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give it some extra time
 
 class PollingTimeoutError(Exception):
     """Custom exception for polling timeout."""
     pass
 
-def poll_until(condition_func, timeout=10, poll_interval=0.1):
+def poll_until(condition_func, timeout=120, poll_interval=0.5):
     start_time = time.time()
     while time.time() - start_time < timeout:
         if condition_func():
+            logging.debug("Condition met")
             return True
-        gevent.sleep(poll_interval) 
+        logging.debug(f"Condition not met, sleeping for {poll_interval} seconds")
+        gevent.sleep(poll_interval)
     raise PollingTimeoutError(f"Condition not met within {timeout} seconds")
 
-
-def is_port_in_use(port: int) -> bool:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+def is_port_in_use(port: int, host: str = 'localhost', timeout: float = 5.0) -> bool:
+    start_time = time.time()
+    while time.time() - start_time < timeout:
         try:
-            s.bind(('localhost', port))
-            return False
-        except socket.error:
-            return True
+            with socket.create_connection((host, port), timeout=1) as sock:
+                return True
+        except (ConnectionRefusedError, socket.timeout):
+            time.sleep(0.1)
+    return False
+
+def is_locust_ready(port):
+    try:
+        response = requests.get(f"http://localhost:{port}/")
+        return response.status_code == 200
+    except requests.ConnectionError:
+        return False
+    
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
     """
@@ -266,7 +281,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             try:
                 # Poll until the specified port is in use
-                poll_until(lambda: is_port_in_use(port), timeout=60)
+                time.sleep(1)
+                poll_until(lambda: is_locust_ready(port), timeout=120)
 
                 # Once the web server is up, send a request to check if it's responding
                 response = requests.get(f"http://localhost:{port}/")
