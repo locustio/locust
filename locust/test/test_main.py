@@ -1086,82 +1086,74 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
 
     def test_autostart_multiple_locustfiles_with_shape(self):
-            content = textwrap.dedent(
-                """
-                from locust import User, task, between
-                class TestUser2(User):
+        port = get_free_tcp_port()
+        content = textwrap.dedent(
+            """
+            from locust import User, task, between
+            class TestUser2(User):
+                wait_time = between(2, 4)
+                @task
+                def my_task(self):
+                    print("running my_task() again")
+            """
+        )
+        with mock_locustfile(content=content) as mocked1:
+            with temporary_file(
+                content=textwrap.dedent(
+                    """
+                from locust import User, task, between, LoadTestShape
+                class LoadTestShape(LoadTestShape):
+                    def tick(self):
+                        run_time = self.get_run_time()
+                        if run_time < 2:
+                            return (10, 1)
+
+                        return None
+
+                class TestUser(User):
                     wait_time = between(2, 4)
                     @task
                     def my_task(self):
-                        print("running my_task() again")
-                """
-            )
-            with mock_locustfile(content=content) as mocked1:
-                with temporary_file(
-                    content=textwrap.dedent(
-                        """
-                    from locust import User, task, between, LoadTestShape
-                    class LoadTestShape(LoadTestShape):
-                        def tick(self):
-                            run_time = self.get_run_time()
-                            if run_time < 2:
-                                return (10, 1)
+                        print("running my_task()")
+            """
+                )
+            ) as mocked2:
+                proc = subprocess.Popen(
+                    [
+                        "locust",
+                        "-f",
+                        f"{mocked1.file_path},{mocked2}",
+                        "--web-port",
+                        str(port),
+                        "--autostart",
+                        "--autoquit",
+                        "3",
+                    ],
+                    stdout=PIPE,
+                    stderr=PIPE,
+                    text=True,
+                )
+                gevent.sleep(2.8)
+                success = True
+                try:
+                    response = requests.get(f"http://localhost:{port}/")
+                except ConnectionError:
+                    success = False
+                try:
+                    _, stderr = proc.communicate(timeout=5)
+                except subprocess.TimeoutExpired:
+                    success = False
+                    proc.send_signal(signal.SIGTERM)
+                    _, stderr = proc.communicate()
 
-                            return None
+                self.assertIn("Starting Locust", stderr)
+                self.assertIn("Shape test starting", stderr)
+                self.assertIn("Shutting down ", stderr)
+                self.assertIn("autoquit time reached", stderr)
+                # check response afterwards, because it really isn't as informative as stderr
+                self.assertEqual(200, response.status_code)
+                self.assertTrue(success, "got timeout and had to kill the process")
 
-                    class TestUser(User):
-                        wait_time = between(2, 4)
-                        @task
-                        def my_task(self):
-                            print("running my_task()")
-                """
-                    )
-                ) as mocked2:
-                    port = get_free_tcp_port()
-                    proc = subprocess.Popen(
-                        [
-                            "locust",
-                            "-f",
-                            f"{mocked1.file_path},{mocked2}",
-                            "--web-port",
-                            str(port),
-                            "--autostart",
-                            "--autoquit",
-                            "3",
-                        ],
-                        stdout=PIPE,
-                        stderr=PIPE,
-                        text=True,
-                    )
-                    
-                    try:
-                        response = wait_for_locust_to_start(f"http://127.0.0.1:{port}/")
-                        self.assertIsNotNone(response, f"No response received from Locust web interface at http://127.0.0.1:{port}/ within 30 seconds")
-                        
-                        if response:
-                            self.assertEqual(200, response.status_code)
-                            content = response.text
-                            self.assertIn("Shape test starting", content)
-                            self.assertIn("Shutting down", content)
-                            self.assertIn("autoquit time reached", content)
-                        
-                        stdout, stderr = proc.communicate(timeout=5)
-                        self.assertIn("Starting Locust", stderr)
-                        self.assertIn("Shape test starting", stderr)
-                        self.assertIn("Shutting down ", stderr)
-                        self.assertIn("autoquit time reached", stderr)
-                        self.assertTrue(proc.returncode == 0, "Expected exit code 0, got %r" % proc.returncode)
-                    
-                    except Exception as e:
-                        self.fail(f"Test failed with exception: {str(e)}")
-                    
-                    finally:
-                        if proc.poll() is None:
-                            proc.terminate()
-                            try:
-                                proc.wait(timeout=5)
-                            except subprocess.TimeoutExpired:
-                                proc.kill()
 
     @unittest.skipIf(platform.system() == "Darwin", reason="Messy on macOS on GH")
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
