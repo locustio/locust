@@ -281,34 +281,24 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             try:
                 logging.info("Waiting for port to be in use")
-                poll_until(lambda: is_port_in_use(port), timeout=120)
+                poll_until(lambda: is_port_in_use(port), timeout=20)  # Reduced timeout
                 logging.info("Port is now in use")
 
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
                 logging.info("Received 200 response from Locust web interface")
 
-                # Use Locust API to stop the test
-                requests.get(f"http://localhost:{port}/stop")
-                time.sleep(2)  # Give Locust time to start shutting down
-
                 # Send SIGTERM signal
                 proc.send_signal(signal.SIGTERM)
                 
-                try:
-                    stdout, stderr = proc.communicate(timeout=30)  # Increased timeout to 30 seconds
-                    logging.info("Locust process communication complete")
-                except subprocess.TimeoutExpired:
-                    logging.warning("Locust process did not terminate within the timeout. Forcing termination.")
-                    proc.kill()
-                    stdout, stderr = proc.communicate()
+                stdout, stderr = proc.communicate(timeout=10)  # Reduced timeout
+                logging.info("Locust process communication complete")
 
                 logging.info(f"Locust stdout: {stdout}")
                 logging.info(f"Locust stderr: {stderr}")
 
                 self.assertIn("Starting web interface at", stderr)
                 self.assertIn("Starting Locust", stderr)
-
 
                 logging.info("All assertions passed")
 
