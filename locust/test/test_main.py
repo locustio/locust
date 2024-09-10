@@ -73,7 +73,7 @@ MOCK_LOCUSTFILE_CONTENT_B = textwrap.dedent(
 class ProcessIntegrationTest(TestCase):
     def setUp(self):
         super().setUp()
-        self.timeout = gevent.Timeout(10)
+        self.timeout = gevent.Timeout(30)
         self.timeout.start()
 
     def tearDown(self):
@@ -1050,9 +1050,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         port = get_free_tcp_port()
         content = textwrap.dedent(
             """
-            from locust import User, task, constant
+            from locust import User, task, between
             class TestUser2(User):
-                wait_time = constant(0.1)  # Reduced wait time
+                wait_time = between(2, 4)
                 @task
                 def my_task(self):
                     print("running my_task() again")
@@ -1062,20 +1062,21 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with temporary_file(
                 content=textwrap.dedent(
                     """
-                    from locust import User, task, constant, LoadTestShape
-                    class LoadTestShape(LoadTestShape):
-                        def tick(self):
-                            run_time = self.get_run_time()
-                            if run_time < 0.5:  # Reduced from 2 to 0.5 seconds
-                                return (10, 1)
-                            return None
+                from locust import User, task, between, LoadTestShape
+                class LoadTestShape(LoadTestShape):
+                    def tick(self):
+                        run_time = self.get_run_time()
+                        if run_time < 2:
+                            return (10, 1)
 
-                    class TestUser(User):
-                        wait_time = constant(0.1)  # Reduced wait time
-                        @task
-                        def my_task(self):
-                            print("running my_task()")
-                    """
+                        return None
+
+                class TestUser(User):
+                    wait_time = between(2, 4)
+                    @task
+                    def my_task(self):
+                        print("running my_task()")
+            """
                 )
             ) as mocked2:
                 proc = subprocess.Popen(
@@ -1087,34 +1088,21 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         str(port),
                         "--autostart",
                         "--autoquit",
-                        "1",  # Reduced from 3 to 1 second
+                        "3",
                     ],
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
                 )
-
+                gevent.sleep(2.8)
                 success = True
-                response = None
                 try:
-                    def locust_web_ready():
-                        try:
-                            resp = requests.get(f"http://localhost:{port}/")
-                            return resp.status_code == 200
-                        except requests.RequestException:
-                            return False
-
-                    poll_until(locust_web_ready, timeout=3, poll_interval=0.05)
-
                     response = requests.get(f"http://localhost:{port}/")
-
-                    def process_finished():
-                        return proc.poll() is not None
-
-                    poll_until(process_finished, timeout=3, poll_interval=0.05)
-
-                    _, stderr = proc.communicate(timeout=0.5)
-                except (PollingTimeoutError, requests.RequestException):
+                except ConnectionError:
+                    success = False
+                try:
+                    _, stderr = proc.communicate(timeout=5)
+                except subprocess.TimeoutExpired:
                     success = False
                     proc.send_signal(signal.SIGTERM)
                     _, stderr = proc.communicate()
@@ -1123,9 +1111,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shape test starting", stderr)
                 self.assertIn("Shutting down ", stderr)
                 self.assertIn("autoquit time reached", stderr)
-                self.assertIsNotNone(response, "No response received from Locust web interface")
-                if response:
-                    self.assertEqual(200, response.status_code)
+                # check response afterwards, because it really isn't as informative as stderr
+                self.assertEqual(200, response.status_code)
                 self.assertTrue(success, "got timeout and had to kill the process")
 
     @unittest.skipIf(platform.system() == "Darwin", reason="Messy on macOS on GH")
