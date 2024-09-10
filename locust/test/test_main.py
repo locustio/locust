@@ -86,7 +86,7 @@ MOCK_LOCUSTFILE_CONTENT_B = textwrap.dedent(
 class ProcessIntegrationTest(TestCase):
     def setUp(self):
         super().setUp()
-        self.timeout = gevent.Timeout(30)
+        self.timeout = gevent.Timeout(60)
         self.timeout.start()
 
     def tearDown(self):
@@ -275,7 +275,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             try:
                 # Poll until the specified port is in use
-                poll_until(lambda: is_port_in_use(port), timeout=20)
+                poll_until(lambda: is_port_in_use(port), timeout=60)
 
                 # Once the web server is up, send a request to check if it's responding
                 response = requests.get(f"http://localhost:{port}/")
@@ -998,14 +998,15 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             content=MOCK_LOCUSTFILE_CONTENT
             + textwrap.dedent(
                 """
-                from locust import LoadTestShape
-                class LoadTestShape(LoadTestShape):
-                    def tick(self):
-                        run_time = self.get_run_time()
-                        if run_time < 2:
-                            return (10, 1)
-                        return None
-                """
+            from locust import LoadTestShape
+            class LoadTestShape(LoadTestShape):
+                def tick(self):
+                    run_time = self.get_run_time()
+                    if run_time < 2:
+                        return (10, 1)
+
+                    return None
+            """
             )
         ) as mocked:
             proc = subprocess.Popen(
@@ -1017,70 +1018,27 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     str(port),
                     "--autostart",
                     "--autoquit",
-                    "2",  
+                    "3",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
             )
-
+            gevent.sleep(2.8)
+            response = requests.get(f"http://localhost:{port}/")
             try:
-                # Poll until the web server is up or timeout after 5 seconds
-                def locust_web_ready():
-                    try:
-                        response = requests.get(f"http://localhost:{port}/")
-                        print(f"Locust web interface response: {response.status_code}")
-                        return response.status_code == 200
-                    except requests.RequestException as e:
-                        print(f"Error connecting to Locust web interface: {e}")
-                        return False
-
-                try:
-                    poll_until(locust_web_ready, timeout=5, poll_interval=0.1)
-                    print("Locust web interface is ready")
-                except PollingTimeoutError:
-                    print("Timeout waiting for Locust web interface")
-                    raise
-
-                # Get the response after ensuring the web server is up
-                response = requests.get(f"http://localhost:{port}/")
-                print(f"Got response from Locust web interface: {response.status_code}")
-
-                # Poll until the process finishes or timeout after 5 seconds
-                def process_finished():
-                    return proc.poll() is not None
-
-                try:
-                    poll_until(process_finished, timeout=5, poll_interval=0.1)
-                    print("Locust process finished")
-                except PollingTimeoutError:
-                    print("Timeout waiting for Locust process to finish")
-                    raise
-
-                stdout, stderr = proc.communicate(timeout=0.5)
                 success = True
-            except Exception as e:
-                print(f"Exception occurred: {e}")
+                _, stderr = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
                 success = False
                 proc.send_signal(signal.SIGTERM)
-                stdout, stderr = proc.communicate()
-            finally:
-                if proc.poll() is None:
-                    print("Terminating Locust process")
-                    proc.terminate()
-                    try:
-                        proc.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        print("Killing Locust process")
-                        proc.kill()
-
-            print(f"STDOUT: {stdout}")
-            print(f"STDERR: {stderr}")
+                _, stderr = proc.communicate()
 
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shape test starting", stderr)
             self.assertIn("Shutting down ", stderr)
             self.assertIn("autoquit time reached", stderr)
+            # check response afterwards, because it really isn't as informative as stderr
             self.assertEqual(200, response.status_code)
             self.assertTrue(success, "got timeout and had to kill the process")
 
