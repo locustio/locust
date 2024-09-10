@@ -229,6 +229,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           context: .
           file: ./Dockerfile.ci
           platforms: linux/amd64
