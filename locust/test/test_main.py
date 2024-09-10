@@ -1195,95 +1195,94 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc.terminate()
                 proc.wait(timeout=5)
 
+    @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, and thus we cannot import pty")
+    def test_input(self):
+        import pty
 
-@unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, and thus we cannot import pty")
-def test_input(self):
-    import pty
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+        from locust import User, TaskSet, task, between
 
-    LOCUSTFILE_CONTENT = textwrap.dedent(
+        class UserSubclass(User):
+            wait_time = between(0.2, 0.8)
+            @task
+            def t(self):
+                print("Test task is running")
         """
-    from locust import User, TaskSet, task, between
-
-    class UserSubclass(User):
-        wait_time = between(0.2, 0.8)
-        @task
-        def t(self):
-            print("Test task is running")
-    """
-    )
-    with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-        stdin_m, stdin_s = pty.openpty()
-        stdin = os.fdopen(stdin_m, "wb", 0)
-
-        proc = subprocess.Popen(
-            " ".join(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--headless",
-                    "--run-time",
-                    "7s",
-                    "-u",
-                    "0",
-                    "--loglevel",
-                    "INFO",
-                ]
-            ),
-            stderr=STDOUT,
-            stdin=stdin_s,
-            stdout=PIPE,
-            shell=True,
-            text=True,
-            bufsize=1,
-            universal_newlines=True,
         )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            stdin_m, stdin_s = pty.openpty()
+            stdin = os.fdopen(stdin_m, "wb", 0)
 
-        def poll_output(proc, expected_output, timeout=5):
-            start_time = time.time()
-            output = ""
-            while time.time() - start_time < timeout:
-                if proc.poll() is not None:
-                    break
-                r, _, _ = select.select([proc.stdout], [], [], 0.1)
-                if r:
-                    output += proc.stdout.read(1)
-                if expected_output in output:
-                    return True
-            return False
+            proc = subprocess.Popen(
+                " ".join(
+                    [
+                        "locust",
+                        "-f",
+                        mocked.file_path,
+                        "--headless",
+                        "--run-time",
+                        "7s",
+                        "-u",
+                        "0",
+                        "--loglevel",
+                        "INFO",
+                    ]
+                ),
+                stderr=STDOUT,
+                stdin=stdin_s,
+                stdout=PIPE,
+                shell=True,
+                text=True,
+                bufsize=1,
+                universal_newlines=True,
+            )
 
-        # Wait for initial startup
-        assert poll_output(proc, "Type 'w' to add users, 's' to stop or 'q' to quit")
+            def poll_output(proc, expected_output, timeout=5):
+                start_time = time.time()
+                output = ""
+                while time.time() - start_time < timeout:
+                    if proc.poll() is not None:
+                        break
+                    r, _, _ = select.select([proc.stdout], [], [], 0.1)
+                    if r:
+                        output += proc.stdout.read(1)
+                    if expected_output in output:
+                        return True
+                return False
 
-        # Test increasing users
-        stdin.write(b"w")
-        assert poll_output(proc, "Ramping to 1 users at a rate of 100.00 per second")
-        assert poll_output(proc, 'All users spawned: {"UserSubclass": 1} (1 total users)')
+            # Wait for initial startup
+            assert poll_output(proc, "Type 'w' to add users, 's' to stop or 'q' to quit")
 
-        stdin.write(b"W")
-        assert poll_output(proc, "Ramping to 11 users at a rate of 100.00 per second")
-        assert poll_output(proc, 'All users spawned: {"UserSubclass": 11} (11 total users)')
+            # Test increasing users
+            stdin.write(b"w")
+            assert poll_output(proc, "Ramping to 1 users at a rate of 100.00 per second")
+            assert poll_output(proc, 'All users spawned: {"UserSubclass": 1} (1 total users)')
 
-        # Test decreasing users
-        stdin.write(b"s")
-        assert poll_output(proc, "Ramping to 10 users at a rate of 100.00 per second")
-        assert poll_output(proc, 'All users spawned: {"UserSubclass": 10} (10 total users)')
+            stdin.write(b"W")
+            assert poll_output(proc, "Ramping to 11 users at a rate of 100.00 per second")
+            assert poll_output(proc, 'All users spawned: {"UserSubclass": 11} (11 total users)')
 
-        stdin.write(b"S")
-        assert poll_output(proc, "Ramping to 0 users at a rate of 100.00 per second")
-        assert poll_output(proc, 'All users spawned: {"UserSubclass": 0} (0 total users)')
+            # Test decreasing users
+            stdin.write(b"s")
+            assert poll_output(proc, "Ramping to 10 users at a rate of 100.00 per second")
+            assert poll_output(proc, 'All users spawned: {"UserSubclass": 10} (10 total users)')
 
-        # This should not do anything since we are already at zero users
-        stdin.write(b"S")
+            stdin.write(b"S")
+            assert poll_output(proc, "Ramping to 0 users at a rate of 100.00 per second")
+            assert poll_output(proc, 'All users spawned: {"UserSubclass": 0} (0 total users)')
 
-        # Wait for the process to finish
-        output, _ = proc.communicate()
-        stdin.close()
+            # This should not do anything since we are already at zero users
+            stdin.write(b"S")
 
-        self.assertIn("Test task is running", output)
-        self.assertRegex(output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
-        self.assertIn("Shutting down (exit code 0)", output)
-        self.assertEqual(0, proc.returncode)
+            # Wait for the process to finish
+            output, _ = proc.communicate()
+            stdin.close()
+
+            self.assertIn("Test task is running", output)
+            self.assertRegex(output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
+            self.assertIn("Shutting down (exit code 0)", output)
+            self.assertEqual(0, proc.returncode)
 
     def test_spawning_with_fixed(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -1546,14 +1545,42 @@ def test_input(self):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
+                    bufsize=1,
+                    universal_newlines=True,
                 )
-                gevent.sleep(2)
-                proc.send_signal(signal.SIGTERM)
-                stdout, stderr = proc.communicate()
 
-                self.assertIn("Locust is running with the UserClass Picker Enabled", stderr)
-                self.assertIn("Starting Locust", stderr)
-                self.assertIn("Starting web interface at", stderr)
+                def poll_output(expected_outputs, timeout=10):
+                    start_time = time.time()
+                    outputs_found = {output: False for output in expected_outputs}
+
+                    while time.time() - start_time < timeout:
+                        ready, _, _ = select.select([proc.stderr], [], [], 0.1)
+                        if ready:
+                            line = proc.stderr.readline()
+                            for output in expected_outputs:
+                                if output in line:
+                                    outputs_found[output] = True
+                            if all(outputs_found.values()):
+                                return True
+                        if proc.poll() is not None:  # Process has terminated
+                            break
+                    return False
+
+                expected_outputs = [
+                    "Locust is running with the UserClass Picker Enabled",
+                    "Starting Locust",
+                    "Starting web interface at",
+                ]
+
+                try:
+                    success = poll_output(expected_outputs)
+                    self.assertTrue(success, "Not all expected outputs were found within the timeout period")
+                finally:
+                    proc.send_signal(signal.SIGTERM)
+                    stdout, stderr = proc.communicate()
+
+                for expected_output in expected_outputs:
+                    self.assertIn(expected_output, stderr)
 
     def test_error_when_duplicate_userclass_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = textwrap.dedent(
