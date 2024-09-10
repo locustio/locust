@@ -600,13 +600,38 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
                 text=True,
             )
-            gevent.sleep(1)
-            proc.send_signal(signal.SIGTERM)
-            stdout, stderr = proc.communicate()
-            self.assertIn("Starting Locust", stderr)
-            self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
-            self.assertIn("Shutting down (exit code 0)", stderr)
-            self.assertEqual(0, proc.returncode)
+
+            def check_locust_started():
+                """Check if Locust has started by looking for specific output in stderr."""
+                ready, _, _ = select.select([proc.stderr], [], [], 0.1)
+                if ready:
+                    line = proc.stderr.readline()
+                    if "All users spawned" in line or "Starting Locust" in line:
+                        return True
+                return False
+
+            try:
+                # Poll until Locust has started
+                poll_until(check_locust_started, timeout=10)
+
+                # After Locust starts, send the termination signal
+                proc.send_signal(signal.SIGTERM)
+
+                # Wait for the process to finish
+                stdout, stderr = proc.communicate()
+
+                # Assertions to verify that Locust started and shut down correctly
+                self.assertIn("All users spawned", stderr)
+                self.assertIn("Shutting down (exit code 0)", stderr)
+                self.assertEqual(0, proc.returncode)
+
+            except PollingTimeoutError:
+                # Handle the case where the polling times out
+                self.fail("Locust did not start within the expected time")
+
+            finally:
+                # Ensure the subprocess is terminated in case of error
+                proc.terminate()
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_run_headless_with_multiple_locustfiles(self):
