@@ -1603,11 +1603,33 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc = subprocess.Popen(
                     ["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"], stdout=PIPE, stderr=PIPE, text=True
                 )
-                gevent.sleep(1)
-                stdout, stderr = proc.communicate()
 
-                self.assertIn("running my_task", stdout)
-                self.assertEqual(0, proc.returncode)
+                def process_completed():
+                    return proc.poll() is not None
+
+                try:
+                    # Wait for the process to complete or timeout after 10 seconds
+                    poll_until(process_completed, timeout=10, poll_interval=0.1)
+
+                    stdout, stderr = proc.communicate(timeout=1)
+
+                    self.assertIn("running my_task", stdout)
+                    self.assertEqual(0, proc.returncode)
+
+                except PollingTimeoutError:
+                    self.fail("Process did not complete within the expected time")
+                except subprocess.TimeoutExpired:
+                    proc.terminate()
+                    stdout, stderr = proc.communicate()
+                    self.fail("Process did not complete in time")
+                finally:
+                    if proc.poll() is None:
+                        proc.terminate()
+                        try:
+                            proc.wait(timeout=5)
+                        except subprocess.TimeoutExpired:
+                            proc.kill()
+                            proc.wait()
 
     def test_error_when_duplicate_shape_class_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent(
@@ -1637,11 +1659,33 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_D) as file2:
                 proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True)
-                gevent.sleep(1)
-                stdout, stderr = proc.communicate()
 
-                self.assertIn("Duplicate shape classes: TestShape", stderr)
-                self.assertEqual(1, proc.returncode)
+                def process_completed():
+                    return proc.poll() is not None
+
+                try:
+                    # Wait for the process to complete or timeout after 10 seconds
+                    poll_until(process_completed, timeout=10, poll_interval=0.1)
+
+                    stdout, stderr = proc.communicate(timeout=1)
+
+                    self.assertIn("Duplicate shape classes: TestShape", stderr)
+                    self.assertEqual(1, proc.returncode)
+
+                except PollingTimeoutError:
+                    self.fail("Process did not complete within the expected time")
+                except subprocess.TimeoutExpired:
+                    proc.terminate()
+                    stdout, stderr = proc.communicate()
+                    self.fail("Process did not complete in time")
+                finally:
+                    if proc.poll() is None:
+                        proc.terminate()
+                        try:
+                            proc.wait(timeout=5)
+                        except subprocess.TimeoutExpired:
+                            proc.kill()
+                            proc.wait()
 
     def test_error_when_providing_both_run_time_and_a_shape_class(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
@@ -1726,11 +1770,33 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_error_when_locustfiles_directory_is_empty(self):
         with TemporaryDirectory() as temp_dir:
             proc = subprocess.Popen(["locust", "-f", temp_dir], stdout=PIPE, stderr=PIPE, text=True)
-            gevent.sleep(1)
-            stdout, stderr = proc.communicate()
 
-            self.assertIn(f"Could not find any locustfiles in directory '{temp_dir}'", stderr)
-            self.assertEqual(1, proc.returncode)
+            def process_completed():
+                return proc.poll() is not None
+
+            try:
+                # Wait for the process to complete or timeout after 10 seconds
+                poll_until(process_completed, timeout=10, poll_interval=0.1)
+
+                stdout, stderr = proc.communicate(timeout=1)
+
+                self.assertIn(f"Could not find any locustfiles in directory '{temp_dir}'", stderr)
+                self.assertEqual(1, proc.returncode)
+
+            except PollingTimeoutError:
+                self.fail("Process did not complete within the expected time")
+            except subprocess.TimeoutExpired:
+                proc.terminate()
+                stdout, stderr = proc.communicate()
+                self.fail("Process did not complete in time")
+            finally:
+                if proc.poll() is None:
+                    proc.terminate()
+                    try:
+                        proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        proc.kill()
+                        proc.wait()
 
     def test_error_when_no_tasks_match_tags(self):
         content = """
