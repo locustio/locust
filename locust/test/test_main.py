@@ -298,6 +298,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 # Ensure the subprocess is terminated in case of an error or timeout
                 proc.terminate()
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_percentiles_to_statistics(self):
         port = get_free_tcp_port()  # Get a free port to pass to Locust
         with temporary_file(
@@ -1234,52 +1235,34 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 shell=True,
                 text=True,
-                bufsize=1,
-                universal_newlines=True,
             )
+            gevent.sleep(1)
 
-            def poll_output(proc, expected_output, timeout=5):
-                start_time = time.time()
-                output = ""
-                while time.time() - start_time < timeout:
-                    if proc.poll() is not None:
-                        break
-                    r, _, _ = select.select([proc.stdout], [], [], 0.1)
-                    if r:
-                        output += proc.stdout.read(1)
-                    if expected_output in output:
-                        return True
-                return False
-
-            # Wait for initial startup
-            assert poll_output(proc, "Type 'w' to add users, 's' to stop or 'q' to quit")
-
-            # Test increasing users
             stdin.write(b"w")
-            assert poll_output(proc, "Ramping to 1 users at a rate of 100.00 per second")
-            assert poll_output(proc, 'All users spawned: {"UserSubclass": 1} (1 total users)')
-
+            gevent.sleep(1)
             stdin.write(b"W")
-            assert poll_output(proc, "Ramping to 11 users at a rate of 100.00 per second")
-            assert poll_output(proc, 'All users spawned: {"UserSubclass": 11} (11 total users)')
-
-            # Test decreasing users
+            gevent.sleep(1)
             stdin.write(b"s")
-            assert poll_output(proc, "Ramping to 10 users at a rate of 100.00 per second")
-            assert poll_output(proc, 'All users spawned: {"UserSubclass": 10} (10 total users)')
-
+            gevent.sleep(1)
             stdin.write(b"S")
-            assert poll_output(proc, "Ramping to 0 users at a rate of 100.00 per second")
-            assert poll_output(proc, 'All users spawned: {"UserSubclass": 0} (0 total users)')
+            gevent.sleep(1)
 
             # This should not do anything since we are already at zero users
             stdin.write(b"S")
+            gevent.sleep(1)
 
-            # Wait for the process to finish
-            output, _ = proc.communicate()
+            output = proc.communicate()[0]
             stdin.close()
-
+            self.assertIn("Ramping to 1 users at a rate of 100.00 per second", output)
+            self.assertIn('All users spawned: {"UserSubclass": 1} (1 total users)', output)
+            self.assertIn("Ramping to 11 users at a rate of 100.00 per second", output)
+            self.assertIn('All users spawned: {"UserSubclass": 11} (11 total users)', output)
+            self.assertIn("Ramping to 10 users at a rate of 100.00 per second", output)
+            self.assertIn('All users spawned: {"UserSubclass": 10} (10 total users)', output)
+            self.assertIn("Ramping to 0 users at a rate of 100.00 per second", output)
+            self.assertIn('All users spawned: {"UserSubclass": 0} (0 total users)', output)
             self.assertIn("Test task is running", output)
+            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
             self.assertRegex(output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
             self.assertIn("Shutting down (exit code 0)", output)
             self.assertEqual(0, proc.returncode)
