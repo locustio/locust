@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import platform
+import re
 import select
 import signal
 import socket
@@ -1523,47 +1524,33 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_run_with_userclass_picker(self):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_B) as file2:
+                port = get_free_tcp_port()  # Get a free port for the Locust process
                 proc = subprocess.Popen(
-                    ["locust", "-f", f"{file1},{file2}", "--class-picker"],
+                    ["locust", "-f", f"{file1},{file2}", "--class-picker", "--web-port", str(port)],
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    bufsize=1,
-                    universal_newlines=True,
                 )
 
-                def poll_output(expected_outputs, timeout=10):
-                    start_time = time.time()
-                    outputs_found = {output: False for output in expected_outputs}
-
-                    while time.time() - start_time < timeout:
-                        ready, _, _ = select.select([proc.stderr], [], [], 0.1)
-                        if ready:
-                            line = proc.stderr.readline()
-                            for output in expected_outputs:
-                                if output in line:
-                                    outputs_found[output] = True
-                            if all(outputs_found.values()):
-                                return True
-                        if proc.poll() is not None:  # Process has terminated
-                            break
-                    return False
-
-                expected_outputs = [
-                    "Locust is running with the UserClass Picker Enabled",
-                    "Starting Locust",
-                    "Starting web interface at",
-                ]
-
                 try:
-                    success = poll_output(expected_outputs)
-                    self.assertTrue(success, "Not all expected outputs were found within the timeout period")
-                finally:
+                    # Poll until the web interface is ready by checking if the port is in use
+                    poll_until(lambda: is_port_in_use(port), timeout=20)
+
+                    # After Locust is ready, send a termination signal
                     proc.send_signal(signal.SIGTERM)
                     stdout, stderr = proc.communicate()
 
-                for expected_output in expected_outputs:
-                    self.assertIn(expected_output, stderr)
+                    # Assertions to check for proper startup and shutdown of Locust
+                    self.assertIn("Locust is running with the UserClass Picker Enabled", stderr)
+                    self.assertIn("Starting Locust", stderr)
+                    self.assertIn("Starting web interface at", stderr)
+
+                except PollingTimeoutError:
+                    self.fail(f"Locust web interface did not start on port {port} within the expected time")
+
+                finally:
+                    # Ensure the subprocess is terminated in case of success or failure
+                    proc.terminate()
 
     def test_error_when_duplicate_userclass_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = textwrap.dedent(
