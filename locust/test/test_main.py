@@ -1952,15 +1952,43 @@ class MyUser(HttpUser):
                 stderr=PIPE,
                 text=True,
             )
-            gevent.sleep(1.9)
-            proc.send_signal(signal.SIGINT)
-            stdout, stderr = proc.communicate()
-            print(stderr, stdout)
-            self.assertIn("Shape test starting", stderr)
-            self.assertIn("Exiting due to CTRL+C interruption", stderr)
-            self.assertIn("Test Stopped", stdout)
-            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
-            self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
+
+            def poll_for_message(expected_message, timeout=10):
+                """Polls stderr until the expected message appears or the timeout is reached."""
+                start_time = time.time()
+                buffer = ""
+
+                while time.time() - start_time < timeout:
+                    ready, _, _ = select.select([proc.stderr], [], [], 0.1)
+                    if ready:
+                        line = proc.stderr.readline()
+                        buffer += line
+                        if expected_message in line:
+                            return True
+                    gevent.sleep(0.1)  # Prevent CPU hogging
+                return False
+
+            try:
+                # Poll until "Shape test starting" message appears
+                if not poll_for_message("Shape test starting", timeout=10):
+                    self.fail("Shape test did not start within the expected time")
+
+                # Send SIGINT signal to trigger graceful shutdown
+                proc.send_signal(signal.SIGINT)
+
+                # Poll until "Exiting due to CTRL+C interruption" message appears
+                if not poll_for_message("Exiting due to CTRL+C interruption", timeout=10):
+                    self.fail("Graceful shutdown did not occur as expected")
+
+                # Wait for the process to finish
+                stdout, stderr = proc.communicate()
+
+                # Assertions to verify the process output
+                self.assertIn("Test Stopped", stdout)
+                self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
+
+            finally:
+                proc.terminate()
 
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
