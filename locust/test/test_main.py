@@ -1048,7 +1048,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertTrue(success, "got timeout and had to kill the process")
 
     def test_autostart_multiple_locustfiles_with_shape(self):
-        port = get_free_tcp_port()
         content = textwrap.dedent(
             """
             from locust import User, task, between
@@ -1080,6 +1079,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
                 )
             ) as mocked2:
+                port = get_free_tcp_port()
                 proc = subprocess.Popen(
                     [
                         "locust",
