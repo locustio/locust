@@ -43,23 +43,14 @@ def poll_until(condition_func, timeout=10, poll_interval=0.1):
         gevent.sleep(poll_interval) 
     raise PollingTimeoutError(f"Condition not met within {timeout} seconds")
 
+
 def is_port_in_use(port: int) -> bool:
-
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(("localhost", port)) == 0
-
-def wait_for_locust_to_start(url, timeout=30, interval=0.5):
-    start_time = time.time()
-    while time.time() - start_time < timeout:
         try:
-            response = requests.get(url, timeout=5)
-            if response.status_code == 200:
-                return response
-        except RequestException:
-            pass
-        time.sleep(interval)
-    return None
-
+            s.bind(('localhost', port))
+            return False
+        except socket.error:
+            return True
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
     """

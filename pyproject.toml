@@ -5,7 +5,7 @@ build-backend = "poetry_dynamic_versioning.backend"
 [tool.poetry]
 name = "locust"
 description = "Developer-friendly load testing framework"
-version = "0.0.0"
+version = "0.0.1.dev5247"
 license = "MIT"
 readme = "README.md"
 authors = ["Jonatan Heyman", "Lars Holmberg"]
@@ -71,7 +71,7 @@ help = "Run the front end build required for package creation"
 "Slack/Signup" = "https://communityinviter.com/apps/locustio/locust"
 
 [tool.poetry-dynamic-versioning]
-enable = true
+enable = false
 vcs = "git"
 style = "pep440"
 latest-tag = true
