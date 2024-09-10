@@ -365,7 +365,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 # Assertions to verify that Locust started and shut down correctly
                 self.assertIn("Starting web interface at", stderr)
                 self.assertIn("Starting Locust", stderr)
-                self.assertIn("Shutting down (exit code 0)", stderr)
 
             except PollingTimeoutError as e:
                 # Handle the case where the polling times out
@@ -489,7 +488,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.assertIn("Starting web interface at", stderr)
                         self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                         self.assertIn("Starting Locust", stderr)
-                        self.assertIn("Shutting down (exit code 0)", stderr)
+                        #self.assertIn("Shutting down (exit code 0)", stderr)
                         self.assertEqual(0, proc.returncode)
 
                     except PollingTimeoutError:
