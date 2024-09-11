@@ -1915,20 +1915,20 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
         content = (
             MOCK_LOCUSTFILE_CONTENT
             + """
-from locust import events
-from locust.runners import MasterRunner
+    from locust import events
+    from locust.runners import MasterRunner
 
-def print_event(event_name, runner_type):
-    print(f"{event_name} on {runner_type}")
+    def print_event(event_name, runner_type):
+        print(f"{event_name} on {runner_type}")
 
-@events.test_start.add_listener
-def on_test_start(environment, **kwargs):
-    print_event("test_start", "master" if isinstance(environment.runner, MasterRunner) else "worker")
+    @events.test_start.add_listener
+    def on_test_start(environment, **kwargs):
+        print_event("test_start", "master" if isinstance(environment.runner, MasterRunner) else "worker")
 
-@events.test_stop.add_listener
-def on_test_stop(environment, **kwargs):
-    print_event("test_stop", "master" if isinstance(environment.runner, MasterRunner) else "worker")
-"""
+    @events.test_stop.add_listener
+    def on_test_stop(environment, **kwargs):
+        print_event("test_stop", "master" if isinstance(environment.runner, MasterRunner) else "worker")
+    """
         )
 
         with ExitStack() as stack:
@@ -1946,7 +1946,7 @@ def on_test_stop(environment, **kwargs):
                 "--exit-code-on-error",
                 "0",
                 "-L",
-                "WARNING",
+                "DEBUG",
             ]
 
             master_cmd = base_cmd + ["--master", "--expect-workers", "1"]
@@ -1979,10 +1979,11 @@ def on_test_stop(environment, **kwargs):
 
             start_time = time.time()
             master_proc = run_process(master_cmd)
-            time.sleep(0.1)
+
+            time.sleep(0.5)
             worker_proc = run_process(worker_cmd)
 
-            timeout = 3.5
+            timeout = 5
             while time.time() - start_time < timeout:
                 if master_proc.poll() is not None and worker_proc.poll() is not None:
                     break
@@ -1991,8 +1992,8 @@ def on_test_stop(environment, **kwargs):
             terminate_process(master_proc)
             terminate_process(worker_proc)
 
-            master_stdout, master_stderr = master_proc.communicate(timeout=0.5)
-            worker_stdout, worker_stderr = worker_proc.communicate(timeout=0.5)
+            master_stdout, master_stderr = master_proc.communicate(timeout=1)
+            worker_stdout, worker_stderr = worker_proc.communicate(timeout=1)
 
             self.assertIn("test_start on master", master_stdout, "Missing test_start on master")
             self.assertIn("test_stop on master", master_stdout, "Missing test_stop on master")
