@@ -1889,18 +1889,17 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
             def check_output():
                 return proc.stderr.readline().strip()
 
-            try:
-                output = ""
-                start_time = time.time()
-                while time.time() - start_time < 2:
-                    line = check_output()
-                    if line:
-                        output += line + "\n"
-                        if "Waiting for workers to be ready" in line and "Gave up waiting for workers" in line:
-                            break
-            finally:
-                proc.terminate()
-                proc.wait(timeout=1)
+            output = ""
+            start_time = time.time()
+            
+            while time.time() - start_time < 3:
+                line = check_output()
+                if line:
+                    output += line + "\n"
+                    if "Gave up waiting for workers to connect" in line:
+                        break
+            
+            proc_returncode = proc.wait(timeout=3)
 
             self.assertTrue(
                 "Waiting for workers to be ready, 0 of 2 connected" in output
@@ -1908,7 +1907,7 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                 f"Expected output not found. Actual output: {output}",
             )
             self.assertNotIn("Traceback", output)
-            self.assertNotEqual(0, proc.returncode)
+            self.assertEqual(1, proc_returncode, "Locust process did not exit with the expected return code")
 
     def test_distributed_events(self):
         content = (
