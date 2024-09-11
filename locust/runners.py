@@ -438,7 +438,6 @@ class LocalRunner(Runner):
         self.worker_index = 0
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.worker_count = 1
-        self.workers = [self]
         # Only when running in standalone mode (non-distributed)
         self._local_worker_node = WorkerNode(id="local")
         self._local_worker_node.user_classes_count = self.user_classes_count
