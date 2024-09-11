@@ -1,5 +1,5 @@
 from locust import HttpUser, between, events, task
-from locust.runners import MasterRunner, WorkerRunner
+from locust.runners import LocalRunner, MasterRunner, WorkerRunner
 
 import gevent
 
@@ -44,8 +44,12 @@ def on_test_start(environment, **_kwargs):
 
         worker_count = environment.runner.worker_count
         chunk_size = int(len(users) / worker_count)
+        if isinstance(environment.runner, LocalRunner):
+            workers = [environment.runner]
+        else:
+            workers = [environment.runner.clients]
 
-        for i, worker in enumerate(environment.runner.clients):
+        for i, worker in enumerate(workers):
             start_index = i * chunk_size
 
             if i + 1 < worker_count:
