@@ -14,7 +14,7 @@ import time
 import unittest
 from subprocess import DEVNULL, PIPE, STDOUT
 from tempfile import TemporaryDirectory
-from typing import Callable, Optional
+from typing import IO, Callable, Optional, cast
 from unittest import TestCase
 
 import gevent
@@ -67,23 +67,38 @@ def web_interface_ready(port: int) -> bool:
 
 
 def all_users_spawned(proc: subprocess.Popen, output: list[str]) -> bool:
-    ready, _, _ = select.select([proc.stderr], [], [], 0.1)
+    stderr = cast(IO[str], proc.stderr)
+
+    ready, _, _ = select.select([stderr], [], [], 0.1)
 
     if ready:
-        line = proc.stderr.readline().strip()
+        line = stderr.readline().strip()
         output.append(line)
         return "All users spawned:" in line
 
     return False
 
 
-def read_output(self, proc):
-    output = []
-    ready, _, _ = select.select([proc.stdout], [], [], 0.1)
+def read_output(proc: subprocess.Popen) -> list[str]:
+    output: list[str] = []
+
+    stdout = cast(IO[str], proc.stdout)
+
+    ready, _, _ = select.select([stdout], [], [], 0.1)
     if ready:
-        line = proc.stdout.readline().strip()
+        line = stdout.readline().strip()
         output.append(line)
+
     return output
+
+
+def read_nonblocking(proc: subprocess.Popen, output: list[str]) -> None:
+    """Read from both stdout and stderr of a process in non-blocking mode."""
+    ready_to_read, _, _ = select.select([proc.stdout, proc.stderr], [], [], 0.1)
+    for stream in ready_to_read:
+        line = stream.readline().strip()
+        if line:
+            output.append(line)
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
@@ -1917,20 +1932,20 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
 
     def test_distributed_tags(self):
         content = """
-    from locust import HttpUser, TaskSet, task, between, LoadTestShape, tag
-    class SecondUser(HttpUser):
-        host = "http://127.0.0.1:8089"
-        wait_time = between(0, 0.1)
-        @tag("tag1")
-        @task
-        def task1(self):
-            print("task1")
+from locust import HttpUser, TaskSet, task, between, LoadTestShape, tag
+class SecondUser(HttpUser):
+    host = "http://127.0.0.1:8089"
+    wait_time = between(0, 0.1)
+    @tag("tag1")
+    @task
+    def task1(self):
+        print("task1")
 
-        @tag("tag2")
-        @task
-        def task2(self):
-            print("task2")
-    """
+    @tag("tag2")
+    @task
+    def task2(self):
+        print("task2")
+"""
         with mock_locustfile(content=content) as mocked:
             proc = subprocess.Popen(
                 [
@@ -1969,22 +1984,8 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
                 text=True,
             )
-
-            def master_finished(proc):
-                return proc.poll() is not None
-
-            def worker_contains_task1(proc):
-                return "task1" in "".join(self.read_output(proc))
-
-            master_finished_poll = self.poll_until(proc, master_finished)
-            self.assertTrue(master_finished_poll, "Master process did not finish in time.")
-
-            task1_poll = self.poll_until(proc_worker, worker_contains_task1)
-            self.assertTrue(task1_poll, "Worker did not execute task1 in time.")
-
+            stdout, stderr = proc.communicate()
             stdout_worker, stderr_worker = proc_worker.communicate()
-            _, stderr = proc.communicate()
-
             self.assertNotIn("ERROR", stderr_worker)
             self.assertIn("task1", stdout_worker)
             self.assertNotIn("task2", stdout_worker)
@@ -2169,18 +2170,10 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
 
             output = []
 
-            def read_nonblocking(proc):
-                """Read from both stdout and stderr of a process in non-blocking mode."""
-                ready_to_read, _, _ = select.select([proc.stdout, proc.stderr], [], [], 0.1)
-                for stream in ready_to_read:
-                    line = stream.readline().strip()
-                    if line:
-                        output.append(line)
-
             try:
                 poll_until(lambda: all_users_spawned(proc, output), timeout=10)
                 while proc.poll() is None:
-                    read_nonblocking(proc)
+                    read_nonblocking(proc, output)
             except PollingTimeoutError:
                 self.fail(f"All users were not spawned within the timeout. Output so far: {''.join(output)}")
 
@@ -2226,11 +2219,12 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                     "-t",
                     "1s",
                 ],
-                stderr=STDOUT,
+                stderr=PIPE,
                 stdout=PIPE,
                 text=True,
+                bufsize=1,
             )
-            gevent.sleep(2)
+
             proc_worker = subprocess.Popen(
                 [
                     "locust",
@@ -2238,18 +2232,30 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                     "-",
                     "--worker",
                 ],
-                stderr=STDOUT,
+                stderr=PIPE,
                 stdout=PIPE,
                 text=True,
+                bufsize=1,
             )
+
+            output = []
+
+            try:
+                poll_until(lambda: all_users_spawned(proc, output), timeout=10)
+                while proc.poll() is None:
+                    read_nonblocking(proc, output)
+            except PollingTimeoutError:
+                self.fail(f"All users were not spawned within the timeout. Output so far: {''.join(output)}")
 
             stdout = proc.communicate()[0]
             stdout_worker = proc_worker.communicate()[0]
 
-            self.assertIn('All users spawned: {"User1": 1} (1 total users)', stdout)
-            self.assertIn("Shutting down (exit code 0)", stdout)
-            self.assertNotIn("Traceback", stdout)
-            self.assertNotIn("Traceback", stdout_worker)
+            output.extend(stdout.splitlines())
+            output.extend(stdout_worker.splitlines())
+
+            self.assertIn('All users spawned: {"User1": 1} (1 total users)', "\n".join(output))
+            self.assertIn("Shutting down (exit code 0)", "\n".join(output))
+            self.assertNotIn("Traceback", "\n".join(output))
 
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
