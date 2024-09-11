@@ -66,16 +66,23 @@ def web_interface_ready(port: int) -> bool:
         return False
 
 
-def all_users_spawned(proc: subprocess.Popen, output: list[str]) -> bool:
-    stderr = cast(IO[str], proc.stderr)
-
-    ready, _, _ = select.select([stderr], [], [], 0.1)
-
-    if ready:
-        line = stderr.readline().strip()
-        output.append(line)
-        return "All users spawned:" in line
-
+def all_users_spawned(proc, output):
+    if platform.system() == "Windows":
+        while True:
+            line = proc.stderr.readline()
+            if not line:
+                break
+            output.append(line)
+            if "All users spawned" in line:
+                return True
+    else:
+        stderr = proc.stderr
+        ready, _, _ = select.select([stderr], [], [], 0.1)
+        if ready:
+            line = stderr.readline()
+            output.append(line)
+            if "All users spawned" in line:
+                return True
     return False
 
 
@@ -1995,7 +2002,7 @@ def on_test_stop(environment, **kwargs):
             self.assertNotIn("Traceback", stderr_worker)
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
-            
+
     def test_distributed_tags(self):
         content = """
 from locust import HttpUser, TaskSet, task, between, LoadTestShape, tag
