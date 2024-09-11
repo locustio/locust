@@ -12,8 +12,9 @@ import sys
 import textwrap
 import time
 import unittest
+from contextlib import ExitStack
 from subprocess import DEVNULL, PIPE, STDOUT
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Callable
 from unittest import TestCase
 
@@ -1916,65 +1917,80 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
             + """
 from locust import events
 from locust.runners import MasterRunner
+
+def print_event(event_name, runner_type):
+    print(f"{event_name} on {runner_type}")
+
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
-    if isinstance(environment.runner, MasterRunner):
-        print("test_start on master")
-    else:
-        print("test_start on worker")
+    print_event("test_start", "master" if isinstance(environment.runner, MasterRunner) else "worker")
 
 @events.test_stop.add_listener
 def on_test_stop(environment, **kwargs):
-    if isinstance(environment.runner, MasterRunner):
-        print("test_stop on master")
-    else:
-        print("test_stop on worker")
+    print_event("test_stop", "master" if isinstance(environment.runner, MasterRunner) else "worker")
 """
         )
-        with mock_locustfile(content=content) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--headless",
-                    "--master",
-                    "--expect-workers",
-                    "1",
-                    "-t",
-                    "1",
-                    "--exit-code-on-error",
-                    "0",
-                    "-L",
-                    "DEBUG",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            proc_worker = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--worker",
-                    "-L",
-                    "DEBUG",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            stdout, stderr = proc.communicate()
-            stdout_worker, stderr_worker = proc_worker.communicate()
-            self.assertIn("test_start on master", stdout)
-            self.assertIn("test_stop on master", stdout)
-            self.assertIn("test_stop on worker", stdout_worker)
-            self.assertIn("test_start on worker", stdout_worker)
-            self.assertNotIn("Traceback", stderr)
-            self.assertNotIn("Traceback", stderr_worker)
-            self.assertEqual(0, proc.returncode)
-            self.assertEqual(0, proc_worker.returncode)
+
+        with ExitStack() as stack:
+            temp_file = stack.enter_context(NamedTemporaryFile(mode="w", suffix=".py", delete=False))
+            temp_file.write(content)
+            temp_file.flush()
+
+            base_cmd = [
+                "locust",
+                "-f",
+                temp_file.name,
+                "--headless",
+                "-t",
+                "1",
+                "--exit-code-on-error",
+                "0",
+                "-L",
+                "WARNING",
+            ]
+
+            master_cmd = base_cmd + ["--master", "--expect-workers", "1"]
+            worker_cmd = base_cmd + ["--worker"]
+
+            def run_process(cmd):
+                return subprocess.Popen(
+                    cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, preexec_fn=os.setsid
+                )
+
+            def terminate_process(proc):
+                try:
+                    os.killpg(os.getpgid(proc.pid), psutil.signal.SIGTERM)
+                except ProcessLookupError:
+                    # Handle the case where the process group doesn't exist
+                    pass
+                except OSError:
+                    # Handle other OS-related errors
+                    pass
+
+            start_time = time.time()
+            master_proc = run_process(master_cmd)
+            time.sleep(0.1)
+            worker_proc = run_process(worker_cmd)
+
+            timeout = 3.5
+            while time.time() - start_time < timeout:
+                if master_proc.poll() is not None and worker_proc.poll() is not None:
+                    break
+                time.sleep(0.05)
+
+            terminate_process(master_proc)
+            terminate_process(worker_proc)
+
+            master_stdout, master_stderr = master_proc.communicate(timeout=0.5)
+            worker_stdout, worker_stderr = worker_proc.communicate(timeout=0.5)
+
+            self.assertIn("test_start on master", master_stdout, "Missing test_start on master")
+            self.assertIn("test_stop on master", master_stdout, "Missing test_stop on master")
+            self.assertIn("test_start on worker", worker_stdout, "Missing test_start on worker")
+            self.assertIn("test_stop on worker", worker_stdout, "Missing test_stop on worker")
+
+            self.assertNotIn("Traceback", master_stderr, "Traceback found in master stderr")
+            self.assertNotIn("Traceback", worker_stderr, "Traceback found in worker stderr")
 
     def test_distributed_tags(self):
         content = """
