@@ -1930,6 +1930,72 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
             self.assertNotIn("Traceback", output)
             self.assertEqual(1, proc_returncode, "Locust process did not exit with the expected return code")
 
+    def test_distributed_events(self):
+        content = (
+            MOCK_LOCUSTFILE_CONTENT
+            + """
+from locust import events
+from locust.runners import MasterRunner
+@events.test_start.add_listener
+def on_test_start(environment, **kwargs):
+    if isinstance(environment.runner, MasterRunner):
+        print("test_start on master")
+    else:
+        print("test_start on worker")
+
+@events.test_stop.add_listener
+def on_test_stop(environment, **kwargs):
+    if isinstance(environment.runner, MasterRunner):
+        print("test_stop on master")
+    else:
+        print("test_stop on worker")
+"""
+        )
+        with mock_locustfile(content=content) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "1",
+                    "-t",
+                    "1",
+                    "--exit-code-on-error",
+                    "0",
+                    "-L",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--worker",
+                    "-L",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+            stdout_worker, stderr_worker = proc_worker.communicate()
+            self.assertIn("test_start on master", stdout)
+            self.assertIn("test_stop on master", stdout)
+            self.assertIn("test_stop on worker", stdout_worker)
+            self.assertIn("test_start on worker", stdout_worker)
+            self.assertNotIn("Traceback", stderr)
+            self.assertNotIn("Traceback", stderr_worker)
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
+            
     def test_distributed_tags(self):
         content = """
 from locust import HttpUser, TaskSet, task, between, LoadTestShape, tag
