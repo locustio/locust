@@ -1896,7 +1896,7 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                     line = check_output()
                     if line:
                         output += line + "\n"
-                        if "Waiting for workers to be ready" in line or "Gave up waiting for workers" in line:
+                        if "Waiting for workers to be ready" in line and "Gave up waiting for workers" in line:
                             break
             finally:
                 proc.terminate()
