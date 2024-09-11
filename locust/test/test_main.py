@@ -14,7 +14,7 @@ import time
 import unittest
 from subprocess import DEVNULL, PIPE, STDOUT
 from tempfile import TemporaryDirectory
-from typing import Callable, list
+from typing import Callable
 from unittest import TestCase
 
 import gevent
