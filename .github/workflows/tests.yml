@@ -69,15 +69,6 @@ jobs:
       - name: Install Yarn
         run: npm install -g yarn
 
-        # Cache Python dist
-      - name: Cache Python dist
-        uses: actions/cache@v4
-        with:
-          path: dist
-          key: dist-${{ runner.os }}-${{ steps.set_python_version.outputs.python_version }}
-          restore-keys: |
-            dist-
-
       # Build and upload the project artifacts only once
       - name: Build Python dist and web UI
         run: poetry build --no-interaction

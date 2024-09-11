@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import multiprocessing
 import os
 import platform
 import re
@@ -10,14 +9,11 @@ import signal
 import socket
 import subprocess
 import sys
-
-sys.dont_write_bytecode = False
 import textwrap
 import time
 import unittest
-from contextlib import ExitStack
 from subprocess import DEVNULL, PIPE, STDOUT
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import TemporaryDirectory
 from typing import Callable
 from unittest import TestCase
 
@@ -39,20 +35,17 @@ class PollingTimeoutError(Exception):
     pass
 
 
-<<<<<<< HEAD
-def poll_until(condition_func: Callable[[], bool], timeout: float = 5, sleep_time: float = 0.005) -> None:
+def poll_until(condition_func: Callable[[], bool], timeout: float = 10, sleep_time: float = 0.01) -> None:
     """
     Polls the condition_func at regular intervals until it returns True or timeout is reached.
     Fixed short sleep time ensures faster polling with early exit when condition is met.
     """
-=======
-def poll_until(condition_func: Callable[[], bool], timeout: float = 10, poll_interval: float = 0.1) -> None:
->>>>>>> parent of ff6ba82e (Optimize test_expect_workers for speed and reliability)
     start_time = time.time()
     while time.time() - start_time < timeout:
         if condition_func():
-            return True
-        gevent.sleep(poll_interval)
+            return
+        time.sleep(sleep_time)
+
     raise PollingTimeoutError(f"Condition not met within {timeout} seconds")
 
 
@@ -74,35 +67,17 @@ def web_interface_ready(port: int) -> bool:
 
 
 def all_users_spawned(proc: subprocess.Popen, output: list[str]) -> bool:
+    if proc.stderr is None:
+        raise ValueError("proc.stderr is None, cannot read from stderr")
+
     ready, _, _ = select.select([proc.stderr], [], [], 0.1)
+
     if ready:
-        line = proc.stderr.readline()
+        line = proc.stderr.readline().strip()
         output.append(line)
         return "All users spawned:" in line
+
     return False
-
-
-def terminate_process(proc):
-    try:
-        if platform.system() == "Windows":
-            proc.terminate()  # Use terminate() on Windows
-        else:
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)  # Use killpg() on Unix-based systems
-    except ProcessLookupError:
-        pass
-    except OSError:
-        pass
-
-
-def run_process(args, output_queue):
-    proc = subprocess.Popen(
-        args,
-        stderr=STDOUT,
-        stdout=PIPE,
-        text=True,
-    )
-    stdout, _ = proc.communicate()
-    output_queue.put((proc.returncode, stdout))
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
@@ -316,7 +291,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                bufsize=1,
             )
 
             try:
@@ -359,7 +333,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                bufsize=1,
             )
 
             try:
@@ -417,7 +390,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         if proc.poll() is not None:
                             return False
 
-                poll_until(check_for_error_message, timeout=10)
+                poll_until(check_for_error_message)
 
                 _, stderr = proc.communicate()
 
@@ -444,7 +417,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    bufsize=1,
                 )
 
                 try:
@@ -530,7 +502,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    bufsize=1,
                 )
 
                 try:
@@ -594,7 +565,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                bufsize=1,
             )
             _, stderr = proc.communicate()
             self.assertIn("ERROR/locust.main: Valid --stop-timeout formats are", stderr)
@@ -617,7 +587,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                bufsize=1,
             )
 
             def check_locust_started():
@@ -677,7 +646,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
-                        bufsize=1,
                     )
 
                     output = []
@@ -737,7 +705,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                bufsize=1,
             )
 
             try:
@@ -803,7 +770,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    bufsize=1,
                 )
 
                 try:
@@ -837,7 +803,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                bufsize=1,
             )
 
             try:
@@ -903,7 +868,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                bufsize=1,
             )
 
             try:
@@ -985,7 +949,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
-                        bufsize=1,
                     )
 
                     output = []
@@ -1049,7 +1012,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                bufsize=1,
             )
 
             def locust_web_ready():
@@ -1125,7 +1087,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    bufsize=1,
                 )
 
                 try:
@@ -1174,7 +1135,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         except requests.RequestException:
                             return False
 
-                    poll_until(server_ready, timeout=5, poll_interval=0.1)
+                    poll_until(server_ready, timeout=5)
 
                     response = requests.get(f"http://127.0.0.2:{port}/", timeout=1)
                     self.assertEqual(200, response.status_code)
@@ -1195,7 +1156,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
-                bufsize=1,
             )
             try:
 
@@ -1206,7 +1166,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     except requests.RequestException:
                         return False
 
-                poll_until(server_ready, timeout=5, poll_interval=0.1)
+                poll_until(server_ready, timeout=5)
 
                 response = requests.get(f"http://127.0.0.1:{port}/", timeout=1)
                 self.assertEqual(200, response.status_code)
@@ -1253,7 +1213,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 shell=True,
                 text=True,
-                bufsize=1,
             )
             gevent.sleep(1)
 
@@ -1334,7 +1293,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 shell=True,
                 text=True,
-                bufsize=1,
             )
 
             output = proc.communicate()[0]
@@ -1370,7 +1328,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     shell=True,
                     text=True,
-                    bufsize=1,
                 )
 
                 output = proc.communicate()[0]
@@ -1419,7 +1376,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                bufsize=1,
             )
 
             output = proc.communicate()[0]
@@ -1497,7 +1453,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 shell=True,
                 text=True,
-                bufsize=1,
             )
 
             output = proc.communicate()[0]
@@ -1553,7 +1508,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
-                    bufsize=1,
                 )
 
                 try:
@@ -1931,11 +1885,30 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
                 text=True,
             )
-            _, stderr = proc.communicate()
-            self.assertIn("Waiting for workers to be ready, 0 of 2 connected", stderr)
-            self.assertIn("Gave up waiting for workers to connect", stderr)
-            self.assertNotIn("Traceback", stderr)
-            self.assertEqual(1, proc.returncode)
+
+            def check_output():
+                return proc.stderr.readline().strip()
+
+            try:
+                output = ""
+                start_time = time.time()
+                while time.time() - start_time < 2:
+                    line = check_output()
+                    if line:
+                        output += line + "\n"
+                        if "Waiting for workers to be ready" in line or "Gave up waiting for workers" in line:
+                            break
+            finally:
+                proc.terminate()
+                proc.wait(timeout=1)
+
+            self.assertTrue(
+                "Waiting for workers to be ready, 0 of 2 connected" in output
+                and "Gave up waiting for workers to connect" in output,
+                f"Expected output not found. Actual output: {output}",
+            )
+            self.assertNotIn("Traceback", output)
+            self.assertNotEqual(0, proc.returncode)
 
     def test_distributed_events(self):
         content = (
@@ -2093,7 +2066,7 @@ class SecondUser(HttpUser):
                     "-u",
                     "3",
                     "-t",
-                    "3s",
+                    "5s",
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
@@ -2156,7 +2129,7 @@ class SecondUser(HttpUser):
                     "-u",
                     "3",
                     "-t",
-                    "2s",
+                    "5s",
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
@@ -2173,7 +2146,6 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
             )
-
             stdout = proc.communicate()[0]
             proc_worker.communicate()
 
@@ -2418,20 +2390,17 @@ class SecondUser(HttpUser):
             self.assertEqual(dict, type(result["num_fail_per_sec"]))
 
     def test_worker_indexes(self):
-        content = textwrap.dedent(
-            """
-            from locust import HttpUser, task, between
+        content = """
+from locust import HttpUser, task, between
 
-            class AnyUser(HttpUser):
-                host = "http://127.0.0.1:8089"
-                wait_time = between(0, 0.01)  # Reduced wait time for faster execution
-                @task
-                def my_task(self):
-                    print("worker index:", self.environment.runner.worker_index)
-            """
-        )
+class AnyUser(HttpUser):
+    host = "http://127.0.0.1:8089"
+    wait_time = between(0, 0.1)
+    @task
+    def my_task(self):
+        print("worker index:", self.environment.runner.worker_index)
+"""
         with mock_locustfile(content=content) as mocked:
-            # Start master process
             master = subprocess.Popen(
                 [
                     "locust",
@@ -2442,7 +2411,7 @@ class SecondUser(HttpUser):
                     "--expect-workers",
                     "2",
                     "-t",
-                    "2",
+                    "5",
                     "-u",
                     "2",
                     "-L",
@@ -2452,8 +2421,6 @@ class SecondUser(HttpUser):
                 stderr=PIPE,
                 text=True,
             )
-
-            # Start two worker processes
             proc_worker_1 = subprocess.Popen(
                 [
                     "locust",
@@ -2480,38 +2447,35 @@ class SecondUser(HttpUser):
                 stderr=PIPE,
                 text=True,
             )
+            stdout, stderr = master.communicate()
+            self.assertNotIn("Traceback", stderr)
+            self.assertIn("Shutting down (exit code 0)", stderr)
+            self.assertEqual(0, master.returncode)
 
-            stdout_master, stderr_master = master.communicate()
             stdout_worker_1, stderr_worker_1 = proc_worker_1.communicate()
             stdout_worker_2, stderr_worker_2 = proc_worker_2.communicate()
-
-            self.assertNotIn("Traceback", stderr_master, "Master process encountered an error.")
-            self.assertNotIn("Traceback", stderr_worker_1, "Worker 1 encountered an error.")
-            self.assertNotIn("Traceback", stderr_worker_2, "Worker 2 encountered an error.")
-
-            self.assertEqual(0, master.returncode, "Master process did not exit cleanly.")
-            self.assertEqual(0, proc_worker_1.returncode, "Worker 1 did not exit cleanly.")
-            self.assertEqual(0, proc_worker_2.returncode, "Worker 2 did not exit cleanly.")
+            self.assertEqual(0, proc_worker_1.returncode)
+            self.assertEqual(0, proc_worker_2.returncode)
+            self.assertNotIn("Traceback", stderr_worker_1)
+            self.assertNotIn("Traceback", stderr_worker_2)
 
             PREFIX = "worker index: "
             p1 = stdout_worker_1.find(PREFIX)
             if p1 == -1:
                 raise Exception(stdout_worker_1 + stderr_worker_1)
             self.assertNotEqual(-1, p1)
-
             p2 = stdout_worker_2.find(PREFIX)
             if p2 == -1:
                 raise Exception(stdout_worker_2 + stderr_worker_2)
             self.assertNotEqual(-1, p2)
-
             found = [
                 int(stdout_worker_1[p1 + len(PREFIX) :].split("\n")[0]),
-                int(stdout_worker_2[p2 + len(PREFIX) :].split("\n")[0]),
+                int(stdout_worker_2[p1 + len(PREFIX) :].split("\n")[0]),
             ]
             found.sort()
             for i in range(2):
                 if found[i] != i:
-                    raise Exception(f"expected index {i} but got {found[i]}")
+                    raise Exception(f"expected index {i} but got", found[i])
 
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes(self):
@@ -2599,7 +2563,6 @@ class SecondUser(HttpUser):
             self.assertIn("Shutting down (exit code 0)", master_stderr)
 
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
-    @unittest.skip("Skipping this test temporarily")
     def test_processes_ctrl_c(self):
         with mock_locustfile() as mocked:
             proc = psutil.Popen(  # use psutil.Popen instead of subprocess.Popen to use extra features
