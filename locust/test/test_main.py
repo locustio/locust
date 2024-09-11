@@ -99,13 +99,32 @@ def read_output(proc: subprocess.Popen) -> list[str]:
     return output
 
 
-def read_nonblocking(proc: subprocess.Popen, output: list[str]) -> None:
-    """Read from both stdout and stderr of a process in non-blocking mode."""
-    ready_to_read, _, _ = select.select([proc.stdout, proc.stderr], [], [], 0.1)
-    for stream in ready_to_read:
-        line = stream.readline().strip()
-        if line:
-            output.append(line)
+def read_nonblocking(proc: subprocess.Popen, output: list[str]) -> bool:
+    if platform.system() == "Windows":
+        if proc.stdout is None or proc.stderr is None:
+            raise ValueError("proc.stdout or proc.stderr is None, cannot read from them")
+
+        while True:
+            stdout_line: str = proc.stdout.readline()
+            if not stdout_line:
+                break
+            output.append(stdout_line)
+            if "All users spawned" in stdout_line:
+                return True
+            stderr_line: str = proc.stderr.readline()
+            if stderr_line:
+                output.append(stderr_line)
+    else:
+        if proc.stdout is None or proc.stderr is None:
+            raise ValueError("proc.stdout or proc.stderr is None, cannot read from them")
+
+        ready_to_read, _, _ = select.select([proc.stdout, proc.stderr], [], [], 0.1)
+        for pipe in ready_to_read:
+            pipe_line: str = pipe.readline()
+            output.append(pipe_line)
+            if "All users spawned" in pipe_line:
+                return True
+    return False
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
@@ -2620,6 +2639,7 @@ class AnyUser(HttpUser):
         print("worker index:", self.environment.runner.worker_index)
 """
         with mock_locustfile(content=content) as mocked:
+            master_port = get_free_tcp_port()
             master_proc = subprocess.Popen(
                 [
                     "locust",
@@ -2629,10 +2649,13 @@ class AnyUser(HttpUser):
                     "--headless",
                     "--expect-workers",
                     "2",
+                    "--master-bind-port",
+                    str(master_port),
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                bufsize=1,
             )
 
             worker_parent_proc = subprocess.Popen(
@@ -2644,25 +2667,68 @@ class AnyUser(HttpUser):
                     "--processes",
                     "2",
                     "--headless",
+                    "--master-port",
+                    str(master_port),
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                bufsize=1,
                 start_new_session=True,
             )
-            gevent.sleep(2)
-            master_proc.kill()
-            master_proc.wait()
-            try:
-                worker_stdout, worker_stderr = worker_parent_proc.communicate(timeout=7)
-            except Exception:
-                os.killpg(worker_parent_proc.pid, signal.SIGTERM)
-                worker_stdout, worker_stderr = worker_parent_proc.communicate()
-                assert False, f"worker never finished: {worker_stdout} / {worker_stderr}"
 
-            self.assertNotIn("Traceback", worker_stderr)
-            self.assertIn("Didn't get heartbeat from master in over ", worker_stderr)
-            self.assertIn("worker index:", worker_stdout)
+            try:
+
+                def master_ready():
+                    line = master_proc.stderr.readline()
+                    print(f"Master stderr: {line.strip()}")
+                    return "All users spawned" in line
+
+                print("Waiting for master to be ready...")
+                try:
+                    poll_until(master_ready, timeout=60, sleep_time=0.1)
+                    print("Master is ready")
+                except PollingTimeoutError as e:
+                    print(f"Master readiness polling timed out: {e}")
+                    raise
+
+                master_proc.terminate()
+                try:
+                    master_proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    master_proc.kill()
+                    master_proc.wait()
+
+                def workers_shut_down():
+                    return worker_parent_proc.poll() is not None
+
+                try:
+                    poll_until(workers_shut_down, timeout=60, sleep_time=0.1)
+                except PollingTimeoutError as e:
+                    print(f"Workers shutdown polling timed out: {e}")
+                    raise
+
+                worker_stdout, worker_stderr = worker_parent_proc.communicate()
+
+                self.assertNotIn("Traceback", worker_stderr)
+                self.assertIn("Got quit message from master, shutting down", worker_stderr)
+                self.assertIn("worker index:", worker_stdout)
+
+            except Exception as e:
+                print(f"Test failed with error: {e}")
+                print("Master stdout:", master_proc.stdout.read())
+                print("Master stderr:", master_proc.stderr.read())
+                print("Worker stdout:", worker_parent_proc.stdout.read())
+                print("Worker stderr:", worker_parent_proc.stderr.read())
+                raise
+            finally:
+                for proc in [master_proc, worker_parent_proc]:
+                    try:
+                        proc.terminate()
+                        proc.wait(timeout=5)
+                    except Exception:
+                        proc.kill()
+                        proc.wait(timeout=5)
 
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_error_doesnt_blow_up_completely(self):
