@@ -14,7 +14,7 @@ import time
 import unittest
 from subprocess import DEVNULL, PIPE, STDOUT
 from tempfile import TemporaryDirectory
-from typing import Callable
+from typing import Callable, list
 from unittest import TestCase
 
 import gevent
@@ -35,7 +35,7 @@ class PollingTimeoutError(Exception):
     pass
 
 
-def poll_until(condition_func, timeout=10, poll_interval=0.1):
+def poll_until(condition_func: Callable[[], bool], timeout: float = 10, poll_interval: float = 0.1) -> None:
     start_time = time.time()
     while time.time() - start_time < timeout:
         if condition_func():
@@ -51,6 +51,23 @@ def is_port_in_use(port: int) -> bool:
             return False
         except OSError:
             return True
+
+
+def web_interface_ready(port: int) -> bool:
+    try:
+        response = requests.get(f"http://localhost:{port}/")
+        return response.status_code == 200
+    except requests.RequestException:
+        return False
+
+
+def all_users_spawned(proc: subprocess.Popen, output: list[str]) -> bool:
+    ready, _, _ = select.select([proc.stderr], [], [], 0.1)
+    if ready:
+        line = proc.stderr.readline()
+        output.append(line)
+        return "All users spawned:" in line
+    return False
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
@@ -111,16 +128,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with temporary_file(
             content=textwrap.dedent(
                 """
-                from locust import User, task, constant, events
-                @events.init_command_line_parser.add_listener
-                def _(parser, **kw):
-                    parser.add_argument("--custom-string-arg")
+            from locust import User, task, constant, events
+            @events.init_command_line_parser.add_listener
+            def _(parser, **kw):
+                parser.add_argument("--custom-string-arg")
 
-                class TestUser(User):
-                    wait_time = constant(10)
-                    @task
-                    def my_task(self):
-                        print(self.environment.parsed_options.custom_string_arg)
+            class TestUser(User):
+                wait_time = constant(10)
+                @task
+                def my_task(self):
+                    print(self.environment.parsed_options.custom_string_arg)
                 """
             )
         ) as file_path:
@@ -132,10 +149,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
 
             try:
-                # Use polling mechanism to wait until the port is in use
                 poll_until(lambda: is_port_in_use(port), timeout=20)
 
-                # Once the web server is up, send a request to start the swarm
                 requests.post(
                     f"http://127.0.0.1:{port}/swarm",
                     data={
@@ -148,7 +163,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             except PollingTimeoutError:
                 self.fail(f"Failed to start Locust web server on port {port}")
             finally:
-                # Ensure the subprocess is terminated in case of success or failure
                 proc.terminate()
 
             stdout, stderr = proc.communicate(timeout=3)
@@ -168,18 +182,18 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with temporary_file(
             content=textwrap.dedent(
                 """
-                from locust import User, task, constant, events
-                @events.quitting.add_listener
-                def _(environment, **kw):
-                    environment.process_exit_code = 42
-                @events.quit.add_listener
-                def _(exit_code, **kw):
-                    print(f"Exit code in quit event {exit_code}")
-                class TestUser(User):
-                    wait_time = constant(3)
-                    @task
-                    def my_task(self):
-                        print("running my_task()")
+            from locust import User, task, constant, events
+            @events.quitting.add_listener
+            def _(environment, **kw):
+                environment.process_exit_code = 42
+            @events.quit.add_listener
+            def _(exit_code, **kw):
+                print(f"Exit code in quit event {exit_code}")
+            class TestUser(User):
+                wait_time = constant(3)
+                @task
+                def my_task(self):
+                    print("running my_task()")
             """
             )
         ) as file_path:
@@ -189,7 +203,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
 
             try:
-                # Polling to ensure the process has started on the chosen port
                 poll_until(lambda: is_port_in_use(port), timeout=20)
 
                 proc.send_signal(signal.SIGTERM)
@@ -207,7 +220,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver(self):
-        port = get_free_tcp_port()  # Use a free port and pass it to Locust
+        port = get_free_tcp_port()
         with temporary_file(
             content=textwrap.dedent(
                 """
@@ -221,7 +234,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
         ) as file_path:
             proc = subprocess.Popen(
-                ["locust", "-f", file_path, "--web-port", str(port)],  # Pass the specific port to Locust
+                ["locust", "-f", file_path, "--web-port", str(port)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
@@ -229,14 +242,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
 
             try:
-                # Poll until the specified port is in use
                 poll_until(lambda: is_port_in_use(port), timeout=20)
 
-                # Once the web server is up, send the SIGTERM signal
                 proc.send_signal(signal.SIGTERM)
                 stdout, stderr = proc.communicate(timeout=3)
 
-                # Assertions
                 self.assertIn("Starting web interface at", stderr)
                 self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                 self.assertIn("Starting Locust", stderr)
@@ -244,16 +254,14 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertEqual(0, proc.returncode)
 
             except PollingTimeoutError as e:
-                # Handle the case where the expected condition is not met
                 self.fail(f"Polling failed: {str(e)}")
 
             finally:
-                # Ensure the process is terminated in any case
                 proc.terminate()
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_percentile_parameter(self):
-        port = get_free_tcp_port()  # Get a free port to pass to Locust
+        port = get_free_tcp_port()
         with temporary_file(
             content=textwrap.dedent(
                 """
@@ -276,32 +284,26 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
 
             try:
-                # Poll until the specified port is in use
                 poll_until(lambda: is_port_in_use(port), timeout=60)
 
-                # Once the web server is up, send a request to check if it's responding
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
 
-                # Send the SIGTERM signal to shut down the Locust process
                 proc.send_signal(signal.SIGTERM)
-                stdout, stderr = proc.communicate()
+                _, stderr = proc.communicate()
 
-                # Assertions to verify that Locust started and shut down correctly
                 self.assertIn("Starting web interface at", stderr)
                 self.assertIn("Starting Locust", stderr)
 
             except PollingTimeoutError as e:
-                # Handle the case where the polling times out
                 self.fail(f"Polling failed: {str(e)}")
 
             finally:
-                # Ensure the subprocess is terminated in case of an error or timeout
                 proc.terminate()
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_percentiles_to_statistics(self):
-        port = get_free_tcp_port()  # Get a free port to pass to Locust
+        port = get_free_tcp_port()
         with temporary_file(
             content=textwrap.dedent(
                 """
@@ -324,41 +326,35 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
 
             try:
-                # Use polling mechanism to wait until the port is in use
                 poll_until(lambda: is_port_in_use(port), timeout=20)
 
-                # Once the web server is up, send a request to check if it's responding
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
 
-                # Send the SIGTERM signal to shut down the Locust process
                 proc.send_signal(signal.SIGTERM)
-                stdout, stderr = proc.communicate()
+                _, stderr = proc.communicate()
 
-                # Assertions to verify that Locust started and shut down correctly
                 self.assertIn("Starting web interface at", stderr)
                 self.assertIn("Starting Locust", stderr)
 
             except PollingTimeoutError as e:
-                # Handle the case where the polling times out
                 self.fail(f"Polling failed: {str(e)}")
 
             finally:
-                # Ensure the subprocess is terminated in case of an error or timeout
                 proc.terminate()
 
     def test_invalid_percentile_parameter(self):
         with temporary_file(
             content=textwrap.dedent(
                 """
-                from locust import User, task, constant, events
-                from locust import stats
-                stats.PERCENTILES_TO_CHART  = [1.2]
-                class TestUser(User):
-                    wait_time = constant(3)
-                    @task
-                    def my_task(self):
-                        print("running my_task()")
+            from locust import User, task, constant, events
+            from locust import stats
+            stats.PERCENTILES_TO_CHART  = [1.2]
+            class TestUser(User):
+                wait_time = constant(3)
+                @task
+                def my_task(self):
+                    print("running my_task()")
             """
             )
         ) as file_path:
@@ -382,36 +378,30 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         if "parameter need to be float" in line:
                             return True
                         if proc.poll() is not None:
-                            return False  # Stop if process terminates
+                            return False
 
-                # Use the polling mechanism to check stderr incrementally
                 poll_until(check_for_error_message, timeout=10)
 
-                # Communicate with the process to make sure it finishes
-                stdout, stderr = proc.communicate()
+                _, stderr = proc.communicate()
 
-                # Join stderr into a single string for final assertion
                 stderr_combined = "".join(stderr_output + [stderr])
 
-                # Assertions to verify the percentile parameter error message
                 self.assertIn(
                     "parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", stderr_combined
                 )
                 self.assertEqual(1, proc.returncode)
 
             except PollingTimeoutError as e:
-                # Fail the test if the condition is not met within the timeout
                 self.fail(f"Polling failed: {str(e)}")
 
             finally:
-                # Ensure the subprocess is terminated in case of an error or timeout
                 proc.terminate()
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver_multiple_locustfiles(self):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:
-                port = get_free_tcp_port()  # Get a free port to pass to Locust
+                port = get_free_tcp_port()
                 proc = subprocess.Popen(
                     ["locust", "-f", f"{mocked1.file_path},{mocked2.file_path}", "--web-port", str(port)],
                     stdout=PIPE,
@@ -420,12 +410,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 )
 
                 try:
-                    # Poll until the specified port is in use
                     poll_until(lambda: is_port_in_use(port), timeout=20)
 
-                    # Once the web server is up, send the SIGTERM signal
                     proc.send_signal(signal.SIGTERM)
-                    stdout, stderr = proc.communicate()
+                    _, stderr = proc.communicate()
                     self.assertIn("Starting web interface at", stderr)
                     self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                     self.assertIn("Starting Locust", stderr)
@@ -433,11 +421,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertEqual(0, proc.returncode)
 
                 except PollingTimeoutError:
-                    # Handle the case where the polling times out
                     self.fail(f"Locust web interface did not start within the expected time on port {port}")
 
                 finally:
-                    # Ensure the subprocess is terminated in case of an error or timeout
                     proc.terminate()
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
@@ -445,18 +431,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with TemporaryDirectory() as temp_dir:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A, dir=temp_dir):
                 with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B, dir=temp_dir):
-                    port = get_free_tcp_port()  # Get a free port to pass to Locust
+                    port = get_free_tcp_port()
                     proc = subprocess.Popen(
                         ["locust", "-f", temp_dir, "--web-port", str(port)], stdout=PIPE, stderr=PIPE, text=True
                     )
 
                     try:
-                        # Poll until the specified port is in use
                         poll_until(lambda: is_port_in_use(port), timeout=20)
 
-                        # Once the web server is up, send the SIGTERM signal
                         proc.send_signal(signal.SIGTERM)
-                        stdout, stderr = proc.communicate()
+                        _, stderr = proc.communicate()
                         self.assertIn("Starting web interface at", stderr)
                         self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                         self.assertIn("Starting Locust", stderr)
@@ -464,11 +448,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.assertEqual(0, proc.returncode)
 
                     except PollingTimeoutError:
-                        # Handle the case where the polling times out
                         self.fail(f"Locust web interface did not start within the expected time on port {port}")
 
                     finally:
-                        # Ensure the subprocess is terminated in case of an error or timeout
                         proc.terminate()
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
@@ -504,7 +486,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
                 )
             ) as mocked2:
-                port = get_free_tcp_port()  # Get a free port to pass to Locust
+                port = get_free_tcp_port()
                 proc = subprocess.Popen(
                     ["locust", "-f", f"{mocked1.file_path},{mocked2}", "--web-port", str(port)],
                     stdout=PIPE,
@@ -513,12 +495,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 )
 
                 try:
-                    # Poll until the specified port is in use
                     poll_until(lambda: is_port_in_use(port), timeout=20)
 
-                    # Once the web server is up, send the SIGTERM signal
                     proc.send_signal(signal.SIGTERM)
-                    stdout, stderr = proc.communicate()
+                    _, stderr = proc.communicate()
                     self.assertIn("Starting web interface at", stderr)
                     self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                     self.assertIn("Starting Locust", stderr)
@@ -526,11 +506,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertEqual(0, proc.returncode)
 
                 except PollingTimeoutError:
-                    # Handle the case where the polling times out
                     self.fail(f"Locust web interface did not start within the expected time on port {port}")
 
                 finally:
-                    # Ensure the subprocess is terminated in case of an error or timeout
                     proc.terminate()
 
     def test_default_headless_spawn_options(self):
@@ -578,7 +556,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
                 text=True,
             )
-            stdout, stderr = proc.communicate()
+            _, stderr = proc.communicate()
             self.assertIn("ERROR/locust.main: Valid --stop-timeout formats are", stderr)
             self.assertEqual(1, proc.returncode)
 
@@ -611,26 +589,20 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 return False
 
             try:
-                # Poll until Locust has started
                 poll_until(check_locust_started, timeout=10)
 
-                # After Locust starts, send the termination signal
                 proc.send_signal(signal.SIGTERM)
 
-                # Wait for the process to finish
-                stdout, stderr = proc.communicate()
+                _, stderr = proc.communicate()
 
-                # Assertions to verify that Locust started and shut down correctly
                 self.assertIn("All users spawned", stderr)
                 self.assertIn("Shutting down (exit code 0)", stderr)
                 self.assertEqual(0, proc.returncode)
 
             except PollingTimeoutError:
-                # Handle the case where the polling times out
                 self.fail("Locust did not start within the expected time")
 
             finally:
-                # Ensure the subprocess is terminated in case of error
                 proc.terminate()
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
@@ -668,38 +640,17 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                     output = []
 
-                    def users_spawned():
-                        """Check stderr to see if all users have been spawned."""
-                        ready, _, _ = select.select([proc.stderr], [], [], 0.1)
-                        if ready:
-                            line = proc.stderr.readline()
-                            output.append(line)
-                            return "All users spawned:" in line
-                        return False
-
-                    def process_finished():
-                        """Check if the process has finished."""
-                        return proc.poll() is not None
-
                     try:
-                        # Wait for all users to be spawned using the polling mechanism
-                        poll_until(users_spawned, timeout=10)
+                        poll_until(lambda: all_users_spawned(proc, output), timeout=10)
 
-                        # Send SIGTERM to gracefully shut down Locust after users are spawned
                         proc.send_signal(signal.SIGTERM)
 
-                        # Wait for the process to finish
-                        poll_until(process_finished, timeout=10)
-
-                        # Collect any remaining output
                         stdout, stderr = proc.communicate(timeout=1)
                         output.extend(stdout.splitlines())
                         output.extend(stderr.splitlines())
 
-                        # Join the output for assertions
                         output_text = "\n".join(output)
 
-                        # Assertions
                         self.assertIn("Starting Locust", output_text)
                         self.assertIn("All users spawned:", output_text)
                         self.assertIn('"TestUser": 1', output_text)
@@ -709,7 +660,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                     except PollingTimeoutError as e:
                         proc.kill()
-                        stdout, stderr = proc.communicate()
+                        proc.communicate()
                         self.fail(f"{str(e)}. Full output: {' '.join(output)}")
 
                     finally:
@@ -853,7 +804,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     except requests.RequestException:
                         return False
 
-                # Poll until Locust web interface is ready or timeout after 10 seconds
                 poll_until(locust_web_ready, timeout=10)
 
                 response = requests.get(f"http://localhost:{port}/")
@@ -861,12 +811,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                 proc.send_signal(signal.SIGTERM)
                 stdout, stderr = proc.communicate(timeout=5)
-
-                # Print full output for debugging
-                print("STDOUT:")
-                print(stdout)
-                print("STDERR:")
-                print(stderr)
 
                 self.assertIn("Starting Locust", stderr)
                 self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
@@ -925,7 +869,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     except requests.RequestException:
                         return False
 
-                # Poll until Locust web interface is ready or timeout after 10 seconds
                 poll_until(locust_web_ready, timeout=10)
 
                 response = requests.get(f"http://localhost:{port}/")
@@ -934,16 +877,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 def process_finished():
                     return proc.poll() is not None
 
-                # Poll until the process finishes or timeout after 10 seconds
                 poll_until(process_finished, timeout=10)
 
                 stdout, stderr = proc.communicate(timeout=1)
-
-                # Print full output for debugging
-                print("STDOUT:")
-                print(stdout)
-                print("STDERR:")
-                print(stderr)
 
                 self.assertIn("Starting Locust", stderr)
                 self.assertIn("Run time limit set to 3 seconds", stderr)
@@ -1007,44 +943,15 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                     output = []
                     try:
+                        poll_until(lambda: is_port_in_use(port), timeout=10)
 
-                        def locust_started():
-                            return is_port_in_use(port)
+                        poll_until(lambda: all_users_spawned(proc, output), timeout=10)
 
-                        def users_spawned():
-                            ready, _, _ = select.select([proc.stderr], [], [], 0.1)
-                            if ready:
-                                line = proc.stderr.readline()
-                                output.append(line)
-                                return "All users spawned:" in line
-                            return False
-
-                        def process_finished():
-                            return proc.poll() is not None
-
-                        # Wait for Locust to start
-                        poll_until(locust_started, timeout=10)
-
-                        # Wait for all users to be spawned
-                        poll_until(users_spawned, timeout=10)
-
-                        # Wait a bit to ensure we capture some task executions
-                        # gevent.sleep(2)
-
-                        # Send SIGTERM
                         proc.send_signal(signal.SIGTERM)
 
-                        # Wait for the process to finish
-                        poll_until(process_finished, timeout=10)
-
-                        # Collect any remaining output
                         stdout, stderr = proc.communicate(timeout=1)
                         output.extend(stdout.splitlines())
                         output.extend(stderr.splitlines())
-
-                        # Print full output for debugging
-                        print("FULL OUTPUT:")
-                        print("\n".join(output))
 
                         output_text = "\n".join(output)
                         self.assertIn("Starting Locust", output_text)
@@ -1105,15 +1012,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     return False
 
             try:
-                # Poll until the Locust web server is ready
                 poll_until(locust_web_ready, timeout=10)
-
-                # Now that the web server is ready, send a request
                 response = requests.get(f"http://localhost:{port}/")
-
                 success = True
-                # Increase timeout here to give more time for shutdown
-                _, stderr = proc.communicate(timeout=10)  # Changed from 5 to 10
+                _, stderr = proc.communicate(timeout=10)
             except PollingTimeoutError:
                 self.fail("Locust web server did not start within the expected time.")
             except subprocess.TimeoutExpired:
@@ -1121,14 +1023,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc.send_signal(signal.SIGTERM)
                 _, stderr = proc.communicate()
 
-            # Log the stderr to see more details about what went wrong
-            print(f"STDERR OUTPUT: {stderr}")
-
-            # Assertions
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shape test starting", stderr)
             self.assertIn("Shutting down ", stderr)
-            self.assertIn("--run-time limit reached", stderr)  # Modified to check for the actual message
+            self.assertIn("--run-time limit reached", stderr)
             self.assertEqual(200, response.status_code)
             self.assertTrue(success, "got timeout and had to kill the process")
 
@@ -1182,27 +1080,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 )
 
                 try:
-                    # Poll until the web interface is ready
-                    def web_interface_ready():
-                        try:
-                            response = requests.get(f"http://localhost:{port}/")
-                            return response.status_code == 200
-                        except requests.RequestException:
-                            return False
-
-                    poll_until(web_interface_ready, timeout=10)
-
-                    # Now we know the web interface is ready, make the request
+                    poll_until(lambda: web_interface_ready(port), timeout=10)
                     response = requests.get(f"http://localhost:{port}/")
                     self.assertEqual(200, response.status_code)
 
-                    # Poll until the process completes or times out
-                    def process_completed():
-                        return proc.poll() is not None
-
-                    poll_until(process_completed, timeout=10)
-
-                    stdout, stderr = proc.communicate(timeout=1)
+                    _, stderr = proc.communicate(timeout=10)
 
                     self.assertIn("Starting Locust", stderr)
                     self.assertIn("Shape test starting", stderr)
@@ -1213,7 +1095,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.fail("Polling timed out")
                 except subprocess.TimeoutExpired:
                     proc.send_signal(signal.SIGTERM)
-                    stdout, stderr = proc.communicate()
+                    _, stderr = proc.communicate()
                     self.fail("Process did not complete in time")
                 finally:
                     if proc.poll() is None:
@@ -1508,7 +1390,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stderr=PIPE,
                         text=True,
                     )
-                    stdout, stderr = proc.communicate()
+                    _, stderr = proc.communicate()
                     self.assertIn("Starting Locust", stderr)
                     self.assertIn("All users spawned:", stderr)
                     self.assertIn('"UserSubclass": 1', stderr)
@@ -1610,7 +1492,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_run_with_userclass_picker(self):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_B) as file2:
-                port = get_free_tcp_port()  # Get a free port for the Locust process
+                port = get_free_tcp_port()
                 proc = subprocess.Popen(
                     ["locust", "-f", f"{file1},{file2}", "--class-picker", "--web-port", str(port)],
                     stdout=PIPE,
@@ -1619,14 +1501,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 )
 
                 try:
-                    # Poll until the web interface is ready by checking if the port is in use
                     poll_until(lambda: is_port_in_use(port), timeout=20)
 
-                    # After Locust is ready, send a termination signal
                     proc.send_signal(signal.SIGTERM)
-                    stdout, stderr = proc.communicate()
+                    _, stderr = proc.communicate()
 
-                    # Assertions to check for proper startup and shutdown of Locust
                     self.assertIn("Locust is running with the UserClass Picker Enabled", stderr)
                     self.assertIn("Starting Locust", stderr)
                     self.assertIn("Starting web interface at", stderr)
@@ -1635,8 +1514,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.fail(f"Locust web interface did not start on port {port} within the expected time")
 
                 finally:
-                    # Ensure the subprocess is terminated in case of success or failure
                     proc.terminate()
+                    proc.communicate()
 
     def test_error_when_duplicate_userclass_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = textwrap.dedent(
@@ -1653,15 +1532,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
                 proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True)
 
-                def process_completed():
-                    return proc.poll() is not None
-
                 try:
-                    # Wait for the process to complete or timeout after 10 seconds
-                    poll_until(process_completed, timeout=10, poll_interval=0.1)
-
-                    stdout, stderr = proc.communicate(timeout=1)
-
+                    _, stderr = proc.communicate(timeout=1)
                     self.assertIn("Duplicate user class names: TestUser1 is defined", stderr)
                     self.assertEqual(1, proc.returncode)
 
@@ -1669,7 +1541,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.fail("Process did not complete within the expected time")
                 except subprocess.TimeoutExpired:
                     proc.terminate()
-                    stdout, stderr = proc.communicate()
+                    _, stderr = proc.communicate()
                     self.fail("Process did not complete in time")
                 finally:
                     if proc.poll() is None:
@@ -1689,24 +1561,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     ["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"], stdout=PIPE, stderr=PIPE, text=True
                 )
 
-                def process_completed():
-                    return proc.poll() is not None
-
                 try:
-                    # Wait for the process to complete or timeout after 10 seconds
-                    poll_until(process_completed, timeout=10, poll_interval=0.1)
-
-                    stdout, stderr = proc.communicate(timeout=1)
+                    stdout, _ = proc.communicate(timeout=10)
 
                     self.assertIn("running my_task", stdout)
                     self.assertEqual(0, proc.returncode)
 
-                except PollingTimeoutError:
-                    self.fail("Process did not complete within the expected time")
                 except subprocess.TimeoutExpired:
                     proc.terminate()
-                    stdout, stderr = proc.communicate()
-                    self.fail("Process did not complete in time")
+                    stdout, _ = proc.communicate()
+                    self.fail(f"Process did not complete in time. Output: {stdout}")
                 finally:
                     if proc.poll() is None:
                         proc.terminate()
@@ -1745,14 +1609,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_D) as file2:
                 proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True)
 
-                def process_completed():
-                    return proc.poll() is not None
-
                 try:
-                    # Wait for the process to complete or timeout after 10 seconds
-                    poll_until(process_completed, timeout=10, poll_interval=0.1)
-
-                    stdout, stderr = proc.communicate(timeout=1)
+                    _, stderr = proc.communicate(timeout=5)
 
                     self.assertIn("Duplicate shape classes: TestShape", stderr)
                     self.assertEqual(1, proc.returncode)
@@ -1761,7 +1619,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.fail("Process did not complete within the expected time")
                 except subprocess.TimeoutExpired:
                     proc.terminate()
-                    stdout, stderr = proc.communicate()
+                    _, stderr = proc.communicate()
                     self.fail("Process did not complete in time")
                 finally:
                     if proc.poll() is None:
@@ -1856,14 +1714,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with TemporaryDirectory() as temp_dir:
             proc = subprocess.Popen(["locust", "-f", temp_dir], stdout=PIPE, stderr=PIPE, text=True)
 
-            def process_completed():
-                return proc.poll() is not None
-
             try:
-                # Wait for the process to complete or timeout after 10 seconds
-                poll_until(process_completed, timeout=10, poll_interval=0.1)
-
-                stdout, stderr = proc.communicate(timeout=1)
+                _, stderr = proc.communicate(timeout=1)
 
                 self.assertIn(f"Could not find any locustfiles in directory '{temp_dir}'", stderr)
                 self.assertEqual(1, proc.returncode)
@@ -1872,7 +1724,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.fail("Process did not complete within the expected time")
             except subprocess.TimeoutExpired:
                 proc.terminate()
-                stdout, stderr = proc.communicate()
+                _, stderr = proc.communicate()
                 self.fail("Process did not complete in time")
             finally:
                 if proc.poll() is None:
@@ -1910,7 +1762,7 @@ class MyUser(HttpUser):
                 stderr=PIPE,
                 text=True,
             )
-            stdout, stderr = proc.communicate()
+            _, stderr = proc.communicate()
             self.assertIn("MyUser had no tasks left after filtering", stderr)
             self.assertIn("No tasks defined on MyUser", stderr)
             self.assertEqual(1, proc.returncode)
@@ -1969,32 +1821,21 @@ class MyUser(HttpUser):
                 return False
 
             try:
-                # Poll until "Shape test starting" message appears
                 if not poll_for_message("Shape test starting", timeout=10):
                     self.fail("Shape test did not start within the expected time")
 
-                # Send SIGINT signal to trigger graceful shutdown
                 proc.send_signal(signal.SIGINT)
 
-                # Poll until "Exiting due to CTRL+C interruption" message appears
                 if not poll_for_message("Exiting due to CTRL+C interruption", timeout=10):
                     self.fail("Graceful shutdown did not occur as expected")
 
-                # Wait for the process to finish
                 stdout, stderr = proc.communicate()
 
-                # Log stderr and stdout for debugging
-                print(f"Full stderr: {stderr}")
-                print(f"Full stdout: {stdout}")
-
-                # Assertions to verify the process output
                 self.assertIn("Test Stopped", stdout)
 
-                # Update the regex to be more flexible or ensure the output format is correct
                 self.assertRegex(stderr, r".*Shutting down.*")
 
             except AssertionError as e:
-                # Print full outputs to aid in debugging if the test fails
                 print(f"Test failed with output:\n{stderr}\n{stdout}")
                 raise e
 
@@ -2160,7 +2001,7 @@ class SecondUser(HttpUser):
                 stderr=PIPE,
                 text=True,
             )
-            stdout, stderr = proc.communicate()
+            _, stderr = proc.communicate()
             stdout_worker, stderr_worker = proc_worker.communicate()
             self.assertNotIn("ERROR", stderr_worker)
             self.assertIn("task1", stdout_worker)
