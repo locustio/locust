@@ -1953,9 +1953,10 @@ def on_test_stop(environment, **kwargs):
             worker_cmd = base_cmd + ["--worker"]
 
             def run_process(cmd):
-                return subprocess.Popen(
-                    cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, preexec_fn=os.setsid
-                )
+                if platform.system() == "Windows":
+                    return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                else:
+                    return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, preexec_fn=os.setsid)
 
             def terminate_process(proc):
                 try:
