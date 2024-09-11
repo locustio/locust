@@ -10,6 +10,8 @@ import signal
 import socket
 import subprocess
 import sys
+
+sys.dont_write_bytecode = False
 import textwrap
 import time
 import unittest
@@ -37,7 +39,7 @@ class PollingTimeoutError(Exception):
     pass
 
 
-def poll_until(condition_func: Callable[[], bool], timeout: float = 10, sleep_time: float = 0.01) -> None:
+def poll_until(condition_func: Callable[[], bool], timeout: float = 5, sleep_time: float = 0.005) -> None:
     """
     Polls the condition_func at regular intervals until it returns True or timeout is reached.
     Fixed short sleep time ensures faster polling with early exit when condition is met.
@@ -316,6 +318,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                bufsize=1,
             )
 
             try:
@@ -358,6 +361,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                bufsize=1,
             )
 
             try:
@@ -442,6 +446,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
+                    bufsize=1,
                 )
 
                 try:
@@ -527,6 +532,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
+                    bufsize=1,
                 )
 
                 try:
@@ -590,6 +596,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                bufsize=1,
             )
             _, stderr = proc.communicate()
             self.assertIn("ERROR/locust.main: Valid --stop-timeout formats are", stderr)
@@ -612,6 +619,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                bufsize=1,
             )
 
             def check_locust_started():
@@ -671,6 +679,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
+                        bufsize=1,
                     )
 
                     output = []
@@ -730,6 +739,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                bufsize=1,
             )
 
             try:
@@ -795,6 +805,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
+                    bufsize=1,
                 )
 
                 try:
@@ -828,6 +839,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                bufsize=1,
             )
 
             try:
@@ -893,6 +905,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                bufsize=1,
             )
 
             try:
@@ -974,6 +987,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
+                        bufsize=1,
                     )
 
                     output = []
@@ -1037,6 +1051,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                bufsize=1,
             )
 
             def locust_web_ready():
@@ -1112,6 +1127,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
+                    bufsize=1,
                 )
 
                 try:
@@ -1181,6 +1197,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                bufsize=1,
             )
             try:
 
@@ -1238,6 +1255,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 shell=True,
                 text=True,
+                bufsize=1,
             )
             gevent.sleep(1)
 
@@ -1318,6 +1336,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 shell=True,
                 text=True,
+                bufsize=1,
             )
 
             output = proc.communicate()[0]
@@ -1353,6 +1372,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     shell=True,
                     text=True,
+                    bufsize=1,
                 )
 
                 output = proc.communicate()[0]
@@ -1401,6 +1421,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
+                bufsize=1,
             )
 
             output = proc.communicate()[0]
@@ -1478,6 +1499,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 shell=True,
                 text=True,
+                bufsize=1,
             )
 
             output = proc.communicate()[0]
@@ -1533,6 +1555,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
+                    bufsize=1,
                 )
 
                 try:
@@ -2068,81 +2091,62 @@ class SecondUser(HttpUser):
     def test_distributed(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
-                from locust import User, task, constant
+            from locust import User, task, constant
 
-                class User1(User):
-                    wait_time = constant(1)
+            class User1(User):
+                wait_time = constant(1)
 
-                    @task
-                    def t(self):
-                        pass
-                """
+                @task
+                def t(self):
+                    pass
+            """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            master_args = [
-                "locust",
-                "-f",
-                mocked.file_path,
-                "--headless",
-                "--master",
-                "--expect-workers",
-                "1",
-                "-u",
-                "3",
-                "-t",
-                "3s",
-            ]
-            worker_args = [
-                "locust",
-                "-f",
-                mocked.file_path,
-                "--worker",
-            ]
-
-            master_queue = multiprocessing.Queue()
-            worker_queue = multiprocessing.Queue()
-
-            master_process = multiprocessing.Process(target=run_process, args=(master_args, master_queue))
-            worker_process = multiprocessing.Process(target=run_process, args=(worker_args, worker_queue))
-
-            master_process.start()
-            worker_process.start()
-
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "1",
+                    "-u",
+                    "3",
+                    "-t",
+                    "3s",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
             try:
-                # Wait for master process to finish (with timeout)
-                master_process.join(timeout=10)
-                if master_process.is_alive():
-                    raise TimeoutError("Master process timed out")
+                stdout = proc.communicate(timeout=9)[0]
+            except Exception:
+                proc.kill()
+                proc_worker.kill()
+                stdout = proc.communicate()[0]
+                worker_stdout = proc_worker.communicate()[0]
+                assert False, f"master never finished: {stdout}, worker output: {worker_stdout}"
+            stdout = proc.communicate()[0]
+            proc_worker.communicate()
 
-                # Ensure worker process is terminated
-                worker_process.terminate()
-                worker_process.join(timeout=5)
+            self.assertIn('All users spawned: {"User1": 3} (3 total users)', stdout)
+            self.assertIn("Shutting down (exit code 0)", stdout)
 
-                # Get output from queues
-                master_returncode, master_stdout = master_queue.get()
-                worker_returncode, worker_stdout = worker_queue.get()
-
-                self.assertIn('All users spawned: {"User1": 3} (3 total users)', master_stdout)
-                self.assertIn("Shutting down (exit code 0)", master_stdout)
-
-                self.assertEqual(0, master_returncode)
-                self.assertEqual(0, worker_returncode)
-
-            except Exception as e:
-                self.fail(
-                    f"Test failed: {str(e)}\nMaster output: {master_stdout if 'master_stdout' in locals() else 'N/A'}\nWorker output: {worker_stdout if 'worker_stdout' in locals() else 'N/A'}"
-                )
-
-            finally:
-                # Ensure processes are terminated
-                if master_process.is_alive():
-                    master_process.terminate()
-                if worker_process.is_alive():
-                    worker_process.terminate()
-
-                # Clean up queues
-                master_queue.close()
-                worker_queue.close()
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
 
     def test_distributed_report_timeout_expired(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
