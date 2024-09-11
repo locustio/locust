@@ -14,7 +14,7 @@ import time
 import unittest
 from subprocess import DEVNULL, PIPE, STDOUT
 from tempfile import TemporaryDirectory
-from typing import Callable
+from typing import Callable, Optional
 from unittest import TestCase
 
 import gevent
@@ -73,7 +73,7 @@ def all_users_spawned(proc: subprocess.Popen, output: list[str]) -> bool:
     ready, _, _ = select.select([proc.stderr], [], [], 0.1)
 
     if ready:
-        line = proc.stderr.readline().strip()
+        line = proc.stderr.readline().strip()  # Now `proc.stderr` is guaranteed to not be None
         output.append(line)
         return "All users spawned:" in line
 
@@ -1891,14 +1891,14 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
 
             output = ""
             start_time = time.time()
-            
+
             while time.time() - start_time < 3:
                 line = check_output()
                 if line:
                     output += line + "\n"
                     if "Gave up waiting for workers to connect" in line:
                         break
-            
+
             proc_returncode = proc.wait(timeout=3)
 
             self.assertTrue(
