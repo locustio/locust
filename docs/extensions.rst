@@ -18,6 +18,11 @@ Support for load testing other protocols, reporting etc
    -  checks (adds command line parameters to set locust exit code based
       on requests/s, error percentage and average response times)
 
+Report OTEL traces for requests
+-----------------------------------------
+
+- `opentelemetry-demo repo <https://github.com/open-telemetry/opentelemetry-demo/tree/main/src/loadgenerator>`__
+
 Automate distributed runs over SSH
 ----------------------------------
 
