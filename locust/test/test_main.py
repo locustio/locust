@@ -1954,18 +1954,27 @@ def on_test_stop(environment, **kwargs):
 
             def run_process(cmd):
                 if platform.system() == "Windows":
-                    return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                    return subprocess.Popen(
+                        cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                    )
                 else:
-                    return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, preexec_fn=os.setsid)
+                    return subprocess.Popen(
+                        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, preexec_fn=os.setsid
+                    )
 
             def terminate_process(proc):
                 try:
-                    os.killpg(os.getpgid(proc.pid), psutil.signal.SIGTERM)
+                    if platform.system() == "Windows":
+                        proc.terminate()
+                    else:
+                        os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
                 except ProcessLookupError:
-                    # Handle the case where the process group doesn't exist
                     pass
                 except OSError:
-                    # Handle other OS-related errors
                     pass
 
             start_time = time.time()
