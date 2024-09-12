@@ -58,9 +58,9 @@ def is_port_in_use(port: int) -> bool:
             return True
 
 
-def web_interface_ready(port: int) -> bool:
+def web_interface_ready(host: str, port: int) -> bool:
     try:
-        response = requests.get(f"http://localhost:{port}/")
+        response = requests.get(f"http://{host}:{port}/", timeout=0.1)
         return response.status_code == 200
     except requests.RequestException:
         return False
@@ -266,7 +266,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 )
 
                 try:
-                    poll_until(lambda: web_interface_ready(port), timeout=20)
+                    poll_until(lambda: web_interface_ready("localhost", port), timeout=20)
                 except PollingTimeoutError:
                     self.fail(f"Failed to start Locust web server on port {port}")
 
@@ -342,7 +342,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                bufsize=1,  # Line-buffered output for real-time reading
+                bufsize=1,
             )
 
             try:
@@ -1158,7 +1158,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 )
 
                 try:
-                    poll_until(lambda: web_interface_ready(port), timeout=10)
+                    poll_until(lambda: web_interface_ready("localhost", port), timeout=10)
                     response = requests.get(f"http://localhost:{port}/")
                     self.assertEqual(200, response.status_code)
 
@@ -1195,15 +1195,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stderr=PIPE,
                 )
                 try:
-
-                    def server_ready():
-                        try:
-                            response = requests.get(f"http://127.0.0.2:{port}/", timeout=0.1)
-                            return response.status_code == 200
-                        except requests.RequestException:
-                            return False
-
-                    poll_until(server_ready, timeout=5)
+                    poll_until(web_interface_ready("127.0.0.2", port), timeout=5)
 
                     response = requests.get(f"http://127.0.0.2:{port}/", timeout=1)
                     self.assertEqual(200, response.status_code)
@@ -1226,15 +1218,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
             )
             try:
-
-                def server_ready():
-                    try:
-                        response = requests.get(f"http://127.0.0.1:{port}/", timeout=0.1)
-                        return response.status_code == 200
-                    except requests.RequestException:
-                        return False
-
-                poll_until(server_ready, timeout=5)
+                poll_until(web_interface_ready("127.0.0.1", port), timeout=5)
 
                 response = requests.get(f"http://127.0.0.1:{port}/", timeout=1)
                 self.assertEqual(200, response.status_code)
