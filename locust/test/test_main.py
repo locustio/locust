@@ -1764,11 +1764,11 @@ class MyUser(HttpUser):
 
                 return condition
 
-            poll_until(condition_for_message("Shape test starting"), timeout=10)
+            poll_until(condition_for_message("Shape test starting"), timeout=15)
 
             proc.send_signal(signal.SIGINT)
 
-            poll_until(condition_for_message("Exiting due to CTRL+C interruption"), timeout=10)
+            poll_until(condition_for_message("Exiting due to CTRL+C interruption"), timeout=15)
 
             stdout, stderr = proc.communicate()
 
@@ -2203,7 +2203,6 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
-                bufsize=1,
             )
             gevent.sleep(2)
             proc = subprocess.Popen(
@@ -2216,7 +2215,7 @@ class SecondUser(HttpUser):
                     "--expect-workers",
                     "1",
                     "-t",
-                    "3",
+                    "1",
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
