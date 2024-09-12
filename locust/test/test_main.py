@@ -2264,9 +2264,8 @@ class SecondUser(HttpUser):
 
             try:
                 poll_until(lambda: all_users_spawned(proc, output), timeout=30)
-                time.sleep(6)  # Wait for the 5-second run time to complete
+                # time.sleep(6)
 
-                print("Debug: Waiting for processes to complete...")
                 stdout, stderr = proc.communicate(timeout=30)
                 stdout_worker, stderr_worker = proc_worker.communicate(timeout=10)
                 stdout_worker2, stderr_worker2 = proc_worker2.communicate(timeout=10)
@@ -2277,17 +2276,6 @@ class SecondUser(HttpUser):
                 output.extend(stderr_worker.splitlines())
                 output.extend(stdout_worker2.splitlines())
                 output.extend(stderr_worker2.splitlines())
-
-                print(f"Debug: Final output:\n{''.join(output)}")
-                print(f"Debug: Master process return code: {proc.returncode}")
-                print(f"Debug: Worker 1 process return code: {proc_worker.returncode}")
-                print(f"Debug: Worker 2 process return code: {proc_worker2.returncode}")
-
-                shutdown_lines = [line for line in output if "Shutting down" in line]
-                if shutdown_lines:
-                    print(f"Debug: Shutdown lines found: {shutdown_lines}")
-                else:
-                    print("Debug: No shutdown lines found in the output")
 
                 self.assertTrue(
                     any("Shutting down" in line for line in output),
@@ -2338,7 +2326,15 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
             )
-            gevent.sleep(2)
+
+            def worker_ready():
+                return "Waiting for messages from master" in proc_worker.stdout.readline()
+
+            try:
+                poll_until(worker_ready, timeout=10)
+            except PollingTimeoutError:
+                self.fail("Worker did not become ready within the expected time")
+
             proc = subprocess.Popen(
                 [
                     "locust",
@@ -2349,22 +2345,51 @@ class SecondUser(HttpUser):
                     "--expect-workers",
                     "1",
                     "-t",
-                    "1",
+                    "5",
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
             )
 
-            stdout = proc.communicate()[0]
-            worker_stdout = proc_worker.communicate()[0]
+            output = []
 
-            self.assertIn('All users spawned: {"User1": ', stdout)
-            self.assertIn("Shutting down (exit code 0)", stdout)
+            try:
+                poll_until(lambda: all_users_spawned(proc, output), timeout=20)
 
-            self.assertEqual(0, proc.returncode)
-            self.assertEqual(0, proc_worker.returncode)
-            self.assertIn("hello", worker_stdout)
+                end_time = time.time() + 10
+                while time.time() < end_time:
+                    line = proc.stdout.readline()
+                    if not line:
+                        break
+                    output.append(line)
+                    if "Shutting down" in line:
+                        break
+
+                stdout = "".join(output)
+                worker_stdout = proc_worker.communicate()[0]
+
+                self.assertIn('All users spawned: {"User1": ', stdout)
+                self.assertIn("Shutting down (exit code 0)", stdout)
+
+                self.assertEqual(0, proc.wait(timeout=5))
+                self.assertEqual(0, proc_worker.wait(timeout=5))
+                self.assertIn("hello", worker_stdout)
+
+            except PollingTimeoutError:
+                self.fail("Master did not spawn all users within the expected time")
+            finally:
+                for p in [proc, proc_worker]:
+                    try:
+                        p.terminate()
+                        p.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        p.kill()
+                        p.wait()
+                    except Exception as e:
+                        print(f"Failed to terminate process: {e}")
+                        p.kill()
+                        p.wait()
 
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -2416,7 +2441,6 @@ class SecondUser(HttpUser):
             try:
                 poll_until(lambda: all_users_spawned(proc, output), timeout=20)
                 time.sleep(6)
-                print(f"Debug: All users spawned. Output so far:\n{''.join(output)}")
 
                 end_time = time.time() + 15
                 while time.time() < end_time:
@@ -2432,10 +2456,6 @@ class SecondUser(HttpUser):
                 output.extend(stderr.splitlines())
                 output.extend(stdout_worker.splitlines())
                 output.extend(stderr_worker.splitlines())
-
-                print(f"Debug: Final output:\n{''.join(output)}")
-                print(f"Debug: Master process return code: {proc.returncode}")
-                print(f"Debug: Worker process return code: {proc_worker.returncode}")
 
                 self.assertTrue(
                     any("Shutting down" in line for line in output),
