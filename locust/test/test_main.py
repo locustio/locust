@@ -2325,16 +2325,9 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
+                bufsize=1,
             )
-
-            def worker_ready():
-                return "Waiting for messages from master" in proc_worker.stdout.readline()
-
-            try:
-                poll_until(worker_ready, timeout=10)
-            except PollingTimeoutError:
-                self.fail("Worker did not become ready within the expected time")
-
+            gevent.sleep(2)
             proc = subprocess.Popen(
                 [
                     "locust",
@@ -2345,51 +2338,22 @@ class SecondUser(HttpUser):
                     "--expect-workers",
                     "1",
                     "-t",
-                    "5",
+                    "3",
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
             )
 
-            output = []
+            stdout = proc.communicate()[0]
+            worker_stdout = proc_worker.communicate()[0]
 
-            try:
-                poll_until(lambda: all_users_spawned(proc, output), timeout=20)
+            self.assertIn('All users spawned: {"User1": ', stdout)
+            self.assertIn("Shutting down (exit code 0)", stdout)
 
-                end_time = time.time() + 10
-                while time.time() < end_time:
-                    line = proc.stdout.readline()
-                    if not line:
-                        break
-                    output.append(line)
-                    if "Shutting down" in line:
-                        break
-
-                stdout = "".join(output)
-                worker_stdout = proc_worker.communicate()[0]
-
-                self.assertIn('All users spawned: {"User1": ', stdout)
-                self.assertIn("Shutting down (exit code 0)", stdout)
-
-                self.assertEqual(0, proc.wait(timeout=5))
-                self.assertEqual(0, proc_worker.wait(timeout=5))
-                self.assertIn("hello", worker_stdout)
-
-            except PollingTimeoutError:
-                self.fail("Master did not spawn all users within the expected time")
-            finally:
-                for p in [proc, proc_worker]:
-                    try:
-                        p.terminate()
-                        p.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        p.kill()
-                        p.wait()
-                    except Exception as e:
-                        print(f"Failed to terminate process: {e}")
-                        p.kill()
-                        p.wait()
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
+            self.assertIn("hello", worker_stdout)
 
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -2415,7 +2379,7 @@ class SecondUser(HttpUser):
                     "--expect-workers",
                     "1",
                     "-t",
-                    "5s",
+                    "3s",
                 ],
                 stderr=PIPE,
                 stdout=PIPE,
