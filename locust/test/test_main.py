@@ -2338,6 +2338,8 @@ class SecondUser(HttpUser):
                     read_nonblocking(proc, output)
 
                 poll_until(lambda: "Shutting down (exit code 0)" in "".join(output), timeout=10)
+                proc.terminate()
+                proc_worker.terminate()
 
             except PollingTimeoutError:
                 self.fail(f"All users were not spawned within the timeout. Output so far: {''.join(output)}")
@@ -2348,7 +2350,7 @@ class SecondUser(HttpUser):
             output.extend(stdout.splitlines())
             output.extend(stdout_worker.splitlines())
 
-            self.assertIn('Shutting down (exit code 0)', "\n".join(output))
+            self.assertIn("Shutting down (exit code 0)", "\n".join(output))
             self.assertNotIn("Traceback", "\n".join(output))
 
             self.assertEqual(0, proc.returncode)
