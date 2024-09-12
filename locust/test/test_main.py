@@ -2309,7 +2309,7 @@ class SecondUser(HttpUser):
                     "--expect-workers",
                     "1",
                     "-t",
-                    "1s",
+                    "5s",
                 ],
                 stderr=PIPE,
                 stdout=PIPE,
@@ -2338,6 +2338,8 @@ class SecondUser(HttpUser):
 
                 while proc.poll() is None:
                     read_nonblocking(proc, output)
+                    if "Shutting down (exit code 0)" in output:
+                        break
 
             except PollingTimeoutError:
                 self.fail(f"All users were not spawned within the timeout. Output so far: {''.join(output)}")
