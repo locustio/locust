@@ -2331,7 +2331,6 @@ class SecondUser(HttpUser):
             )
 
             output = []
-            print("Debug: Master and worker processes started.")
 
             try:
                 poll_until(lambda: all_users_spawned(proc, output), timeout=10)
@@ -2340,13 +2339,7 @@ class SecondUser(HttpUser):
                 while proc.poll() is None:
                     read_nonblocking(proc, output)
 
-                print(f"Debug: Process is still running, checking shutdown. Output so far:\n{''.join(output)}")
-
-                poll_until(lambda: "Shutting down (exit code 0)" in "".join(output), timeout=15)
-                print(f"Debug: Shutdown message detected. Final output:\n{''.join(output)}")
-
             except PollingTimeoutError:
-                print(f"Debug: PollingTimeoutError raised. Output so far:\n{''.join(output)}")
                 self.fail(f"All users were not spawned within the timeout. Output so far: {''.join(output)}")
 
             stdout = proc.communicate()[0]
@@ -2354,8 +2347,6 @@ class SecondUser(HttpUser):
 
             output.extend(stdout.splitlines())
             output.extend(stdout_worker.splitlines())
-
-            print(f"Debug: Processes terminated. Final output:\n{''.join(output)}")
 
             self.assertIn("Shutting down (exit code 0)", "\n".join(output))
             self.assertNotIn("Traceback", "\n".join(output))
