@@ -1725,7 +1725,7 @@ class MyUser(HttpUser):
                 class LoadTestShape(LoadTestShape):
                     def tick(self):
                         run_time = self.get_run_time()
-                        if run_time < 2:
+                        if run_time < 10:
                             return (10, 1)
 
                         return None
@@ -1735,7 +1735,7 @@ class MyUser(HttpUser):
                     @task
                     def my_task(self):
                         print("running my_task()")
-            """
+                """
             )
         ) as mocked:
             proc = subprocess.Popen(
@@ -1764,17 +1764,15 @@ class MyUser(HttpUser):
                                 if any(expected_message in line for line in lines):
                                     return True
                         else:
-                            break 
+                            break
 
                     gevent.sleep(0.1)
                     return False
 
                 return condition
 
-
-
             poll_until(condition_for_message("Shape test starting"), timeout=15)
-
+            gevent.sleep(1)
             proc.send_signal(signal.SIGINT)
 
             poll_until(condition_for_message("Exiting due to CTRL+C interruption"), timeout=15)
