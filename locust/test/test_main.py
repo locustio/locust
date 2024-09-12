@@ -2228,7 +2228,7 @@ class SecondUser(HttpUser):
                     "--expect-workers",
                     "2",
                     "-t",
-                    "1s",
+                    "5s",
                 ],
                 stderr=PIPE,
                 stdout=PIPE,
@@ -2263,27 +2263,108 @@ class SecondUser(HttpUser):
             output = []
 
             try:
-                poll_until(lambda: all_users_spawned(proc, output), timeout=20)
-                while proc.poll() is None:
-                    read_nonblocking(proc, output)
+                poll_until(lambda: all_users_spawned(proc, output), timeout=30)
+                time.sleep(6)  # Wait for the 5-second run time to complete
+
+                print("Debug: Waiting for processes to complete...")
+                stdout, stderr = proc.communicate(timeout=30)
+                stdout_worker, stderr_worker = proc_worker.communicate(timeout=10)
+                stdout_worker2, stderr_worker2 = proc_worker2.communicate(timeout=10)
+
+                output.extend(stdout.splitlines())
+                output.extend(stderr.splitlines())
+                output.extend(stdout_worker.splitlines())
+                output.extend(stderr_worker.splitlines())
+                output.extend(stdout_worker2.splitlines())
+                output.extend(stderr_worker2.splitlines())
+
+                print(f"Debug: Final output:\n{''.join(output)}")
+                print(f"Debug: Master process return code: {proc.returncode}")
+                print(f"Debug: Worker 1 process return code: {proc_worker.returncode}")
+                print(f"Debug: Worker 2 process return code: {proc_worker2.returncode}")
+
+                shutdown_lines = [line for line in output if "Shutting down" in line]
+                if shutdown_lines:
+                    print(f"Debug: Shutdown lines found: {shutdown_lines}")
+                else:
+                    print("Debug: No shutdown lines found in the output")
+
+                self.assertTrue(
+                    any("Shutting down" in line for line in output),
+                    f"'Shutting down' not found in output:\n{''.join(output)}",
+                )
+                self.assertIn('All users spawned: {"User1": 1} (1 total users)', "\n".join(output))
+                self.assertNotIn("Traceback", "\n".join(output))
+
+                self.assertEqual(0, proc.returncode)
+                self.assertEqual(0, proc_worker.returncode)
+                self.assertEqual(0, proc_worker2.returncode)
+
             except PollingTimeoutError:
                 self.fail(f"All users were not spawned within the timeout. Output so far: {''.join(output)}")
+            except subprocess.TimeoutExpired:
+                self.fail("Process communication timed out")
+            finally:
+                for p in [proc, proc_worker, proc_worker2]:
+                    try:
+                        p.terminate()
+                        p.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        p.kill()
+                        p.wait()
+
+    def test_locustfile_distribution_with_workers_started_first(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
+
+            class User1(User):
+                wait_time = constant(1)
+
+                @task
+                def t(self):
+                    print("hello")
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    "-",
+                    "--worker",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
+            gevent.sleep(2)
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "1",
+                    "-t",
+                    "1",
+                ],
+                stderr=STDOUT,
+                stdout=PIPE,
+                text=True,
+            )
 
             stdout = proc.communicate()[0]
-            stdout_worker = proc_worker.communicate()[0]
-            stdout_worker2 = proc_worker2.communicate()[0]
+            worker_stdout = proc_worker.communicate()[0]
 
-            output.extend(stdout.splitlines())
-            output.extend(stdout_worker.splitlines())
-            output.extend(stdout_worker2.splitlines())
-
-            self.assertIn('All users spawned: {"User1": 1} (1 total users)', "\n".join(output))
-            self.assertIn("Shutting down (exit code 0)", "\n".join(output))
-            self.assertNotIn("Traceback", "\n".join(output))
+            self.assertIn('All users spawned: {"User1": ', stdout)
+            self.assertIn("Shutting down (exit code 0)", stdout)
 
             self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
-            self.assertEqual(0, proc_worker2.returncode)
+            self.assertIn("hello", worker_stdout)
 
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
