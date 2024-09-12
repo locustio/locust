@@ -875,14 +875,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             try:
 
-                def locust_web_ready():
-                    try:
-                        response = requests.get(f"http://localhost:{port}/")
-                        return response.status_code == 200
-                    except requests.RequestException:
-                        return False
-
-                poll_until(locust_web_ready, timeout=10)
+                poll_until(web_interface_ready('localhost', port))
 
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
@@ -940,15 +933,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             try:
 
-                def locust_web_ready():
-                    try:
-                        response = requests.get(f"http://localhost:{port}/")
-                        return response.status_code == 200
-                    except requests.RequestException:
-                        return False
-
-                poll_until(locust_web_ready, timeout=10)
-
+                poll_until(web_interface_ready('localhost', port))
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
 
@@ -1082,15 +1067,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 text=True,
             )
 
-            def locust_web_ready():
-                try:
-                    response = requests.get(f"http://localhost:{port}/")
-                    return response.status_code == 200
-                except requests.RequestException:
-                    return False
-
             try:
-                poll_until(locust_web_ready, timeout=10)
+                poll_until(web_interface_ready('localhost', port))
                 response = requests.get(f"http://localhost:{port}/")
                 success = True
                 _, stderr = proc.communicate(timeout=10)
