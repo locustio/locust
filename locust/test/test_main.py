@@ -1857,34 +1857,31 @@ class MyUser(HttpUser):
                     mocked,
                     "--headless",
                 ],
-                stdout=PIPE,
-                stderr=PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
             )
 
-            def poll_for_message(expected_message, timeout=10):
-                """Polls stderr until the expected message appears or the timeout is reached."""
-                start_time = time.time()
-                buffer = ""
+            output = []
 
-                while time.time() - start_time < timeout:
+            def condition_for_message(expected_message: str) -> Callable[[], bool]:
+                def condition() -> bool:
                     ready, _, _ = select.select([proc.stderr], [], [], 0.1)
                     if ready:
                         line = proc.stderr.readline()
-                        buffer += line
-                        if expected_message in line:
-                            return True
+                        output.append(line)
+                        return expected_message in line
                     gevent.sleep(0.1)  # Prevent CPU hogging
-                return False
+                    return False
+
+                return condition
 
             try:
-                if not poll_for_message("Shape test starting", timeout=10):
-                    self.fail("Shape test did not start within the expected time")
+                poll_until(condition_for_message("Shape test starting"), timeout=10)
 
                 proc.send_signal(signal.SIGINT)
 
-                if not poll_for_message("Exiting due to CTRL+C interruption", timeout=10):
-                    self.fail("Graceful shutdown did not occur as expected")
+                poll_until(condition_for_message("Exiting due to CTRL+C interruption"), timeout=10)
 
                 stdout, stderr = proc.communicate()
 
@@ -1892,9 +1889,12 @@ class MyUser(HttpUser):
 
                 self.assertRegex(stderr, r".*Shutting down.*")
 
-            except AssertionError as e:
-                print(f"Test failed with output:\n{stderr}\n{stdout}")
-                raise e
+            except AssertionError:
+                print(f"Test failed with output:\n{''.join(output)}")
+                raise
+            except PollingTimeoutError as e:
+                print(f"PollingTimeoutError: {str(e)}")
+                raise
 
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
