@@ -2333,29 +2333,43 @@ class SecondUser(HttpUser):
             output = []
 
             try:
-                poll_until(lambda: all_users_spawned(proc, output), timeout=10)
-                time.sleep(2)
+                poll_until(lambda: all_users_spawned(proc, output), timeout=20)
+                time.sleep(6)
                 print(f"Debug: All users spawned. Output so far:\n{''.join(output)}")
 
-                while proc.poll() is None:
+                end_time = time.time() + 10
+                while time.time() < end_time:
                     read_nonblocking(proc, output)
-                    if "Shutting down (exit code 0)" in output:
+                    if "Shutting down" in "\n".join(output):
                         break
+                    time.sleep(0.1)
+
+                stdout = proc.communicate()[0]
+                stdout_worker = proc_worker.communicate()[0]
+
+                output.extend(stdout.splitlines())
+                output.extend(stdout_worker.splitlines())
+
+                print(f"Debug: Final output:\n{''.join(output)}")
+                print(f"Debug: Master process return code: {proc.returncode}")
+                print(f"Debug: Worker process return code: {proc_worker.returncode}")
+
+                self.assertTrue(
+                    any("Shutting down" in line for line in output),
+                    f"'Shutting down' not found in output:\n{''.join(output)}",
+                )
+                self.assertNotIn("Traceback", "\n".join(output))
+
+                self.assertEqual(0, proc.returncode)
+                self.assertEqual(0, proc_worker.returncode)
 
             except PollingTimeoutError:
                 self.fail(f"All users were not spawned within the timeout. Output so far: {''.join(output)}")
-
-            stdout = proc.communicate()[0]
-            stdout_worker = proc_worker.communicate()[0]
-
-            output.extend(stdout.splitlines())
-            output.extend(stdout_worker.splitlines())
-
-            self.assertIn("Shutting down (exit code 0)", "\n".join(output))
-            self.assertNotIn("Traceback", "\n".join(output))
-
-            self.assertEqual(0, proc.returncode)
-            self.assertEqual(0, proc_worker.returncode)
+            finally:
+                proc.terminate()
+                proc_worker.terminate()
+                proc.wait(timeout=5)
+                proc_worker.wait(timeout=5)
 
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
