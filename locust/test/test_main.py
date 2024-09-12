@@ -874,8 +874,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
 
             try:
-
-                poll_until(web_interface_ready('localhost', port))
+                poll_until(lambda: web_interface_ready("localhost", port))
 
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
@@ -932,8 +931,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
 
             try:
-
-                poll_until(web_interface_ready('localhost', port))
+                poll_until(web_interface_ready("localhost", port))
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
 
@@ -1068,7 +1066,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
 
             try:
-                poll_until(web_interface_ready('localhost', port))
+                poll_until(lambda: web_interface_ready("localhost", port))
                 response = requests.get(f"http://localhost:{port}/")
                 success = True
                 _, stderr = proc.communicate(timeout=10)
