@@ -235,6 +235,53 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("web_form_value", stdout)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
+    def test_custom_arguments_in_file(self):
+        with temporary_file(
+            content=textwrap.dedent(
+                """
+            from locust import User, task, constant, events
+            @events.init_command_line_parser.add_listener
+            def _(parser, **kw):
+                parser.add_argument("--custom-string-arg")
+
+            class TestUser(User):
+                wait_time = constant(10)
+                @task
+                def my_task(self):
+                    print(self.environment.parsed_options.custom_string_arg)
+                """
+            )
+        ) as file_path:
+            try:
+                with open("locust.conf", "w") as conf_file:
+                    conf_file.write("custom-string-arg config_file_value")
+
+                port = get_free_tcp_port()
+
+                proc = subprocess.Popen(
+                    ["locust", "-f", file_path, "--autostart", "--web-port", str(port), "--config", "locust.conf"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+
+                try:
+                    poll_until(lambda: web_interface_ready(port), timeout=20)
+                except PollingTimeoutError:
+                    self.fail(f"Failed to start Locust web server on port {port}")
+
+            finally:
+                if os.path.exists("locust.conf"):
+                    os.remove("locust.conf")
+
+            proc.send_signal(signal.SIGTERM)
+
+            stdout, stderr = proc.communicate(timeout=3)
+
+            self.assertIn("Starting Locust", stderr)
+            self.assertIn("config_file_value", stdout)
+
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_custom_exit_code(self):
         with temporary_file(
             content=textwrap.dedent(
@@ -322,14 +369,14 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with temporary_file(
             content=textwrap.dedent(
                 """
-                from locust import User, task, constant, events
-                from locust import stats
-                stats.PERCENTILES_TO_CHART = [0.9, 0.4]
-                class TestUser(User):
-                    wait_time = constant(3)
-                    @task
-                    def my_task(self):
-                        print("running my_task()")
+            from locust import User, task, constant, events
+            from locust import stats
+            stats.PERCENTILES_TO_CHART = [0.9, 0.4]
+            class TestUser(User):
+                wait_time = constant(3)
+                @task
+                def my_task(self):
+                    print("running my_task()")
             """
             )
         ) as file_path:
