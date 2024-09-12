@@ -2337,18 +2337,20 @@ class SecondUser(HttpUser):
                 time.sleep(6)
                 print(f"Debug: All users spawned. Output so far:\n{''.join(output)}")
 
-                end_time = time.time() + 10
+                end_time = time.time() + 15
                 while time.time() < end_time:
                     read_nonblocking(proc, output)
                     if "Shutting down" in "\n".join(output):
                         break
                     time.sleep(0.1)
 
-                stdout = proc.communicate()[0]
-                stdout_worker = proc_worker.communicate()[0]
+                stdout, stderr = proc.communicate(timeout=20)
+                stdout_worker, stderr_worker = proc_worker.communicate(timeout=5)
 
                 output.extend(stdout.splitlines())
+                output.extend(stderr.splitlines())
                 output.extend(stdout_worker.splitlines())
+                output.extend(stderr_worker.splitlines())
 
                 print(f"Debug: Final output:\n{''.join(output)}")
                 print(f"Debug: Master process return code: {proc.returncode}")
@@ -2365,11 +2367,16 @@ class SecondUser(HttpUser):
 
             except PollingTimeoutError:
                 self.fail(f"All users were not spawned within the timeout. Output so far: {''.join(output)}")
+            except subprocess.TimeoutExpired:
+                self.fail("Process communication timed out")
             finally:
-                proc.terminate()
-                proc_worker.terminate()
-                proc.wait(timeout=5)
-                proc_worker.wait(timeout=5)
+                for p in [proc, proc_worker]:
+                    try:
+                        p.terminate()
+                        p.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        p.kill()
+                        p.wait()
 
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
