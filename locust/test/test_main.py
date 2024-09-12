@@ -1171,7 +1171,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stderr=PIPE,
                 )
                 try:
-                    poll_until(web_interface_ready("127.0.0.2", port), timeout=5)
+                    poll_until(lambda: web_interface_ready("127.0.0.2", port), timeout=5)
 
                     response = requests.get(f"http://127.0.0.2:{port}/", timeout=1)
                     self.assertEqual(200, response.status_code)
