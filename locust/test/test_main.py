@@ -366,18 +366,19 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_percentile_parameter(self):
         port = get_free_tcp_port()
+
         with temporary_file(
             content=textwrap.dedent(
                 """
-            from locust import User, task, constant, events
-            from locust import stats
-            stats.PERCENTILES_TO_CHART = [0.9, 0.4]
-            class TestUser(User):
-                wait_time = constant(3)
-                @task
-                def my_task(self):
-                    print("running my_task()")
-            """
+                from locust import User, task, constant, events
+                from locust import stats
+                stats.PERCENTILES_TO_CHART = [0.9, 0.4]
+                class TestUser(User):
+                    wait_time = constant(3)
+                    @task
+                    def my_task(self):
+                        print("running my_task()")
+                """
             )
         ) as file_path:
             proc = subprocess.Popen(
@@ -399,15 +400,15 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Starting web interface at", stderr)
                 self.assertIn("Starting Locust", stderr)
 
-            except PollingTimeoutError as e:
-                self.fail(f"Polling failed: {str(e)}")
-
             finally:
+                proc.terminate()
+                proc.wait(timeout=5)
                 proc.terminate()
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_percentiles_to_statistics(self):
         port = get_free_tcp_port()
+
         with temporary_file(
             content=textwrap.dedent(
                 """
@@ -441,11 +442,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Starting web interface at", stderr)
                 self.assertIn("Starting Locust", stderr)
 
-            except PollingTimeoutError as e:
-                self.fail(f"Polling failed: {str(e)}")
-
             finally:
                 proc.terminate()
+                proc.wait(timeout=5)
 
     def test_invalid_percentile_parameter(self):
         with temporary_file(
@@ -492,17 +491,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                     proc.send_signal(signal.SIGTERM)
                     _, stderr = proc.communicate()
+
                     self.assertIn("Starting web interface at", stderr)
                     self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                     self.assertIn("Starting Locust", stderr)
                     self.assertIn("Shutting down (exit code 0)", stderr)
                     self.assertEqual(0, proc.returncode)
 
-                except PollingTimeoutError:
-                    self.fail(f"Locust web interface did not start within the expected time on port {port}")
-
                 finally:
                     proc.terminate()
+                    proc.wait(timeout=5)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver_multiple_locustfiles_in_directory(self):
@@ -519,17 +517,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                         proc.send_signal(signal.SIGTERM)
                         _, stderr = proc.communicate()
+
                         self.assertIn("Starting web interface at", stderr)
                         self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                         self.assertIn("Starting Locust", stderr)
                         self.assertIn("Shutting down (exit code 0)", stderr)
                         self.assertEqual(0, proc.returncode)
 
-                    except PollingTimeoutError:
-                        self.fail(f"Locust web interface did not start within the expected time on port {port}")
-
                     finally:
                         proc.terminate()
+                        proc.wait(timeout=5)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver_multiple_locustfiles_with_shape(self):
@@ -553,7 +550,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         run_time = self.get_run_time()
                         if run_time < 2:
                             return (10, 1)
-
                         return None
 
                 class TestUser(User):
@@ -577,17 +573,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                     proc.send_signal(signal.SIGTERM)
                     _, stderr = proc.communicate()
+
                     self.assertIn("Starting web interface at", stderr)
                     self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                     self.assertIn("Starting Locust", stderr)
                     self.assertIn("Shutting down (exit code 0)", stderr)
                     self.assertEqual(0, proc.returncode)
 
-                except PollingTimeoutError:
-                    self.fail(f"Locust web interface did not start within the expected time on port {port}")
-
                 finally:
                     proc.terminate()
+                    proc.wait(timeout=5)
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
@@ -658,7 +653,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
 
             def check_locust_started():
-                """Check if Locust has started by looking for specific output in stderr."""
                 ready, _, _ = select.select([proc.stderr], [], [], 0.1)
                 if ready:
                     line = proc.stderr.readline()
@@ -677,11 +671,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shutting down (exit code 0)", stderr)
                 self.assertEqual(0, proc.returncode)
 
-            except PollingTimeoutError:
-                self.fail("Locust did not start within the expected time")
-
             finally:
                 proc.terminate()
+                proc.wait(timeout=5)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_run_headless_with_multiple_locustfiles(self):
@@ -735,11 +727,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.assertIn('"UserSubclass": 1', output_text)
                         self.assertIn("Shutting down (exit code 0)", output_text)
                         self.assertEqual(0, proc.returncode)
-
-                    except PollingTimeoutError as e:
-                        proc.kill()
-                        proc.communicate()
-                        self.fail(f"{str(e)}. Full output: {' '.join(output)}")
 
                     finally:
                         if proc.poll() is None:
@@ -932,6 +919,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             try:
                 poll_until(lambda: web_interface_ready("localhost", port))
+
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
 
@@ -947,20 +935,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shutting down ", stderr)
                 self.assertNotIn("Traceback", stderr)
 
-                # check response afterwards, because it really isn't as informative as stderr
                 d = pq(response.content.decode("utf-8"))
 
                 self.assertEqual(200, response.status_code)
                 self.assertIn('"state": "running"', str(d))
 
-            except subprocess.TimeoutExpired:
-                proc.kill()
-                stdout, stderr = proc.communicate()
-                self.fail(f"Process didn't finish in time. stdout: {stdout}, stderr: {stderr}")
-            except PollingTimeoutError as e:
-                proc.kill()
-                stdout, stderr = proc.communicate()
-                self.fail(f"Polling timed out: {str(e)}. stdout: {stdout}, stderr: {stderr}")
             finally:
                 if proc.poll() is None:
                     proc.terminate()
@@ -1005,7 +984,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     output = []
                     try:
                         poll_until(lambda: is_port_in_use(port), timeout=10)
-
                         poll_until(lambda: all_users_spawned(proc, output), timeout=10)
 
                         proc.send_signal(signal.SIGTERM)
@@ -1023,10 +1001,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.assertIn("running my_task()", output_text)
                         self.assertEqual(0, proc.returncode)
 
-                    except PollingTimeoutError as e:
-                        proc.kill()
-                        stdout, stderr = proc.communicate()
-                        self.fail(f"{str(e)}. Full output: {' '.join(output)}")
                     finally:
                         if proc.poll() is None:
                             proc.terminate()
@@ -1065,13 +1039,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 text=True,
             )
 
+            poll_until(lambda: web_interface_ready("localhost", port))
+
+            response = requests.get(f"http://localhost:{port}/")
+            success = True
+
             try:
-                poll_until(lambda: web_interface_ready("localhost", port))
-                response = requests.get(f"http://localhost:{port}/")
-                success = True
                 _, stderr = proc.communicate(timeout=10)
-            except PollingTimeoutError:
-                self.fail("Locust web server did not start within the expected time.")
             except subprocess.TimeoutExpired:
                 success = False
                 proc.send_signal(signal.SIGTERM)
@@ -1133,28 +1107,20 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     text=True,
                 )
 
-                try:
-                    poll_until(lambda: web_interface_ready("localhost", port), timeout=10)
-                    response = requests.get(f"http://localhost:{port}/")
-                    self.assertEqual(200, response.status_code)
+                poll_until(lambda: web_interface_ready("localhost", port), timeout=10)
+                response = requests.get(f"http://localhost:{port}/")
+                self.assertEqual(200, response.status_code)
 
-                    _, stderr = proc.communicate(timeout=10)
+                _, stderr = proc.communicate(timeout=10)
 
-                    self.assertIn("Starting Locust", stderr)
-                    self.assertIn("Shape test starting", stderr)
-                    self.assertIn("Shutting down ", stderr)
-                    self.assertIn("autoquit time reached", stderr)
+                self.assertIn("Starting Locust", stderr)
+                self.assertIn("Shape test starting", stderr)
+                self.assertIn("Shutting down ", stderr)
+                self.assertIn("autoquit time reached", stderr)
 
-                except PollingTimeoutError:
-                    self.fail("Polling timed out")
-                except subprocess.TimeoutExpired:
-                    proc.send_signal(signal.SIGTERM)
-                    _, stderr = proc.communicate()
-                    self.fail("Process did not complete in time")
-                finally:
-                    if proc.poll() is None:
-                        proc.terminate()
-                        proc.wait(timeout=5)
+                if proc.poll() is None:
+                    proc.terminate()
+                    proc.wait(timeout=5)
 
                 self.assertEqual(0, proc.returncode, f"Process failed with return code {proc.returncode}")
 
@@ -1538,20 +1504,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     text=True,
                 )
 
-                try:
-                    poll_until(lambda: is_port_in_use(port), timeout=20)
+                poll_until(lambda: is_port_in_use(port), timeout=20)
 
-                    proc.send_signal(signal.SIGTERM)
-                    _, stderr = proc.communicate()
+                proc.send_signal(signal.SIGTERM)
+                _, stderr = proc.communicate()
 
-                    self.assertIn("Locust is running with the UserClass Picker Enabled", stderr)
-                    self.assertIn("Starting Locust", stderr)
-                    self.assertIn("Starting web interface at", stderr)
+                self.assertIn("Locust is running with the UserClass Picker Enabled", stderr)
+                self.assertIn("Starting Locust", stderr)
+                self.assertIn("Starting web interface at", stderr)
 
-                except PollingTimeoutError:
-                    self.fail(f"Locust web interface did not start on port {port} within the expected time")
-
-                finally:
+                if proc.poll() is None:
                     proc.terminate()
                     proc.communicate()
 
@@ -1570,21 +1532,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
                 proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True)
 
-                try:
-                    _, stderr = proc.communicate(timeout=1)
-                    self.assertIn("Duplicate user class names: TestUser1 is defined", stderr)
-                    self.assertEqual(1, proc.returncode)
+                _, stderr = proc.communicate(timeout=1)
+                self.assertIn("Duplicate user class names: TestUser1 is defined", stderr)
+                self.assertEqual(1, proc.returncode)
 
-                except PollingTimeoutError:
-                    self.fail("Process did not complete within the expected time")
-                except subprocess.TimeoutExpired:
+                if proc.poll() is None:
                     proc.terminate()
-                    _, stderr = proc.communicate()
-                    self.fail("Process did not complete in time")
-                finally:
-                    if proc.poll() is None:
-                        proc.terminate()
-                        proc.wait(timeout=5)
+                    proc.wait(timeout=5)
 
     def test_no_error_when_same_userclass_in_two_files(self):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
@@ -1599,24 +1553,18 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     ["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"], stdout=PIPE, stderr=PIPE, text=True
                 )
 
-                try:
-                    stdout, _ = proc.communicate(timeout=10)
+                stdout, _ = proc.communicate(timeout=10)
 
-                    self.assertIn("running my_task", stdout)
-                    self.assertEqual(0, proc.returncode)
+                self.assertIn("running my_task", stdout)
+                self.assertEqual(0, proc.returncode)
 
-                except subprocess.TimeoutExpired:
+                if proc.poll() is None:
                     proc.terminate()
-                    stdout, _ = proc.communicate()
-                    self.fail(f"Process did not complete in time. Output: {stdout}")
-                finally:
-                    if proc.poll() is None:
-                        proc.terminate()
-                        try:
-                            proc.wait(timeout=5)
-                        except subprocess.TimeoutExpired:
-                            proc.kill()
-                            proc.wait()
+                    try:
+                        proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        proc.kill()
+                        proc.wait()
 
     def test_error_when_duplicate_shape_class_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent(
@@ -1647,26 +1595,18 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_D) as file2:
                 proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True)
 
-                try:
-                    _, stderr = proc.communicate(timeout=5)
+                _, stderr = proc.communicate(timeout=5)
 
-                    self.assertIn("Duplicate shape classes: TestShape", stderr)
-                    self.assertEqual(1, proc.returncode)
+                self.assertIn("Duplicate shape classes: TestShape", stderr)
+                self.assertEqual(1, proc.returncode)
 
-                except PollingTimeoutError:
-                    self.fail("Process did not complete within the expected time")
-                except subprocess.TimeoutExpired:
+                if proc.poll() is None:
                     proc.terminate()
-                    _, stderr = proc.communicate()
-                    self.fail("Process did not complete in time")
-                finally:
-                    if proc.poll() is None:
-                        proc.terminate()
-                        try:
-                            proc.wait(timeout=5)
-                        except subprocess.TimeoutExpired:
-                            proc.kill()
-                            proc.wait()
+                    try:
+                        proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        proc.kill()
+                        proc.wait()
 
     def test_error_when_providing_both_run_time_and_a_shape_class(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
@@ -1752,26 +1692,18 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with TemporaryDirectory() as temp_dir:
             proc = subprocess.Popen(["locust", "-f", temp_dir], stdout=PIPE, stderr=PIPE, text=True)
 
-            try:
-                _, stderr = proc.communicate(timeout=1)
+            _, stderr = proc.communicate(timeout=1)
 
-                self.assertIn(f"Could not find any locustfiles in directory '{temp_dir}'", stderr)
-                self.assertEqual(1, proc.returncode)
+            self.assertIn(f"Could not find any locustfiles in directory '{temp_dir}'", stderr)
+            self.assertEqual(1, proc.returncode)
 
-            except PollingTimeoutError:
-                self.fail("Process did not complete within the expected time")
-            except subprocess.TimeoutExpired:
+            if proc.poll() is None:
                 proc.terminate()
-                _, stderr = proc.communicate()
-                self.fail("Process did not complete in time")
-            finally:
-                if proc.poll() is None:
-                    proc.terminate()
-                    try:
-                        proc.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        proc.kill()
-                        proc.wait()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait()
 
     def test_error_when_no_tasks_match_tags(self):
         content = """
@@ -1852,30 +1784,26 @@ class MyUser(HttpUser):
                         line = proc.stderr.readline()
                         output.append(line)
                         return expected_message in line
-                    gevent.sleep(0.1)  # Prevent CPU hogging
+                    gevent.sleep(0.1)
                     return False
 
                 return condition
 
-            try:
-                poll_until(condition_for_message("Shape test starting"), timeout=10)
+            poll_until(condition_for_message("Shape test starting"), timeout=10)
 
-                proc.send_signal(signal.SIGINT)
+            proc.send_signal(signal.SIGINT)
 
-                poll_until(condition_for_message("Exiting due to CTRL+C interruption"), timeout=10)
+            poll_until(condition_for_message("Exiting due to CTRL+C interruption"), timeout=10)
 
-                stdout, stderr = proc.communicate()
+            stdout, stderr = proc.communicate()
 
-                self.assertIn("Test Stopped", stdout)
+            self.assertIn("Test Stopped", stdout)
 
-                self.assertRegex(stderr, r".*Shutting down.*")
+            self.assertRegex(stderr, r".*Shutting down.*")
 
-            except AssertionError:
-                print(f"Test failed with output:\n{''.join(output)}")
-                raise
-            except PollingTimeoutError as e:
-                print(f"PollingTimeoutError: {str(e)}")
-                raise
+            if proc.poll() is None:
+                proc.terminate()
+                proc.wait(timeout=5)
 
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
@@ -2243,40 +2171,34 @@ class SecondUser(HttpUser):
 
             output = []
 
-            try:
-                poll_until(lambda: all_users_spawned(proc, output), timeout=30)
-                # time.sleep(6)
+            poll_until(lambda: all_users_spawned(proc, output), timeout=30)
 
-                stdout, stderr = proc.communicate(timeout=30)
-                stdout_worker, stderr_worker = proc_worker.communicate(timeout=10)
-                stdout_worker2, stderr_worker2 = proc_worker2.communicate(timeout=10)
+            stdout, stderr = proc.communicate(timeout=30)
+            stdout_worker, stderr_worker = proc_worker.communicate(timeout=10)
+            stdout_worker2, stderr_worker2 = proc_worker2.communicate(timeout=10)
 
-                output.extend(stdout.splitlines())
-                output.extend(stderr.splitlines())
-                output.extend(stdout_worker.splitlines())
-                output.extend(stderr_worker.splitlines())
-                output.extend(stdout_worker2.splitlines())
-                output.extend(stderr_worker2.splitlines())
+            output.extend(stdout.splitlines())
+            output.extend(stderr.splitlines())
+            output.extend(stdout_worker.splitlines())
+            output.extend(stderr_worker.splitlines())
+            output.extend(stdout_worker2.splitlines())
+            output.extend(stderr_worker2.splitlines())
 
-                self.assertTrue(
-                    any("Shutting down" in line for line in output),
-                    f"'Shutting down' not found in output:\n{''.join(output)}",
-                )
-                self.assertIn('All users spawned: {"User1": 1} (1 total users)', "\n".join(output))
-                self.assertNotIn("Traceback", "\n".join(output))
+            self.assertTrue(
+                any("Shutting down" in line for line in output),
+                f"'Shutting down' not found in output:\n{''.join(output)}",
+            )
+            self.assertIn('All users spawned: {"User1": 1} (1 total users)', "\n".join(output))
+            self.assertNotIn("Traceback", "\n".join(output))
 
-                self.assertEqual(0, proc.returncode)
-                self.assertEqual(0, proc_worker.returncode)
-                self.assertEqual(0, proc_worker2.returncode)
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
+            self.assertEqual(0, proc_worker2.returncode)
 
-            except PollingTimeoutError:
-                self.fail(f"All users were not spawned within the timeout. Output so far: {''.join(output)}")
-            except subprocess.TimeoutExpired:
-                self.fail("Process communication timed out")
-            finally:
-                for p in [proc, proc_worker, proc_worker2]:
+            for p in [proc, proc_worker, proc_worker2]:
+                if p.poll() is None:
+                    p.terminate()
                     try:
-                        p.terminate()
                         p.wait(timeout=5)
                     except subprocess.TimeoutExpired:
                         p.kill()
@@ -2383,42 +2305,36 @@ class SecondUser(HttpUser):
 
             output = []
 
-            try:
-                poll_until(lambda: all_users_spawned(proc, output), timeout=20)
-                time.sleep(6)
+            poll_until(lambda: all_users_spawned(proc, output), timeout=20)
 
-                end_time = time.time() + 15
-                while time.time() < end_time:
-                    read_nonblocking(proc, output)
-                    if "Shutting down" in "\n".join(output):
-                        break
-                    time.sleep(0.1)
+            end_time = time.time() + 15
+            while time.time() < end_time:
+                read_nonblocking(proc, output)
+                if "Shutting down" in "\n".join(output):
+                    break
+                time.sleep(0.1)
 
-                stdout, stderr = proc.communicate(timeout=20)
-                stdout_worker, stderr_worker = proc_worker.communicate(timeout=5)
+            stdout, stderr = proc.communicate(timeout=20)
+            stdout_worker, stderr_worker = proc_worker.communicate(timeout=5)
 
-                output.extend(stdout.splitlines())
-                output.extend(stderr.splitlines())
-                output.extend(stdout_worker.splitlines())
-                output.extend(stderr_worker.splitlines())
+            output.extend(stdout.splitlines())
+            output.extend(stderr.splitlines())
+            output.extend(stdout_worker.splitlines())
+            output.extend(stderr_worker.splitlines())
 
-                self.assertTrue(
-                    any("Shutting down" in line for line in output),
-                    f"'Shutting down' not found in output:\n{''.join(output)}",
-                )
-                self.assertNotIn("Traceback", "\n".join(output))
+            self.assertTrue(
+                any("Shutting down" in line for line in output),
+                f"'Shutting down' not found in output:\n{''.join(output)}",
+            )
+            self.assertNotIn("Traceback", "\n".join(output))
 
-                self.assertEqual(0, proc.returncode)
-                self.assertEqual(0, proc_worker.returncode)
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
 
-            except PollingTimeoutError:
-                self.fail(f"All users were not spawned within the timeout. Output so far: {''.join(output)}")
-            except subprocess.TimeoutExpired:
-                self.fail("Process communication timed out")
-            finally:
-                for p in [proc, proc_worker]:
+            for p in [proc, proc_worker]:
+                if p.poll() is None:
+                    p.terminate()
                     try:
-                        p.terminate()
                         p.wait(timeout=5)
                     except subprocess.TimeoutExpired:
                         p.kill()
@@ -2770,10 +2686,7 @@ class AnyUser(HttpUser):
                 def workers_shut_down():
                     return worker_parent_proc.poll() is not None
 
-                try:
-                    poll_until(workers_shut_down, timeout=60, sleep_time=0.1)
-                except PollingTimeoutError:
-                    raise
+                poll_until(workers_shut_down, timeout=60, sleep_time=0.1)
 
                 worker_stdout, worker_stderr = worker_parent_proc.communicate()
 
@@ -2862,9 +2775,6 @@ class AnyUser(User):
 
                 poll_until(master_detected_missing_worker, timeout=5)
 
-            except PollingTimeoutError as e:
-                print(f"Polling timeout: {e}")
-                raise
             finally:
                 master_proc.kill()
                 _, additional_stderr = master_proc.communicate()
