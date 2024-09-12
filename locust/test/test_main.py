@@ -2334,6 +2334,7 @@ class SecondUser(HttpUser):
 
             try:
                 poll_until(lambda: all_users_spawned(proc, output), timeout=10)
+                time.sleep(2)
                 print(f"Debug: All users spawned. Output so far:\n{''.join(output)}")
 
                 while proc.poll() is None:
