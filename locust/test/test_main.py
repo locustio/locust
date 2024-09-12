@@ -1754,15 +1754,24 @@ class MyUser(HttpUser):
 
             def condition_for_message(expected_message: str) -> Callable[[], bool]:
                 def condition() -> bool:
-                    ready, _, _ = select.select([proc.stderr], [], [], 0.1)
-                    if ready:
-                        line = proc.stderr.readline()
-                        output.append(line)
-                        return expected_message in line
+                    while True:
+                        ready, _, _ = select.select([proc.stderr], [], [], 0.1)
+                        if ready:
+                            chunk = os.read(proc.stderr.fileno(), 4096).decode()
+                            if chunk:
+                                lines = chunk.splitlines()
+                                output.extend(lines)
+                                if any(expected_message in line for line in lines):
+                                    return True
+                        else:
+                            break 
+
                     gevent.sleep(0.1)
                     return False
 
                 return condition
+
+
 
             poll_until(condition_for_message("Shape test starting"), timeout=15)
 
