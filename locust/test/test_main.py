@@ -281,12 +281,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with temporary_file(
             content=textwrap.dedent(
                 """
-                from locust import User, task, constant, events
-                class TestUser(User):
-                    wait_time = constant(3)
-                    @task
-                    def my_task(self):
-                        print("running my_task()")
+            from locust import User, task, constant, events
+            class TestUser(User):
+                wait_time = constant(3)
+                @task
+                def my_task(self):
+                    print("running my_task()")
                 """
             )
         ) as file_path:
@@ -420,39 +420,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
-                bufsize=1,  # Line-buffered output
+                bufsize=1,
             )
 
-            try:
-                # Continuously read stderr for real-time updates
-                stderr_output = []
+            stderr_output = proc.communicate(timeout=10)[1]
 
-                def check_for_error_message():
-                    while True:
-                        line = proc.stderr.readline()
-                        if line:
-                            stderr_output.append(line)
-                        if "parameter need to be float" in line:
-                            return True
-                        if proc.poll() is not None:
-                            return False
-
-                poll_until(check_for_error_message)
-
-                _, stderr = proc.communicate()
-
-                stderr_combined = "".join(stderr_output + [stderr])
-
-                self.assertIn(
-                    "parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", stderr_combined
-                )
-                self.assertEqual(1, proc.returncode)
-
-            except PollingTimeoutError as e:
-                self.fail(f"Polling failed: {str(e)}")
-
-            finally:
-                proc.terminate()
+            self.assertIn("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", stderr_output)
+            self.assertEqual(1, proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver_multiple_locustfiles(self):
