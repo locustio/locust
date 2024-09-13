@@ -1024,7 +1024,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shape test starting", stderr)
             self.assertIn("Shutting down ", stderr)
-            self.assertIn("--run-time limit reached", stderr)
+            self.assertIn("autoquit time reached", stderr)
             self.assertEqual(200, response.status_code)
             self.assertTrue(success, "got timeout and had to kill the process")
 
