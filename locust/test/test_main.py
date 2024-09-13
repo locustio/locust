@@ -100,27 +100,23 @@ def read_output(proc: subprocess.Popen) -> list[str]:
 
 
 def read_nonblocking(proc: subprocess.Popen, output: list[str]) -> bool:
-    if platform.system() == "Windows":
-        if proc.stdout is None or proc.stderr is None:
-            raise ValueError("proc.stdout or proc.stderr is None, cannot read from them")
+    assert proc.stdout and proc.stderr, "proc.stdout or proc.stderr is None, cannot read from them"
 
+    if platform.system() == "Windows":
         while True:
-            stdout_line: str = proc.stdout.readline()
+            stdout_line = proc.stdout.readline()
             if not stdout_line:
                 break
             output.append(stdout_line)
             if "All users spawned" in stdout_line:
                 return True
-            stderr_line: str = proc.stderr.readline()
+            stderr_line = proc.stderr.readline()
             if stderr_line:
                 output.append(stderr_line)
     else:
-        if proc.stdout is None or proc.stderr is None:
-            raise ValueError("proc.stdout or proc.stderr is None, cannot read from them")
-
         ready_to_read, _, _ = select.select([proc.stdout, proc.stderr], [], [], 0.1)
         for pipe in ready_to_read:
-            pipe_line: str = pipe.readline()
+            pipe_line = pipe.readline()
             output.append(pipe_line)
             if "All users spawned" in pipe_line:
                 return True
@@ -389,7 +385,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             finally:
                 proc.terminate()
                 proc.wait(timeout=5)
-                proc.terminate()
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_percentiles_to_statistics(self):
