@@ -135,11 +135,6 @@ class WebUI:
         # ensures static js files work on Windows
         mimetypes.add_type("application/javascript", ".js")
 
-        if self.web_login:
-            self.login_manager = LoginManager()
-            self.login_manager.init_app(app)
-            self.login_manager.login_view = "login"
-
         if environment.runner:
             self.update_template_args()
         if not delayed_start:
@@ -517,6 +512,16 @@ class WebUI:
             self.environment.update_user_class(user_settings)
 
             return {}, 201
+
+    @property
+    def login_manager(self):
+        if self.web_login:
+            login_manager = LoginManager()
+            login_manager.init_app(self.app)
+            login_manager.login_view = "login"
+            return login_manager
+
+        raise AttributeError("The login_manager is only available with --web-login.\n")
 
     def start(self):
         self.greenlet = gevent.spawn(self.start_server)
