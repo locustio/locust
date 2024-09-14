@@ -1708,7 +1708,7 @@ class MyUser(HttpUser):
             self.assertIn("No tasks defined on MyUser", stderr)
             self.assertEqual(1, proc.returncode)
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_graceful_exit_when_keyboard_interrupt(self):
         with temporary_file(
             content=textwrap.dedent(
@@ -1721,8 +1721,9 @@ class MyUser(HttpUser):
                 class LoadTestShape(LoadTestShape):
                     def tick(self):
                         run_time = self.get_run_time()
-                        if run_time < 10:
+                        if run_time < 2:
                             return (10, 1)
+
                         return None
 
                 class TestUser(User):
@@ -1730,12 +1731,9 @@ class MyUser(HttpUser):
                     @task
                     def my_task(self):
                         print("running my_task()")
-                """
+            """
             )
         ) as mocked:
-            env = os.environ.copy()
-            env["LOCUST_STATS_INTERVAL_SEC"] = "1"
-
             proc = subprocess.Popen(
                 [
                     "locust",
@@ -1743,61 +1741,19 @@ class MyUser(HttpUser):
                     mocked,
                     "--headless",
                 ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
+                stdout=PIPE,
+                stderr=PIPE,
                 text=True,
-                env=env,
             )
-
-            output = []
-
-            def condition_for_messages(expected_messages: list[str]) -> Callable[[], bool]:
-                def condition() -> bool:
-                    while True:
-                        ready, _, _ = select.select([proc.stdout], [], [], 0.1)
-                        if ready:
-                            chunk = os.read(proc.stdout.fileno(), 4096).decode()
-                            if chunk:
-                                lines = chunk.splitlines()
-                                output.extend(lines)
-                                if all(any(msg in line for line in lines) for msg in expected_messages):
-                                    print(f"All expected messages found: {expected_messages}")
-                                    return True
-                        else:
-                            break
-                        gevent.sleep(0.1)
-                    return False
-
-                return condition
-
-            try:
-                poll_until(condition_for_messages(["Aggregated"]), timeout=15)
-            except PollingTimeoutError:
-                print("Timeout while waiting for initial 'Aggregated' message.")
-                print("Output so far:")
-                print("\n".join(output))
-                raise
-
+            gevent.sleep(1.9)
             proc.send_signal(signal.SIGINT)
-
-            poll_until(
-                condition_for_messages(["Exiting due to CTRL+C interruption", "Aggregated"]),
-                timeout=15,
-            )
-
-            stdout, _ = proc.communicate()
-            if stdout:
-                output.append(stdout)
-
-            output_text = "\n".join(output)
-
-            self.assertIn("Shape test starting", output_text)
-            self.assertIn("Test Stopped", output_text)
-            self.assertRegex(output_text, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
-
-            if proc.poll() is None:
-                proc.terminate()
-                proc.wait(timeout=5)
+            stdout, stderr = proc.communicate()
+            print(stderr, stdout)
+            self.assertIn("Shape test starting", stderr)
+            self.assertIn("Exiting due to CTRL+C interruption", stderr)
+            self.assertIn("Test Stopped", stdout)
+            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
+            self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
 
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
