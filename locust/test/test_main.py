@@ -2301,6 +2301,7 @@ class SecondUser(HttpUser):
                     pass
             """
         )
+
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             proc = subprocess.Popen(
                 [
@@ -2314,8 +2315,8 @@ class SecondUser(HttpUser):
                     "-t",
                     "3s",
                 ],
-                stderr=PIPE,
-                stdout=PIPE,
+                stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE,
                 text=True,
                 bufsize=1,
             )
@@ -2327,38 +2328,44 @@ class SecondUser(HttpUser):
                     "-",
                     "--worker",
                 ],
-                stderr=PIPE,
-                stdout=PIPE,
+                stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE,
                 text=True,
                 bufsize=1,
             )
 
-            output = []
+            output_master = []
+            output_worker = []
 
-            poll_until(lambda: all_users_spawned(proc, output), timeout=20)
+            poll_until(lambda: all_users_spawned(proc, output_master), timeout=20)
 
             end_time = time.time() + 15
             while time.time() < end_time:
-                read_nonblocking(proc, output)
-                if "Shutting down" in "\n".join(output):
+                read_nonblocking(proc, output_master)
+                read_nonblocking(proc_worker, output_worker)
+
+                if "Shutting down" in "\n".join(output_master) or "Shutting down" in "\n".join(output_worker):
                     break
+
                 time.sleep(0.1)
 
-            stdout, stderr = proc.communicate(timeout=20)
+            stdout_master, stderr_master = proc.communicate(timeout=20)
             stdout_worker, stderr_worker = proc_worker.communicate(timeout=5)
 
-            output.extend(stdout.splitlines())
-            output.extend(stderr.splitlines())
-            output.extend(stdout_worker.splitlines())
-            output.extend(stderr_worker.splitlines())
+            output_master.extend(stdout_master.splitlines())
+            output_master.extend(stderr_master.splitlines())
+
+            output_worker.extend(stdout_worker.splitlines())
+            output_worker.extend(stderr_worker.splitlines())
 
             self.assertTrue(
-                any("Shutting down" in line for line in output),
-                f"'Shutting down' not found in output:\n{''.join(output)}",
+                any("Shutting down" in line for line in output_master),
+                f"'Shutting down' not found in master output:\n{''.join(output_master)}",
             )
-            self.assertNotIn("Traceback", "\n".join(output))
-
+            self.assertNotIn("Traceback", "\n".join(output_master))
             self.assertEqual(0, proc.returncode)
+
+            self.assertNotIn("Traceback", "\n".join(output_worker))
             self.assertEqual(0, proc_worker.returncode)
 
             for p in [proc, proc_worker]:
