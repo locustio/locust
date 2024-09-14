@@ -1790,7 +1790,7 @@ class MyUser(HttpUser):
 
             output_text = "\n".join(output)
 
-            # Perform assertions on the combined output
+            self.assertIn("Shape test starting", output_text)
             self.assertIn("Test Stopped", output_text)
             self.assertRegex(output_text, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
 
