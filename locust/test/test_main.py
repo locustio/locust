@@ -2188,14 +2188,6 @@ class SecondUser(HttpUser):
             self.assertEqual(0, proc_worker.returncode)
             self.assertEqual(0, proc_worker2.returncode)
 
-            for p in [proc, proc_worker, proc_worker2]:
-                if p.poll() is None:
-                    p.terminate()
-                    try:
-                        p.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        p.kill()
-                        p.wait()
 
     def test_locustfile_distribution_with_workers_started_first(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
