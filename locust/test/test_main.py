@@ -1485,7 +1485,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                 if proc.poll() is None:
                     proc.terminate()
-                    proc.communicate()
+                    proc.wait(timeout=5)
 
     def test_error_when_duplicate_userclass_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = textwrap.dedent(
@@ -1707,7 +1707,7 @@ class MyUser(HttpUser):
             self.assertIn("No tasks defined on MyUser", stderr)
             self.assertEqual(1, proc.returncode)
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_graceful_exit_when_keyboard_interrupt(self):
         with temporary_file(
             content=textwrap.dedent(
@@ -1722,7 +1722,6 @@ class MyUser(HttpUser):
                         run_time = self.get_run_time()
                         if run_time < 10:
                             return (10, 1)
-
                         return None
 
                 class TestUser(User):
@@ -1733,6 +1732,9 @@ class MyUser(HttpUser):
                 """
             )
         ) as mocked:
+            env = os.environ.copy()
+            env["LOCUST_STATS_INTERVAL_SEC"] = "1"
+
             proc = subprocess.Popen(
                 [
                     "locust",
@@ -1741,42 +1743,56 @@ class MyUser(HttpUser):
                     "--headless",
                 ],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
                 text=True,
+                env=env,
             )
 
             output = []
 
-            def condition_for_message(expected_message: str) -> Callable[[], bool]:
+            def condition_for_messages(expected_messages: list[str]) -> Callable[[], bool]:
                 def condition() -> bool:
                     while True:
-                        ready, _, _ = select.select([proc.stderr], [], [], 0.1)
+                        ready, _, _ = select.select([proc.stdout], [], [], 0.1)
                         if ready:
-                            chunk = os.read(proc.stderr.fileno(), 4096).decode()
+                            chunk = os.read(proc.stdout.fileno(), 4096).decode()
                             if chunk:
                                 lines = chunk.splitlines()
                                 output.extend(lines)
-                                if any(expected_message in line for line in lines):
+                                if all(any(msg in line for line in lines) for msg in expected_messages):
+                                    print(f"All expected messages found: {expected_messages}")
                                     return True
                         else:
                             break
-
-                    gevent.sleep(0.1)
+                        gevent.sleep(0.1)
                     return False
 
                 return condition
 
-            poll_until(condition_for_message("Shape test starting"), timeout=15)
-            gevent.sleep(1)
+            try:
+                poll_until(condition_for_messages(["Aggregated"]), timeout=15)
+            except PollingTimeoutError:
+                print("Timeout while waiting for initial 'Aggregated' message.")
+                print("Output so far:")
+                print("\n".join(output))
+                raise
+
             proc.send_signal(signal.SIGINT)
 
-            poll_until(condition_for_message("Exiting due to CTRL+C interruption"), timeout=15)
+            poll_until(
+                condition_for_messages(["Exiting due to CTRL+C interruption", "Aggregated"]),
+                timeout=15,
+            )
 
-            stdout, stderr = proc.communicate()
+            stdout, _ = proc.communicate()
+            if stdout:
+                output.append(stdout)
 
-            self.assertIn("Test Stopped", stdout)
+            output_text = "\n".join(output)
 
-            self.assertRegex(stderr, r".*Shutting down.*")
+            # Perform assertions on the combined output
+            self.assertIn("Test Stopped", output_text)
+            self.assertRegex(output_text, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
 
             if proc.poll() is None:
                 proc.terminate()
