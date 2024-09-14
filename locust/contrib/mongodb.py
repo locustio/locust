@@ -2,12 +2,12 @@ from gevent import monkey
 
 _ = monkey.patch_all()
 
+from locust import User, events
+
 import time
 
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
-
-from locust import User, events
 
 
 class MongoDBClient(MongoClient):
