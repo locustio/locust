@@ -372,7 +372,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
 
             try:
-                poll_until(lambda: is_port_in_use(port), timeout=60)
+                poll_until(lambda: is_port_in_use(port))
 
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
@@ -2179,7 +2179,7 @@ class SecondUser(HttpUser):
                     read_nonblocking(proc_master, master_output)
                     return any("All users spawned" in line for line in master_output)
 
-                poll_until(all_users_spawned, timeout=60)
+                poll_until(all_users_spawned)
 
                 proc_master.wait(timeout=30)
                 proc_worker1.wait(timeout=10)
