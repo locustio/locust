@@ -14,6 +14,7 @@ import time
 import unittest
 from subprocess import DEVNULL, PIPE, STDOUT
 from tempfile import TemporaryDirectory
+from threading import Thread
 from typing import IO, Callable, Optional, cast
 from unittest import TestCase
 
@@ -2188,7 +2189,6 @@ class SecondUser(HttpUser):
             self.assertEqual(0, proc_worker.returncode)
             self.assertEqual(0, proc_worker2.returncode)
 
-
     def test_locustfile_distribution_with_workers_started_first(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
@@ -2597,21 +2597,25 @@ class AnyUser(HttpUser):
             # ensure no weird escaping in error report. Not really related to ctrl-c...
             self.assertIn(", 'Connection refused') ", stderr)
 
-    @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
+    @unittest.skipIf(os.name == "nt", reason="--processes doesn't work on Windows")
     def test_workers_shut_down_if_master_is_gone(self):
-        content = """
-from locust import HttpUser, task, constant, runners
-runners.MASTER_HEARTBEAT_TIMEOUT = 2
+        content = textwrap.dedent(
+            """
+            from locust import HttpUser, task, constant, runners
+            runners.MASTER_HEARTBEAT_TIMEOUT = 2  # Reduce heartbeat timeout for quicker test
 
-class AnyUser(HttpUser):
-    host = "http://127.0.0.1:8089"
-    wait_time = constant(1)
-    @task
-    def my_task(self):
-        print("worker index:", self.environment.runner.worker_index)
-"""
+            class AnyUser(HttpUser):
+                host = "http://127.0.0.1:8089"
+                wait_time = constant(1)
+
+                @task
+                def my_task(self):
+                    print("worker index:", self.environment.runner.worker_index)
+            """
+        )
         with mock_locustfile(content=content) as mocked:
-            master_port = get_free_tcp_port()
+            env = os.environ.copy()
+            env["PYTHONUNBUFFERED"] = "1"
             master_proc = subprocess.Popen(
                 [
                     "locust",
@@ -2621,13 +2625,14 @@ class AnyUser(HttpUser):
                     "--headless",
                     "--expect-workers",
                     "2",
-                    "--master-bind-port",
-                    str(master_port),
+                    "-L",
+                    "DEBUG",
                 ],
-                stdout=PIPE,
-                stderr=PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
                 text=True,
                 bufsize=1,
+                env=env,
             )
 
             worker_parent_proc = subprocess.Popen(
@@ -2639,52 +2644,79 @@ class AnyUser(HttpUser):
                     "--processes",
                     "2",
                     "--headless",
-                    "--master-port",
-                    str(master_port),
+                    "-L",
+                    "DEBUG",
                 ],
-                stdout=PIPE,
-                stderr=PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
                 text=True,
                 bufsize=1,
                 start_new_session=True,
+                env=env,
             )
 
             try:
+                output_master = []
+                output_worker = []
 
-                def master_ready():
-                    line = master_proc.stderr.readline()
-                    return "All users spawned" in line
+                def read_output(proc, output_list, proc_name):
+                    while True:
+                        line = proc.stdout.readline()
+                        if not line:
+                            if proc.poll() is not None:
+                                break
+                            else:
+                                continue
+                        output_list.append(line)
+                        print(f"{proc_name}: {line.strip()}")
 
-                poll_until(master_ready, timeout=60, sleep_time=0.1)
+                master_thread = Thread(target=read_output, args=(master_proc, output_master, "MASTER"))
+                worker_thread = Thread(target=read_output, args=(worker_parent_proc, output_worker, "WORKER"))
+                master_thread.start()
+                worker_thread.start()
 
-                master_proc.terminate()
-                try:
-                    master_proc.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    master_proc.kill()
-                    master_proc.wait()
+                start_time = time.time()
+                while time.time() - start_time < 30:
+                    if any("All users spawned" in line for line in output_master):
+                        break
+                    if master_proc.poll() is not None:
+                        break
+                    time.sleep(0.1)
+                else:
+                    self.fail("Timeout waiting for workers to be ready.")
 
-                def workers_shut_down():
-                    return worker_parent_proc.poll() is not None
+                master_proc.kill()
+                master_proc.wait()
 
-                poll_until(workers_shut_down, timeout=60, sleep_time=0.1)
+                # Wait for workers to shut down due to missing heartbeats
+                start_time = time.time()
+                while time.time() - start_time < 30:
+                    if worker_parent_proc.poll() is not None:
+                        break
+                    time.sleep(0.1)
+                else:
+                    self.fail("Timeout waiting for workers to shut down.")
 
-                worker_stdout, worker_stderr = worker_parent_proc.communicate()
+                master_thread.join(timeout=5)
+                worker_thread.join(timeout=5)
 
-                self.assertNotIn("Traceback", worker_stderr)
-                self.assertIn("Got quit message from master, shutting down", worker_stderr)
-                self.assertIn("worker index:", worker_stdout)
+                worker_output = "".join(output_worker)
+                master_output = "".join(output_master)
 
-            except Exception:
-                raise
+                self.assertNotIn("Traceback", worker_output)
+                self.assertIn("Didn't get heartbeat from master in over", worker_output)
+                self.assertIn("worker index:", worker_output)
+
             finally:
+                # Ensure all processes are terminated
                 for proc in [master_proc, worker_parent_proc]:
-                    try:
+                    if proc.poll() is None:
                         proc.terminate()
-                        proc.wait(timeout=5)
-                    except Exception:
-                        proc.kill()
-                        proc.wait(timeout=5)
+                        try:
+                            proc.wait(timeout=5)
+                        except subprocess.TimeoutExpired:
+                            proc.kill()
+                            proc.wait()
 
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_error_doesnt_blow_up_completely(self):
