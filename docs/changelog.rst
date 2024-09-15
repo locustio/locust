@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.31.6
+======
+* Various documentation and type hint fixes.
+* Fix issue when using --config-users to set weight to 0 https://github.com/locustio/locust/pull/2891
+* Add worker_count = 1 to LocalRunner for parity with MasterRunner https://github.com/locustio/locust/pull/2900/files
+* Tiny WebUI fixes https://github.com/locustio/locust/pull/2901, https://github.com/locustio/locust/pull/2902
+
 2.31.5
 ======
 * WebUI: Correct types for form select by @andrewbaldwin44 in https://github.com/locustio/locust/pull/2872
