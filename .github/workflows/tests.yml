@@ -141,7 +141,7 @@ jobs:
 
           # OS Integration tests 
           - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
-          - { name: "Windows", python: '3.12', os: windows-latest, tox: fail_fast_test_main_external_package }
+          - { name: "Windows", python: '3.12.5', os: windows-latest, tox: fail_fast_test_main_external_package }
           - { name: "MacOS", python: '3.12', os: macos-latest, tox: fail_fast_test_main_external_package }
           
           # Unit tests on Python versions
