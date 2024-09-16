@@ -2130,6 +2130,24 @@ class SecondUser(HttpUser):
             stdout_worker, stderr_worker = proc_worker.communicate(timeout=10)
             stdout_worker2, stderr_worker2 = proc_worker2.communicate(timeout=10)
 
+            output.extend(stdout.splitlines())
+            output.extend(stderr.splitlines())
+            output.extend(stdout_worker.splitlines())
+            output.extend(stderr_worker.splitlines())
+            output.extend(stdout_worker2.splitlines())
+            output.extend(stderr_worker2.splitlines())
+
+            self.assertTrue(
+                any("Shutting down" in line for line in output),
+                f"'Shutting down' not found in output:\n{''.join(output)}",
+            )
+            self.assertIn('All users spawned: {"User1": 1} (1 total users)', "\n".join(output))
+            self.assertNotIn("Traceback", "\n".join(output))
+
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
+            self.assertEqual(0, proc_worker2.returncode)
+
     def test_locustfile_distribution_with_workers_started_first(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
