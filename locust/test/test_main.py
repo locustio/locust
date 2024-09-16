@@ -890,6 +890,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                 stdout, stderr = proc.communicate(timeout=1)
 
+                def process_finished():
+                    return proc.poll() is not None
+
+                poll_until(process_finished, timeout=10)
+
                 self.assertIn("Starting Locust", stderr)
                 self.assertIn("Run time limit set to 3 seconds", stderr)
                 self.assertIn("Shutting down ", stderr)
