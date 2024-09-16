@@ -24,10 +24,9 @@ jobs:
       tag: ${{ steps.set_tag.outputs.tag }}
       tag_short: ${{ steps.set_tag_short.outputs.tag_short }}
       branch: ${{ steps.set_branch.outputs.branch }}
-      is_merge_commit: ${{ steps.set_is_merge_commit.outputs.is_merge_commit }}
+      is_not_merge_commit: ${{ steps.set_is_not_merge_commit.outputs.is_not_merge_commit }}
       is_tag_build: ${{ steps.set_is_tag_build.outputs.is_tag_build }}
       python_version: ${{ steps.set_python_version.outputs.python_version }}
-      test_merge_commit: ${{ steps.set_test_merge_commit.outputs.test_merge_commit }}
     
     steps:
       - uses: actions/checkout@v4
@@ -102,12 +101,11 @@ jobs:
         run: echo "tag_short=$(poetry version -s | cut -d '.' -f1-3)" >> "$GITHUB_OUTPUT"
       - id: set_branch
         run: echo "branch=${{ github.head_ref || github.ref_name }}" >> "$GITHUB_OUTPUT"
-      - id: set_is_merge_commit
-        run: echo "is_merge_commit=$( [ $(git rev-list --count $GITHUB_SHA^@) -eq 2 ] && echo 'true' || echo 'false' )" >> "$GITHUB_OUTPUT"
+      - id: set_is_not_merge_commit
+        # Will be 'true' if this is not a merge commit, or '' if it is a merge commit
+        run: echo "is_not_merge_commit=$(git rev-parse HEAD^2 2>/dev/null >/dev/null || echo 'true')" >> "$GITHUB_OUTPUT"
       - id: set_is_tag_build
         run: echo "is_tag_build=${{ startsWith(github.event.ref, 'refs/tags') }}" >> "$GITHUB_OUTPUT"
-      - id: set_test_merge_commit
-        run: echo "test_merge_commit=$(git rev-parse HEAD^2 2>/dev/null >/dev/null || echo NOT_MERGE_COMMIT='true')" >> "$GITHUB_OUTPUT"
       - id: set_python_version
         run: echo "python_version=$(python -VV | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
@@ -120,10 +118,17 @@ jobs:
           echo "tag: ${{ needs.build_package.outputs.tag }}"
           echo "tag_short: ${{ needs.build_package.outputs.tag_short }}"
           echo "branch: ${{ needs.build_package.outputs.branch }}"
-          echo "is_merge_commit: ${{ needs.build_package.outputs.is_merge_commit }}"
+          echo "is_not_merge_commit: ${{ needs.build_package.outputs.is_not_merge_commit }}"
           echo "is_tag_build: ${{ needs.build_package.outputs.is_tag_build }}"
           echo "python_version: ${{ needs.build_package.outputs.python_version }}"
-          echo "test_merge_commit: ${{ needs.build_package.outputs.test_merge_commit }}"
+
+  publish:
+    name: Publish prerelease on merge commit to master
+    needs: [build_package]
+    if: github.repository_owner == 'mquinnfd' && ( ( github.ref == 'refs/heads/merge-test' && ${{ needs.build_package.outputs.is_not_merge_commit }} == '' ) || startsWith(github.event.ref, 'refs/tags') )
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "time to run publishing!"
 
   # #-------------------------
   # #       Testing
@@ -284,8 +289,8 @@ jobs:
 
   # publish:
   #   name: Publish prerelease on merge commit to master
-  #   needs: [tox_tests, lint_typecheck_test_webui, test_docker_image]
-  #   if: github.repository_owner == 'locustio' && ( ( github.ref == 'refs/heads/master' && ${{ needs.build_package.outputs.is_merge_commit }} == 'true' ) || startsWith(github.event.ref, 'refs/tags') )
+  #   needs: [tox_tests, lint_typecheck_test_webui, test_docker_image, build_package]
+  #   if: github.repository_owner == 'locustio' && ( ( github.ref == 'refs/heads/master' && ${{ needs.build_package.outputs.is_not_merge_commit }} == '' ) || startsWith(github.event.ref, 'refs/tags') )
   #   runs-on: ubuntu-latest
   #   steps:
 
