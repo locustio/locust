@@ -654,14 +654,14 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             try:
                 poll_until(check_locust_started, timeout=60)
-
+                time.sleep(2)
                 proc.send_signal(signal.SIGTERM)
 
                 _, remaining_stderr = proc.communicate(timeout=20)
                 stderr_output.append(remaining_stderr)
 
                 full_stderr = "".join(stderr_output)
-                logging.debug(f"Full stderr output: {full_stderr}")  # Log the full stderr output
+                logging.debug(f"Full stderr output: {full_stderr}")
 
                 self.assertIn("All users spawned", full_stderr)
                 self.assertIn("Shutting down (exit code 0)", full_stderr)
