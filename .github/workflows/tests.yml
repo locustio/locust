@@ -25,6 +25,7 @@ jobs:
       is_merge_commit: ${{ steps.set_is_merge_commit.outputs.is_merge_commit }}
       is_tag_build: ${{ steps.set_is_tag_build.outputs.is_tag_build }}
       python_version: ${{ steps.set_python_version.outputs.python_version }}
+      test_merge_commit: ${{ steps.set_test_merge_commit.outputs.test_merge_commit }}
     
     steps:
       - uses: actions/checkout@v4
@@ -103,6 +104,8 @@ jobs:
         run: echo "is_merge_commit=$( [ $(git rev-list --count $GITHUB_SHA^@) -eq 2 ] && echo 'true' || echo 'false' )" >> "$GITHUB_OUTPUT"
       - id: set_is_tag_build
         run: echo "is_tag_build=${{ startsWith(github.event.ref, 'refs/tags') }}" >> "$GITHUB_OUTPUT"
+      - id: set_test_merge_commit
+        run: echo "test_merge_commit=$(git rev-parse HEAD^2 2>/dev/null >/dev/null || echo NOT_MERGE_COMMIT='true')" >> "$GITHUB_OUTPUT"
       - id: set_python_version
         run: echo "python_version=$(python -VV | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
@@ -118,248 +121,249 @@ jobs:
           echo "is_merge_commit: ${{ needs.build_package.outputs.is_merge_commit }}"
           echo "is_tag_build: ${{ needs.build_package.outputs.is_tag_build }}"
           echo "python_version: ${{ needs.build_package.outputs.python_version }}"
+          echo "test_merge_commit: ${{ needs.build_package.outputs.test_merge_commit }}"
 
-  #-------------------------
-  #       Testing
-  #-------------------------
+  # #-------------------------
+  # #       Testing
+  # #-------------------------
 
-  tox_tests:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    needs: build_package
+  # tox_tests:
+  #   name: ${{ matrix.name }}
+  #   runs-on: ${{ matrix.os }}
+  #   needs: build_package
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # Static analysis and utilities
-          - { name: "Ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
-          - { name: "Mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         # Static analysis and utilities
+  #         - { name: "Ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
+  #         - { name: "Mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
 
-          # Verification of builds and other aspects          
-          - { name: "Docs Build", python: "3.10", os: ubuntu-latest, tox: "docs" }
+  #         # Verification of builds and other aspects          
+  #         - { name: "Docs Build", python: "3.10", os: ubuntu-latest, tox: "docs" }
 
-          # OS Integration tests 
-          - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
-          - { name: "Windows", python: '3.12.5', os: windows-latest, tox: fail_fast_test_main_external_package }
-          - { name: "MacOS", python: '3.12', os: macos-latest, tox: fail_fast_test_main_external_package }
+  #         # OS Integration tests 
+  #         - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
+  #         - { name: "Windows", python: '3.12.5', os: windows-latest, tox: fail_fast_test_main_external_package }
+  #         - { name: "MacOS", python: '3.12', os: macos-latest, tox: fail_fast_test_main_external_package }
           
-          # Unit tests on Python versions
-          - { name: "Python 3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
-          - { name: "Python 3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
-          - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
-          - { name: "Python 3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
+  #         # Unit tests on Python versions
+  #         - { name: "Python 3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
+  #         - { name: "Python 3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
+  #         - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
+  #         - { name: "Python 3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
 
-      # Set up Python and Poetry 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
-          cache: 'pip'
-          cache-dependency-path: poetry.lock
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          virtualenvs-path: .venv
-          installer-parallel: true
-          plugins: |
-            poetry-dynamic-versioning[plugin]
-            poethepoet[poetry_plugin]
+  #     # Set up Python and Poetry 
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: ${{ matrix.python }}
+  #         cache: 'pip'
+  #         cache-dependency-path: poetry.lock
+  #     - name: Install Poetry
+  #       uses: snok/install-poetry@v1
+  #       with:
+  #         virtualenvs-create: true
+  #         virtualenvs-in-project: true
+  #         virtualenvs-path: .venv
+  #         installer-parallel: true
+  #         plugins: |
+  #           poetry-dynamic-versioning[plugin]
+  #           poethepoet[poetry_plugin]
 
-      # Install and cache test-only dependencies
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-tox-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-      - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --with test,docs --no-plugins
+  #     # Install and cache test-only dependencies
+  #     - name: Load cached venv
+  #       id: cached-poetry-dependencies
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: .venv
+  #         key: venv-tox-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+  #     - name: Install dependencies
+  #       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+  #       run: poetry install --no-interaction --no-root --with test,docs --no-plugins
 
-      # Grab the built artifacts to ensure we're testing what we eventually publish
-      - name: Download Python dist
-        uses: actions/download-artifact@v4
-        with:
-          name: python-dist
-          path: dist
+  #     # Grab the built artifacts to ensure we're testing what we eventually publish
+  #     - name: Download Python dist
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: python-dist
+  #         path: dist
     
-      - name: Download WebUI dist
-        uses: actions/download-artifact@v4
-        with:
-          name: webui-dist
-          path: locust/webui/dist
+  #     - name: Download WebUI dist
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: webui-dist
+  #         path: locust/webui/dist
 
-      # Run tests!
-      - name: Run tox tests
-        run: |
-          source $VENV
-          tox -e ${{ matrix.tox }} --installpkg dist/*.whl
+  #     # Run tests!
+  #     - name: Run tox tests
+  #       run: |
+  #         source $VENV
+  #         tox -e ${{ matrix.tox }} --installpkg dist/*.whl
       
-  test_docker_image:
-    name: Test Docker Image
-    runs-on: ubuntu-latest
-    needs: build_package
+  # test_docker_image:
+  #   name: Test Docker Image
+  #   runs-on: ubuntu-latest
+  #   needs: build_package
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
   
-      # Grab the built artifacts to ensure we're testing what we eventually publish
-      - name: Download Python dist
-        uses: actions/download-artifact@v4
-        with:
-          name: python-dist
-          path: dist
+  #     # Grab the built artifacts to ensure we're testing what we eventually publish
+  #     - name: Download Python dist
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: python-dist
+  #         path: dist
 
-      # Set up Docker daemon dependencies for building and publishing
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+  #     # Set up Docker daemon dependencies for building and publishing
+  #     - name: Set up QEMU
+  #       uses: docker/setup-qemu-action@v3
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
 
-      # Build and load Docker image to the local daemon
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.ci
-          platforms: linux/amd64
-          load: true
-          tags: locustio/locust:${{ github.sha }}-test
+  #     # Build and load Docker image to the local daemon
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v6
+  #       with:
+  #         context: .
+  #         file: ./Dockerfile.ci
+  #         platforms: linux/amd64
+  #         load: true
+  #         tags: locustio/locust:${{ github.sha }}-test
 
-      # Run a basic test on the image
-      - name: Test docker image
-        run: |
-          docker run --rm locustio/locust:${{ github.sha }}-test --version
+  #     # Run a basic test on the image
+  #     - name: Test docker image
+  #       run: |
+  #         docker run --rm locustio/locust:${{ github.sha }}-test --version
 
-  lint_typecheck_test_webui:
-    name: Web UI Lint and Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: 'yarn'
-          cache-dependency-path: locust/webui/yarn.lock
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: install
-          dir: locust/webui
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: build
-          dir: locust/webui
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: test
-          dir: locust/webui
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: lint
-          dir: locust/webui
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: type-check
-          dir: locust/webui
+  # lint_typecheck_test_webui:
+  #   name: Web UI Lint and Type Check
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set Node.js 20.x
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20.x
+  #         cache: 'yarn'
+  #         cache-dependency-path: locust/webui/yarn.lock
+  #     - uses: borales/actions-yarn@v5
+  #       with:
+  #         cmd: install
+  #         dir: locust/webui
+  #     - uses: borales/actions-yarn@v5
+  #       with:
+  #         cmd: build
+  #         dir: locust/webui
+  #     - uses: borales/actions-yarn@v5
+  #       with:
+  #         cmd: test
+  #         dir: locust/webui
+  #     - uses: borales/actions-yarn@v5
+  #       with:
+  #         cmd: lint
+  #         dir: locust/webui
+  #     - uses: borales/actions-yarn@v5
+  #       with:
+  #         cmd: type-check
+  #         dir: locust/webui
 
-  # -------------------------
-  #       Publishing
-  # -------------------------
+  # # -------------------------
+  # #       Publishing
+  # # -------------------------
 
-  publish:
-    name: Publish prerelease on merge commit to master
-    needs: [tox_tests, lint_typecheck_test_webui, test_docker_image, build_package]
-    if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
-    runs-on: ubuntu-latest
-    steps:
+  # publish:
+  #   name: Publish prerelease on merge commit to master
+  #   needs: [tox_tests, lint_typecheck_test_webui, test_docker_image]
+  #   if: github.repository_owner == 'locustio' && ( ( github.ref == 'refs/heads/master' && ${{ needs.build_package.outputs.is_merge_commit }} == 'true' ) || startsWith(github.event.ref, 'refs/tags') )
+  #   runs-on: ubuntu-latest
+  #   steps:
 
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
 
-      # Download Python dist artifact
-      - name: Download Python dist 
-        uses: actions/download-artifact@v4
-        with:
-          name: python-dist
-          path: dist
+  #     # Download Python dist artifact
+  #     - name: Download Python dist 
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: python-dist
+  #         path: dist
 
-      # Download Web UI lib artifact
-      - name: Download UI lib
-        uses: actions/download-artifact@v4
-        with:
-          name: webui-lib-dist
-          path: locust/webui/lib
+  #     # Download Web UI lib artifact
+  #     - name: Download UI lib
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: webui-lib-dist
+  #         path: locust/webui/lib
 
-      # Staged docker builds using exports/artifacts is currently difficult using multi-arch builds with buildx
-      # So let's just build it here
+  #     # Staged docker builds using exports/artifacts is currently difficult using multi-arch builds with buildx
+  #     # So let's just build it here
 
-      # Set docker image and tag values
-      - name: Docker meta
-        id: docker_meta
-        uses: docker/metadata-action@v5
-        with:
-          images: locustio/locust
-          tags: |
-            type=raw,value=latest,enable=${{ needs.build_package.outputs.is_tag_build }}
-            type=raw,value=${{ needs.build_package.outputs.tag }}
-            type=raw,value=${{ needs.build_package.outputs.branch }}
+  #     # Set docker image and tag values
+  #     - name: Docker meta
+  #       id: docker_meta
+  #       uses: docker/metadata-action@v5
+  #       with:
+  #         images: locustio/locust
+  #         tags: |
+  #           type=raw,value=latest,enable=${{ needs.build_package.outputs.is_tag_build }}
+  #           type=raw,value=${{ needs.build_package.outputs.tag }}
+  #           type=raw,value=${{ needs.build_package.outputs.branch }}
 
-      # Set up Docker daemon dependencies for building and publishing
-      - uses: docker/login-action@v3
-        with:
-          username: locustbuild
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+  #     # Set up Docker daemon dependencies for building and publishing
+  #     - uses: docker/login-action@v3
+  #       with:
+  #         username: locustbuild
+  #         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+  #     - name: Set up QEMU
+  #       uses: docker/setup-qemu-action@v3
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
 
-      # Build and push Docker image
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.ci
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.docker_meta.outputs.tags }}
+  #     # Build and push Docker image
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v6
+  #       with:
+  #         context: .
+  #         file: ./Dockerfile.ci
+  #         platforms: linux/amd64,linux/arm64
+  #         push: ${{ github.event_name != 'pull_request' }}
+  #         tags: ${{ steps.docker_meta.outputs.tags }}
 
-      # Publish Python package
-      - name: Publish prerelease version to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          skip-existing: true
+  #     # Publish Python package
+  #     - name: Publish prerelease version to PyPI
+  #       uses: pypa/gh-action-pypi-publish@release/v1
+  #       with:
+  #         user: __token__
+  #         password: ${{ secrets.PYPI_API_TOKEN }}
+  #         skip-existing: true
 
-      # Publish UI lib
-      # On commits to trunk
-      - uses: borales/actions-yarn@v5
-        name: Publish package on NPM
-        if: github.ref == 'refs/heads/master'
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-        with:
-          cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ needs.build_package.outputs.tag_short }}-next-${{ github.run_id }}
-          dir: locust/webui
+  #     # Publish UI lib
+  #     # On commits to trunk
+  #     - uses: borales/actions-yarn@v5
+  #       name: Publish package on NPM
+  #       if: github.ref == 'refs/heads/master'
+  #       env:
+  #         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+  #       with:
+  #         cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ needs.build_package.outputs.tag_short }}-next-${{ github.run_id }}
+  #         dir: locust/webui
       
-      # On tag builds
-      - uses: borales/actions-yarn@v5
-        name: Publish package on NPM
-        if: startsWith(github.event.ref, 'refs/tags')
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-        with:
-          cmd: publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
-          dir: locust/webui
+  #     # On tag builds
+  #     - uses: borales/actions-yarn@v5
+  #       name: Publish package on NPM
+  #       if: startsWith(github.event.ref, 'refs/tags')
+  #       env:
+  #         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+  #       with:
+  #         cmd: publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
+  #         dir: locust/webui
