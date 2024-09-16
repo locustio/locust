@@ -144,15 +144,14 @@ def read_output_non_blocking(proc, output_list):
 
 
 def wait_for_output_condition_non_threading(proc, output_lines, condition, timeout=30):
-    for _ in range(timeout * 10):  # Check every 0.1 seconds
+    start_time = time.time()
+    while True:
         combined_output = "\n".join(output_lines)
-        print(f"DEBUG: Current combined output: {combined_output}")  # Log current output
         if condition in combined_output:
-            print(f"DEBUG: Condition '{condition}' found in output.")
             return True
-        gevent.sleep(0.1)  # Sleep briefly before checking again
-    print(f"DEBUG: Condition '{condition}' not found after {timeout} seconds.")
-    return False
+        if time.time() - start_time >= timeout:
+            return False
+        gevent.sleep(0.1)
 
 
 class ProcessManager:
@@ -163,24 +162,31 @@ class ProcessManager:
         self.temp_file_path = temp_file_path
         self.output_lines = output_lines
 
-    def terminate(self):
-        self.proc.terminate()
-        self.proc.wait()
-        self.stdout_reader.join()
-        self.stderr_reader.join()
-
     def cleanup(self):
-        os.unlink(self.temp_file_path)
+        if self.temp_file_path is not None and os.path.exists(self.temp_file_path):
+            os.unlink(self.temp_file_path)
 
 
 @contextmanager
-def run_locust_process(file_content, args, port):
-    with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
-        temp_file.write(file_content)
-        temp_file_path = temp_file.name
+def run_locust_process(file_content=None, args=None, port=None):
+    temp_file_path = None
+    locust_command = ["locust"]
+
+    if file_content is not None:
+        with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
+            temp_file.write(file_content)
+            temp_file.flush()
+            temp_file_path = temp_file.name
+        locust_command += ["-f", temp_file_path]
+
+    if args:
+        locust_command += args
+
+    if port is not None:
+        locust_command += ["--web-port", str(port)]
 
     proc = subprocess.Popen(
-        ["locust", "-f", temp_file_path, "--web-port", str(port)] + args,
+        locust_command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         bufsize=1,
@@ -192,8 +198,8 @@ def run_locust_process(file_content, args, port):
 
     def read_output(process_stdout):
         for line in iter(process_stdout.readline, ""):
-            output_lines.append(line.strip())
-            print(f"DEBUG OUTPUT: {line.strip()}")
+            output_lines.append(line.rstrip("\n"))
+            print(f"DEBUG OUTPUT: {line.rstrip()}")
 
     stdout_reader = gevent.spawn(read_output, proc.stdout)
     stderr_reader = gevent.spawn(read_output, proc.stderr)
@@ -204,7 +210,10 @@ def run_locust_process(file_content, args, port):
         yield manager
     finally:
         if manager.proc.poll() is None:
-            manager.terminate()
+            manager.proc.terminate()
+            manager.proc.wait()
+        manager.stdout_reader.join()
+        manager.stderr_reader.join()
         manager.cleanup()
 
 
@@ -248,6 +257,18 @@ class ProcessIntegrationTest(TestCase):
 
 
 class StandaloneIntegrationTests(ProcessIntegrationTest):
+    def test_help_arg(self):
+        with run_locust_process(file_content=None, args=["--help"]) as manager:
+            manager.proc.wait()
+
+        output = "\n".join(manager.output_lines).strip()
+
+        self.assertTrue(output.startswith("Usage: locust [options] [UserClass ...]"))
+        self.assertIn("Common options:", output)
+        self.assertIn("-f <filename>, --locustfile <filename>", output)
+        self.assertIn("Logging options:", output)
+        self.assertIn("--skip-log-setup", output)
+
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_custom_arguments(self):
         port = get_free_tcp_port()
@@ -280,18 +301,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 },
             )
 
-            manager.terminate()
-
-            combined_output = "\n".join(manager.output_lines)
-            self.assertIn("Starting Locust", combined_output)
-            self.assertRegex(
-                combined_output, r".*Shutting down[\S\s]*Aggregated.*", "No stats table printed after shutting down"
-            )
-            self.assertNotRegex(
-                combined_output, r".*Aggregated[\S\s]*Shutting down.*", "Stats table printed BEFORE shutting down"
-            )
-            self.assertNotIn("command_line_value", combined_output)
-            self.assertIn("web_form_value", combined_output)
+        combined_output = "\n".join(manager.output_lines)
+        self.assertIn("Starting Locust", combined_output)
+        self.assertRegex(
+            combined_output, r".*Shutting down[\S\s]*Aggregated.*", "No stats table printed after shutting down"
+        )
+        self.assertNotRegex(
+            combined_output, r".*Aggregated[\S\s]*Shutting down.*", "Stats table printed BEFORE shutting down"
+        )
+        self.assertNotIn("command_line_value", combined_output)
+        self.assertIn("web_form_value", combined_output)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_custom_exit_code(self):
