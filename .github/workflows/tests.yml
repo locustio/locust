@@ -123,21 +123,21 @@ jobs:
     name: Publish prerelease on merge commit to master
     needs: [build_package]
     # Only publish on tags and PR merges
-    if: github.repository_owner == 'mquinnfd' && github.event.pull_request.opened == false && ( ( github.ref == 'refs/heads/merge-test' && github.event.pull_request.merged == 'true' ) || ${{ needs.build_package.outputs.is_tag_build }} == 'true' )
+    if: github.repository_owner == 'mquinnfd' && {{ ! github.event.pull_request.opened }} && ( ( github.ref == 'refs/heads/merge-test' && github.event.pull_request.merged ) || needs.build_package.outputs.is_tag_build )
     runs-on: ubuntu-latest
     steps:
       - run: echo "time to run publishing!"
       - run: |
           echo 1
-          echo ${{ github.event.pull_request.opened == false }}
+          echo ${{ github.event.pull_request.opened }}
           echo 2
           echo ${{ github.ref == 'refs/heads/merge-test' }} 
           echo 3
-          echo ${{ github.event.pull_request.merged == true }} 
+          echo ${{ github.event.pull_request.merged }} 
           echo 4
-          echo ${{ needs.build_package.outputs.is_tag_build == true }}
+          echo ${{ needs.build_package.outputs.is_tag_build }}
           echo 5
-          echo ${{ github.ref == 'refs/heads/merge-test' && github.event.pull_request.merged == true }} 
+          echo ${{ github.ref == 'refs/heads/merge-test' && github.event.pull_request.merged }} 
 
 
   # #-------------------------
