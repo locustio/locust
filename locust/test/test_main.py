@@ -1068,7 +1068,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         str(port),
                         "--autostart",
                         "--autoquit",
-                        "3",
+                        "10",
                     ],
                     stdout=PIPE,
                     stderr=PIPE,
