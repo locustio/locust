@@ -635,10 +635,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 text=True,
             )
 
+            stderr_output = []
+
             def check_locust_started():
                 ready, _, _ = select.select([proc.stderr], [], [], 0.1)
                 if ready:
                     line = proc.stderr.readline()
+                    stderr_output.append(line)
                     if "All users spawned" in line or "Starting Locust" in line:
                         return True
                 return False
@@ -648,10 +651,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                 proc.send_signal(signal.SIGTERM)
 
-                _, stderr = proc.communicate()
+                _, remaining_stderr = proc.communicate(timeout=10)
+                stderr_output.append(remaining_stderr)
 
-                self.assertIn("All users spawned", stderr)
-                self.assertIn("Shutting down (exit code 0)", stderr)
+                full_stderr = "".join(stderr_output)
+
+                self.assertIn("All users spawned", full_stderr)
+                self.assertIn("Shutting down (exit code 0)", full_stderr)
                 self.assertEqual(0, proc.returncode)
 
             finally:
