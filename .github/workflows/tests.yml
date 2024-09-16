@@ -122,8 +122,10 @@ jobs:
   publish:
     name: Publish prerelease on merge commit to master
     needs: [build_package]
-    # Only publish on tags and PR merges
-    if: github.repository_owner == 'mquinnfd' && github.event.pull_request.opened != true && ( ( github.ref == 'refs/heads/merge-test' && github.event.pull_request.merged == true ) || needs.build_package.outputs.is_tag_build == true ) == true
+    # Only publish on PR merges to master, and tag builds
+    if: |
+        github.repository_owner == 'mquinnfd' 
+        && ( ( github.ref == 'refs/heads/merge-test' && github.event.pull_request.merged == true ) || needs.build_package.outputs.is_tag_build == true ) == true
     runs-on: ubuntu-latest
     steps:
       - run: echo "time to run publishing!"
