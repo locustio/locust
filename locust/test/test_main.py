@@ -1080,7 +1080,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     response = requests.get(f"http://localhost:{port}/")
                     self.assertEqual(200, response.status_code)
 
-                    _, stderr = proc.communicate(timeout=50)
+                    stdout, stderr = proc.communicate(timeout=50)
+
+                    print("----- Locust STDOUT -----")
+                    print(stdout)
+                    print("----- Locust STDERR -----")
+                    print(stderr)
 
                     self.assertIn("Starting Locust", stderr)
                     self.assertIn("Shape test starting", stderr)
