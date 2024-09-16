@@ -28,8 +28,6 @@ from requests.exceptions import RequestException
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .util import get_free_tcp_port, patch_env, temporary_file
 
-logging.basicConfig(level=logging.DEBUG)
-
 SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give it some extra time
 
 
@@ -647,21 +645,18 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 if ready:
                     line = proc.stderr.readline()
                     stderr_output.append(line)
-                    logging.debug(f"Captured stderr: {line.strip()}")
                     if "All users spawned" in line or "Starting Locust" in line:
                         return True
                 return False
 
             try:
                 poll_until(check_locust_started, timeout=60)
-                time.sleep(2)
                 proc.send_signal(signal.SIGTERM)
 
                 _, remaining_stderr = proc.communicate(timeout=20)
                 stderr_output.append(remaining_stderr)
 
                 full_stderr = "".join(stderr_output)
-                logging.debug(f"Full stderr output: {full_stderr}")
 
                 self.assertIn("All users spawned", full_stderr)
                 self.assertIn("Shutting down (exit code 0)", full_stderr)
@@ -1086,7 +1081,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertEqual(200, response.status_code)
 
                     _, stderr = proc.communicate(timeout=50)
-                    logging.debug(f"Captured stderr: {stderr.strip()}")
 
                     self.assertIn("Starting Locust", stderr)
                     self.assertIn("Shape test starting", stderr)
