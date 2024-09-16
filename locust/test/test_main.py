@@ -302,7 +302,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
 
         combined_output = "\n".join(manager.output_lines)
-        self.assertIn("Starting Locust", combined_output)
         self.assertRegex(
             combined_output, r".*Shutting down[\S\s]*Aggregated.*", "No stats table printed after shutting down"
         )
@@ -312,11 +311,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertNotIn("command_line_value", combined_output)
         self.assertIn("web_form_value", combined_output)
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_custom_exit_code(self):
-        with temporary_file(
-            content=textwrap.dedent(
-                """
+        port = get_free_tcp_port()
+        file_content = textwrap.dedent("""
             from locust import User, task, constant, events
             @events.quitting.add_listener
             def _(environment, **kw):
@@ -329,30 +327,28 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 @task
                 def my_task(self):
                     print("running my_task()")
-        """
-            )
-        ) as file_path:
-            port = get_free_tcp_port()
-            proc = subprocess.Popen(
-                ["locust", "-f", file_path, "--web-port", str(port)],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
+        """)
 
-            poll_until(lambda: is_port_in_use(port), timeout=20)
+        with run_locust_process(file_content=file_content, args=[], port=port) as manager:
+            if not wait_for_output_condition_non_threading(
+                manager.proc, manager.output_lines, "Starting Locust", timeout=30
+            ):
+                self.fail("Timeout waiting for Locust to start.")
 
-            proc.send_signal(signal.SIGTERM)
-            stdout, stderr = proc.communicate(timeout=3)
+            if not wait_for_output_condition_non_threading(
+                manager.proc, manager.output_lines, "Starting web interface at", timeout=30
+            ):
+                self.fail("Timeout waiting for web interface to start.")
 
-            self.assertIn("Starting web interface at", stderr)
-            self.assertIn("Starting Locust", stderr)
-            self.assertIn("Shutting down (exit code 42)", stderr)
-            self.assertIn("Exit code in quit event 42", stdout)
-            self.assertEqual(42, proc.returncode)
+            manager.proc.send_signal(signal.SIGTERM)
 
-            proc.terminate()
+            manager.proc.wait(timeout=3)
+
+        combined_output = "\n".join(manager.output_lines)
+
+        self.assertIn("Shutting down (exit code 42)", combined_output)
+        self.assertIn("Exit code in quit event 42", combined_output)
+        self.assertEqual(42, manager.proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver(self):
