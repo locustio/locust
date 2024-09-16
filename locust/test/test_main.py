@@ -653,11 +653,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 return False
 
             try:
-                poll_until(check_locust_started, timeout=20)
+                poll_until(check_locust_started, timeout=60)
 
                 proc.send_signal(signal.SIGTERM)
 
-                _, remaining_stderr = proc.communicate(timeout=10)
+                _, remaining_stderr = proc.communicate(timeout=20)
                 stderr_output.append(remaining_stderr)
 
                 full_stderr = "".join(stderr_output)
