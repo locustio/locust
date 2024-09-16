@@ -350,42 +350,38 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("Exit code in quit event 42", combined_output)
         self.assertEqual(42, manager.proc.returncode)
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_webserver(self):
         port = get_free_tcp_port()
-        with temporary_file(
-            content=textwrap.dedent(
-                """
+        file_content = textwrap.dedent("""
             from locust import User, task, constant, events
             class TestUser(User):
                 wait_time = constant(3)
                 @task
                 def my_task(self):
                     print("running my_task()")
-        """
-            )
-        ) as file_path:
-            proc = subprocess.Popen(
-                ["locust", "-f", file_path, "--web-port", str(port)],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                bufsize=1,
-                env=os.environ.copy(),
-            )
+        """)
 
-            poll_until(lambda: is_port_in_use(port), timeout=20)
+        with run_locust_process(file_content=file_content, args=[], port=port) as manager:
+            if not wait_for_output_condition_non_threading(
+                manager.proc, manager.output_lines, "Starting Locust", timeout=30
+            ):
+                self.fail("Timeout waiting for Locust to start.")
 
-            proc.send_signal(signal.SIGTERM)
-            stdout, stderr = proc.communicate(timeout=3)
+            if not wait_for_output_condition_non_threading(
+                manager.proc, manager.output_lines, "Starting web interface at", timeout=30
+            ):
+                self.fail("Timeout waiting for web interface to start.")
 
-            self.assertIn("Starting web interface at", stderr)
-            self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
-            self.assertIn("Starting Locust", stderr)
-            self.assertIn("Shutting down (exit code 0)", stderr)
-            self.assertEqual(0, proc.returncode)
+            manager.proc.send_signal(signal.SIGTERM)
 
-            proc.terminate()
+            manager.proc.wait(timeout=3)
+
+        combined_output = "\n".join(manager.output_lines)
+
+        self.assertNotIn("Locust is running with the UserClass Picker Enabled", combined_output)
+        self.assertIn("Shutting down (exit code 0)", combined_output)
+        self.assertEqual(0, manager.proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_percentile_parameter(self):
