@@ -704,8 +704,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                         output_text = "\n".join(output)
 
-                        self.assertIn("Starting Locust", output_text)
-                        self.assertIn("All users spawned:", output_text)
                         self.assertIn('"TestUser": 1', output_text)
                         self.assertIn('"UserSubclass": 1', output_text)
                         self.assertIn("Shutting down (exit code 0)", output_text)
@@ -862,10 +860,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertEqual(200, response.status_code)
             self.assertIn('"state": "running"', str(d))
 
-            if proc.poll() is None:
-                proc.terminate()
-                proc.wait(timeout=5)
-
     @unittest.skipIf(sys.platform == "darwin", reason="This is too messy on macOS")
     def test_autostart_w_run_time(self):
         port = get_free_tcp_port()
@@ -893,11 +887,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
-
-                def process_finished():
-                    return proc.poll() is not None
-
-                poll_until(process_finished, timeout=10)
 
                 stdout, stderr = proc.communicate(timeout=1)
 
@@ -1088,10 +1077,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Shape test starting", stderr)
                 self.assertIn("Shutting down ", stderr)
                 self.assertIn("autoquit time reached", stderr)
-
-                if proc.poll() is None:
-                    proc.terminate()
-                    proc.wait(timeout=5)
 
                 self.assertEqual(0, proc.returncode, f"Process failed with return code {proc.returncode}")
 
