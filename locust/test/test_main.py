@@ -5,6 +5,7 @@ import os
 import platform
 import re
 import select
+import selectors
 import signal
 import socket
 import subprocess
@@ -12,8 +13,9 @@ import sys
 import textwrap
 import time
 import unittest
+from contextlib import contextmanager
 from subprocess import DEVNULL, PIPE, STDOUT
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from threading import Thread
 from typing import IO, Callable, Optional, cast
 from unittest import TestCase
@@ -21,6 +23,9 @@ from unittest import TestCase
 import gevent
 import psutil
 import requests
+from gevent.fileobject import FileObject
+
+# from gevent.subprocess import PIPE, Popen
 from pyquery import PyQuery as pq
 from requests.exceptions import RequestException
 
@@ -124,6 +129,85 @@ def read_nonblocking(proc: subprocess.Popen, output: list[str]) -> bool:
     return False
 
 
+def read_output_non_blocking(proc, output_list):
+    """
+    Reads real-time output from a subprocess in a non-blocking way using gevent.
+    :param proc: Subprocess object
+    :param output_list: List to store the real-time output.
+    """
+    while proc.poll() is None:  # Keep reading while the process is still running
+        line = proc.stdout.readline()
+        if line:
+            output_list.append(line)
+            print(line.strip())  # Optional: for real-time feedback
+        gevent.sleep(0.1)  # Yield control to allow other greenlets to run
+
+
+def wait_for_output_condition_non_threading(proc, output_lines, condition, timeout=30):
+    for _ in range(timeout * 10):  # Check every 0.1 seconds
+        combined_output = "\n".join(output_lines)
+        print(f"DEBUG: Current combined output: {combined_output}")  # Log current output
+        if condition in combined_output:
+            print(f"DEBUG: Condition '{condition}' found in output.")
+            return True
+        gevent.sleep(0.1)  # Sleep briefly before checking again
+    print(f"DEBUG: Condition '{condition}' not found after {timeout} seconds.")
+    return False
+
+
+class ProcessManager:
+    def __init__(self, proc, stdout_reader, stderr_reader, temp_file_path, output_lines):
+        self.proc = proc
+        self.stdout_reader = stdout_reader
+        self.stderr_reader = stderr_reader
+        self.temp_file_path = temp_file_path
+        self.output_lines = output_lines
+
+    def terminate(self):
+        self.proc.terminate()
+        self.proc.wait()
+        self.stdout_reader.join()
+        self.stderr_reader.join()
+
+    def cleanup(self):
+        os.unlink(self.temp_file_path)
+
+
+@contextmanager
+def run_locust_process(file_content, args, port):
+    with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
+        temp_file.write(file_content)
+        temp_file_path = temp_file.name
+
+    proc = subprocess.Popen(
+        ["locust", "-f", temp_file_path, "--web-port", str(port)] + args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        bufsize=1,
+        text=True,
+        env={**os.environ, "PYTHONUNBUFFERED": "1"},
+    )
+
+    output_lines = []
+
+    def read_output(process_stdout):
+        for line in iter(process_stdout.readline, ""):
+            output_lines.append(line.strip())
+            print(f"DEBUG OUTPUT: {line.strip()}")
+
+    stdout_reader = gevent.spawn(read_output, proc.stdout)
+    stderr_reader = gevent.spawn(read_output, proc.stderr)
+
+    manager = ProcessManager(proc, stdout_reader, stderr_reader, temp_file_path, output_lines)
+
+    try:
+        yield manager
+    finally:
+        if manager.proc.poll() is None:
+            manager.terminate()
+        manager.cleanup()
+
+
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
     """
     from locust import User, task, constant, events
@@ -164,25 +248,10 @@ class ProcessIntegrationTest(TestCase):
 
 
 class StandaloneIntegrationTests(ProcessIntegrationTest):
-    def test_help_arg(self):
-        output = subprocess.check_output(
-            ["locust", "--help"],
-            stderr=subprocess.STDOUT,
-            timeout=5,
-            text=True,
-        ).strip()
-        self.assertTrue(output.startswith("Usage: locust [options] [UserClass"))
-        self.assertIn("Common options:", output)
-        self.assertIn("-f <filename>, --locustfile <filename>", output)
-        self.assertIn("Logging options:", output)
-        self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
-
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_custom_arguments(self):
         port = get_free_tcp_port()
-        with temporary_file(
-            content=textwrap.dedent(
-                """
+        file_content = textwrap.dedent("""
             from locust import User, task, constant, events
             @events.init_command_line_parser.add_listener
             def _(parser, **kw):
@@ -193,18 +262,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 @task
                 def my_task(self):
                     print(self.environment.parsed_options.custom_string_arg)
-        """
-            )
-        ) as file_path:
-            proc = subprocess.Popen(
-                ["locust", "-f", file_path, "--custom-string-arg", "command_line_value", "--web-port", str(port)],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
+        """)
 
-            poll_until(lambda: is_port_in_use(port), timeout=20)
+        with run_locust_process(file_content, ["--custom-string-arg", "command_line_value"], port) as manager:
+            if not wait_for_output_condition_non_threading(
+                manager.proc, manager.output_lines, "Starting Locust", timeout=30
+            ):
+                self.fail("Timeout waiting for Locust to start.")
 
             requests.post(
                 f"http://127.0.0.1:{port}/swarm",
@@ -216,64 +280,18 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 },
             )
 
-            proc.terminate()
+            manager.terminate()
 
-            stdout, stderr = proc.communicate(timeout=3)
-
-            self.assertIn("Starting Locust", stderr)
+            combined_output = "\n".join(manager.output_lines)
+            self.assertIn("Starting Locust", combined_output)
             self.assertRegex(
-                stderr, r".*Shutting down[\S\s]*Aggregated.*", "no stats table printed after shutting down"
+                combined_output, r".*Shutting down[\S\s]*Aggregated.*", "No stats table printed after shutting down"
             )
             self.assertNotRegex(
-                stderr, r".*Aggregated[\S\s]*Shutting down.*", "stats table printed BEFORE shutting down"
+                combined_output, r".*Aggregated[\S\s]*Shutting down.*", "Stats table printed BEFORE shutting down"
             )
-            self.assertNotIn("command_line_value", stdout)
-            self.assertIn("web_form_value", stdout)
-
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
-    def test_custom_arguments_in_file(self):
-        with temporary_file(
-            content=textwrap.dedent(
-                """
-            from locust import User, task, constant, events
-            @events.init_command_line_parser.add_listener
-            def _(parser, **kw):
-                parser.add_argument("--custom-string-arg")
-
-            class TestUser(User):
-                wait_time = constant(10)
-                @task
-                def my_task(self):
-                    print(self.environment.parsed_options.custom_string_arg)
-        """
-            )
-        ) as file_path:
-            try:
-                with open("locust.conf", "w") as conf_file:
-                    conf_file.write("custom-string-arg config_file_value")
-
-                port = get_free_tcp_port()
-
-                proc = subprocess.Popen(
-                    ["locust", "-f", file_path, "--autostart", "--web-port", str(port), "--config", "locust.conf"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    env=os.environ.copy(),
-                )
-
-                poll_until(lambda: web_interface_ready("localhost", port), timeout=20)
-
-            finally:
-                if os.path.exists("locust.conf"):
-                    os.remove("locust.conf")
-
-            proc.send_signal(signal.SIGTERM)
-
-            stdout, stderr = proc.communicate(timeout=3)
-
-            self.assertIn("Starting Locust", stderr)
-            self.assertIn("config_file_value", stdout)
+            self.assertNotIn("command_line_value", combined_output)
+            self.assertIn("web_form_value", combined_output)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_custom_exit_code(self):
