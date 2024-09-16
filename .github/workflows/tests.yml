@@ -127,13 +127,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "time to run publishing!"
-<<<<<<< Updated upstream
-      - id: check pr opening
-        run: echo ${{ needs.build_package.outputs.is_pr_opening }} 
-      - id: check merge clause
-        run: echo ${{ needs.build_package.outputs.is_not_merge_commit }} == ''
-=======
->>>>>>> Stashed changes
 
 
   # #-------------------------
