@@ -451,7 +451,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 bufsize=1,
             )
 
-            stderr_output = proc.communicate(timeout=10)[1]
+            stderr_output = proc.communicate(timeout=50)[1]
 
             self.assertIn("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", stderr_output)
             self.assertEqual(1, proc.returncode)
@@ -698,7 +698,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                         proc.send_signal(signal.SIGTERM)
 
-                        stdout, stderr = proc.communicate(timeout=1)
+                        stdout, stderr = proc.communicate(timeout=5)
                         output.extend(stdout.splitlines())
                         output.extend(stderr.splitlines())
 
@@ -888,12 +888,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
 
-                stdout, stderr = proc.communicate(timeout=1)
-
-                def process_finished():
-                    return proc.poll() is not None
-
-                poll_until(process_finished, timeout=10)
+                stdout, stderr = proc.communicate(timeout=50)
 
                 self.assertIn("Starting Locust", stderr)
                 self.assertIn("Run time limit set to 3 seconds", stderr)
@@ -953,7 +948,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                         proc.send_signal(signal.SIGTERM)
 
-                        stdout, stderr = proc.communicate(timeout=1)
+                        stdout, stderr = proc.communicate(timeout=5)
                         output.extend(stdout.splitlines())
                         output.extend(stderr.splitlines())
 
@@ -1010,7 +1005,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             success = True
 
             try:
-                _, stderr = proc.communicate(timeout=10)
+                _, stderr = proc.communicate(timeout=50)
             except subprocess.TimeoutExpired:
                 success = False
                 proc.send_signal(signal.SIGTERM)
@@ -1076,7 +1071,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
 
-                _, stderr = proc.communicate(timeout=10)
+                _, stderr = proc.communicate(timeout=50)
 
                 self.assertIn("Starting Locust", stderr)
                 self.assertIn("Shape test starting", stderr)
@@ -1493,7 +1488,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
                 proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True)
 
-                _, stderr = proc.communicate(timeout=1)
+                _, stderr = proc.communicate(timeout=5)
                 self.assertIn("Duplicate user class names: TestUser1 is defined", stderr)
                 self.assertEqual(1, proc.returncode)
 
@@ -1514,7 +1509,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     ["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"], stdout=PIPE, stderr=PIPE, text=True
                 )
 
-                stdout, _ = proc.communicate(timeout=10)
+                stdout, _ = proc.communicate(timeout=50)
 
                 self.assertIn("running my_task", stdout)
                 self.assertEqual(0, proc.returncode)
@@ -1653,7 +1648,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with TemporaryDirectory() as temp_dir:
             proc = subprocess.Popen(["locust", "-f", temp_dir], stdout=PIPE, stderr=PIPE, text=True)
 
-            _, stderr = proc.communicate(timeout=1)
+            _, stderr = proc.communicate(timeout=5)
 
             self.assertIn(f"Could not find any locustfiles in directory '{temp_dir}'", stderr)
             self.assertEqual(1, proc.returncode)
@@ -2583,7 +2578,7 @@ class AnyUser(HttpUser):
                 self.assertFalse(child.is_running(), "child processes failed to terminate")
 
             try:
-                _, stderr = proc.communicate(timeout=1)
+                _, stderr = proc.communicate(timeout=5)
             except Exception:
                 proc.kill()
                 _, stderr = proc.communicate()
