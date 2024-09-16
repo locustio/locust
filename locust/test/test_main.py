@@ -199,7 +199,6 @@ def run_locust_process(file_content=None, args=None, port=None):
     def read_output(process_stdout):
         for line in iter(process_stdout.readline, ""):
             output_lines.append(line.rstrip("\n"))
-            print(f"DEBUG OUTPUT: {line.rstrip()}")
 
     stdout_reader = gevent.spawn(read_output, proc.stdout)
     stderr_reader = gevent.spawn(read_output, proc.stderr)
@@ -383,13 +382,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("Shutting down (exit code 0)", combined_output)
         self.assertEqual(0, manager.proc.returncode)
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_percentile_parameter(self):
         port = get_free_tcp_port()
 
-        with temporary_file(
-            content=textwrap.dedent(
-                """
+        file_content = textwrap.dedent("""
             from locust import User, task, constant, events
             from locust import stats
             stats.PERCENTILES_TO_CHART = [0.9, 0.4]
@@ -398,79 +395,71 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 @task
                 def my_task(self):
                     print("running my_task()")
-        """
-            )
-        ) as file_path:
-            proc = subprocess.Popen(
-                ["locust", "-f", file_path, "--web-port", str(port), "--autostart"],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
+        """)
 
-            try:
-                poll_until(lambda: is_port_in_use(port))
+        with run_locust_process(file_content=file_content, args=["--autostart"], port=port) as manager:
+            if not wait_for_output_condition_non_threading(
+                manager.proc, manager.output_lines, "Starting Locust", timeout=30
+            ):
+                self.fail("Timeout waiting for Locust to start.")
 
-                response = requests.get(f"http://localhost:{port}/")
-                self.assertEqual(200, response.status_code)
+            if not wait_for_output_condition_non_threading(
+                manager.proc, manager.output_lines, "Starting web interface at", timeout=30
+            ):
+                self.fail("Timeout waiting for web interface to start.")
 
-                proc.send_signal(signal.SIGTERM)
-                _, stderr = proc.communicate()
+            response = requests.get(f"http://localhost:{port}/")
+            self.assertEqual(200, response.status_code)
 
-                self.assertIn("Starting web interface at", stderr)
-                self.assertIn("Starting Locust", stderr)
+            manager.proc.send_signal(signal.SIGTERM)
 
-            finally:
-                proc.terminate()
-                proc.wait(timeout=5)
+            manager.proc.wait(timeout=5)
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
+        combined_output = "\n".join(manager.output_lines)
+
+        self.assertIn("Starting web interface at", combined_output)
+        self.assertIn("Starting Locust", combined_output)
+
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_percentiles_to_statistics(self):
         port = get_free_tcp_port()
 
-        with temporary_file(
-            content=textwrap.dedent(
-                """
-                from locust import User, task, constant, events
-                from locust.stats import PERCENTILES_TO_STATISTICS
-                PERCENTILES_TO_STATISTICS = [0.9, 0.99]
-                class TestUser(User):
-                    wait_time = constant(3)
-                    @task
-                    def my_task(self):
-                        print("running my_task()")
-            """
-            )
-        ) as file_path:
-            proc = subprocess.Popen(
-                ["locust", "-f", file_path, "--web-port", str(port), "--autostart"],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
+        file_content = textwrap.dedent("""
+            from locust import User, task, constant, events
+            from locust.stats import PERCENTILES_TO_STATISTICS
+            PERCENTILES_TO_STATISTICS = [0.9, 0.99]
+            class TestUser(User):
+                wait_time = constant(3)
+                @task
+                def my_task(self):
+                    print("running my_task()")
+        """)
 
-            try:
-                poll_until(lambda: is_port_in_use(port), timeout=20)
+        with run_locust_process(file_content=file_content, args=["--autostart"], port=port) as manager:
+            if not wait_for_output_condition_non_threading(
+                manager.proc, manager.output_lines, "Starting Locust", timeout=30
+            ):
+                self.fail("Timeout waiting for Locust to start.")
 
-                response = requests.get(f"http://localhost:{port}/")
-                self.assertEqual(200, response.status_code)
+            if not wait_for_output_condition_non_threading(
+                manager.proc, manager.output_lines, "Starting web interface at", timeout=30
+            ):
+                self.fail("Timeout waiting for web interface to start.")
 
-                proc.send_signal(signal.SIGTERM)
-                _, stderr = proc.communicate()
+            response = requests.get(f"http://localhost:{port}/")
+            self.assertEqual(200, response.status_code)
 
-                self.assertIn("Starting web interface at", stderr)
-                self.assertIn("Starting Locust", stderr)
+            manager.proc.send_signal(signal.SIGTERM)
 
-            finally:
-                proc.terminate()
-                proc.wait(timeout=5)
+            manager.proc.wait(timeout=5)
+
+        combined_output = "\n".join(manager.output_lines)
+
+        self.assertIn("Starting web interface at", combined_output)
+        self.assertIn("Starting Locust", combined_output)
 
     def test_invalid_percentile_parameter(self):
-        with temporary_file(
-            content=textwrap.dedent(
-                """
+        file_content = textwrap.dedent("""
             from locust import User, task, constant, events
             from locust import stats
             stats.PERCENTILES_TO_CHART  = [1.2]
@@ -479,22 +468,20 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 @task
                 def my_task(self):
                     print("running my_task()")
-        """
-            )
-        ) as file_path:
-            proc = subprocess.Popen(
-                ["locust", "-f", file_path, "--autostart"],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                bufsize=1,
-                env=os.environ.copy(),
-            )
+        """)
 
-            stderr_output = proc.communicate(timeout=50)[1]
+        with run_locust_process(file_content=file_content, args=["--autostart"]) as manager:
+            if not wait_for_output_condition_non_threading(
+                manager.proc, manager.output_lines, "parameter need to be float", timeout=30
+            ):
+                self.fail("Timeout waiting for invalid percentile error message.")
 
-            self.assertIn("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", stderr_output)
-            self.assertEqual(1, proc.returncode)
+            manager.proc.wait(timeout=5)
+
+        combined_output = "\n".join(manager.output_lines)
+
+        self.assertIn("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", combined_output)
+        self.assertEqual(1, manager.proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver_multiple_locustfiles(self):
