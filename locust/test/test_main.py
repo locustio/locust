@@ -2095,7 +2095,7 @@ class SecondUser(HttpUser):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                bufsize=1,
+                bufsize=0,
             )
             proc_worker1 = subprocess.Popen(
                 [
@@ -2108,7 +2108,7 @@ class SecondUser(HttpUser):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                bufsize=1,
+                bufsize=0,
             )
             proc_worker2 = subprocess.Popen(
                 [
@@ -2121,7 +2121,7 @@ class SecondUser(HttpUser):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                bufsize=1,
+                bufsize=0,
             )
 
             try:
