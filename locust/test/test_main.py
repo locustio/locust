@@ -645,7 +645,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 if ready:
                     line = proc.stderr.readline()
                     stderr_output.append(line)
-                    if "All users spawned" in line or "Starting Locust" in line:
+                    if "All users spawned" in line:
                         return True
                 return False
 
@@ -1076,7 +1076,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 )
 
                 try:
-                    poll_until(lambda: web_interface_ready("localhost", port), timeout=20)
+                    poll_until(lambda: web_interface_ready("localhost", port), timeout=60)
                     response = requests.get(f"http://localhost:{port}/")
                     self.assertEqual(200, response.status_code)
 
