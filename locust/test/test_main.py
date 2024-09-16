@@ -635,7 +635,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                bufsize=1,
                 text=True,
+                universal_newlines=True,
             )
 
             stderr_output = []
