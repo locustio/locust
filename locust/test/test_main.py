@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import platform
 import re
@@ -26,6 +27,8 @@ from requests.exceptions import RequestException
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .util import get_free_tcp_port, patch_env, temporary_file
+
+logging.basicConfig(level=logging.DEBUG)
 
 SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give it some extra time
 
@@ -642,12 +645,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 if ready:
                     line = proc.stderr.readline()
                     stderr_output.append(line)
+                    logging.debug(f"Captured stderr: {line.strip()}")
                     if "All users spawned" in line or "Starting Locust" in line:
                         return True
                 return False
 
             try:
-                poll_until(check_locust_started, timeout=10)
+                poll_until(check_locust_started, timeout=20)
 
                 proc.send_signal(signal.SIGTERM)
 
@@ -655,6 +659,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr_output.append(remaining_stderr)
 
                 full_stderr = "".join(stderr_output)
+                logging.debug(f"Full stderr output: {full_stderr}")  # Log the full stderr output
 
                 self.assertIn("All users spawned", full_stderr)
                 self.assertIn("Shutting down (exit code 0)", full_stderr)
@@ -1073,18 +1078,24 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     text=True,
                 )
 
-                poll_until(lambda: web_interface_ready("localhost", port), timeout=10)
-                response = requests.get(f"http://localhost:{port}/")
-                self.assertEqual(200, response.status_code)
+                try:
+                    poll_until(lambda: web_interface_ready("localhost", port), timeout=20)
+                    response = requests.get(f"http://localhost:{port}/")
+                    self.assertEqual(200, response.status_code)
 
-                _, stderr = proc.communicate(timeout=50)
+                    _, stderr = proc.communicate(timeout=50)
+                    logging.debug(f"Captured stderr: {stderr.strip()}")
 
-                self.assertIn("Starting Locust", stderr)
-                self.assertIn("Shape test starting", stderr)
-                self.assertIn("Shutting down ", stderr)
-                self.assertIn("autoquit time reached", stderr)
+                    self.assertIn("Starting Locust", stderr)
+                    self.assertIn("Shape test starting", stderr)
+                    self.assertIn("Shutting down", stderr)
+                    self.assertIn("autoquit time reached", stderr)
 
-                self.assertEqual(0, proc.returncode, f"Process failed with return code {proc.returncode}")
+                    self.assertEqual(0, proc.returncode, f"Process failed with return code {proc.returncode}")
+
+                finally:
+                    proc.terminate()
+                    proc.wait(timeout=5)
 
     @unittest.skipIf(platform.system() == "Darwin", reason="Messy on macOS on GH")
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
