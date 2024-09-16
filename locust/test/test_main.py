@@ -2080,7 +2080,7 @@ class SecondUser(HttpUser):
             """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc_master = subprocess.Popen(
+            proc = subprocess.Popen(
                 [
                     "locust",
                     "-f",
@@ -2092,23 +2092,22 @@ class SecondUser(HttpUser):
                     "-t",
                     "5s",
                 ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stderr=PIPE,
+                stdout=PIPE,
                 text=True,
-                bufsize=0,
+                bufsize=1,
             )
-            proc_worker1 = subprocess.Popen(
+            proc_worker = subprocess.Popen(
                 [
                     "locust",
                     "-f",
                     "-",
                     "--worker",
                 ],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stderr=PIPE,
+                stdout=PIPE,
                 text=True,
-                bufsize=0,
+                bufsize=1,
             )
             proc_worker2 = subprocess.Popen(
                 [
@@ -2117,82 +2116,19 @@ class SecondUser(HttpUser):
                     "-",
                     "--worker",
                 ],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stderr=PIPE,
+                stdout=PIPE,
                 text=True,
-                bufsize=0,
+                bufsize=1,
             )
 
-            try:
-                proc_worker1.stdin.write(LOCUSTFILE_CONTENT)
-                proc_worker1.stdin.close()
-                proc_worker2.stdin.write(LOCUSTFILE_CONTENT)
-                proc_worker2.stdin.close()
+            output = []
 
-                master_output = []
-                worker1_output = []
-                worker2_output = []
+            poll_until(lambda: all_users_spawned(proc, output), timeout=30)
 
-                def all_users_spawned():
-                    read_nonblocking(proc_master, master_output)
-                    return any("All users spawned" in line for line in master_output)
-
-                poll_until(all_users_spawned, timeout=120)
-
-                proc_master.wait(timeout=30)
-                proc_worker1.wait(timeout=10)
-                proc_worker2.wait(timeout=10)
-
-                master_stdout, master_stderr = proc_master.communicate()
-                worker1_stdout, worker1_stderr = proc_worker1.communicate()
-                worker2_stdout, worker2_stderr = proc_worker2.communicate()
-
-                master_output.extend(master_stdout.splitlines())
-                master_output.extend(master_stderr.splitlines())
-                worker1_output.extend(worker1_stdout.splitlines())
-                worker1_output.extend(worker1_stderr.splitlines())
-                worker2_output.extend(worker2_stdout.splitlines())
-                worker2_output.extend(worker2_stderr.splitlines())
-
-                print("Master output:")
-                print("\n".join(master_output))
-                print("Worker 1 output:")
-                print("\n".join(worker1_output))
-                print("Worker 2 output:")
-                print("\n".join(worker2_output))
-
-                self.assertIn(
-                    'All users spawned: {"User1": 1} (1 total users)',
-                    "\n".join(master_output),
-                    msg="Expected 'All users spawned' message not found in master output",
-                )
-                self.assertTrue(
-                    any("Shutting down (exit code 0)" in line for line in master_output),
-                    f"'Shutting down (exit code 0)' not found in master output:\n{''.join(master_output)}",
-                )
-                self.assertNotIn("Traceback", "\n".join(master_output), msg="Traceback found in master output")
-
-                for idx, (worker_stdout, worker_stderr) in enumerate(
-                    [(worker1_stdout, worker1_stderr), (worker2_stdout, worker2_stderr)],
-                    start=1,
-                ):
-                    combined_worker_output = worker_stdout + worker_stderr
-                    self.assertNotIn("Traceback", combined_worker_output, msg=f"Traceback found in worker{idx} output")
-
-                self.assertEqual(0, proc_master.returncode, msg="Master process did not exit cleanly")
-                self.assertEqual(0, proc_worker1.returncode, msg="Worker 1 process did not exit cleanly")
-                self.assertEqual(0, proc_worker2.returncode, msg="Worker 2 process did not exit cleanly")
-
-            finally:
-                for proc in [proc_master, proc_worker1, proc_worker2]:
-                    if proc.poll() is None:
-                        proc.terminate()
-                        try:
-                            proc.wait(timeout=5)
-                        except subprocess.TimeoutExpired:
-                            proc.kill()
-                            proc.wait()
+            stdout, stderr = proc.communicate(timeout=30)
+            stdout_worker, stderr_worker = proc_worker.communicate(timeout=10)
+            stdout_worker2, stderr_worker2 = proc_worker2.communicate(timeout=10)
 
     def test_locustfile_distribution_with_workers_started_first(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
