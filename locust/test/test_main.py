@@ -2138,7 +2138,7 @@ class SecondUser(HttpUser):
                     read_nonblocking(proc_master, master_output)
                     return any("All users spawned" in line for line in master_output)
 
-                poll_until(all_users_spawned)
+                poll_until(all_users_spawned, timeout=120)
 
                 proc_master.wait(timeout=30)
                 proc_worker1.wait(timeout=10)
