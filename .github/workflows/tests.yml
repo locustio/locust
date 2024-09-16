@@ -127,6 +127,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "time to run publishing!"
+      - run: |
+          echo 1
+          echo ${{ github.event.pull_request.opened == false }}
+          echo 2
+          echo ${{ github.ref == 'refs/heads/merge-test' }} 
+          echo 3
+          echo ${{ github.event.pull_request.merged == true }} 
+          echo 4
+          echo ${{ needs.build_package.outputs.is_tag_build == true }}
+          echo 5
+          echo ${{ github.ref == 'refs/heads/merge-test' && github.event.pull_request.merged == true }} 
 
 
   # #-------------------------
