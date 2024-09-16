@@ -26,6 +26,7 @@ jobs:
       branch: ${{ steps.set_branch.outputs.branch }}
       is_not_merge_commit: ${{ steps.set_is_not_merge_commit.outputs.is_not_merge_commit }}
       is_tag_build: ${{ steps.set_is_tag_build.outputs.is_tag_build }}
+      is_pr_opening: ${{ steps.set_is_pr_opening.outputs.is_pr_opening }}
       python_version: ${{ steps.set_python_version.outputs.python_version }}
     
     steps:
@@ -106,6 +107,8 @@ jobs:
         run: echo "is_not_merge_commit=$(git rev-parse HEAD^2 2>/dev/null >/dev/null || echo 'true')" >> "$GITHUB_OUTPUT"
       - id: set_is_tag_build
         run: echo "is_tag_build=${{ startsWith(github.event.ref, 'refs/tags') }}" >> "$GITHUB_OUTPUT"
+      - id: set_is_pr_opening
+        run: echo "is_pr_opening=${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}" >> "$GITHUB_OUTPUT"
       - id: set_python_version
         run: echo "python_version=$(python -VV | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
@@ -120,15 +123,22 @@ jobs:
           echo "branch: ${{ needs.build_package.outputs.branch }}"
           echo "is_not_merge_commit: ${{ needs.build_package.outputs.is_not_merge_commit }}"
           echo "is_tag_build: ${{ needs.build_package.outputs.is_tag_build }}"
+          echo "is_pr_opening: ${{ needs.build_package.outputs.is_pr_opening }}"
           echo "python_version: ${{ needs.build_package.outputs.python_version }}"
 
   publish:
     name: Publish prerelease on merge commit to master
     needs: [build_package]
-    if: github.repository_owner == 'mquinnfd' && ( ( github.ref == 'refs/heads/merge-test' && ${{ needs.build_package.outputs.is_not_merge_commit }} == '' ) || startsWith(github.event.ref, 'refs/tags') )
+    # Only publish on tags and merge commits to master (not upon opening PRs)
+    if: github.repository_owner == 'mquinnfd' && ${{ needs.build_package.outputs.is_pr_opening }} == 'false' && ( ( github.ref == 'refs/heads/merge-test' && ${{ needs.build_package.outputs.is_not_merge_commit }} == '' ) || startsWith(github.event.ref, 'refs/tags') )
     runs-on: ubuntu-latest
     steps:
       - run: echo "time to run publishing!"
+      - id: check pr opening
+        run: echo ${{ needs.build_package.outputs.is_pr_opening }} 
+      - id: check merge clause
+        run: echo ${{ needs.build_package.outputs.is_not_merge_commit }} == ''
+
 
   # #-------------------------
   # #       Testing
