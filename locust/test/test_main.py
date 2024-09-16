@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 import platform
 import re
@@ -152,6 +151,7 @@ class ProcessIntegrationTest(TestCase):
         super().setUp()
         self.timeout = gevent.Timeout(60)
         self.timeout.start()
+        os.environ["PYTHONUNBUFFERED"] = "1"
 
     def tearDown(self):
         self.timeout.cancel()
@@ -201,6 +201,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
 
             poll_until(lambda: is_port_in_use(port), timeout=20)
@@ -258,6 +259,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
+                    env=os.environ.copy(),
                 )
 
                 poll_until(lambda: web_interface_ready("localhost", port), timeout=20)
@@ -295,7 +297,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         ) as file_path:
             port = get_free_tcp_port()
             proc = subprocess.Popen(
-                ["locust", "-f", file_path, "--web-port", str(port)], stdout=PIPE, stderr=PIPE, text=True
+                ["locust", "-f", file_path, "--web-port", str(port)],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+                env=os.environ.copy(),
             )
 
             poll_until(lambda: is_port_in_use(port), timeout=20)
@@ -332,6 +338,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=subprocess.PIPE,
                 text=True,
                 bufsize=1,
+                env=os.environ.copy(),
             )
 
             poll_until(lambda: is_port_in_use(port), timeout=20)
@@ -370,6 +377,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
 
             try:
@@ -411,6 +419,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
 
             try:
@@ -450,6 +459,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=PIPE,
                 text=True,
                 bufsize=1,
+                env=os.environ.copy(),
             )
 
             stderr_output = proc.communicate(timeout=50)[1]
@@ -467,6 +477,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
+                    env=os.environ.copy(),
                 )
 
                 try:
@@ -492,7 +503,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B, dir=temp_dir):
                     port = get_free_tcp_port()
                     proc = subprocess.Popen(
-                        ["locust", "-f", temp_dir, "--web-port", str(port)], stdout=PIPE, stderr=PIPE, text=True
+                        ["locust", "-f", temp_dir, "--web-port", str(port)],
+                        stdout=PIPE,
+                        stderr=PIPE,
+                        text=True,
+                        env=os.environ.copy(),
                     )
 
                     try:
@@ -550,6 +565,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
+                    env=os.environ.copy(),
                 )
 
                 try:
@@ -591,6 +607,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             stdout, stderr = proc.communicate(timeout=4)
             self.assertNotIn("Traceback", stderr)
@@ -612,6 +629,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             _, stderr = proc.communicate()
             self.assertIn("ERROR/locust.main: Valid --stop-timeout formats are", stderr)
@@ -636,6 +654,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 bufsize=1,
                 text=True,
                 universal_newlines=True,
+                env=os.environ.copy(),
             )
 
             stderr_output = []
@@ -697,6 +716,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
+                        env=os.environ.copy(),
                     )
 
                     output = []
@@ -749,6 +769,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
 
             try:
@@ -814,6 +835,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
+                    env=os.environ.copy(),
                 )
 
                 try:
@@ -847,6 +869,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
 
             poll_until(lambda: web_interface_ready("localhost", port))
@@ -888,6 +911,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
 
             try:
@@ -947,6 +971,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
+                        env=os.environ.copy(),
                     )
 
                     output = []
@@ -1005,6 +1030,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
 
             poll_until(lambda: web_interface_ready("localhost", port))
@@ -1073,6 +1099,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
+                    env=os.environ.copy(),
                 )
 
                 try:
@@ -1109,6 +1136,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     ["locust", "-f", mocked.file_path, "--web-host", "127.0.0.2", "--web-port", str(port)],
                     stdout=PIPE,
                     stderr=PIPE,
+                    env=os.environ.copy(),
                 )
                 try:
                     poll_until(lambda: web_interface_ready("127.0.0.2", port), timeout=5)
@@ -1132,6 +1160,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ],
                 stdout=PIPE,
                 stderr=PIPE,
+                env=os.environ.copy(),
             )
             try:
                 poll_until(lambda: web_interface_ready("127.0.0.1", port), timeout=5)
@@ -1181,6 +1210,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 shell=True,
                 text=True,
+                env=os.environ.copy(),
             )
             gevent.sleep(1)
 
@@ -1261,6 +1291,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 shell=True,
                 text=True,
+                env=os.environ.copy(),
             )
 
             output = proc.communicate()[0]
@@ -1296,6 +1327,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     shell=True,
                     text=True,
+                    env=os.environ.copy(),
                 )
 
                 output = proc.communicate()[0]
@@ -1344,6 +1376,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
 
             output = proc.communicate()[0]
@@ -1367,6 +1400,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         stdout=PIPE,
                         stderr=PIPE,
                         text=True,
+                        env=os.environ.copy(),
                     )
                     _, stderr = proc.communicate()
                     self.assertIn("Starting Locust", stderr)
@@ -1421,6 +1455,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 shell=True,
                 text=True,
+                env=os.environ.copy(),
             )
 
             output = proc.communicate()[0]
@@ -1476,6 +1511,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
+                    env=os.environ.copy(),
                 )
 
                 poll_until(lambda: is_port_in_use(port), timeout=20)
@@ -1504,7 +1540,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
-                proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True)
+                proc = subprocess.Popen(
+                    ["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True, env=os.environ.copy()
+                )
 
                 _, stderr = proc.communicate(timeout=5)
                 self.assertIn("Duplicate user class names: TestUser1 is defined", stderr)
@@ -1524,7 +1562,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             print(MOCK_LOCUSTFILE_CONTENT_C)
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
                 proc = subprocess.Popen(
-                    ["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"], stdout=PIPE, stderr=PIPE, text=True
+                    ["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"],
+                    stdout=PIPE,
+                    stderr=PIPE,
+                    text=True,
+                    env=os.environ.copy(),
                 )
 
                 stdout, _ = proc.communicate(timeout=50)
@@ -1567,7 +1609,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_D) as file2:
-                proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True)
+                proc = subprocess.Popen(
+                    ["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True, env=os.environ.copy()
+                )
 
                 _, stderr = proc.communicate(timeout=5)
 
@@ -1664,7 +1708,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
     def test_error_when_locustfiles_directory_is_empty(self):
         with TemporaryDirectory() as temp_dir:
-            proc = subprocess.Popen(["locust", "-f", temp_dir], stdout=PIPE, stderr=PIPE, text=True)
+            proc = subprocess.Popen(
+                ["locust", "-f", temp_dir],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+                env=os.environ.copy(),
+            )
 
             _, stderr = proc.communicate(timeout=5)
 
@@ -1705,6 +1755,7 @@ class MyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             _, stderr = proc.communicate()
             self.assertIn("MyUser had no tasks left after filtering", stderr)
@@ -1793,6 +1844,7 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
 
             def check_output():
@@ -1859,6 +1911,7 @@ def on_test_stop(environment, **kwargs):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             proc_worker = subprocess.Popen(
                 [
@@ -1924,6 +1977,7 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             proc_worker = subprocess.Popen(
                 [
@@ -1937,6 +1991,7 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             stdout, stderr = proc.communicate()
             stdout_worker, stderr_worker = proc_worker.communicate()
@@ -1979,6 +2034,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             proc_worker = subprocess.Popen(
                 [
@@ -1990,6 +2046,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             try:
                 stdout = proc.communicate(timeout=9)[0]
@@ -2042,6 +2099,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             proc_worker = subprocess.Popen(
                 [
@@ -2053,6 +2111,7 @@ class SecondUser(HttpUser):
                 stderr=STDOUT,
                 stdout=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             stdout = proc.communicate()[0]
             proc_worker.communicate()
@@ -2096,6 +2155,7 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
                 bufsize=1,
+                env=os.environ.copy(),
             )
             proc_worker = subprocess.Popen(
                 [
@@ -2108,6 +2168,7 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
                 bufsize=1,
+                env=os.environ.copy(),
             )
             proc_worker2 = subprocess.Popen(
                 [
@@ -2120,6 +2181,7 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
                 bufsize=1,
+                env=os.environ.copy(),
             )
 
             output = []
@@ -2232,6 +2294,7 @@ class SecondUser(HttpUser):
                 stdout=subprocess.PIPE,
                 text=True,
                 bufsize=1,
+                env=os.environ.copy(),
             )
 
             proc_worker = subprocess.Popen(
@@ -2322,6 +2385,7 @@ class SecondUser(HttpUser):
                 stderr=PIPE,
                 stdout=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             stdout, stderr = proc.communicate()
 
@@ -2446,6 +2510,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             try:
                 _, stderr = proc.communicate(timeout=9)
@@ -2466,6 +2531,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             try:
                 _, stderr = proc.communicate(timeout=9)
@@ -2485,6 +2551,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
 
             worker_parent_proc = subprocess.Popen(
@@ -2493,6 +2560,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
 
             try:
@@ -2580,8 +2648,6 @@ class AnyUser(HttpUser):
             """
         )
         with mock_locustfile(content=content) as mocked:
-            env = os.environ.copy()
-            env["PYTHONUNBUFFERED"] = "1"
             master_proc = subprocess.Popen(
                 [
                     "locust",
@@ -2598,7 +2664,7 @@ class AnyUser(HttpUser):
                 stderr=subprocess.STDOUT,
                 text=True,
                 bufsize=1,
-                env=env,
+                env=os.environ.copy(),
             )
 
             worker_parent_proc = subprocess.Popen(
@@ -2618,7 +2684,7 @@ class AnyUser(HttpUser):
                 text=True,
                 bufsize=1,
                 start_new_session=True,
-                env=env,
+                env=os.environ.copy(),
             )
 
             try:
@@ -2698,6 +2764,7 @@ class AnyUser(HttpUser):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             _, stderr = proc.communicate()
             self.assertIn("Unknown User(s): UserThatDoesntExist", stderr)
@@ -2729,12 +2796,14 @@ class AnyUser(User):
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             master_proc = subprocess.Popen(
                 ["locust", "-f", mocked.file_path, "--master", "--headless", "-t", "5"],
                 stdout=PIPE,
                 stderr=PIPE,
                 text=True,
+                env=os.environ.copy(),
             )
             try:
                 poll_until(lambda: worker_proc.poll() is not None, timeout=5)
