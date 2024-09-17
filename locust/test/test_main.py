@@ -2752,37 +2752,38 @@ def on_test_stop(environment, **kwargs):
 
             """
         )
-        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--host",
-                    "http://google.com",
-                    "--headless",
-                    "-u",
-                    "1",
-                    "-t",
-                    "2s",
-                    "--json",
-                ],
-                stderr=PIPE,
-                stdout=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
-            stdout, stderr = proc.communicate()
+        with run_locust_process(
+            file_content=LOCUSTFILE_CONTENT,
+            args=[
+                "--host",
+                "http://google.com",
+                "--headless",
+                "-u",
+                "1",
+                "-t",
+                "2s",
+                "--json",
+            ],
+        ) as manager:
+            manager.proc.wait()
 
-            try:
-                data = json.loads(stdout)
-            except json.JSONDecodeError:
-                self.fail(f"Trying to parse {stdout} as json failed")
+            output = "\n".join(manager.output_lines)
 
-            self.assertEqual(0, proc.returncode)
+            json_pattern = re.compile(r"(\[\s*\{.*?\}\s*\])", re.DOTALL)
+            match = json_pattern.search(output)
+            if match:
+                json_output = match.group(1)
+                try:
+                    data = json.loads(json_output)
+                except json.JSONDecodeError:
+                    self.fail(f"Trying to parse JSON failed. JSON output was: {json_output}")
+            else:
+                self.fail(f"Could not find JSON output in process output. Output was: {output}")
+
+            self.assertEqual(0, manager.proc.returncode)
 
             if not data:
-                self.fail(f"No data in json: {stdout}, stderr: {stderr}")
+                self.fail(f"No data in JSON output: {output}")
 
             result = data[0]
             self.assertEqual(float, type(result["last_request_timestamp"]))
