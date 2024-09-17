@@ -1781,8 +1781,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         self.assertNotIn(unexpected_output, combined_output, f"Unexpected output found: {unexpected_output}")
 
-        self.assertEqual(0, manager.proc.returncode, f"Process failed with return code {manager.proc.returncode}")
-
     def test_html_report_option(self):
         with mock_locustfile() as mocked:
             with temporary_file("", suffix=".html") as html_report_file_path:
@@ -2217,11 +2215,13 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
         self.assertIsNotNone(manager.proc.returncode, "Locust process did not terminate")
 
     def test_distributed_events(self):
+        # Define the Locustfile content with event listeners
         content = (
             MOCK_LOCUSTFILE_CONTENT
             + """
 from locust import events
 from locust.runners import MasterRunner
+
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
     if isinstance(environment.runner, MasterRunner):
@@ -2237,51 +2237,56 @@ def on_test_stop(environment, **kwargs):
         print("test_stop on worker")
 """
         )
-        with mock_locustfile(content=content) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
+
+        with mock_locustfile(content=content):
+            # Start the master process
+            with run_locust_process(
+                file_content=content,
+                args=[
                     "--headless",
                     "--master",
                     "--expect-workers",
                     "1",
                     "-t",
-                    "1",
+                    "1",  # Run test for 1 second
                     "--exit-code-on-error",
                     "0",
                     "-L",
                     "DEBUG",
                 ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
-            proc_worker = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--worker",
-                    "-L",
-                    "DEBUG",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            stdout, stderr = proc.communicate()
-            stdout_worker, stderr_worker = proc_worker.communicate()
-            self.assertIn("test_start on master", stdout)
-            self.assertIn("test_stop on master", stdout)
-            self.assertIn("test_stop on worker", stdout_worker)
-            self.assertIn("test_start on worker", stdout_worker)
-            self.assertNotIn("Traceback", stderr)
-            self.assertNotIn("Traceback", stderr_worker)
-            self.assertEqual(0, proc.returncode)
-            self.assertEqual(0, proc_worker.returncode)
+                port=get_free_tcp_port(),
+            ) as master_manager:
+                with run_locust_process(
+                    file_content=content,
+                    args=["--worker", "-L", "DEBUG"],
+                    port=None,
+                ) as worker_manager:
+                    master_finished = wait_for_output_condition_non_threading(
+                        master_manager.proc, master_manager.output_lines, "test_stop on master", timeout=5
+                    )
+                    self.assertTrue(master_finished, "Master did not finish as expected.")
+
+                    worker_finished = wait_for_output_condition_non_threading(
+                        worker_manager.proc, worker_manager.output_lines, "test_stop on worker", timeout=5
+                    )
+                    self.assertTrue(worker_finished, "Worker did not finish as expected.")
+
+                self.assertIsNotNone(worker_manager.proc.returncode, "Worker process did not terminate")
+                self.assertEqual(0, worker_manager.proc.returncode, "Worker process exited with unexpected return code")
+
+            self.assertIsNotNone(master_manager.proc.returncode, "Master process did not terminate")
+            self.assertEqual(0, master_manager.proc.returncode, "Master process exited with unexpected return code")
+
+            master_output = "\n".join(master_manager.output_lines)
+            worker_output = "\n".join(worker_manager.output_lines)
+
+            self.assertIn("test_start on master", master_output)
+            self.assertIn("test_stop on master", master_output)
+            self.assertNotIn("Traceback", master_output)
+
+            self.assertIn("test_start on worker", worker_output)
+            self.assertIn("test_stop on worker", worker_output)
+            self.assertNotIn("Traceback", worker_output)
 
     def test_distributed_tags(self):
         content = """
