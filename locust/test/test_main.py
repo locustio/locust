@@ -1061,43 +1061,73 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     )
                     self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_autostart_wo_run_time(self):
         port = get_free_tcp_port()
         with mock_locustfile() as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--web-port",
-                    str(port),
-                    "--autostart",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
+            args = [
+                "-f",
+                mocked.file_path,
+                "--web-port",
+                str(port),
+                "--autostart",
+            ]
 
-            poll_until(lambda: web_interface_ready("localhost", port))
+            with run_locust_process(file_content=None, args=args, port=port) as manager:
+                start_message = "Starting Locust"
+                no_run_time_message = "No run time limit set, use CTRL+C to interrupt"
 
-            response = requests.get(f"http://localhost:{port}/")
-            self.assertEqual(200, response.status_code)
+                messages_to_check = [
+                    start_message,
+                    no_run_time_message,
+                ]
 
-            proc.send_signal(signal.SIGTERM)
-            stdout, stderr = proc.communicate(timeout=5)
+                for message in messages_to_check:
+                    if not wait_for_output_condition_non_threading(
+                        manager.proc, manager.output_lines, message, timeout=10
+                    ):
+                        print(f"Locust output after expected '{message}' time:")
+                        print("\n".join(manager.output_lines))
+                        manager.proc.terminate()
+                        manager.proc.wait(timeout=5)
+                        self.fail(f"Timeout waiting for Locust to output: {message}")
 
-            self.assertIn("Starting Locust", stderr)
-            self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
-            self.assertIn("Shutting down ", stderr)
-            self.assertNotIn("Traceback", stderr)
+                response = requests.get(f"http://localhost:{port}/")
+                self.assertEqual(200, response.status_code)
 
-            # check response afterwards, because it really isn't as informative as stderr
+                manager.proc.send_signal(signal.SIGTERM)
+
+                shutdown_message = "Shutting down"
+                if not wait_for_output_condition_non_threading(
+                    manager.proc, manager.output_lines, shutdown_message, timeout=10
+                ):
+                    print("Locust output after expected shutdown time:")
+                    print("\n".join(manager.output_lines))
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Timeout waiting for Locust to shut down.")
+
+                try:
+                    manager.proc.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    print("Locust did not terminate within the expected time.")
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=10)
+                    self.fail("Locust process did not terminate gracefully after SIGTERM.")
+
+            combined_output = "\n".join(manager.output_lines)
+
+            self.assertIn(start_message, combined_output, msg="Start message not found in output.")
+            self.assertIn(no_run_time_message, combined_output, msg="No run time message not found in output.")
+            self.assertIn(shutdown_message, combined_output, msg="Shutdown message not found in output.")
+            self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
+
             d = pq(response.content.decode("utf-8"))
+            self.assertIn('"state": "running"', str(d), msg="Expected 'running' state not found in response.")
 
-            self.assertEqual(200, response.status_code)
-            self.assertIn('"state": "running"', str(d))
+            self.assertEqual(
+                0, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}."
+            )
 
     @unittest.skipIf(sys.platform == "darwin", reason="This is too messy on macOS")
     def test_autostart_w_run_time(self):
