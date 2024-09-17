@@ -1249,7 +1249,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                                 manager.proc, manager.output_lines, message, timeout=10
                             ):
                                 print(f"Locust output after expected '{message}' time:")
-                                print("\n".join(manager.output_lines))
                                 manager.proc.terminate()
                                 manager.proc.wait(timeout=5)
                                 self.fail(f"Timeout waiting for Locust to output: {message}")
@@ -1259,8 +1258,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         if not wait_for_output_condition_non_threading(
                             manager.proc, manager.output_lines, shutdown_message, timeout=10
                         ):
-                            print("Locust output after expected shutdown time:")
-                            print("\n".join(manager.output_lines))
                             manager.proc.terminate()
                             manager.proc.wait(timeout=5)
                             self.fail("Timeout waiting for Locust to shut down.")
@@ -1268,7 +1265,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         try:
                             manager.proc.wait(timeout=10)
                         except subprocess.TimeoutExpired:
-                            print("Locust did not terminate within the expected time.")
                             manager.proc.terminate()
                             manager.proc.wait(timeout=10)
                             self.fail("Locust process did not terminate gracefully after SIGTERM.")
@@ -1287,58 +1283,79 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         msg=f"Locust process exited with return code {manager.proc.returncode}.",
                     )
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_autostart_w_load_shape(self):
+        """
+        Test Locust's autostart functionality with a custom LoadTestShape.
+        Ensures that Locust starts automatically, applies the load shape, and shuts down after autoquit time.
+        """
         port = get_free_tcp_port()
-        with mock_locustfile(
-            content=MOCK_LOCUSTFILE_CONTENT
-            + textwrap.dedent(
-                """
+        locustfile_content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
+            """
             from locust import LoadTestShape
+
             class LoadTestShape(LoadTestShape):
                 def tick(self):
                     run_time = self.get_run_time()
                     if run_time < 2:
-                        return (10, 1)
-
-                    return None
+                        return (10, 1)  # (users, spawn rate)
+                    return None  # Stop the test
             """
-            )
-        ) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--web-port",
-                    str(port),
-                    "--autostart",
-                    "--autoquit",
-                    "3",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
+        )
 
-            poll_until(lambda: web_interface_ready("localhost", port))
+        with mock_locustfile(content=locustfile_content) as mocked:
+            args = [
+                "-f",
+                mocked.file_path,
+                "--web-port",
+                str(port),
+                "--autostart",
+                "--autoquit",
+                "3",
+            ]
 
-            response = requests.get(f"http://localhost:{port}/")
-            success = True
+            with run_locust_process(file_content=None, args=args, port=port) as manager:
+                if not wait_for_output_condition_non_threading(
+                    manager.proc, manager.output_lines, "Starting web interface at", timeout=30
+                ):
+                    manager.proc.terminate()
+                    self.fail("Timeout waiting for Locust web interface to start.")
 
-            try:
-                _, stderr = proc.communicate(timeout=50)
-            except subprocess.TimeoutExpired:
-                success = False
-                proc.send_signal(signal.SIGTERM)
-                _, stderr = proc.communicate()
+                try:
+                    response = requests.get(f"http://localhost:{port}/", timeout=10)
+                    self.assertEqual(200, response.status_code, "Locust web interface did not return status code 200.")
+                except requests.exceptions.RequestException as e:
+                    manager.proc.terminate()
+                    self.fail(f"Failed to connect to Locust web interface: {e}")
 
-            self.assertIn("Starting Locust", stderr)
-            self.assertIn("Shape test starting", stderr)
-            self.assertIn("Shutting down ", stderr)
-            self.assertIn("autoquit time reached", stderr)
-            self.assertEqual(200, response.status_code)
-            self.assertTrue(success, "got timeout and had to kill the process")
+                try:
+                    manager.proc.wait(timeout=50)
+                    success = True
+                except subprocess.TimeoutExpired:
+                    success = False
+                    manager.proc.send_signal(signal.SIGTERM)
+                    try:
+                        manager.proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        manager.proc.kill()
+                        manager.proc.wait()
+                    self.fail("Locust process did not terminate within the expected time.")
+
+                combined_output = "\n".join(manager.output_lines)
+
+                self.assertIn("Starting Locust", combined_output, "Expected 'Starting Locust' not found in output.")
+                self.assertIn(
+                    "Shape test starting", combined_output, "Expected 'Shape test starting' not found in output."
+                )
+                self.assertIn("Shutting down", combined_output, "Expected 'Shutting down' not found in output.")
+                self.assertIn(
+                    "autoquit time reached", combined_output, "Expected 'autoquit time reached' not found in output."
+                )
+                self.assertTrue(success, "Locust process did not terminate successfully.")
+
+                self.assertEqual(
+                    0, manager.proc.returncode, f"Locust process exited with return code {manager.proc.returncode}."
+                )
 
     def test_autostart_multiple_locustfiles_with_shape(self):
         content = textwrap.dedent(
