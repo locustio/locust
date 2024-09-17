@@ -308,7 +308,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup", output)
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_custom_arguments(self):
         port = get_free_tcp_port()
         file_content = textwrap.dedent("""
@@ -324,40 +323,58 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     print(self.environment.parsed_options.custom_string_arg)
         """)
 
-        with run_locust_process(
-            file_content=file_content, args=["--custom-string-arg", "command_line_value"], port=port
-        ) as manager:
-            if not wait_for_output_condition_non_threading(
-                manager.proc, manager.output_lines, "Starting Locust", timeout=30
-            ):
-                self.fail("Timeout waiting for Locust to start.")
+        with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
+            temp_file.write(file_content)
+            temp_file.flush()
+            temp_file_path = temp_file.name
 
-            if not wait_for_output_condition_non_threading(
-                manager.proc, manager.output_lines, "Starting web interface at", timeout=30
-            ):
-                self.fail("Timeout waiting for web interface to start.")
+        try:
+            args = [
+                sys.executable,
+                "-m",
+                "locust",
+                "-f",
+                temp_file_path,
+                "--custom-string-arg",
+                "command_line_value",
+                "--web-port",
+                str(port),
+            ]
 
-            response = requests.post(
-                f"http://127.0.0.1:{port}/swarm",
-                data={
-                    "user_count": 1,
-                    "spawn_rate": 1,
-                    "host": "https://localhost",
-                    "custom_string_arg": "web_form_value",
-                },
+            with PopenContextManager(args) as manager:
+                if not wait_for_output_condition_non_threading(
+                    manager.process, manager.output_lines, "Starting Locust", timeout=30
+                ):
+                    self.fail("Timeout waiting for Locust to start.")
+
+                if not wait_for_output_condition_non_threading(
+                    manager.process, manager.output_lines, "Starting web interface at", timeout=30
+                ):
+                    self.fail("Timeout waiting for web interface to start.")
+
+                response = requests.post(
+                    f"http://127.0.0.1:{port}/swarm",
+                    data={
+                        "user_count": 1,
+                        "spawn_rate": 1,
+                        "host": "https://localhost",
+                        "custom_string_arg": "web_form_value",
+                    },
+                )
+
+                self.assertEqual(response.status_code, 200)
+
+            combined_output = "\n".join(manager.output_lines)
+            self.assertRegex(
+                combined_output, r".*Shutting down[\S\s]*Aggregated.*", "No stats table printed after shutting down"
             )
-
-            self.assertEqual(response.status_code, 200)
-
-        combined_output = "\n".join(manager.output_lines)
-        self.assertRegex(
-            combined_output, r".*Shutting down[\S\s]*Aggregated.*", "No stats table printed after shutting down"
-        )
-        self.assertNotRegex(
-            combined_output, r".*Aggregated[\S\s]*Shutting down.*", "Stats table printed BEFORE shutting down"
-        )
-        self.assertNotIn("command_line_value", combined_output)
-        self.assertIn("web_form_value", combined_output)
+            self.assertNotRegex(
+                combined_output, r".*Aggregated[\S\s]*Shutting down.*", "Stats table printed BEFORE shutting down"
+            )
+            self.assertNotIn("command_line_value", combined_output)
+            self.assertIn("web_form_value", combined_output)
+        finally:
+            os.unlink(temp_file_path)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_custom_exit_code(self):
@@ -377,26 +394,36 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     print("running my_task()")
         """)
 
-        with run_locust_process(file_content=file_content, args=[], port=port) as manager:
-            if not wait_for_output_condition_non_threading(
-                manager.proc, manager.output_lines, "Starting Locust", timeout=30
-            ):
-                self.fail("Timeout waiting for Locust to start.")
+        with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
+            temp_file.write(file_content)
+            temp_file.flush()
+            temp_file_path = temp_file.name
 
-            if not wait_for_output_condition_non_threading(
-                manager.proc, manager.output_lines, "Starting web interface at", timeout=30
-            ):
-                self.fail("Timeout waiting for web interface to start.")
+        try:
+            args = [sys.executable, "-m", "locust", "-f", temp_file_path, "--web-port", str(port)]
 
-            manager.proc.send_signal(signal.SIGTERM)
+            with PopenContextManager(args) as manager:
+                if not wait_for_output_condition_non_threading(
+                    manager.process, manager.output_lines, "Starting Locust", timeout=30
+                ):
+                    self.fail("Timeout waiting for Locust to start.")
 
-            manager.proc.wait(timeout=3)
+                if not wait_for_output_condition_non_threading(
+                    manager.process, manager.output_lines, "Starting web interface at", timeout=30
+                ):
+                    self.fail("Timeout waiting for web interface to start.")
 
-        combined_output = "\n".join(manager.output_lines)
+                manager.process.send_signal(signal.SIGTERM)
 
-        self.assertIn("Shutting down (exit code 42)", combined_output)
-        self.assertIn("Exit code in quit event 42", combined_output)
-        self.assertEqual(42, manager.proc.returncode)
+                manager.process.wait(timeout=3)
+
+            combined_output = "\n".join(manager.output_lines)
+
+            self.assertIn("Shutting down (exit code 42)", combined_output)
+            self.assertIn("Exit code in quit event 42", combined_output)
+            self.assertEqual(42, manager.process.returncode)
+        finally:
+            os.unlink(temp_file_path)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_webserver_multiple_locustfiles(self):
@@ -405,23 +432,32 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2,
         ):
             port = get_free_tcp_port()
-            print(f"Selected free TCP port: {port}")
 
-            args = ["-f", mocked1.file_path, "-f", mocked2.file_path, "--web-port", str(port)]
+            args = [
+                sys.executable,
+                "-m",
+                "locust",
+                "-f",
+                mocked1.file_path,
+                "-f",
+                mocked2.file_path,
+                "--web-port",
+                str(port),
+            ]
 
-            with run_locust_process(file_content=None, args=args, port=None) as manager:
+            with PopenContextManager(args) as manager:
                 if not wait_for_output_condition_non_threading(
-                    manager.proc, manager.output_lines, "Starting Locust", timeout=30
+                    manager.process, manager.output_lines, "Starting Locust", timeout=30
                 ):
-                    manager.proc.terminate()
-                    manager.proc.wait(timeout=5)
+                    manager.process.terminate()
+                    manager.process.wait(timeout=5)
                     self.fail("Timeout waiting for Locust to start.")
 
                 if not wait_for_output_condition_non_threading(
-                    manager.proc, manager.output_lines, "Starting web interface at", timeout=30
+                    manager.process, manager.output_lines, "Starting web interface at", timeout=30
                 ):
-                    manager.proc.terminate()
-                    manager.proc.wait(timeout=5)
+                    manager.process.terminate()
+                    manager.process.wait(timeout=5)
                     self.fail("Timeout waiting for web interface to start.")
 
                 try:
@@ -430,24 +466,24 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         200, response.status_code, msg=f"Expected status code 200, got {response.status_code}"
                     )
                 except requests.exceptions.RequestException as e:
-                    manager.proc.terminate()
-                    manager.proc.wait(timeout=5)
+                    manager.process.terminate()
+                    manager.process.wait(timeout=5)
                     self.fail(f"Failed to connect to Locust web interface: {e}")
 
-                manager.proc.send_signal(signal.SIGTERM)
+                manager.process.send_signal(signal.SIGTERM)
 
                 if not wait_for_output_condition_non_threading(
-                    manager.proc, manager.output_lines, "Shutting down (exit code 0)", timeout=30
+                    manager.process, manager.output_lines, "Shutting down (exit code 0)", timeout=30
                 ):
-                    manager.proc.terminate()
-                    manager.proc.wait(timeout=5)
+                    manager.process.terminate()
+                    manager.process.wait(timeout=5)
                     self.fail("Timeout waiting for Locust to shut down.")
 
                 try:
-                    manager.proc.wait(timeout=5)
+                    manager.process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
-                    manager.proc.terminate()
-                    manager.proc.wait(timeout=5)
+                    manager.process.terminate()
+                    manager.process.wait(timeout=5)
                     self.fail("Locust process did not terminate gracefully after SIGTERM.")
 
         combined_output = "\n".join(manager.output_lines)
@@ -471,7 +507,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
         self.assertEqual(
-            0, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}"
+            0, manager.process.returncode, msg=f"Locust process exited with return code {manager.process.returncode}"
         )
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
@@ -489,31 +525,47 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     print("running my_task()")
         """)
 
-        with run_locust_process(file_content=file_content, args=["--autostart"], port=port) as manager:
-            if not wait_for_output_condition_non_threading(
-                manager.proc, manager.output_lines, "Starting Locust", timeout=30
-            ):
-                self.fail("Timeout waiting for Locust to start.")
+        with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
+            temp_file.write(file_content)
+            temp_file.flush()
+            temp_file_path = temp_file.name
 
-            if not wait_for_output_condition_non_threading(
-                manager.proc, manager.output_lines, "Starting web interface at", timeout=30
-            ):
-                self.fail("Timeout waiting for web interface to start.")
+        try:
+            args = [sys.executable, "-m", "locust", "-f", temp_file_path, "--autostart", "--web-port", str(port)]
 
-            try:
-                response = requests.get(f"http://localhost:{port}/", timeout=10)
-                self.assertEqual(200, response.status_code)
-            except requests.exceptions.RequestException as e:
-                self.fail(f"Failed to connect to Locust web interface: {e}\nLocust output: {manager.output_lines}")
+            with PopenContextManager(args) as manager:
+                if not wait_for_output_condition_non_threading(
+                    manager.process, manager.output_lines, "Starting Locust", timeout=30
+                ):
+                    manager.process.terminate()
+                    manager.process.wait(timeout=5)
+                    self.fail("Timeout waiting for Locust to start.")
 
-            manager.proc.send_signal(signal.SIGTERM)
+                if not wait_for_output_condition_non_threading(
+                    manager.process, manager.output_lines, "Starting web interface at", timeout=30
+                ):
+                    manager.process.terminate()
+                    manager.process.wait(timeout=5)
+                    self.fail("Timeout waiting for web interface to start.")
 
-            manager.proc.wait(timeout=5)
+                try:
+                    response = requests.get(f"http://localhost:{port}/", timeout=10)
+                    self.assertEqual(200, response.status_code)
+                except requests.exceptions.RequestException as e:
+                    manager.process.terminate()
+                    manager.process.wait(timeout=5)
+                    self.fail(f"Failed to connect to Locust web interface: {e}\nLocust output: {manager.output_lines}")
 
-        combined_output = "\n".join(manager.output_lines)
+                manager.process.send_signal(signal.SIGTERM)
 
-        self.assertIn("Starting web interface at", combined_output)
-        self.assertIn("Starting Locust", combined_output)
+                manager.process.wait(timeout=5)
+
+            combined_output = "\n".join(manager.output_lines)
+
+            self.assertIn("Starting web interface at", combined_output)
+            self.assertIn("Starting Locust", combined_output)
+        finally:
+            os.unlink(temp_file_path)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_percentiles_to_statistics(self):
@@ -530,28 +582,42 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     print("running my_task()")
         """)
 
-        with run_locust_process(file_content=file_content, args=["--autostart"], port=port) as manager:
-            if not wait_for_output_condition_non_threading(
-                manager.proc, manager.output_lines, "Starting Locust", timeout=30
-            ):
-                self.fail("Timeout waiting for Locust to start.")
+        with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
+            temp_file.write(file_content)
+            temp_file.flush()
+            temp_file_path = temp_file.name
 
-            if not wait_for_output_condition_non_threading(
-                manager.proc, manager.output_lines, "Starting web interface at", timeout=30
-            ):
-                self.fail("Timeout waiting for web interface to start.")
+        try:
+            args = [sys.executable, "-m", "locust", "-f", temp_file_path, "--autostart", "--web-port", str(port)]
 
-            response = requests.get(f"http://localhost:{port}/")
-            self.assertEqual(200, response.status_code)
+            with PopenContextManager(args) as manager:
+                if not wait_for_output_condition_non_threading(
+                    manager.process, manager.output_lines, "Starting Locust", timeout=30
+                ):
+                    manager.process.terminate()
+                    manager.process.wait(timeout=5)
+                    self.fail("Timeout waiting for Locust to start.")
 
-            manager.proc.send_signal(signal.SIGTERM)
+                if not wait_for_output_condition_non_threading(
+                    manager.process, manager.output_lines, "Starting web interface at", timeout=30
+                ):
+                    manager.process.terminate()
+                    manager.process.wait(timeout=5)
+                    self.fail("Timeout waiting for web interface to start.")
 
-            manager.proc.wait(timeout=5)
+                response = requests.get(f"http://localhost:{port}/")
+                self.assertEqual(200, response.status_code)
 
-        combined_output = "\n".join(manager.output_lines)
+                manager.process.send_signal(signal.SIGTERM)
 
-        self.assertIn("Starting web interface at", combined_output)
-        self.assertIn("Starting Locust", combined_output)
+                manager.process.wait(timeout=5)
+
+            combined_output = "\n".join(manager.output_lines)
+
+            self.assertIn("Starting web interface at", combined_output)
+            self.assertIn("Starting Locust", combined_output)
+        finally:
+            os.unlink(temp_file_path)
 
     def test_invalid_percentile_parameter(self):
         file_content = textwrap.dedent("""
@@ -565,18 +631,30 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     print("running my_task()")
         """)
 
-        with run_locust_process(file_content=file_content, args=["--autostart"]) as manager:
-            if not wait_for_output_condition_non_threading(
-                manager.proc, manager.output_lines, "parameter need to be float", timeout=30
-            ):
-                self.fail("Timeout waiting for invalid percentile error message.")
+        with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
+            temp_file.write(file_content)
+            temp_file.flush()
+            temp_file_path = temp_file.name
 
-            manager.proc.wait(timeout=5)
+        try:
+            args = [sys.executable, "-m", "locust", "-f", temp_file_path, "--autostart"]
 
-        combined_output = "\n".join(manager.output_lines)
+            with PopenContextManager(args) as manager:
+                if not wait_for_output_condition_non_threading(
+                    manager.process, manager.output_lines, "parameter need to be float", timeout=30
+                ):
+                    manager.process.terminate()
+                    manager.process.wait(timeout=5)
+                    self.fail("Timeout waiting for invalid percentile error message.")
 
-        self.assertIn("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", combined_output)
-        self.assertEqual(1, manager.proc.returncode)
+                manager.process.wait(timeout=5)
+
+            combined_output = "\n".join(manager.output_lines)
+
+            self.assertIn("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", combined_output)
+            self.assertEqual(1, manager.process.returncode)
+        finally:
+            os.unlink(temp_file_path)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_webserver_multiple_locustfiles_in_directory(self):
@@ -585,28 +663,27 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         and that the web interface functions correctly.
         """
         with TemporaryDirectory() as temp_dir:
-            # Create multiple locustfiles within the temporary directory
             with (
                 mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A, dir=temp_dir),
                 mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B, dir=temp_dir),
             ):
                 port = get_free_tcp_port()
 
-                args = ["-f", temp_dir, "--web-port", str(port)]
+                args = [sys.executable, "-m", "locust", "-f", temp_dir, "--web-port", str(port)]
 
-                with run_locust_process(file_content=None, args=args, port=None) as manager:
+                with PopenContextManager(args) as manager:
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, "Starting Locust", timeout=30
+                        manager.process, manager.output_lines, "Starting Locust", timeout=30
                     ):
-                        manager.proc.terminate()
-                        manager.proc.wait(timeout=5)
+                        manager.process.terminate()
+                        manager.process.wait(timeout=5)
                         self.fail("Timeout waiting for Locust to start.")
 
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, "Starting web interface at", timeout=30
+                        manager.process, manager.output_lines, "Starting web interface at", timeout=30
                     ):
-                        manager.proc.terminate()
-                        manager.proc.wait(timeout=5)
+                        manager.process.terminate()
+                        manager.process.wait(timeout=5)
                         self.fail("Timeout waiting for web interface to start.")
 
                     try:
@@ -615,49 +692,52 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             200, response.status_code, msg=f"Expected status code 200, got {response.status_code}"
                         )
                     except requests.exceptions.RequestException as e:
-                        manager.proc.terminate()
-                        manager.proc.wait(timeout=5)
+                        manager.process.terminate()
+                        manager.process.wait(timeout=5)
                         self.fail(f"Failed to connect to Locust web interface: {e}")
 
-                    manager.proc.send_signal(signal.SIGTERM)
+                    manager.process.send_signal(signal.SIGTERM)
 
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, "Shutting down (exit code 0)", timeout=30
+                        manager.process, manager.output_lines, "Shutting down (exit code 0)", timeout=30
                     ):
-                        manager.proc.terminate()
-                        manager.proc.wait(timeout=5)
+                        manager.process.terminate()
+                        manager.process.wait(timeout=5)
                         self.fail("Timeout waiting for Locust to shut down.")
 
                     try:
-                        manager.proc.wait(timeout=5)
+                        manager.process.wait(timeout=5)
                     except subprocess.TimeoutExpired:
-                        manager.proc.terminate()
-                        manager.proc.wait(timeout=5)
+                        manager.process.terminate()
+                        manager.process.wait(timeout=5)
                         self.fail("Locust process did not terminate gracefully after SIGTERM.")
 
-        combined_output = "\n".join(manager.output_lines)
+            combined_output = "\n".join(manager.output_lines)
 
-        self.assertIn(
-            "Starting web interface at",
-            combined_output,
-            msg="Expected 'Starting web interface at' not found in output.",
-        )
-        self.assertIn("Starting Locust", combined_output, msg="Expected 'Starting Locust' not found in output.")
-        self.assertIn(
-            "Shutting down (exit code 0)",
-            combined_output,
-            msg="Expected 'Shutting down (exit code 0)' not found in output.",
-        )
-        self.assertNotIn(
-            "Locust is running with the UserClass Picker Enabled",
-            combined_output,
-            msg="Unexpected 'UserClass Picker Enabled' message found in output.",
-        )
-        self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
+            # Perform assertions
+            self.assertIn(
+                "Starting web interface at",
+                combined_output,
+                msg="Expected 'Starting web interface at' not found in output.",
+            )
+            self.assertIn("Starting Locust", combined_output, msg="Expected 'Starting Locust' not found in output.")
+            self.assertIn(
+                "Shutting down (exit code 0)",
+                combined_output,
+                msg="Expected 'Shutting down (exit code 0)' not found in output.",
+            )
+            self.assertNotIn(
+                "Locust is running with the UserClass Picker Enabled",
+                combined_output,
+                msg="Unexpected 'UserClass Picker Enabled' message found in output.",
+            )
+            self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
-        self.assertEqual(
-            0, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}"
-        )
+            self.assertEqual(
+                0,
+                manager.process.returncode,
+                msg=f"Locust process exited with return code {manager.process.returncode}",
+            )
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_webserver_multiple_locustfiles_with_shape(self):
