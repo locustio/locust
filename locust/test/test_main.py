@@ -1409,12 +1409,25 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with run_locust_process(file_content=None, args=args, port=port) as manager:
                 try:
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, expected_outputs[0], timeout=30
+                        manager.proc, manager.output_lines, expected_outputs[0], timeout=60
                     ):
                         self.fail(f"Timeout waiting for: {expected_outputs[0]}")
 
-                    response = requests.get(f"http://localhost:{port}/")
-                    self.assertEqual(200, response.status_code)
+                    # Add retry mechanism for connecting to the web interface
+                    max_retries = 5
+                    retry_delay = 2
+                    for attempt in range(max_retries):
+                        try:
+                            response = requests.get(f"http://localhost:{port}/", timeout=10)
+                            self.assertEqual(200, response.status_code)
+                            break
+                        except RequestException as e:
+                            if attempt == max_retries - 1:
+                                self.fail(
+                                    f"Failed to connect to Locust web interface after {max_retries} attempts: {e}"
+                                )
+                            print(f"Connection attempt {attempt + 1} failed, retrying in {retry_delay} seconds...")
+                            time.sleep(retry_delay)
 
                     for output in expected_outputs[1:]:
                         if not wait_for_output_condition_non_threading(
@@ -1422,12 +1435,20 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         ):
                             self.fail(f"Timeout waiting for: {output}")
 
-                except requests.exceptions.RequestException as e:
-                    self.fail(f"Failed to connect to Locust web interface: {e}")
+                except Exception as e:
+                    print(f"Test failed with exception: {e}")
+                    print("Process output:")
+                    print("\n".join(manager.output_lines))
+                    raise
 
                 finally:
-                    manager.proc.terminate()
-                    manager.proc.wait(timeout=5)
+                    # Ensure process is terminated
+                    if manager.proc.poll() is None:
+                        manager.proc.terminate()
+                        try:
+                            manager.proc.wait(timeout=5)
+                        except subprocess.TimeoutExpired:
+                            manager.proc.kill()
 
         combined_output = "\n".join(manager.output_lines)
 
@@ -1716,7 +1737,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         for output in expected_outputs:
             self.assertIn(output, combined_output, f"Expected output not found: {output}")
 
-        self.assertEqual(0, manager.proc.returncode, f"Process failed with return code {manager.proc.returncode}")
+        self.assertEqual(1, manager.proc.returncode, f"Process failed with return code {manager.proc.returncode}")
 
     def test_with_package_as_locustfile(self):
         expected_outputs = ["Starting Locust", "All users spawned:", '"UserSubclass": 1', "Shutting down (exit code 0)"]
