@@ -171,6 +171,40 @@ class ProcessManager:
             os.unlink(self.temp_file_path)
 
 
+class PopenContextManager:
+    def __init__(self, args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.process = None
+        self.output_lines = []
+
+    def __enter__(self):
+        self.process = subprocess.Popen(
+            self.args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            bufsize=1,
+            **self.kwargs,
+        )
+
+        self.stdout_reader = gevent.spawn(self._read_output, self.process.stdout)
+        self.stderr_reader = gevent.spawn(self._read_output, self.process.stderr)
+
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.process.poll() is None:
+            self.process.terminate()
+            self.process.wait()
+        self.stdout_reader.join()
+        self.stderr_reader.join()
+
+    def _read_output(self, pipe):
+        for line in iter(pipe.readline, ""):
+            self.output_lines.append(line.rstrip("\n"))
+
+
 @contextmanager
 def run_locust_process(file_content=None, args=None, port=None):
     temp_file_path = None
@@ -261,8 +295,10 @@ class ProcessIntegrationTest(TestCase):
 
 class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_help_arg(self):
-        with run_locust_process(file_content=None, args=["--help"]) as manager:
-            manager.proc.wait()
+        args = [sys.executable, "-m", "locust", "--help"]
+
+        with PopenContextManager(args) as manager:
+            manager.process.wait()
 
         output = "\n".join(manager.output_lines).strip()
 
