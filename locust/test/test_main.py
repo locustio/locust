@@ -284,13 +284,20 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     print(self.environment.parsed_options.custom_string_arg)
         """)
 
-        with run_locust_process(file_content, ["--custom-string-arg", "command_line_value"], port) as manager:
+        with run_locust_process(
+            file_content=file_content, args=["--custom-string-arg", "command_line_value"], port=port
+        ) as manager:
             if not wait_for_output_condition_non_threading(
                 manager.proc, manager.output_lines, "Starting Locust", timeout=30
             ):
                 self.fail("Timeout waiting for Locust to start.")
 
-            requests.post(
+            if not wait_for_output_condition_non_threading(
+                manager.proc, manager.output_lines, "Starting web interface at", timeout=30
+            ):
+                self.fail("Timeout waiting for web interface to start.")
+
+            response = requests.post(
                 f"http://127.0.0.1:{port}/swarm",
                 data={
                     "user_count": 1,
@@ -299,6 +306,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "custom_string_arg": "web_form_value",
                 },
             )
+
+            self.assertEqual(response.status_code, 200)
 
         combined_output = "\n".join(manager.output_lines)
         self.assertRegex(
@@ -408,8 +417,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             ):
                 self.fail("Timeout waiting for web interface to start.")
 
-            response = requests.get(f"http://localhost:{port}/")
-            self.assertEqual(200, response.status_code)
+            try:
+                response = requests.get(f"http://localhost:{port}/", timeout=10)
+                self.assertEqual(200, response.status_code)
+            except requests.exceptions.RequestException as e:
+                self.fail(f"Failed to connect to Locust web interface: {e}\nLocust output: {manager.output_lines}")
 
             manager.proc.send_signal(signal.SIGTERM)
 
