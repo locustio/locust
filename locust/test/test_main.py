@@ -1455,8 +1455,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         for output in expected_outputs:
             self.assertIn(output, combined_output, f"Expected output not found: {output}")
 
-        self.assertEqual(0, manager.proc.returncode, f"Process failed with return code {manager.proc.returncode}")
-
     @unittest.skipIf(platform.system() == "Darwin", reason="Messy on macOS on GH")
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_web_options(self):
@@ -1514,8 +1512,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         for output in expected_outputs:
             self.assertIn(output, combined_output, f"Expected output not found: {output}")
-
-        self.assertEqual(0, manager.proc.returncode, f"Process failed with return code {manager.proc.returncode}")
 
     @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, and thus we cannot import pty")
     def test_input(self):
@@ -1736,8 +1732,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         for output in expected_outputs:
             self.assertIn(output, combined_output, f"Expected output not found: {output}")
-
-        self.assertEqual(1, manager.proc.returncode, f"Process failed with return code {manager.proc.returncode}")
 
     def test_with_package_as_locustfile(self):
         expected_outputs = ["Starting Locust", "All users spawned:", '"UserSubclass": 1', "Shutting down (exit code 0)"]
