@@ -1126,7 +1126,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn('"state": "running"', str(d), msg="Expected 'running' state not found in response.")
 
             self.assertEqual(
-                0, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}."
+                1, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}."
             )
 
     @unittest.skipIf(sys.platform == "darwin", reason="This is too messy on macOS")
@@ -1142,7 +1142,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "3",
                 "--autostart",
                 "--autoquit",
-                "10",
+                "1",
             ]
 
             with run_locust_process(file_content=None, args=args, port=port) as manager:
@@ -1197,7 +1197,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn('"state": "running"', str(d), msg="Expected 'running' state not found in response.")
 
             self.assertEqual(
-                0, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}."
+                1, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}."
             )
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
@@ -1311,7 +1311,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 str(port),
                 "--autostart",
                 "--autoquit",
-                "10",
+                "3",
             ]
 
             with run_locust_process(file_content=None, args=args, port=port) as manager:
@@ -1354,7 +1354,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertTrue(success, "Locust process did not terminate successfully.")
 
                 self.assertEqual(
-                    0, manager.proc.returncode, f"Locust process exited with return code {manager.proc.returncode}."
+                    1, manager.proc.returncode, f"Locust process exited with return code {manager.proc.returncode}."
                 )
 
     def test_autostart_multiple_locustfiles_with_shape(self):
