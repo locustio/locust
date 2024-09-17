@@ -1200,7 +1200,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 0, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}."
             )
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_run_autostart_with_multiple_locustfiles(self):
         with TemporaryDirectory() as temp_dir:
             with mock_locustfile(dir=temp_dir):
@@ -1218,49 +1218,74 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     dir=temp_dir,
                 ):
                     port = get_free_tcp_port()
-                    proc = subprocess.Popen(
-                        [
-                            "locust",
-                            "-f",
-                            temp_dir,
-                            "--autostart",
-                            "-u",
-                            "2",
-                            "--exit-code-on-error",
-                            "0",
-                            "--web-port",
-                            str(port),
-                        ],
-                        stdout=PIPE,
-                        stderr=PIPE,
-                        text=True,
-                        env=os.environ.copy(),
+                    args = [
+                        "-f",
+                        temp_dir,
+                        "--autostart",
+                        "-u",
+                        "2",
+                        "--exit-code-on-error",
+                        "0",
+                        "--web-port",
+                        str(port),
+                    ]
+
+                    with run_locust_process(file_content=None, args=args, port=port) as manager:
+                        start_message = "Starting Locust"
+                        all_users_spawned_message = "All users spawned:"
+                        user_count_messages = ['"TestUser": 1', '"UserSubclass": 1']
+                        task_running_message = "running my_task()"
+                        shutdown_message = "Shutting down (exit code 0)"
+
+                        messages_to_check = [
+                            start_message,
+                            all_users_spawned_message,
+                            *user_count_messages,
+                            task_running_message,
+                        ]
+
+                        for message in messages_to_check:
+                            if not wait_for_output_condition_non_threading(
+                                manager.proc, manager.output_lines, message, timeout=10
+                            ):
+                                print(f"Locust output after expected '{message}' time:")
+                                print("\n".join(manager.output_lines))
+                                manager.proc.terminate()
+                                manager.proc.wait(timeout=5)
+                                self.fail(f"Timeout waiting for Locust to output: {message}")
+
+                        manager.proc.send_signal(signal.SIGTERM)
+
+                        if not wait_for_output_condition_non_threading(
+                            manager.proc, manager.output_lines, shutdown_message, timeout=10
+                        ):
+                            print("Locust output after expected shutdown time:")
+                            print("\n".join(manager.output_lines))
+                            manager.proc.terminate()
+                            manager.proc.wait(timeout=5)
+                            self.fail("Timeout waiting for Locust to shut down.")
+
+                        try:
+                            manager.proc.wait(timeout=10)
+                        except subprocess.TimeoutExpired:
+                            print("Locust did not terminate within the expected time.")
+                            manager.proc.terminate()
+                            manager.proc.wait(timeout=10)
+                            self.fail("Locust process did not terminate gracefully after SIGTERM.")
+
+                    combined_output = "\n".join(manager.output_lines)
+
+                    for message in messages_to_check + [shutdown_message]:
+                        self.assertIn(
+                            message, combined_output, msg=f"Expected message '{message}' not found in output."
+                        )
+
+                    self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
+                    self.assertEqual(
+                        0,
+                        manager.proc.returncode,
+                        msg=f"Locust process exited with return code {manager.proc.returncode}.",
                     )
-
-                    output = []
-                    try:
-                        poll_until(lambda: is_port_in_use(port), timeout=10)
-                        poll_until(lambda: all_users_spawned(proc, output), timeout=10)
-
-                        proc.send_signal(signal.SIGTERM)
-
-                        stdout, stderr = proc.communicate(timeout=5)
-                        output.extend(stdout.splitlines())
-                        output.extend(stderr.splitlines())
-
-                        output_text = "\n".join(output)
-                        self.assertIn("Starting Locust", output_text)
-                        self.assertIn("All users spawned:", output_text)
-                        self.assertIn('"TestUser": 1', output_text)
-                        self.assertIn('"UserSubclass": 1', output_text)
-                        self.assertIn("Shutting down (exit code 0)", output_text)
-                        self.assertIn("running my_task()", output_text)
-                        self.assertEqual(0, proc.returncode)
-
-                    finally:
-                        if proc.poll() is None:
-                            proc.terminate()
-                            proc.wait(timeout=5)
 
     def test_autostart_w_load_shape(self):
         port = get_free_tcp_port()
