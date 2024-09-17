@@ -4,8 +4,8 @@ from locust.contrib.mongodb import MongoDBUser
 import os
 
 
-class MongoDBUser(MongoDBUser):
-    conn_string = os.getenv("MONGODB_URI")
+class MongoUser(MongoDBUser):
+    conn_string = os.getenv("MONGODB_URI", "mongodb://localhost:27017/defaultdb")
     db_name = "test"  # change to your db name
 
     @task

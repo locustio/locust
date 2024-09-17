@@ -1,7 +1,3 @@
-from gevent import monkey
-
-_ = monkey.patch_all()
-
 from locust import User, events
 
 import time
