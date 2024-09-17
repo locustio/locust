@@ -2289,27 +2289,28 @@ def on_test_stop(environment, **kwargs):
             self.assertNotIn("Traceback", worker_output)
 
     def test_distributed_tags(self):
-        content = """
-from locust import HttpUser, TaskSet, task, between, LoadTestShape, tag
-class SecondUser(HttpUser):
-    host = "http://127.0.0.1:8089"
-    wait_time = between(0, 0.1)
-    @tag("tag1")
-    @task
-    def task1(self):
-        print("task1")
+        content = textwrap.dedent("""
+            from locust import HttpUser, task, between, tag
 
-    @tag("tag2")
-    @task
-    def task2(self):
-        print("task2")
-"""
-        with mock_locustfile(content=content) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
+            class SecondUser(HttpUser):
+                host = "http://127.0.0.1:8089"
+                wait_time = between(0, 0.1)
+
+                @tag("tag1")
+                @task
+                def task1(self):
+                    print("task1")
+
+                @tag("tag2")
+                @task
+                def task2(self):
+                    print("task2")
+        """)
+
+        with mock_locustfile(content=content):
+            with run_locust_process(
+                file_content=content,
+                args=[
                     "--headless",
                     "--master",
                     "--expect-workers",
@@ -2325,38 +2326,44 @@ class SecondUser(HttpUser):
                     "--tags",
                     "tag1",
                 ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                env=os.environ.copy(),
+                port=get_free_tcp_port(),
+            ) as master_manager:
+                with run_locust_process(
+                    file_content=content,
+                    args=["--worker", "-L", "DEBUG"],
+                    port=None,
+                ) as worker_manager:
+                    master_finished = wait_for_output_condition_non_threading(
+                        master_manager.proc, master_manager.output_lines, "Shutting down", timeout=5
+                    )
+                    self.assertTrue(master_finished, "Master did not shut down as expected.")
+
+                    worker_finished = wait_for_output_condition_non_threading(
+                        worker_manager.proc, worker_manager.output_lines, "Shutting down", timeout=5
+                    )
+                    self.assertTrue(worker_finished, "Worker did not shut down as expected.")
+
+            self.assertIsNotNone(master_manager.proc.returncode, "Master process did not terminate")
+            self.assertEqual(0, master_manager.proc.returncode, "Master process exited with unexpected return code")
+
+            self.assertIsNotNone(worker_manager.proc.returncode, "Worker process did not terminate")
+            self.assertEqual(0, worker_manager.proc.returncode, "Worker process exited with unexpected return code")
+
+            master_output = "\n".join(master_manager.output_lines)
+            worker_output = "\n".join(worker_manager.output_lines)
+
+            self.assertIn("task1", worker_output, "Expected 'task1' not found in worker output")
+            self.assertNotIn("task2", worker_output, "Unexpected 'task2' found in worker output")
+            self.assertNotIn("Traceback", master_output, "Traceback found in master stderr/output")
+            self.assertNotIn("Traceback", worker_output, "Traceback found in worker stderr/output")
+
+            self.assertIn("task1", worker_output, "Master did not filter tasks correctly; 'task1' should be present")
+            self.assertNotIn(
+                "task2", worker_output, "Master did not filter tasks correctly; 'task2' should not be present"
             )
-            proc_worker = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--worker",
-                    "-L",
-                    "DEBUG",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
-            stdout, stderr = proc.communicate()
-            stdout_worker, stderr_worker = proc_worker.communicate()
-            self.assertNotIn("ERROR", stderr_worker)
-            self.assertIn("task1", stdout_worker)
-            self.assertNotIn("task2", stdout_worker)
-            self.assertNotIn("Traceback", stderr)
-            self.assertNotIn("Traceback", stderr_worker)
-            self.assertEqual(0, proc.returncode)
-            self.assertEqual(0, proc_worker.returncode)
 
     def test_distributed(self):
-        LOCUSTFILE_CONTENT = textwrap.dedent(
-            """
+        LOCUSTFILE_CONTENT = textwrap.dedent("""
             from locust import User, task, constant
 
             class User1(User):
@@ -2365,14 +2372,12 @@ class SecondUser(HttpUser):
                 @task
                 def t(self):
                     pass
-            """
-        )
-        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
+        """)
+
+        with mock_locustfile(content=LOCUSTFILE_CONTENT):
+            with run_locust_process(
+                file_content=LOCUSTFILE_CONTENT,
+                args=[
                     "--headless",
                     "--master",
                     "--expect-workers",
@@ -2382,43 +2387,44 @@ class SecondUser(HttpUser):
                     "-t",
                     "5s",
                 ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
-            proc_worker = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--worker",
-                ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
-            try:
-                stdout = proc.communicate(timeout=9)[0]
-            except Exception:
-                proc.kill()
-                proc_worker.kill()
-                stdout = proc.communicate()[0]
-                worker_stdout = proc_worker.communicate()[0]
-                assert False, f"master never finished: {stdout}, worker output: {worker_stdout}"
-            stdout = proc.communicate()[0]
-            proc_worker.communicate()
+                port=get_free_tcp_port(),
+            ) as master_manager:
+                with run_locust_process(
+                    file_content=LOCUSTFILE_CONTENT,
+                    args=["--worker"],
+                    port=None,
+                ) as worker_manager:
+                    master_finished = wait_for_output_condition_non_threading(
+                        master_manager.proc, master_manager.output_lines, "Shutting down (exit code 0)", timeout=10
+                    )
+                    self.assertTrue(master_finished, "Master did not shut down as expected.")
 
-            self.assertIn('All users spawned: {"User1": 3} (3 total users)', stdout)
-            self.assertIn("Shutting down (exit code 0)", stdout)
+                    worker_finished = wait_for_output_condition_non_threading(
+                        worker_manager.proc, worker_manager.output_lines, "Shutting down (exit code 0)", timeout=10
+                    )
+                    self.assertTrue(worker_finished, "Worker did not shut down as expected.")
 
-            self.assertEqual(0, proc.returncode)
-            self.assertEqual(0, proc_worker.returncode)
+        self.assertIsNotNone(master_manager.proc.returncode, "Master process did not terminate")
+        self.assertEqual(0, master_manager.proc.returncode, "Master process exited with unexpected return code")
+
+        self.assertIsNotNone(worker_manager.proc.returncode, "Worker process did not terminate")
+        self.assertEqual(0, worker_manager.proc.returncode, "Worker process exited with unexpected return code")
+
+        master_output = "\n".join(master_manager.output_lines)
+        worker_output = "\n".join(worker_manager.output_lines)
+
+        self.assertIn('All users spawned: {"User1": 3} (3 total users)', master_output)
+        self.assertIn("Shutting down (exit code 0)", master_output)
+
+        self.assertNotIn("Traceback", master_output, "Traceback found in master output")
+        self.assertNotIn("Traceback", worker_output, "Traceback found in worker output")
 
     def test_distributed_report_timeout_expired(self):
-        LOCUSTFILE_CONTENT = textwrap.dedent(
-            """
+        """
+        Tests that the master process correctly handles a timeout when waiting for worker reports
+        after spawning users.
+        """
+        LOCUSTFILE_CONTENT = textwrap.dedent("""
             from locust import User, task, constant
 
             class User1(User):
@@ -2427,17 +2433,20 @@ class SecondUser(HttpUser):
                 @task
                 def t(self):
                     pass
-            """
-        )
+        """)
+
+        # Define the environment variable key and value
+        env_var_key = "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP"
+        env_var_value = "0.01"  # Very short wait time to trigger timeout
+
         with (
-            mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked,
-            patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.01") as _,
+            mock_locustfile(content=LOCUSTFILE_CONTENT),
+            patch_env(env_var_key, env_var_value),
         ):
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
+            # Start the master process
+            with run_locust_process(
+                file_content=LOCUSTFILE_CONTENT,
+                args=[
                     "--headless",
                     "--master",
                     "--expect-workers",
@@ -2447,38 +2456,54 @@ class SecondUser(HttpUser):
                     "-t",
                     "5s",
                 ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
-            proc_worker = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--worker",
-                ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
-            stdout = proc.communicate()[0]
-            proc_worker.communicate()
+                port=get_free_tcp_port(),
+            ) as master_manager:
+                with run_locust_process(
+                    file_content=LOCUSTFILE_CONTENT,
+                    args=["--worker"],
+                    port=None,
+                ) as worker_manager:
+                    master_finished = wait_for_output_condition_non_threading(
+                        master_manager.proc,
+                        master_manager.output_lines,
+                        'Spawning is complete and report waittime is expired, but not all reports received from workers: {"User1": 2} (2 total users)',
+                        timeout=10,
+                    )
+                    self.assertTrue(master_finished, "Master did not report timeout as expected.")
 
-            self.assertIn(
-                'Spawning is complete and report waittime is expired, but not all reports received from workers: {"User1": 2} (2 total users)',
-                stdout,
-            )
-            self.assertIn("Shutting down (exit code 0)", stdout)
+                    shutting_down = wait_for_output_condition_non_threading(
+                        master_manager.proc, master_manager.output_lines, "Shutting down (exit code 0)", timeout=5
+                    )
+                    self.assertTrue(shutting_down, "Master did not shut down as expected.")
 
-            self.assertEqual(0, proc.returncode)
-            self.assertEqual(0, proc_worker.returncode)
+                    worker_finished = wait_for_output_condition_non_threading(
+                        worker_manager.proc, worker_manager.output_lines, "Shutting down (exit code 0)", timeout=5
+                    )
+                    self.assertTrue(worker_finished, "Worker did not shut down as expected.")
+
+        self.assertIsNotNone(master_manager.proc.returncode, "Master process did not terminate")
+        self.assertEqual(0, master_manager.proc.returncode, "Master process exited with unexpected return code")
+
+        self.assertIsNotNone(worker_manager.proc.returncode, "Worker process did not terminate")
+        self.assertEqual(0, worker_manager.proc.returncode, "Worker process exited with unexpected return code")
+
+        master_output = "\n".join(master_manager.output_lines)
+        worker_output = "\n".join(worker_manager.output_lines)
+
+        expected_timeout_message = 'Spawning is complete and report waittime is expired, but not all reports received from workers: {"User1": 2} (2 total users)'
+        self.assertIn(expected_timeout_message, master_output, "Expected timeout message not found in master output")
+        self.assertIn("Shutting down (exit code 0)", master_output)
+
+        # Assertions for worker process
+        self.assertNotIn("Traceback", master_output, "Traceback found in master output")
+        self.assertNotIn("Traceback", worker_output, "Traceback found in worker output")
 
     def test_locustfile_distribution(self):
-        LOCUSTFILE_CONTENT = textwrap.dedent(
-            """
+        """
+        Tests that the Locust master and multiple worker processes correctly distribute users
+        and handle shutdown as expected.
+        """
+        LOCUSTFILE_CONTENT = textwrap.dedent("""
             from locust import User, task, constant
 
             class User1(User):
@@ -2487,83 +2512,78 @@ class SecondUser(HttpUser):
                 @task
                 def t(self):
                     pass
-            """
-        )
-        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
+        """)
+
+        with mock_locustfile(content=LOCUSTFILE_CONTENT):
+            with run_locust_process(
+                file_content=LOCUSTFILE_CONTENT,
+                args=[
                     "--headless",
                     "--master",
                     "--expect-workers",
                     "2",
                     "-t",
                     "5s",
+                    "-u",
+                    "2",
                 ],
-                stderr=PIPE,
-                stdout=PIPE,
-                text=True,
-                bufsize=1,
-                env=os.environ.copy(),
-            )
-            proc_worker = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    "-",
-                    "--worker",
-                ],
-                stderr=PIPE,
-                stdout=PIPE,
-                text=True,
-                bufsize=1,
-                env=os.environ.copy(),
-            )
-            proc_worker2 = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    "-",
-                    "--worker",
-                ],
-                stderr=PIPE,
-                stdout=PIPE,
-                text=True,
-                bufsize=1,
-                env=os.environ.copy(),
-            )
+                port=get_free_tcp_port(),
+            ) as master_manager:
+                with run_locust_process(
+                    file_content=LOCUSTFILE_CONTENT,
+                    args=["--worker"],
+                    port=None,
+                ) as worker_manager1:
+                    with run_locust_process(
+                        file_content=LOCUSTFILE_CONTENT,
+                        args=["--worker"],
+                        port=None,
+                    ) as worker_manager2:
+                        all_users_spawned = wait_for_output_condition_non_threading(
+                            master_manager.proc,
+                            master_manager.output_lines,
+                            'All users spawned: {"User1": 2} (2 total users)',
+                            timeout=30,
+                        )
+                        self.assertTrue(all_users_spawned, "Timeout waiting for all users to be spawned.")
 
-            output = []
+        master_output = "\n".join(master_manager.output_lines)
+        worker_output1 = "\n".join(worker_manager1.output_lines)
+        worker_output2 = "\n".join(worker_manager2.output_lines)
+        combined_output = f"{master_output}\n{worker_output1}\n{worker_output2}"
 
-            poll_until(lambda: all_users_spawned(proc, output), timeout=30)
+        self.assertIn(
+            "Shutting down (exit code 0)",
+            combined_output,
+            f"'Shutting down (exit code 0)' not found in output:\n{combined_output}",
+        )
 
-            stdout, stderr = proc.communicate(timeout=30)
-            stdout_worker, stderr_worker = proc_worker.communicate(timeout=10)
-            stdout_worker2, stderr_worker2 = proc_worker2.communicate(timeout=10)
+        self.assertIn(
+            'All users spawned: {"User1": 2} (2 total users)',
+            combined_output,
+            "Expected user spawn message not found in output.",
+        )
 
-            output.extend(stdout.splitlines())
-            output.extend(stderr.splitlines())
-            output.extend(stdout_worker.splitlines())
-            output.extend(stderr_worker.splitlines())
-            output.extend(stdout_worker2.splitlines())
-            output.extend(stderr_worker2.splitlines())
+        self.assertNotIn("Traceback", combined_output, "Traceback found in output, indicating an error.")
 
-            self.assertTrue(
-                any("Shutting down" in line for line in output),
-                f"'Shutting down' not found in output:\n{''.join(output)}",
-            )
-            self.assertIn('All users spawned: {"User1": 1} (1 total users)', "\n".join(output))
-            self.assertNotIn("Traceback", "\n".join(output))
-
-            self.assertEqual(0, proc.returncode)
-            self.assertEqual(0, proc_worker.returncode)
-            self.assertEqual(0, proc_worker2.returncode)
+        self.assertEqual(
+            0,
+            master_manager.proc.returncode,
+            f"Master process exited with unexpected return code: {master_manager.proc.returncode}",
+        )
+        self.assertEqual(
+            0,
+            worker_manager1.proc.returncode,
+            f"First worker process exited with unexpected return code: {worker_manager1.proc.returncode}",
+        )
+        self.assertEqual(
+            0,
+            worker_manager2.proc.returncode,
+            f"Second worker process exited with unexpected return code: {worker_manager2.proc.returncode}",
+        )
 
     def test_locustfile_distribution_with_workers_started_first(self):
-        LOCUSTFILE_CONTENT = textwrap.dedent(
-            """
+        LOCUSTFILE_CONTENT = textwrap.dedent("""
             from locust import User, task, constant
 
             class User1(User):
@@ -2572,51 +2592,74 @@ class SecondUser(HttpUser):
                 @task
                 def t(self):
                     print("hello")
-            """
+        """)
+
+        with mock_locustfile(content=LOCUSTFILE_CONTENT):
+            with run_locust_process(
+                file_content=LOCUSTFILE_CONTENT,
+                args=["--worker"],
+                port=None,
+            ) as worker_manager:
+                with run_locust_process(
+                    file_content=LOCUSTFILE_CONTENT,
+                    args=[
+                        "--headless",
+                        "--master",
+                        "--expect-workers",
+                        "1",
+                        "-t",
+                        "2s",
+                        "-u",
+                        "2",
+                    ],
+                    port=get_free_tcp_port(),
+                ) as master_manager:
+                    all_users_spawned = wait_for_output_condition_non_threading(
+                        master_manager.proc,
+                        master_manager.output_lines,
+                        'All users spawned: {"User1": 2} (2 total users)',
+                        timeout=30,
+                    )
+                    self.assertTrue(all_users_spawned, "Timeout waiting for all users to be spawned.")
+
+                    shutting_down = wait_for_output_condition_non_threading(
+                        master_manager.proc, master_manager.output_lines, "Shutting down (exit code 0)", timeout=30
+                    )
+                    self.assertTrue(shutting_down, "'Shutting down (exit code 0)' not found in master output.")
+
+        master_output = "\n".join(master_manager.output_lines)
+        worker_output = "\n".join(worker_manager.output_lines)
+        combined_output = f"{master_output}\n{worker_output}"
+
+        self.assertIn(
+            'All users spawned: {"User1": 2} (2 total users)',
+            master_output,
+            "Expected user spawn message not found in master output.",
         )
-        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc_worker = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    "-",
-                    "--worker",
-                ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-            )
-            gevent.sleep(2)
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--headless",
-                    "--master",
-                    "--expect-workers",
-                    "1",
-                    "-t",
-                    "1",
-                ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-            )
 
-            stdout = proc.communicate()[0]
-            worker_stdout = proc_worker.communicate()[0]
+        self.assertIn(
+            "Shutting down (exit code 0)",
+            master_output,
+            f"'Shutting down (exit code 0)' not found in master output:\n{master_output}",
+        )
 
-            self.assertIn('All users spawned: {"User1": ', stdout)
-            self.assertIn("Shutting down (exit code 0)", stdout)
+        self.assertIn("hello", worker_output, "Expected 'hello' not found in worker output.")
 
-            self.assertEqual(0, proc.returncode)
-            self.assertEqual(0, proc_worker.returncode)
-            self.assertIn("hello", worker_stdout)
+        self.assertNotIn("Traceback", combined_output, "Traceback found in output, indicating an error.")
+
+        self.assertEqual(
+            0,
+            master_manager.proc.returncode,
+            f"Master process exited with unexpected return code: {master_manager.proc.returncode}",
+        )
+        self.assertEqual(
+            0,
+            worker_manager.proc.returncode,
+            f"Worker process exited with unexpected return code: {worker_manager.proc.returncode}",
+        )
 
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
-        LOCUSTFILE_CONTENT = textwrap.dedent(
-            """
+        LOCUSTFILE_CONTENT = textwrap.dedent("""
             from locust import User, task, constant
 
             class User1(User):
@@ -2624,85 +2667,76 @@ class SecondUser(HttpUser):
 
                 @task
                 def t(self):
-                    pass
-            """
-        )
+                    print("hello")
+        """)
 
-        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    f"{mocked.file_path},{mocked.file_path}",
-                    "--headless",
-                    "--master",
-                    "--expect-workers",
-                    "1",
-                    "-t",
-                    "3s",
-                ],
-                stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                text=True,
-                bufsize=1,
-                env=os.environ.copy(),
+        with mock_locustfile(content=LOCUSTFILE_CONTENT):
+            with run_locust_process(
+                file_content=LOCUSTFILE_CONTENT,
+                args=["--worker"],
+                port=None,
+            ) as worker_manager:
+                print(f"DEBUG: Worker started with PID {worker_manager.proc.pid}")
+
+                with run_locust_process(
+                    file_content=LOCUSTFILE_CONTENT,
+                    args=[
+                        "--headless",
+                        "--master",
+                        "--expect-workers",
+                        "1",
+                        "-t",
+                        "5s",
+                    ],
+                    port=get_free_tcp_port(),  # Assign a free port to the master process
+                ) as master_manager:
+                    # Poll for the worker to connect to the master
+                    worker_connected = wait_for_output_condition_non_threading(
+                        master_manager.proc, master_manager.output_lines, "1 workers connected", timeout=30
+                    )
+                    self.assertTrue(worker_connected, "Worker did not connect to master.")
+
+                    all_users_spawned = wait_for_output_condition_non_threading(
+                        master_manager.proc,
+                        master_manager.output_lines,
+                        'All users spawned: {"User1": 1} (1 total users)',
+                        timeout=30,
+                    )
+                    self.assertTrue(all_users_spawned, "Timeout waiting for all users to be spawned.")
+
+                    shutting_down = wait_for_output_condition_non_threading(
+                        master_manager.proc, master_manager.output_lines, "Shutting down (exit code 0)", timeout=30
+                    )
+                    self.assertTrue(shutting_down, "'Shutting down (exit code 0)' not found in master output.")
+
+            master_output = "\n".join(master_manager.output_lines)
+            worker_output = "\n".join(worker_manager.output_lines)
+            combined_output = f"{master_output}\n{worker_output}"
+
+            self.assertIn(
+                'All users spawned: {"User1": 1} (1 total users)',
+                master_output,
+                "Expected user spawn message not found in master output.",
             )
-
-            proc_worker = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    "-",
-                    "--worker",
-                ],
-                stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                text=True,
-                bufsize=1,
+            self.assertIn(
+                "Shutting down (exit code 0)",
+                master_output,
+                f"'Shutting down (exit code 0)' not found in master output:\n{master_output}",
             )
+            self.assertIn("hello", worker_output, "Expected 'hello' not found in worker output.")
 
-            output_master = []
-            output_worker = []
+            self.assertNotIn("Traceback", combined_output, "Traceback found in output, indicating an error.")
 
-            poll_until(lambda: all_users_spawned(proc, output_master), timeout=20)
-
-            end_time = time.time() + 15
-            while time.time() < end_time:
-                read_nonblocking(proc, output_master)
-                read_nonblocking(proc_worker, output_worker)
-
-                if "Shutting down" in "\n".join(output_master) or "Shutting down" in "\n".join(output_worker):
-                    break
-
-                time.sleep(0.1)
-
-            stdout_master, stderr_master = proc.communicate(timeout=20)
-            stdout_worker, stderr_worker = proc_worker.communicate(timeout=5)
-
-            output_master.extend(stdout_master.splitlines())
-            output_master.extend(stderr_master.splitlines())
-
-            output_worker.extend(stdout_worker.splitlines())
-            output_worker.extend(stderr_worker.splitlines())
-
-            self.assertTrue(
-                any("Shutting down" in line for line in output_master),
-                f"'Shutting down' not found in master output:\n{''.join(output_master)}",
+            self.assertEqual(
+                0,
+                master_manager.proc.returncode,
+                f"Master process exited with unexpected return code: {master_manager.proc.returncode}",
             )
-            self.assertNotIn("Traceback", "\n".join(output_master))
-            self.assertEqual(0, proc.returncode)
-
-            self.assertNotIn("Traceback", "\n".join(output_worker))
-            self.assertEqual(0, proc_worker.returncode)
-
-            for p in [proc, proc_worker]:
-                if p.poll() is None:
-                    p.terminate()
-                    try:
-                        p.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        p.kill()
-                        p.wait()
+            self.assertEqual(
+                0,
+                worker_manager.proc.returncode,
+                f"Worker process exited with unexpected return code: {worker_manager.proc.returncode}",
+            )
 
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
