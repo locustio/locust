@@ -1142,7 +1142,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "3",
                 "--autostart",
                 "--autoquit",
-                "1",
+                "10",
             ]
 
             with run_locust_process(file_content=None, args=args, port=port) as manager:
@@ -1311,7 +1311,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 str(port),
                 "--autostart",
                 "--autoquit",
-                "3",
+                "10",
             ]
 
             with run_locust_process(file_content=None, args=args, port=port) as manager:
