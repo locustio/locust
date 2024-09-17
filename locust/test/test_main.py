@@ -359,37 +359,80 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertEqual(42, manager.proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
-    def test_webserver(self):
-        port = get_free_tcp_port()
-        file_content = textwrap.dedent("""
-            from locust import User, task, constant, events
-            class TestUser(User):
-                wait_time = constant(3)
-                @task
-                def my_task(self):
-                    print("running my_task()")
-        """)
+    def test_webserver_multiple_locustfiles(self):
+        with (
+            mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1,
+            mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2,
+        ):
+            port = get_free_tcp_port()
+            print(f"Selected free TCP port: {port}")
 
-        with run_locust_process(file_content=file_content, args=[], port=port) as manager:
-            if not wait_for_output_condition_non_threading(
-                manager.proc, manager.output_lines, "Starting Locust", timeout=30
-            ):
-                self.fail("Timeout waiting for Locust to start.")
+            args = ["-f", mocked1.file_path, "-f", mocked2.file_path, "--web-port", str(port)]
 
-            if not wait_for_output_condition_non_threading(
-                manager.proc, manager.output_lines, "Starting web interface at", timeout=30
-            ):
-                self.fail("Timeout waiting for web interface to start.")
+            with run_locust_process(file_content=None, args=args, port=None) as manager:
+                if not wait_for_output_condition_non_threading(
+                    manager.proc, manager.output_lines, "Starting Locust", timeout=30
+                ):
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Timeout waiting for Locust to start.")
 
-            manager.proc.send_signal(signal.SIGTERM)
+                if not wait_for_output_condition_non_threading(
+                    manager.proc, manager.output_lines, "Starting web interface at", timeout=30
+                ):
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Timeout waiting for web interface to start.")
 
-            manager.proc.wait(timeout=3)
+                try:
+                    response = requests.get(f"http://localhost:{port}/", timeout=10)
+                    self.assertEqual(
+                        200, response.status_code, msg=f"Expected status code 200, got {response.status_code}"
+                    )
+                except requests.exceptions.RequestException as e:
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail(f"Failed to connect to Locust web interface: {e}")
+
+                manager.proc.send_signal(signal.SIGTERM)
+
+                if not wait_for_output_condition_non_threading(
+                    manager.proc, manager.output_lines, "Shutting down (exit code 0)", timeout=30
+                ):
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Timeout waiting for Locust to shut down.")
+
+                try:
+                    manager.proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Locust process did not terminate gracefully after SIGTERM.")
 
         combined_output = "\n".join(manager.output_lines)
 
-        self.assertNotIn("Locust is running with the UserClass Picker Enabled", combined_output)
-        self.assertIn("Shutting down (exit code 0)", combined_output)
-        self.assertEqual(0, manager.proc.returncode)
+        self.assertIn(
+            "Starting web interface at",
+            combined_output,
+            msg="Expected 'Starting web interface at' not found in output.",
+        )
+        self.assertIn("Starting Locust", combined_output, msg="Expected 'Starting Locust' not found in output.")
+        self.assertIn(
+            "Shutting down (exit code 0)",
+            combined_output,
+            msg="Expected 'Shutting down (exit code 0)' not found in output.",
+        )
+        self.assertNotIn(
+            "Locust is running with the UserClass Picker Enabled",
+            combined_output,
+            msg="Unexpected 'UserClass Picker Enabled' message found in output.",
+        )
+        self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
+
+        self.assertEqual(
+            0, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}"
+        )
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_percentile_parameter(self):
@@ -495,122 +538,194 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", combined_output)
         self.assertEqual(1, manager.proc.returncode)
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
-    def test_webserver_multiple_locustfiles(self):
-        with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
-            with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:
-                port = get_free_tcp_port()
-                proc = subprocess.Popen(
-                    ["locust", "-f", f"{mocked1.file_path},{mocked2.file_path}", "--web-port", str(port)],
-                    stdout=PIPE,
-                    stderr=PIPE,
-                    text=True,
-                    env=os.environ.copy(),
-                )
-
-                try:
-                    poll_until(lambda: is_port_in_use(port), timeout=20)
-
-                    proc.send_signal(signal.SIGTERM)
-                    _, stderr = proc.communicate()
-
-                    self.assertIn("Starting web interface at", stderr)
-                    self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
-                    self.assertIn("Starting Locust", stderr)
-                    self.assertIn("Shutting down (exit code 0)", stderr)
-                    self.assertEqual(0, proc.returncode)
-
-                finally:
-                    proc.terminate()
-                    proc.wait(timeout=5)
-
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_webserver_multiple_locustfiles_in_directory(self):
+        """
+        Test that Locust can start with multiple Locustfiles located in a directory
+        and that the web interface functions correctly.
+        """
         with TemporaryDirectory() as temp_dir:
-            with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A, dir=temp_dir):
-                with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B, dir=temp_dir):
-                    port = get_free_tcp_port()
-                    proc = subprocess.Popen(
-                        ["locust", "-f", temp_dir, "--web-port", str(port)],
-                        stdout=PIPE,
-                        stderr=PIPE,
-                        text=True,
-                        env=os.environ.copy(),
-                    )
+            # Create multiple locustfiles within the temporary directory
+            with (
+                mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A, dir=temp_dir),
+                mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B, dir=temp_dir),
+            ):
+                port = get_free_tcp_port()
+
+                args = ["-f", temp_dir, "--web-port", str(port)]
+
+                with run_locust_process(file_content=None, args=args, port=None) as manager:
+                    if not wait_for_output_condition_non_threading(
+                        manager.proc, manager.output_lines, "Starting Locust", timeout=30
+                    ):
+                        manager.proc.terminate()
+                        manager.proc.wait(timeout=5)
+                        self.fail("Timeout waiting for Locust to start.")
+
+                    if not wait_for_output_condition_non_threading(
+                        manager.proc, manager.output_lines, "Starting web interface at", timeout=30
+                    ):
+                        manager.proc.terminate()
+                        manager.proc.wait(timeout=5)
+                        self.fail("Timeout waiting for web interface to start.")
 
                     try:
-                        poll_until(lambda: is_port_in_use(port), timeout=20)
+                        response = requests.get(f"http://localhost:{port}/", timeout=10)
+                        self.assertEqual(
+                            200, response.status_code, msg=f"Expected status code 200, got {response.status_code}"
+                        )
+                    except requests.exceptions.RequestException as e:
+                        manager.proc.terminate()
+                        manager.proc.wait(timeout=5)
+                        self.fail(f"Failed to connect to Locust web interface: {e}")
 
-                        proc.send_signal(signal.SIGTERM)
-                        _, stderr = proc.communicate()
+                    manager.proc.send_signal(signal.SIGTERM)
 
-                        self.assertIn("Starting web interface at", stderr)
-                        self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
-                        self.assertIn("Starting Locust", stderr)
-                        self.assertIn("Shutting down (exit code 0)", stderr)
-                        self.assertEqual(0, proc.returncode)
+                    if not wait_for_output_condition_non_threading(
+                        manager.proc, manager.output_lines, "Shutting down (exit code 0)", timeout=30
+                    ):
+                        manager.proc.terminate()
+                        manager.proc.wait(timeout=5)
+                        self.fail("Timeout waiting for Locust to shut down.")
 
-                    finally:
-                        proc.terminate()
-                        proc.wait(timeout=5)
+                    try:
+                        manager.proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        manager.proc.terminate()
+                        manager.proc.wait(timeout=5)
+                        self.fail("Locust process did not terminate gracefully after SIGTERM.")
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
+        combined_output = "\n".join(manager.output_lines)
+
+        self.assertIn(
+            "Starting web interface at",
+            combined_output,
+            msg="Expected 'Starting web interface at' not found in output.",
+        )
+        self.assertIn("Starting Locust", combined_output, msg="Expected 'Starting Locust' not found in output.")
+        self.assertIn(
+            "Shutting down (exit code 0)",
+            combined_output,
+            msg="Expected 'Shutting down (exit code 0)' not found in output.",
+        )
+        self.assertNotIn(
+            "Locust is running with the UserClass Picker Enabled",
+            combined_output,
+            msg="Unexpected 'UserClass Picker Enabled' message found in output.",
+        )
+        self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
+
+        self.assertEqual(
+            0, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}"
+        )
+
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_webserver_multiple_locustfiles_with_shape(self):
-        content = textwrap.dedent(
+        shape_file_content = textwrap.dedent(
+            """
+            from locust import User, task, between, LoadTestShape
+
+            class LoadTestShape(LoadTestShape):
+                def tick(self):
+                    run_time = self.get_run_time()
+                    if run_time < 2:
+                        return (10, 1)  # (users, spawn rate)
+                    return None  # Stop the test
+
+            class TestUser(User):
+                wait_time = between(2, 4)
+
+                @task
+                def my_task(self):
+                    print("running my_task()")
+            """
+        )
+
+        user_file_content = textwrap.dedent(
             """
             from locust import User, task, between
+
             class TestUser2(User):
                 wait_time = between(2, 4)
+
                 @task
                 def my_task(self):
                     print("running my_task() again")
             """
         )
-        with mock_locustfile(content=content) as mocked1:
-            with temporary_file(
-                content=textwrap.dedent(
-                    """
-                from locust import User, task, between, LoadTestShape
-                class LoadTestShape(LoadTestShape):
-                    def tick(self):
-                        run_time = self.get_run_time()
-                        if run_time < 2:
-                            return (10, 1)
 
-                        return None
+        with (
+            mock_locustfile(content=user_file_content) as mocked1,
+            temporary_file(content=shape_file_content) as mocked2,
+        ):
+            port = get_free_tcp_port()
 
-                class TestUser(User):
-                    wait_time = between(2, 4)
-                    @task
-                    def my_task(self):
-                        print("running my_task()")
-            """
-                )
-            ) as mocked2:
-                port = get_free_tcp_port()
-                proc = subprocess.Popen(
-                    ["locust", "-f", f"{mocked1.file_path},{mocked2}", "--web-port", str(port)],
-                    stdout=PIPE,
-                    stderr=PIPE,
-                    text=True,
-                    env=os.environ.copy(),
-                )
+            args = ["-f", mocked1.file_path, "-f", mocked2, "--web-port", str(port)]
+
+            with run_locust_process(file_content=None, args=args, port=None) as manager:
+                if not wait_for_output_condition_non_threading(
+                    manager.proc, manager.output_lines, "Starting Locust", timeout=30
+                ):
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Timeout waiting for Locust to start.")
+
+                if not wait_for_output_condition_non_threading(
+                    manager.proc, manager.output_lines, "Starting web interface at", timeout=30
+                ):
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Timeout waiting for web interface to start.")
 
                 try:
-                    poll_until(lambda: is_port_in_use(port), timeout=20)
+                    response = requests.get(f"http://localhost:{port}/", timeout=10)
+                    self.assertEqual(
+                        200, response.status_code, msg=f"Expected status code 200, got {response.status_code}"
+                    )
+                except requests.exceptions.RequestException as e:
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail(f"Failed to connect to Locust web interface: {e}")
 
-                    proc.send_signal(signal.SIGTERM)
-                    _, stderr = proc.communicate()
+                manager.proc.send_signal(signal.SIGTERM)
 
-                    self.assertIn("Starting web interface at", stderr)
-                    self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
-                    self.assertIn("Starting Locust", stderr)
-                    self.assertIn("Shutting down (exit code 0)", stderr)
-                    self.assertEqual(0, proc.returncode)
+                if not wait_for_output_condition_non_threading(
+                    manager.proc, manager.output_lines, "Shutting down (exit code 0)", timeout=30
+                ):
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Timeout waiting for Locust to shut down.")
 
-                finally:
-                    proc.terminate()
-                    proc.wait(timeout=5)
+                try:
+                    manager.proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Locust process did not terminate gracefully after SIGTERM.")
+
+        combined_output = "\n".join(manager.output_lines)
+
+        self.assertIn(
+            "Starting web interface at",
+            combined_output,
+            msg="Expected 'Starting web interface at' not found in output.",
+        )
+        self.assertIn("Starting Locust", combined_output, msg="Expected 'Starting Locust' not found in output.")
+        self.assertIn(
+            "Shutting down (exit code 0)",
+            combined_output,
+            msg="Expected 'Shutting down (exit code 0)' not found in output.",
+        )
+        self.assertNotIn(
+            "Locust is running with the UserClass Picker Enabled",
+            combined_output,
+            msg="Unexpected 'UserClass Picker Enabled' message found in output.",
+        )
+        self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
+
+        self.assertEqual(
+            0, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}"
+        )
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
@@ -663,55 +778,65 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("ERROR/locust.main: Valid --stop-timeout formats are", stderr)
             self.assertEqual(1, proc.returncode)
 
-    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_headless_spawn_options_wo_run_time(self):
+        """
+        Test Locust's headless mode with spawn options without specifying run time.
+        Ensures that Locust starts, spawns all users, and shuts down gracefully.
+        """
         with mock_locustfile() as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--host",
-                    "https://test.com/",
-                    "--headless",
-                    "--exit-code-on-error",
-                    "0",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                bufsize=1,
-                text=True,
-                universal_newlines=True,
-                env=os.environ.copy(),
-            )
+            args = [
+                "-f",
+                mocked.file_path,
+                "--host",
+                "https://test.com/",
+                "--headless",
+                "--exit-code-on-error",
+                "0",
+            ]
 
-            stderr_output = []
+            with run_locust_process(file_content=None, args=args, port=None) as manager:
+                if not wait_for_output_condition_non_threading(
+                    manager.proc, manager.output_lines, "All users spawned", timeout=30
+                ):
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Timeout waiting for Locust to spawn all users.")
 
-            def check_locust_started():
-                ready, _, _ = select.select([proc.stderr], [], [], 0.1)
-                if ready:
-                    line = proc.stderr.readline()
-                    stderr_output.append(line)
-                    if "All users spawned" in line:
-                        return True
-                return False
+                manager.proc.send_signal(signal.SIGTERM)
 
-            try:
-                poll_until(check_locust_started, timeout=10)
-                proc.send_signal(signal.SIGTERM)
+                if not wait_for_output_condition_non_threading(
+                    manager.proc, manager.output_lines, "Shutting down (exit code 0)", timeout=30
+                ):
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Timeout waiting for Locust to shut down.")
 
-                _, remaining_stderr = proc.communicate(timeout=20)
-                stderr_output.append(remaining_stderr)
+                try:
+                    manager.proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Locust process did not terminate gracefully after SIGTERM.")
 
-                full_stderr = "".join(stderr_output)
+        combined_output = "\n".join(manager.output_lines)
+        print(f"Combined Locust Output:\n{combined_output}")
 
-                self.assertIn("All users spawned", full_stderr)
-                self.assertIn("Shutting down (exit code 0)", full_stderr)
-                self.assertEqual(0, proc.returncode)
-
-            finally:
-                proc.terminate()
-                proc.wait(timeout=5)
+        self.assertIn("All users spawned", combined_output, msg="Expected 'All users spawned' not found in output.")
+        self.assertIn(
+            "Shutting down (exit code 0)",
+            combined_output,
+            msg="Expected 'Shutting down (exit code 0)' not found in output.",
+        )
+        self.assertEqual(
+            0, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}"
+        )
+        self.assertNotIn(
+            "Locust is running with the UserClass Picker Enabled",
+            combined_output,
+            msg="Unexpected 'UserClass Picker Enabled' message found in output.",
+        )
+        self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_run_headless_with_multiple_locustfiles(self):
@@ -720,102 +845,132 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 with temporary_file(
                     content=textwrap.dedent(
                         """
-                    from locust import User, task, constant, events
-                    class TestUser(User):
-                        wait_time = constant(1)
-                        @task
-                        def my_task(self):
-                            print("running my_task()")
-                """
+                        from locust import User, task, constant, events
+                        class TestUser(User):
+                            wait_time = constant(1)
+                            @task
+                            def my_task(self):
+                                print("running my_task()")
+                        """
                     ),
                     dir=temp_dir,
                 ):
-                    proc = subprocess.Popen(
-                        [
-                            "locust",
-                            "-f",
-                            temp_dir,
-                            "--headless",
-                            "-u",
-                            "2",
-                            "--exit-code-on-error",
-                            "0",
-                        ],
-                        stdout=PIPE,
-                        stderr=PIPE,
-                        text=True,
-                        env=os.environ.copy(),
+                    args = [
+                        "-f",
+                        temp_dir,
+                        "--headless",
+                        "-u",
+                        "2",
+                        "--exit-code-on-error",
+                        "0",
+                    ]
+
+                    with run_locust_process(file_content=None, args=args, port=None) as manager:
+                        if not wait_for_output_condition_non_threading(
+                            manager.proc, manager.output_lines, "All users spawned", timeout=30
+                        ):
+                            manager.proc.terminate()
+                            manager.proc.wait(timeout=5)
+                            self.fail("Timeout waiting for Locust to spawn all users.")
+
+                        manager.proc.send_signal(signal.SIGTERM)
+
+                        if not wait_for_output_condition_non_threading(
+                            manager.proc, manager.output_lines, "Shutting down (exit code 0)", timeout=30
+                        ):
+                            manager.proc.terminate()
+                            manager.proc.wait(timeout=5)
+                            self.fail("Timeout waiting for Locust to shut down.")
+
+                        try:
+                            manager.proc.wait(timeout=5)
+                        except subprocess.TimeoutExpired:
+                            manager.proc.terminate()
+                            manager.proc.wait(timeout=5)
+                            self.fail("Locust process did not terminate gracefully after SIGTERM.")
+
+                    combined_output = "\n".join(manager.output_lines)
+
+                    self.assertIn(
+                        '"TestUser": 1', combined_output, msg="Expected 'TestUser' user count not found in output."
                     )
+                    self.assertIn(
+                        '"UserSubclass": 1', combined_output, msg="Expected 'UserSubclass' user count not found."
+                    )
+                    self.assertIn(
+                        "Shutting down (exit code 0)", combined_output, msg="Expected shutdown message not found."
+                    )
+                    self.assertEqual(
+                        0,
+                        manager.proc.returncode,
+                        msg=f"Locust process exited with return code {manager.proc.returncode}.",
+                    )
+                    self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
-                    output = []
-
-                    try:
-                        poll_until(lambda: all_users_spawned(proc, output), timeout=10)
-
-                        proc.send_signal(signal.SIGTERM)
-
-                        stdout, stderr = proc.communicate(timeout=5)
-                        output.extend(stdout.splitlines())
-                        output.extend(stderr.splitlines())
-
-                        output_text = "\n".join(output)
-
-                        self.assertIn('"TestUser": 1', output_text)
-                        self.assertIn('"UserSubclass": 1', output_text)
-                        self.assertIn("Shutting down (exit code 0)", output_text)
-                        self.assertEqual(0, proc.returncode)
-
-                    finally:
-                        if proc.poll() is None:
-                            proc.terminate()
-                            proc.wait(timeout=5)
-
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_default_headless_spawn_options_with_shape(self):
+        """
+        Test Locust with default headless spawn options and a custom LoadTestShape.
+        Ensures that Locust runs the shape and properly shuts down with exit code 0.
+        """
+        # Define the content for the custom LoadTestShape with a unique class name
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
             """
-            class LoadTestShape(LoadTestShape):
+            from locust import LoadTestShape
+
+            class MyLoadTestShape(LoadTestShape):
                 def tick(self):
                     run_time = self.get_run_time()
                     if run_time < 2:
-                        return (10, 1)
-
-                    return None
+                        return (10, 1)  # (users, spawn rate)
+                    return None  # Stop the test
             """
         )
+
         with mock_locustfile(content=content) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--host",
-                    "https://test.com/",
-                    "--headless",
-                    "--exit-code-on-error",
-                    "0",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
+            args = ["-f", mocked.file_path, "--host", "https://test.com/", "--headless", "--exit-code-on-error", "0"]
 
-            try:
-                success = True
-                _, stderr = proc.communicate(timeout=5)
-            except subprocess.TimeoutExpired:
-                success = False
-                proc.send_signal(signal.SIGTERM)
-                _, stderr = proc.communicate()
+            with run_locust_process(file_content=None, args=args, port=None) as manager:
+                shape_update_message = "Shape test updating to 10 users at 1.00 spawn rate"
+                if not wait_for_output_condition_non_threading(
+                    manager.proc, manager.output_lines, shape_update_message, timeout=10
+                ):
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Timeout waiting for Locust to run the shape test.")
 
-            proc.send_signal(signal.SIGTERM)
-            _, stderr = proc.communicate()
-            self.assertIn("Shape test updating to 10 users at 1.00 spawn rate", stderr)
-            self.assertTrue(success, "Got timeout and had to kill the process")
-            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
-            self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
-            self.assertIn("Shutting down (exit code 0)", stderr)
-            self.assertEqual(0, proc.returncode)
+                shutdown_message = "Shutting down (exit code 0)"
+                if not wait_for_output_condition_non_threading(
+                    manager.proc, manager.output_lines, shutdown_message, timeout=10
+                ):
+                    print("Locust output after expected shutdown time:")
+                    print("\n".join(manager.output_lines))
+
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=5)
+                    self.fail("Timeout waiting for Locust to shut down.")
+
+                try:
+                    manager.proc.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    print("Locust did not terminate within the expected time.")
+                    manager.proc.terminate()
+                    manager.proc.wait(timeout=10)
+                    self.fail("Locust process did not terminate gracefully after SIGTERM.")
+
+        combined_output = "\n".join(manager.output_lines)
+
+        self.assertIn(shape_update_message, combined_output, msg="Shape test output not found.")
+        self.assertRegex(
+            combined_output,
+            r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*",
+            msg="Aggregated output not found before shutdown.",
+        )
+        self.assertIn(shutdown_message, combined_output, msg="Expected shutdown message not found.")
+        self.assertEqual(
+            0, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}."
+        )
+        self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
     def test_run_headless_with_multiple_locustfiles_with_shape(self):
         content = textwrap.dedent(
