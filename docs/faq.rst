@@ -6,12 +6,6 @@ FAQ
 
 How do I…
 
-..
-
-   Note: Hatch rate/ramp up does not change peak load, it only changes
-   how fast you get there (people keep asking about this for some
-   reason).
-
 Resolve errors that occur during load (error 5xx, Connection aborted, Connection reset by peer, etc)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
