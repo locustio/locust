@@ -2799,92 +2799,104 @@ def on_test_stop(environment, **kwargs):
             self.assertEqual(dict, type(result["num_fail_per_sec"]))
 
     def test_worker_indexes(self):
-        content = """
-from locust import HttpUser, task, between
+        content = textwrap.dedent("""
+            from locust import HttpUser, task, between
 
-class AnyUser(HttpUser):
-    host = "http://127.0.0.1:8089"
-    wait_time = between(0, 0.1)
-    @task
-    def my_task(self):
-        print("worker index:", self.environment.runner.worker_index)
-"""
-        with mock_locustfile(content=content) as mocked:
-            master = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--headless",
-                    "--master",
-                    "--expect-workers",
-                    "2",
-                    "-t",
-                    "5",
-                    "-u",
-                    "2",
-                    "-L",
-                    "DEBUG",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            proc_worker_1 = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--worker",
-                    "-L",
-                    "DEBUG",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            proc_worker_2 = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--worker",
-                    "-L",
-                    "DEBUG",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            stdout, stderr = master.communicate()
-            self.assertNotIn("Traceback", stderr)
-            self.assertIn("Shutting down (exit code 0)", stderr)
-            self.assertEqual(0, master.returncode)
+            class AnyUser(HttpUser):
+                host = "http://127.0.0.1:8089"
+                wait_time = between(0, 0.1)
 
-            stdout_worker_1, stderr_worker_1 = proc_worker_1.communicate()
-            stdout_worker_2, stderr_worker_2 = proc_worker_2.communicate()
-            self.assertEqual(0, proc_worker_1.returncode)
-            self.assertEqual(0, proc_worker_2.returncode)
-            self.assertNotIn("Traceback", stderr_worker_1)
-            self.assertNotIn("Traceback", stderr_worker_2)
+                @task
+                def my_task(self):
+                    print("worker index:", self.environment.runner.worker_index)
+        """)
 
-            PREFIX = "worker index: "
-            p1 = stdout_worker_1.find(PREFIX)
-            if p1 == -1:
-                raise Exception(stdout_worker_1 + stderr_worker_1)
-            self.assertNotEqual(-1, p1)
-            p2 = stdout_worker_2.find(PREFIX)
-            if p2 == -1:
-                raise Exception(stdout_worker_2 + stderr_worker_2)
-            self.assertNotEqual(-1, p2)
-            found = [
-                int(stdout_worker_1[p1 + len(PREFIX) :].split("\n")[0]),
-                int(stdout_worker_2[p1 + len(PREFIX) :].split("\n")[0]),
+        with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
+            temp_file.write(content)
+            temp_file.flush()
+            temp_file_path = temp_file.name
+
+        try:
+            master_args = [
+                "-f",
+                temp_file_path,
+                "--headless",
+                "--master",
+                "--expect-workers",
+                "2",
+                "-t",
+                "5s",
+                "-u",
+                "2",
+                "-L",
+                "DEBUG",
             ]
-            found.sort()
-            for i in range(2):
-                if found[i] != i:
-                    raise Exception(f"expected index {i} but got", found[i])
+            with run_locust_process(
+                args=master_args,
+            ) as master:
+                master_ready = wait_for_output_condition_non_threading(
+                    master.proc, master.output_lines, "Waiting for workers to be ready", timeout=10
+                )
+                self.assertTrue(master_ready, "Master did not start properly")
+
+                worker_args = [
+                    "-f",
+                    temp_file_path,
+                    "--worker",
+                    "--master-host",
+                    "127.0.0.1",
+                    "-L",
+                    "DEBUG",
+                ]
+                with (
+                    run_locust_process(
+                        args=worker_args,
+                    ) as worker1,
+                    run_locust_process(
+                        args=worker_args,
+                    ) as worker2,
+                ):
+                    workers_ready = wait_for_output_condition_non_threading(
+                        master.proc, master.output_lines, "Sending spawn jobs", timeout=10
+                    )
+
+                    self.assertTrue(workers_ready, "Workers did not connect properly")
+
+                    master.proc.wait(timeout=15)
+                    self.assertEqual(0, master.proc.poll(), "Master process did not exit cleanly")
+
+                    worker1.proc.wait(timeout=5)
+                    worker2.proc.wait(timeout=5)
+
+                    self.assertEqual(0, worker1.proc.poll(), "Worker 1 did not exit cleanly")
+                    self.assertEqual(0, worker2.proc.poll(), "Worker 2 did not exit cleanly")
+
+                    master_output = "\n".join(master.output_lines)
+                    worker1_output = "\n".join(worker1.output_lines)
+                    worker2_output = "\n".join(worker2.output_lines)
+
+                    self.assertNotIn("Traceback", master_output)
+                    self.assertNotIn("Traceback", worker1_output)
+                    self.assertNotIn("Traceback", worker2_output)
+
+                    def extract_worker_indexes(output):
+                        PREFIX = "worker index:"
+                        indexes = []
+                        for line in output.splitlines():
+                            if PREFIX in line:
+                                idx_str = line.split(PREFIX)[-1].strip()
+                                idx = int(idx_str)
+                                indexes.append(idx)
+                        return indexes
+
+                    indexes1 = extract_worker_indexes(worker1_output)
+                    indexes2 = extract_worker_indexes(worker2_output)
+
+                    found = set(indexes1 + indexes2)
+                    expected = {0, 1}
+                    self.assertEqual(found, expected, f"Expected worker indexes {expected}, but got {found}")
+        finally:
+            os.unlink(temp_file_path)
 
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes(self):
