@@ -2898,26 +2898,36 @@ def on_test_stop(environment, **kwargs):
         finally:
             os.unlink(temp_file_path)
 
-    @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
+    @unittest.skipIf(os.name == "nt", reason="--processes doesn't work on Windows")
     def test_processes(self):
         with mock_locustfile() as mocked:
-            command = f"locust -f {mocked.file_path} --processes 4 --headless --run-time 1 --exit-code-on-error 0"
-            proc = subprocess.Popen(
-                command,
-                shell=True,
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
-            try:
-                _, stderr = proc.communicate(timeout=9)
-            except Exception:
-                proc.kill()
-                assert False, f"locust process never finished: {command}"
-            self.assertNotIn("Traceback", stderr)
-            self.assertIn("(index 3) reported as ready", stderr)
-            self.assertIn("Shutting down (exit code 0)", stderr)
+            # Prepare the arguments for the locust command
+            args = [
+                "-f",
+                mocked.file_path,
+                "--processes",
+                "4",
+                "--headless",
+                "--run-time",
+                "1s",
+                "--exit-code-on-error",
+                "0",
+            ]
+            with run_locust_process(args=args) as proc:
+                # Wait until the process outputs "Shutting down (exit code 0)"
+                process_finished = wait_for_output_condition_non_threading(
+                    proc.proc, proc.output_lines, "Shutting down (exit code 0)", timeout=9
+                )
+                if not process_finished:
+                    proc.proc.kill()
+                    print("Process output:\n", "\n".join(proc.output_lines))
+                    self.fail(f"Locust process never finished: {' '.join(args)}")
+                # Collect the combined output
+                output = "\n".join(proc.output_lines)
+                # Perform assertions
+                self.assertNotIn("Traceback", output)
+                self.assertIn("(index 3) reported as ready", output)
+                self.assertIn("Shutting down (exit code 0)", output)
 
     @unittest.skipIf(os.name == "nt", reason="--processes doesnt work on windows")
     def test_processes_autodetect(self):
