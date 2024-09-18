@@ -761,17 +761,24 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_webserver_multiple_locustfiles_with_shape(self):
+        """
+        Test that Locust can start with multiple Locustfiles and a shape file,
+        and that the web interface functions correctly.
+        """
         shape_file_content = textwrap.dedent(
             """
             from locust import User, task, between, LoadTestShape
+
             class LoadTestShape(LoadTestShape):
                 def tick(self):
                     run_time = self.get_run_time()
                     if run_time < 2:
                         return (10, 1)  # (users, spawn rate)
                     return None  # Stop the test
+
             class TestUser(User):
                 wait_time = between(2, 4)
+
                 @task
                 def my_task(self):
                     print("running my_task()")
@@ -780,65 +787,85 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         user_file_content = textwrap.dedent(
             """
             from locust import User, task, between
+
             class TestUser2(User):
                 wait_time = between(2, 4)
+
                 @task
                 def my_task(self):
                     print("running my_task() again")
             """
         )
 
-        with (
-            mock_locustfile(content=user_file_content) as mocked1,
-            temporary_file(content=shape_file_content) as mocked2,
-        ):
-            port = get_free_tcp_port()
+        with TemporaryDirectory() as temp_dir:
+            # Create multiple Locustfiles in the temporary directory
+            with (
+                mock_locustfile(content=user_file_content, dir=temp_dir),
+                mock_locustfile(content=shape_file_content, dir=temp_dir),
+            ):
+                port = get_free_tcp_port()
 
-            args = ["-f", mocked1.file_path, "-f", mocked2, "--web-port", str(port)]
+                args = [
+                    sys.executable,
+                    "-m",
+                    "locust",
+                    "-f",
+                    temp_dir,  # Directory containing multiple Locustfiles
+                    "--web-port",
+                    str(port),
+                ]
 
-            with run_locust_process(file_content=None, args=args, port=None) as manager:
-                if not wait_for_output_condition_non_threading(
-                    manager.proc, manager.output_lines, "Starting Locust", timeout=30
-                ):
-                    manager.proc.terminate()
-                    manager.proc.wait(timeout=5)
-                    self.fail("Timeout waiting for Locust to start.")
+                with PopenContextManager(args) as manager:
+                    # Wait for Locust to start
+                    if not wait_for_output_condition_non_threading(
+                        manager.process, manager.output_lines, "Starting Locust", timeout=30
+                    ):
+                        manager.process.terminate()
+                        manager.process.wait(timeout=5)
+                        self.fail("Timeout waiting for Locust to start.")
 
-                if not wait_for_output_condition_non_threading(
-                    manager.proc, manager.output_lines, "Starting web interface at", timeout=30
-                ):
-                    manager.proc.terminate()
-                    manager.proc.wait(timeout=5)
-                    self.fail("Timeout waiting for web interface to start.")
+                    # Wait for the web interface to start
+                    if not wait_for_output_condition_non_threading(
+                        manager.process, manager.output_lines, "Starting web interface at", timeout=30
+                    ):
+                        manager.process.terminate()
+                        manager.process.wait(timeout=5)
+                        self.fail("Timeout waiting for web interface to start.")
 
-                try:
-                    response = requests.get(f"http://localhost:{port}/", timeout=10)
-                    self.assertEqual(
-                        200, response.status_code, msg=f"Expected status code 200, got {response.status_code}"
-                    )
-                except requests.exceptions.RequestException as e:
-                    manager.proc.terminate()
-                    manager.proc.wait(timeout=5)
-                    self.fail(f"Failed to connect to Locust web interface: {e}")
+                    # Test the web interface
+                    try:
+                        response = requests.get(f"http://localhost:{port}/", timeout=10)
+                        self.assertEqual(
+                            200, response.status_code, msg=f"Expected status code 200, got {response.status_code}"
+                        )
+                    except requests.exceptions.RequestException as e:
+                        manager.process.terminate()
+                        manager.process.wait(timeout=5)
+                        self.fail(f"Failed to connect to Locust web interface: {e}")
 
-                manager.proc.send_signal(signal.SIGTERM)
+                    # Send SIGTERM to gracefully shut down Locust
+                    manager.process.send_signal(signal.SIGTERM)
 
-                if not wait_for_output_condition_non_threading(
-                    manager.proc, manager.output_lines, "Shutting down (exit code 0)", timeout=30
-                ):
-                    manager.proc.terminate()
-                    manager.proc.wait(timeout=5)
-                    self.fail("Timeout waiting for Locust to shut down.")
+                    # Wait for Locust to shut down
+                    if not wait_for_output_condition_non_threading(
+                        manager.process, manager.output_lines, "Shutting down (exit code 0)", timeout=30
+                    ):
+                        manager.process.terminate()
+                        manager.process.wait(timeout=5)
+                        self.fail("Timeout waiting for Locust to shut down.")
 
-                try:
-                    manager.proc.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    manager.proc.terminate()
-                    manager.proc.wait(timeout=5)
-                    self.fail("Locust process did not terminate gracefully after SIGTERM.")
+                    # Ensure the process has terminated
+                    try:
+                        manager.process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        manager.process.terminate()
+                        manager.process.wait(timeout=5)
+                        self.fail("Locust process did not terminate gracefully after SIGTERM.")
 
+        # Combine all output lines for assertions
         combined_output = "\n".join(manager.output_lines)
 
+        # Perform assertions on the output
         self.assertIn(
             "Starting web interface at",
             combined_output,
@@ -857,8 +884,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
+        # Assert that the process exited successfully
         self.assertEqual(
-            0, manager.proc.returncode, msg=f"Locust process exited with return code {manager.proc.returncode}"
+            0,
+            manager.process.returncode,
+            msg=f"Locust process exited with return code {manager.process.returncode}",
         )
 
     def test_default_headless_spawn_options(self):
@@ -2039,28 +2069,28 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_spawning_with_fixed(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
-        from locust import User, task, constant
+            from locust import User, task, constant
 
-        class User1(User):
-            fixed_count = 2
-            wait_time = constant(1)
+            class User1(User):
+                fixed_count = 2
+                wait_time = constant(1)
 
-            @task
-            def t(self):
-                print("Test task is running")
+                @task
+                def t(self):
+                    print("Test task is running")
 
-        class User2(User):
-            wait_time = constant(1)
-            @task
-            def t(self):
-                print("Test task is running")
+            class User2(User):
+                wait_time = constant(1)
+                @task
+                def t(self):
+                    print("Test task is running")
 
-        class User3(User):
-            wait_time = constant(1)
-            @task
-            def t(self):
-                print("Test task is running")
-        """
+            class User3(User):
+                wait_time = constant(1)
+                @task
+                def t(self):
+                    print("Test task is running")
+            """
         )
 
         expected_outputs = [
@@ -2085,19 +2115,19 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "INFO",
             ]
 
-            with run_locust_process(file_content=None, args=args) as manager:
+            with PopenContextManager(["locust"] + args) as manager:
                 for output in expected_outputs:
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, output, timeout=30
+                        manager.process, manager.output_lines, output, timeout=30
                     ):
                         self.fail(f"Timeout waiting for: {output}")
 
-        combined_output = "\n".join(manager.output_lines)
+            combined_output = "\n".join(manager.output_lines)
 
-        for output in expected_outputs:
-            self.assertIn(output, combined_output, f"Expected output not found: {output}")
+            for output in expected_outputs:
+                self.assertIn(output, combined_output, f"Expected output not found: {output}")
 
-        self.assertRegex(combined_output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
+            self.assertRegex(combined_output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
 
     def test_spawning_with_fixed_multiple_locustfiles(self):
         expected_outputs = [
@@ -2125,123 +2155,181 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "INFO",
             ]
 
-            with run_locust_process(file_content=None, args=args) as manager:
+            with PopenContextManager(["locust"] + args) as manager:
                 for output in expected_outputs:
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, output, timeout=30
+                        manager.process, manager.output_lines, output, timeout=30
                     ):
                         self.fail(f"Timeout waiting for: {output}")
 
-        combined_output = "\n".join(manager.output_lines)
-        print(f"Combined Locust Output:\n{combined_output}")
+            combined_output = "\n".join(manager.output_lines)
 
-        for output in expected_outputs:
-            self.assertIn(output, combined_output, f"Expected output not found: {output}")
+            for output in expected_outputs:
+                self.assertIn(output, combined_output, f"Expected output not found: {output}")
 
-        self.assertRegex(combined_output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
+            self.assertRegex(combined_output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
 
-        self.assertEqual(0, manager.proc.returncode, f"Process failed with return code {manager.proc.returncode}")
+            self.assertEqual(
+                0,
+                manager.process.returncode,
+                f"Process failed with return code {manager.process.returncode}",
+            )
 
     def test_warning_with_lower_user_count_than_fixed_count(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
-        from locust import User, task, constant
+            from locust import User, task, constant
 
-        class User1(User):
-            fixed_count = 2
-            wait_time = constant(1)
+            class User1(User):
+                fixed_count = 2
+                wait_time = constant(1)
 
-            @task
-            def t(self):
-                pass
+                @task
+                def t(self):
+                    pass
 
-        class User2(User):
-            fixed_count = 2
-            wait_time = constant(1)
+            class User2(User):
+                fixed_count = 2
+                wait_time = constant(1)
 
-            @task
-            def t(self):
-                pass
-        """
+                @task
+                def t(self):
+                    pass
+            """
         )
 
-        expected_outputs = ["Total fixed_count of User classes (4) is greater than ", "Shutting down (exit code 0)"]
+        expected_outputs = [
+            "Total fixed_count of User classes (4) is greater than ",
+            "Shutting down (exit code 0)",
+        ]
 
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            args = ["-f", mocked.file_path, "--headless", "--run-time", "1s", "-u", "3"]
+            args = [
+                "-f",
+                mocked.file_path,
+                "--headless",
+                "--run-time",
+                "1s",
+                "-u",
+                "3",
+                "--loglevel",
+                "INFO",
+            ]
 
-            with run_locust_process(file_content=None, args=args) as manager:
+            # Replace 'run_locust_process' with 'PopenContextManager'
+            with PopenContextManager(["locust"] + args) as manager:
                 for output in expected_outputs:
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, output, timeout=30
+                        manager.process, manager.output_lines, output, timeout=30
                     ):
                         self.fail(f"Timeout waiting for: {output}")
 
-        combined_output = "\n".join(manager.output_lines)
+            combined_output = "\n".join(manager.output_lines)
 
-        for output in expected_outputs:
-            self.assertIn(output, combined_output, f"Expected output not found: {output}")
+            for output in expected_outputs:
+                self.assertIn(output, combined_output, f"Expected output not found: {output}")
+
+            # Additionally, verify that the process exited with code 0
+            self.assertEqual(
+                0,
+                manager.process.returncode,
+                f"Process failed with return code {manager.process.returncode}",
+            )
 
     def test_with_package_as_locustfile(self):
-        expected_outputs = ["Starting Locust", "All users spawned:", '"UserSubclass": 1', "Shutting down (exit code 0)"]
+        expected_outputs = [
+            "Starting Locust",
+            "All users spawned:",
+            '"UserSubclass": 1',
+            "Shutting down (exit code 0)",
+        ]
 
         with TemporaryDirectory() as temp_dir:
-            with open(os.path.join(temp_dir, "__init__.py"), mode="w"):
+            init_path = os.path.join(temp_dir, "__init__.py")
+            with open(init_path, mode="w"):
                 pass
 
             with mock_locustfile(dir=temp_dir):
-                args = ["-f", temp_dir, "--headless", "--exit-code-on-error", "0", "--run-time", "2"]
+                args = [
+                    "-f",
+                    temp_dir,
+                    "--headless",
+                    "--exit-code-on-error",
+                    "0",
+                    "--run-time",
+                    "2s",
+                    "--loglevel",
+                    "INFO",
+                ]
 
-                with run_locust_process(file_content=None, args=args) as manager:
+                with PopenContextManager(["locust"] + args) as manager:
                     for output in expected_outputs:
                         if not wait_for_output_condition_non_threading(
-                            manager.proc, manager.output_lines, output, timeout=30
+                            manager.process, manager.output_lines, output, timeout=30
                         ):
                             self.fail(f"Timeout waiting for: {output}")
 
-        combined_output = "\n".join(manager.output_lines)
+            combined_output = "\n".join(manager.output_lines)
 
-        for output in expected_outputs:
-            self.assertIn(output, combined_output, f"Expected output not found: {output}")
+            for output in expected_outputs:
+                self.assertIn(output, combined_output, f"Expected output not found: {output}")
 
-        self.assertEqual(0, manager.proc.returncode, f"Process failed with return code {manager.proc.returncode}")
+            self.assertEqual(
+                0,
+                manager.process.returncode,
+                f"Process failed with return code {manager.process.returncode}",
+            )
 
     def test_command_line_user_selection(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
-        from locust import User, task, constant
+            from locust import User, task, constant
 
-        class User1(User):
-            wait_time = constant(1)
-            @task
-            def t(self):
-                print("User1 is running")
+            class User1(User):
+                wait_time = constant(1)
+                @task
+                def t(self):
+                    print("User1 is running")
 
-        class User2(User):
-            wait_time = constant(1)
-            @task
-            def t(self):
-                print("User2 is running")
+            class User2(User):
+                wait_time = constant(1)
+                @task
+                def t(self):
+                    print("User2 is running")
 
-        class User3(User):
-            wait_time = constant(1)
-            @task
-            def t(self):
-                print("User3 is running")
-        """
+            class User3(User):
+                wait_time = constant(1)
+                @task
+                def t(self):
+                    print("User3 is running")
+            """
         )
 
         expected_outputs = ["User2 is running", "User3 is running", "Shutting down (exit code 0)"]
-
         unexpected_output = "User1 is running"
 
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            args = ["-f", mocked.file_path, "--headless", "--run-time", "2s", "-u", "5", "-r", "10", "User2", "User3"]
+            args = [
+                "-f",
+                mocked.file_path,
+                "--headless",
+                "--run-time",
+                "2s",
+                "-u",
+                "5",
+                "-r",
+                "10",
+                "User2",
+                "User3",
+                "--loglevel",
+                "INFO",
+            ]
 
-            with run_locust_process(file_content=None, args=args) as manager:
+            # Replace 'run_locust_process' with 'PopenContextManager'
+            with PopenContextManager(["locust"] + args) as manager:
                 for output in expected_outputs:
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, output, timeout=30
+                        manager.process, manager.output_lines, output, timeout=30
                     ):
                         self.fail(f"Timeout waiting for: {output}")
 
@@ -2295,26 +2383,27 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_B) as file2:
-                with run_locust_process(args=["-f", f"{file1},{file2}", "--class-picker"], port=port) as manager:
+                args = ["locust", "-f", f"{file1},{file2}", "--class-picker", "--web-port", str(port)]
+                with PopenContextManager(args) as manager:
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, "Starting Locust", timeout=20
+                        manager.process, manager.output_lines, "Starting Locust", timeout=20
                     ):
                         self.fail("Timeout waiting for Locust to start.")
 
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, "Starting web interface at", timeout=20
+                        manager.process, manager.output_lines, "Starting web interface at", timeout=20
                     ):
                         self.fail("Timeout waiting for web interface to start.")
 
                     if not wait_for_output_condition_non_threading(
-                        manager.proc,
+                        manager.process,
                         manager.output_lines,
                         "Locust is running with the UserClass Picker Enabled",
                         timeout=20,
                     ):
                         self.fail("Timeout waiting for UserClass Picker message.")
 
-                    manager.proc.send_signal(signal.SIGTERM)
+                    manager.process.send_signal(signal.SIGTERM)
 
         combined_output = "\n".join(manager.output_lines)
 
@@ -2323,116 +2412,176 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("Starting web interface at", combined_output)
         self.assertIn("Shutting down (exit code 0)", combined_output)
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_error_when_duplicate_userclass_names(self):
-        MOCK_LOCUSTFILE_CONTENT_C = textwrap.dedent(
-            """
+        MOCK_LOCUSTFILE_CONTENT_C = textwrap.dedent("""
             from locust import User, task, constant, events
+
             class TestUser1(User):
                 wait_time = constant(3)
                 @task
                 def my_task(self):
                     print("running my_task()")
-        """
-        )
+        """)
 
-        with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
-            with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
-                with run_locust_process(args=["-f", f"{file1},{file2}"]) as manager:
-                    if not wait_for_output_condition_non_threading(
-                        manager.proc,
-                        manager.output_lines,
-                        "Duplicate user class names: TestUser1 is defined",
-                        timeout=5,
-                    ):
-                        self.fail("Timeout waiting for duplicate user class error message.")
+        with (
+            temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1,
+            temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2,
+        ):
+            args = [
+                "-f",
+                f"{file1},{file2}",
+                "--headless",
+                "--run-time",
+                "5s",
+                "-u",
+                "1",
+                "-r",
+                "1",
+                "--loglevel",
+                "INFO",
+            ]
 
-                    manager.proc.wait(timeout=5)
+            with PopenContextManager(["locust"] + args) as manager:
+                if not wait_for_output_condition_non_threading(
+                    manager.process,
+                    manager.output_lines,
+                    "Duplicate user class names: TestUser1 is defined",
+                    timeout=5,
+                ):
+                    self.fail("Timeout waiting for duplicate user class error message.")
+
+                try:
+                    manager.process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.fail("Locust process did not terminate as expected.")
 
         combined_output = "\n".join(manager.output_lines)
 
         self.assertIn("Duplicate user class names: TestUser1 is defined", combined_output)
-        self.assertEqual(1, manager.proc.returncode)
+        self.assertEqual(1, manager.process.returncode, "Process did not exit with return code 1 as expected.")
 
     def test_no_error_when_same_userclass_in_two_files(self):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
-            MOCK_LOCUSTFILE_CONTENT_C = textwrap.dedent(
-                f"""
-                from {os.path.basename(file1)[:-3]} import TestUser1
-            """
-            )
+            # Create a second file that imports TestUser1 from file1
+            MOCK_LOCUSTFILE_CONTENT_C = textwrap.dedent(f"""
+                    from {os.path.basename(file1)[:-3]} import TestUser1
+                """)
             print(MOCK_LOCUSTFILE_CONTENT_C)
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
-                with run_locust_process(args=["-f", f"{file1},{file2}", "-t", "1", "--headless"]) as manager:
+                args = [
+                    "-f",
+                    f"{file1},{file2}",
+                    "--headless",
+                    "--run-time",
+                    "1s",
+                    "-u",
+                    "1",
+                    "-r",
+                    "1",
+                    "--loglevel",
+                    "INFO",
+                ]
+
+                with PopenContextManager(["locust"] + args) as manager:
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, "running my_task", timeout=50
+                        manager.process, manager.output_lines, "running my_task", timeout=50
                     ):
                         self.fail("Timeout waiting for 'running my_task' message.")
 
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, "Shutting down (exit code 0)", timeout=10
+                        manager.process, manager.output_lines, "Shutting down (exit code 0)", timeout=10
                     ):
                         self.fail("Timeout waiting for Locust to shut down.")
 
         combined_output = "\n".join(manager.output_lines)
 
         self.assertIn("running my_task", combined_output)
-        self.assertEqual(0, manager.proc.returncode)
+        self.assertEqual(0, manager.process.returncode, f"Process failed with return code {manager.process.returncode}")
 
     def test_error_when_duplicate_shape_class_names(self):
-        MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent(
-            """
-            from locust import LoadTestShape
-            class TestShape(LoadTestShape):
-                def tick(self):
-                    run_time = self.get_run_time()
-                    if run_time < 2:
-                        return (10, 1)
+        MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent("""
+                from locust import LoadTestShape
+                class TestShape(LoadTestShape):
+                    def tick(self):
+                        run_time = self.get_run_time()
+                        if run_time < 2:
+                            return (10, 1)
 
-                    return None
-            """
-        )
-        MOCK_LOCUSTFILE_CONTENT_D = MOCK_LOCUSTFILE_CONTENT_B + textwrap.dedent(
-            """
-            from locust import LoadTestShape
-            class TestShape(LoadTestShape):
-                def tick(self):
-                    run_time = self.get_run_time()
-                    if run_time < 2:
-                        return (10, 1)
+                        return None
+            """)
+        MOCK_LOCUSTFILE_CONTENT_D = MOCK_LOCUSTFILE_CONTENT_B + textwrap.dedent("""
+                from locust import LoadTestShape
+                class TestShape(LoadTestShape):
+                    def tick(self):
+                        run_time = self.get_run_time()
+                        if run_time < 2:
+                            return (10, 1)
 
-                    return None
-            """
-        )
-        with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file1:
-            with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_D) as file2:
-                with run_locust_process(args=["-f", f"{file1},{file2}"]) as manager:
-                    if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, "Duplicate shape classes: TestShape", timeout=5
-                    ):
-                        self.fail("Timeout waiting for duplicate shape class error message.")
+                        return None
+            """)
+        with (
+            temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file1,
+            temporary_file(content=MOCK_LOCUSTFILE_CONTENT_D) as file2,
+        ):
+            args = [
+                "-f",
+                f"{file1},{file2}",
+                "--headless",
+                "--run-time",
+                "5s",
+                "-u",
+                "1",
+                "-r",
+                "1",
+                "--loglevel",
+                "INFO",
+            ]
 
-                    manager.proc.wait(timeout=5)
+            with PopenContextManager(["locust"] + args) as manager:
+                if not wait_for_output_condition_non_threading(
+                    manager.process, manager.output_lines, "Duplicate shape classes: TestShape", timeout=5
+                ):
+                    self.fail("Timeout waiting for duplicate shape class error message.")
+
+                try:
+                    manager.process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.fail("Locust process did not terminate as expected.")
 
         combined_output = "\n".join(manager.output_lines)
 
         self.assertIn("Duplicate shape classes: TestShape", combined_output)
-        self.assertEqual(1, manager.proc.returncode)
+        self.assertEqual(1, manager.process.returncode, "Process did not exit with return code 1 as expected.")
 
     def test_error_when_providing_both_run_time_and_a_shape_class(self):
-        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
-            """
-            from locust import LoadTestShape
-            class TestShape(LoadTestShape):
-                def tick(self):
-                    return None
-            """
-        )
+        """
+        Tests that providing both --run-time and a LoadTestShape class produces appropriate warning messages
+        and that the process exits successfully.
+        """
+        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent("""
+                from locust import LoadTestShape
+
+                class TestShape(LoadTestShape):
+                    def tick(self):
+                        return None
+            """)
+
         with mock_locustfile(content=content) as mocked:
-            with run_locust_process(
-                args=["-f", mocked.file_path, "--run-time=1s", "--headless", "--exit-code-on-error", "0"]
-            ) as manager:
+            args = [
+                "-f",
+                mocked.file_path,
+                "--run-time=1s",
+                "--headless",
+                "--exit-code-on-error",
+                "0",
+                "--loglevel",
+                "INFO",
+            ]
+
+            with PopenContextManager(["locust"] + args) as manager:
                 if not wait_for_output_condition_non_threading(
-                    manager.proc,
+                    manager.process,
                     manager.output_lines,
                     "--run-time, --users or --spawn-rate have no impact on LoadShapes",
                     timeout=5,
@@ -2440,32 +2589,50 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.fail("Timeout waiting for LoadShapes impact message.")
 
                 if not wait_for_output_condition_non_threading(
-                    manager.proc, manager.output_lines, "The following option(s) will be ignored: --run-time", timeout=5
+                    manager.process,
+                    manager.output_lines,
+                    "The following option(s) will be ignored: --run-time",
+                    timeout=5,
                 ):
                     self.fail("Timeout waiting for ignored options message.")
 
-                manager.proc.wait(timeout=5)
+                try:
+                    manager.process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.fail("Locust process did not terminate as expected.")
 
         combined_output = "\n".join(manager.output_lines)
 
         self.assertIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", combined_output)
         self.assertIn("The following option(s) will be ignored: --run-time", combined_output)
-        self.assertEqual(0, manager.proc.returncode)
+        self.assertEqual(0, manager.process.returncode, "Process did not exit with return code 0 as expected.")
 
     def test_shape_class_log_disabled_parameters(self):
-        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
-            """
-            from locust import LoadTestShape
+        """
+        Tests that providing both --run-time and a LoadTestShape class logs appropriate warning messages
+        and that the process exits successfully with return code 0.
+        """
+        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent("""
+                from locust import LoadTestShape
 
-            class TestShape(LoadTestShape):
-                def tick(self):
-                    return None
-            """
-        )
+                class TestShape(LoadTestShape):
+                    def tick(self):
+                        return None
+            """)
+
         with mock_locustfile(content=content) as mocked:
-            with run_locust_process(
-                args=["--headless", "-f", mocked.file_path, "--exit-code-on-error=0", "--users=1", "--spawn-rate=1"]
-            ) as manager:
+            args = [
+                "--headless",
+                "-f",
+                mocked.file_path,
+                "--exit-code-on-error=0",
+                "--users=1",
+                "--spawn-rate=1",
+                "--loglevel",
+                "INFO",
+            ]
+
+            with PopenContextManager(["locust"] + args) as manager:
                 expected_messages = [
                     "Shape test starting.",
                     "--run-time, --users or --spawn-rate have no impact on LoadShapes",
@@ -2474,157 +2641,236 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                 for message in expected_messages:
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, message, timeout=5
+                        manager.process, manager.output_lines, message, timeout=5
                     ):
                         self.fail(f"Timeout waiting for message: {message}")
 
-                manager.proc.wait(timeout=5)
+                try:
+                    manager.process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.fail("Locust process did not terminate as expected.")
 
         combined_output = "\n".join(manager.output_lines)
 
         for message in expected_messages:
             self.assertIn(message, combined_output)
 
-        self.assertEqual(0, manager.proc.returncode)
+        self.assertEqual(0, manager.process.returncode, "Process did not exit with return code 0 as expected.")
 
     def test_shape_class_with_use_common_options(self):
-        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
-            """
-            from locust import LoadTestShape
+        """
+        Tests that providing both --run-time and a LoadTestShape class with use_common_options=True
+        does not produce warnings about ignored options and that the process exits successfully.
+        """
+        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent("""
+                from locust import LoadTestShape
 
-            class TestShape(LoadTestShape):
-                use_common_options = True
+                class TestShape(LoadTestShape):
+                    use_common_options = True
 
-                def tick(self):
-                    return None
-            """
-        )
+                    def tick(self):
+                        return None
+            """)
+
         with mock_locustfile(content=content) as mocked:
-            with run_locust_process(
-                args=[
-                    "-f",
-                    mocked.file_path,
-                    "--run-time=1s",
-                    "--users=1",
-                    "--spawn-rate=1",
-                    "--headless",
-                    "--exit-code-on-error=0",
+            args = [
+                "--headless",
+                "-f",
+                mocked.file_path,
+                "--exit-code-on-error=0",
+                "--users=1",
+                "--spawn-rate=1",
+                "--run-time=1s",
+                "--loglevel",
+                "INFO",
+            ]
+
+            with PopenContextManager(["locust"] + args) as manager:
+                expected_messages = [
+                    "Shape test starting.",
                 ]
-            ) as manager:
+
                 if not wait_for_output_condition_non_threading(
-                    manager.proc, manager.output_lines, "Shape test starting.", timeout=5
+                    manager.process, manager.output_lines, "Shape test starting.", timeout=5
                 ):
                     self.fail("Timeout waiting for 'Shape test starting.' message.")
 
-                # Wait for the process to finish
-                manager.proc.wait(timeout=5)
+                unwanted_messages = [
+                    "--run-time, --users or --spawn-rate have no impact on LoadShapes",
+                    "The following option(s) will be ignored:",
+                ]
+
+                for message in unwanted_messages:
+                    if any(message in line for line in manager.output_lines):
+                        self.fail(f"Unexpected message found: {message}")
+
+                try:
+                    manager.process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.fail("Locust process did not terminate as expected.")
 
         combined_output = "\n".join(manager.output_lines)
 
-        self.assertIn("Shape test starting.", combined_output)
-        self.assertNotIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", combined_output)
-        self.assertNotIn("The following option(s) will be ignored:", combined_output)
-        self.assertEqual(0, manager.proc.returncode)
+        for message in expected_messages:
+            self.assertIn(message, combined_output)
+
+        for message in [
+            "--run-time, --users or --spawn-rate have no impact on LoadShapes",
+            "The following option(s) will be ignored:",
+        ]:
+            self.assertNotIn(message, combined_output, f"Unexpected message found: {message}")
+
+        self.assertEqual(0, manager.process.returncode, "Process did not exit with return code 0 as expected.")
 
     def test_error_when_locustfiles_directory_is_empty(self):
+        """
+        Tests that providing an empty directory for locustfiles results in an appropriate error message and exit code.
+        """
         with TemporaryDirectory() as temp_dir:
-            with run_locust_process(args=["-f", temp_dir]) as manager:
+            args = [
+                "-f",
+                temp_dir,
+                "--headless",
+                "--exit-code-on-error=1",
+                "--loglevel",
+                "INFO",
+            ]
+
+            with PopenContextManager(["locust"] + args) as manager:
                 expected_error_message = f"Could not find any locustfiles in directory '{temp_dir}'"
 
                 if not wait_for_output_condition_non_threading(
-                    manager.proc, manager.output_lines, expected_error_message, timeout=5
+                    manager.process, manager.output_lines, expected_error_message, timeout=5
                 ):
                     self.fail(f"Timeout waiting for error message: {expected_error_message}")
 
-                manager.proc.wait(timeout=5)
+                try:
+                    manager.process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.fail("Locust process did not terminate as expected.")
 
         combined_output = "\n".join(manager.output_lines)
 
         self.assertIn(expected_error_message, combined_output)
-        self.assertEqual(1, manager.proc.returncode)
+        self.assertEqual(1, manager.process.returncode, "Process did not exit with return code 1 as expected.")
 
     def test_error_when_no_tasks_match_tags(self):
-        content = """
-from locust import HttpUser, TaskSet, task, constant, LoadTestShape, tag
-class MyUser(HttpUser):
-    host = "http://127.0.0.1:8089"
-    wait_time = constant(1)
-    @tag("tag1")
-    @task
-    def task1(self):
-        print("task1")
-    """
+        """
+        Tests that providing tags that do not match any tasks results in appropriate error messages and exit code.
+        """
+        content = textwrap.dedent("""
+            from locust import HttpUser, task, constant, LoadTestShape, tag
+
+            class MyUser(HttpUser):
+                host = "http://127.0.0.1:8089"
+                wait_time = constant(1)
+
+                @tag("tag1")
+                @task
+                def task1(self):
+                    print("task1")
+        """)
+
         with mock_locustfile(content=content) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--headless",
-                    "-t",
-                    "1",
-                    "--tags",
-                    "tag2",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-                env=os.environ.copy(),
-            )
-            _, stderr = proc.communicate()
-            self.assertIn("MyUser had no tasks left after filtering", stderr)
-            self.assertIn("No tasks defined on MyUser", stderr)
-            self.assertEqual(1, proc.returncode)
+            args = [
+                "locust",
+                "-f",
+                mocked.file_path,
+                "--headless",
+                "-t",
+                "1",
+                "--tags",
+                "tag2",
+            ]
+
+            with PopenContextManager(args) as manager:
+                expected_error_messages = [
+                    "MyUser had no tasks left after filtering",
+                    "No tasks defined on MyUser",
+                ]
+
+                for message in expected_error_messages:
+                    if not wait_for_output_condition_non_threading(
+                        manager.process, manager.output_lines, message, timeout=5
+                    ):
+                        self.fail(f"Timeout waiting for error message: {message}")
+
+                try:
+                    manager.process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.fail("Locust process did not terminate as expected.")
+
+        combined_output = "\n".join(manager.output_lines)
+
+        for message in expected_error_messages:
+            self.assertIn(message, combined_output)
+
+        self.assertEqual(1, manager.process.returncode, "Process did not exit with return code 1 as expected.")
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_graceful_exit_when_keyboard_interrupt(self):
-        content = textwrap.dedent(
-            """
-            from locust import User, events, task, constant, LoadTestShape
-            @events.test_stop.add_listener
-            def on_test_stop(environment, **kwargs) -> None:
-                print("Test Stopped")
+        """
+        Tests that Locust exits gracefully when a KeyboardInterrupt (SIGINT) is sent.
+        """
+        content = textwrap.dedent("""
+                from locust import User, events, task, constant, LoadTestShape
 
-            class LoadTestShape(LoadTestShape):
-                def tick(self):
-                    run_time = self.get_run_time()
-                    if run_time < 2:
-                        return (10, 1)
+                @events.test_stop.add_listener
+                def on_test_stop(environment, **kwargs) -> None:
+                    print("Test Stopped")
 
-                    return None
+                class LoadTestShape(LoadTestShape):
+                    def tick(self):
+                        run_time = self.get_run_time()
+                        if run_time < 2:
+                            return (10, 1)
+                        return None
 
-            class TestUser(User):
-                wait_time = constant(3)
-                @task
-                def my_task(self):
-                    print("running my_task()")
-            """
-        )
+                class TestUser(User):
+                    wait_time = constant(3)
+                    @task
+                    def my_task(self):
+                        print("running my_task()")
+            """)
+
         with temporary_file(content=content) as mocked:
-            with run_locust_process(args=["-f", mocked, "--headless"]) as manager:
+            args = [
+                "-f",
+                mocked,
+                "--headless",
+            ]
+
+            with PopenContextManager(["locust"] + args) as manager:
                 if not wait_for_output_condition_non_threading(
-                    manager.proc, manager.output_lines, "Shape test starting", timeout=5
+                    manager.process, manager.output_lines, "Shape test starting", timeout=5
                 ):
                     self.fail("Timeout waiting for 'Shape test starting' message.")
 
-                manager.proc.send_signal(signal.SIGINT)
+                manager.process.send_signal(signal.SIGINT)
 
-                expected_messages = ["Shape test starting", "Exiting due to CTRL+C interruption", "Test Stopped"]
+                expected_messages = [
+                    "Shape test starting",
+                    "Exiting due to CTRL+C interruption",
+                    "Test Stopped",
+                ]
 
                 for message in expected_messages:
                     if not wait_for_output_condition_non_threading(
-                        manager.proc, manager.output_lines, message, timeout=5
+                        manager.process, manager.output_lines, message, timeout=5
                     ):
                         self.fail(f"Timeout waiting for message: {message}")
 
-                manager.proc.wait(timeout=5)
+                try:
+                    manager.process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.fail("Locust process did not terminate as expected.")
 
         combined_output = "\n".join(manager.output_lines)
 
         for message in expected_messages:
             self.assertIn(message, combined_output)
 
-        # Check for the stats printer output
+        # Check for the stats printer output using regex
         self.assertRegex(combined_output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
 
 
