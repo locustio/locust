@@ -87,7 +87,7 @@ class PopenContextManager:
             self.args,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            universal_newlines=True,
+            text=True,
             bufsize=1,
             creationflags=creation_flags,  # Windows-specific creation flag
             **self.kwargs,
