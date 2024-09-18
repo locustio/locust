@@ -38,116 +38,15 @@ from .util import get_free_tcp_port, patch_env, temporary_file
 SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give it some extra time
 
 
+def is_port_in_use(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(("localhost", port)) == 0
+
+
 class PollingTimeoutError(Exception):
     """Custom exception for polling timeout."""
 
     pass
-
-
-def poll_until(condition_func: Callable[[], bool], timeout: float = 10, sleep_time: float = 0.01) -> None:
-    """
-    Polls the condition_func at regular intervals until it returns True or timeout is reached.
-    Fixed short sleep time ensures faster polling with early exit when condition is met.
-    """
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        if condition_func():
-            return
-        time.sleep(sleep_time)
-
-    raise PollingTimeoutError(f"Condition not met within {timeout} seconds")
-
-
-def is_port_in_use(port: int) -> bool:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        try:
-            s.bind(("localhost", port))
-            return False
-        except OSError:
-            return True
-
-
-def wait_for_locust_to_start(port, max_retries=10, retry_delay=2):
-    for attempt in range(max_retries):
-        try:
-            response = requests.get(f"http://localhost:{port}/", timeout=10)
-            if response.status_code == 200:
-                return True
-        except requests.RequestException as e:
-            print(f"Connection attempt {attempt + 1} failed: {e}")
-            time.sleep(retry_delay)
-    return False
-
-
-def all_users_spawned(proc, output):
-    if platform.system() == "Windows":
-        while True:
-            line = proc.stderr.readline()
-            if not line:
-                break
-            output.append(line)
-            if "All users spawned" in line:
-                return True
-    else:
-        stderr = proc.stderr
-        ready, _, _ = select.select([stderr], [], [], 0.1)
-        if ready:
-            line = stderr.readline()
-            output.append(line)
-            if "All users spawned" in line:
-                return True
-    return False
-
-
-def read_output(proc: subprocess.Popen) -> list[str]:
-    output: list[str] = []
-
-    stdout = cast(IO[str], proc.stdout)
-
-    ready, _, _ = select.select([stdout], [], [], 0.1)
-    if ready:
-        line = stdout.readline().strip()
-        output.append(line)
-
-    return output
-
-
-def read_nonblocking(proc: subprocess.Popen, output: list[str]) -> bool:
-    assert proc.stdout and proc.stderr, "proc.stdout or proc.stderr is None, cannot read from them"
-
-    if platform.system() == "Windows":
-        while True:
-            stdout_line = proc.stdout.readline()
-            if not stdout_line:
-                break
-            output.append(stdout_line)
-            if "All users spawned" in stdout_line:
-                return True
-            stderr_line = proc.stderr.readline()
-            if stderr_line:
-                output.append(stderr_line)
-    else:
-        ready_to_read, _, _ = select.select([proc.stdout, proc.stderr], [], [], 0.1)
-        for pipe in ready_to_read:
-            pipe_line = pipe.readline()
-            output.append(pipe_line)
-            if "All users spawned" in pipe_line:
-                return True
-    return False
-
-
-def read_output_non_blocking(proc, output_list):
-    """
-    Reads real-time output from a subprocess in a non-blocking way using gevent.
-    :param proc: Subprocess object
-    :param output_list: List to store the real-time output.
-    """
-    while proc.poll() is None:  # Keep reading while the process is still running
-        line = proc.stdout.readline()
-        if line:
-            output_list.append(line)
-            print(line.strip())  # Optional: for real-time feedback
-        gevent.sleep(0.1)  # Yield control to allow other greenlets to run
 
 
 def wait_for_output_condition_non_threading(proc, output_lines, condition, timeout=30):
@@ -159,19 +58,6 @@ def wait_for_output_condition_non_threading(proc, output_lines, condition, timeo
         if time.time() - start_time >= timeout:
             return False
         gevent.sleep(0.1)
-
-
-class ProcessManager:
-    def __init__(self, proc, stdout_reader, stderr_reader, temp_file_path, output_lines):
-        self.proc = proc
-        self.stdout_reader = stdout_reader
-        self.stderr_reader = stderr_reader
-        self.temp_file_path = temp_file_path
-        self.output_lines = output_lines
-
-    def cleanup(self):
-        if self.temp_file_path is not None and os.path.exists(self.temp_file_path):
-            os.unlink(self.temp_file_path)
 
 
 class PopenContextManager:
@@ -225,56 +111,7 @@ class PopenContextManager:
         for line in iter(pipe.readline, ""):
             line = line.rstrip("\n")
             self.output_lines.append(line)
-            print(f"Captured output: {line}")  # Debugging line to check output capture
-
-
-@contextmanager
-def run_locust_process(file_content=None, args=None, port=None):
-    temp_file_path = None
-    locust_command = ["locust"]
-
-    if file_content is not None:
-        with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
-            temp_file.write(file_content)
-            temp_file.flush()
-            temp_file_path = temp_file.name
-        locust_command += ["-f", temp_file_path]
-
-    if args:
-        locust_command += args
-
-    if port is not None:
-        locust_command += ["--web-port", str(port)]
-
-    proc = subprocess.Popen(
-        locust_command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        bufsize=1,
-        text=True,
-        env={**os.environ, "PYTHONUNBUFFERED": "1"},
-    )
-
-    output_lines = []
-
-    def read_output(process_stdout):
-        for line in iter(process_stdout.readline, ""):
-            output_lines.append(line.rstrip("\n"))
-
-    stdout_reader = gevent.spawn(read_output, proc.stdout)
-    stderr_reader = gevent.spawn(read_output, proc.stderr)
-
-    manager = ProcessManager(proc, stdout_reader, stderr_reader, temp_file_path, output_lines)
-
-    try:
-        yield manager
-    finally:
-        if manager.proc.poll() is None:
-            manager.proc.terminate()
-            manager.proc.wait()
-        manager.stdout_reader.join()
-        manager.stderr_reader.join()
-        manager.cleanup()
+            print(f"Captured output: {line}")
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
@@ -331,71 +168,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             temp_file.flush()
             yield temp_file.name
         os.unlink(temp_file.name)
-
-    def launch_locust(self, args, timeout_start=30, timeout_shutdown=30):
-        """
-        Launch the Locust subprocess with the given arguments and wait for it to start.
-
-        :param args: List of command-line arguments to launch Locust.
-        :param timeout_start: Time in seconds to wait for Locust to start.
-        :param timeout_shutdown: Time in seconds to wait for Locust to shut down.
-        :return: PopenContextManager instance.
-        """
-        manager = PopenContextManager(args)
-        manager.__enter__()
-
-        # Wait for Locust to start
-        self.wait_for_output(manager, "Starting Locust", timeout=timeout_start)
-        self.wait_for_output(manager, "Starting web interface at", timeout=timeout_start)
-
-        return manager
-
-    def wait_for_output(self, manager, condition, timeout=30):
-        """
-        Wait for a specific condition in the subprocess output.
-
-        :param manager: The PopenContextManager instance.
-        :param condition: The string to wait for in the output.
-        :param timeout: Maximum time to wait in seconds.
-        :raises AssertionError: If the condition is not met within the timeout.
-        """
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            if any(condition in line for line in manager.output_lines):
-                return
-            if manager.process.poll() is not None:
-                break
-            time.sleep(0.5)
-        # If condition not met, terminate the process and fail the test
-        manager.process.terminate()
-        try:
-            manager.process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            manager.process.kill()
-            manager.process.wait()
-        self.fail(f"Timeout waiting for condition '{condition}'.")
-
-    def terminate_locust(self, manager, shutdown_message="Shutting down (exit code 0)", timeout=30):
-        """
-        Gracefully terminate the Locust subprocess and wait for shutdown confirmation.
-
-        :param manager: The PopenContextManager instance.
-        :param shutdown_message: The shutdown message to wait for in the output.
-        :param timeout: Maximum time to wait in seconds for shutdown.
-        """
-        # Send SIGTERM to gracefully shut down Locust
-        manager.process.send_signal(signal.SIGTERM)
-
-        # Wait for shutdown message
-        self.wait_for_output(manager, shutdown_message, timeout=timeout)
-
-        # Wait for the process to terminate
-        try:
-            manager.process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            manager.process.terminate()
-            manager.process.wait(timeout=5)
-            self.fail("Locust process did not terminate gracefully after SIGTERM.")
 
     def make_http_request(self, port, method="GET", path="/", data=None, timeout=10):
         """
