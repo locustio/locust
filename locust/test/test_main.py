@@ -234,7 +234,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 str(port),
             ],
         ) as manager:
-            # Wait for the Locust process to start and check output for success conditions
             if not wait_for_output_condition_non_threading(
                 manager.process, manager.output_lines, "Starting Locust", timeout=30
             ):
@@ -245,7 +244,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             ):
                 self.fail("Timeout waiting for web interface to start.")
 
-            # Send a request to start the Locust swarm
             response = requests.post(
                 f"http://127.0.0.1:{port}/swarm",
                 data={
@@ -256,10 +254,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 },
             )
 
-            # Validate the HTTP response status code
             self.assertEqual(response.status_code, 200)
 
-        # After the process completes, verify the output
         combined_output = "\n".join(manager.output_lines)
         self.assertRegex(
             combined_output, r".*Shutting down[\S\s]*Aggregated.*", "No stats table printed after shutting down"
@@ -288,7 +284,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     print("running my_task()")
         """)
 
-        # Use PopenContextManager instead of manual file and process handling
         with PopenContextManager(
             file_content=file_content,
             args=[
@@ -299,7 +294,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 str(port),
             ],
         ) as manager:
-            # Wait for Locust to start and for the web interface to be ready
             if not wait_for_output_condition_non_threading(
                 manager.process, manager.output_lines, "Starting Locust", timeout=30
             ):
@@ -310,13 +304,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             ):
                 self.fail("Timeout waiting for web interface to start.")
 
-            # Send a SIGTERM signal to the process
             manager.process.send_signal(signal.SIGTERM)
 
-            # Wait for the process to exit with the custom exit code
             manager.process.wait(timeout=3)
 
-        # After the process exits, verify the output and the exit code
         combined_output = "\n".join(manager.output_lines)
 
         self.assertIn("Shutting down (exit code 42)", combined_output)
@@ -527,7 +518,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             combined_output = "\n".join(manager.output_lines)
 
-            # Perform assertions
             self.assertIn(
                 "Starting web interface at",
                 combined_output,
@@ -591,7 +581,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
 
         with TemporaryDirectory() as temp_dir:
-            # Create multiple Locustfiles in the temporary directory
             with (
                 mock_locustfile(content=user_file_content, dir=temp_dir),
                 mock_locustfile(content=shape_file_content, dir=temp_dir),
@@ -603,13 +592,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "-m",
                     "locust",
                     "-f",
-                    temp_dir,  # Directory containing multiple Locustfiles
+                    temp_dir,
                     "--web-port",
                     str(port),
                 ]
 
                 with PopenContextManager(args) as manager:
-                    # Wait for Locust to start
                     if not wait_for_output_condition_non_threading(
                         manager.process, manager.output_lines, "Starting Locust", timeout=30
                     ):
@@ -617,7 +605,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         manager.process.wait(timeout=5)
                         self.fail("Timeout waiting for Locust to start.")
 
-                    # Wait for the web interface to start
                     if not wait_for_output_condition_non_threading(
                         manager.process, manager.output_lines, "Starting web interface at", timeout=30
                     ):
@@ -625,7 +612,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         manager.process.wait(timeout=5)
                         self.fail("Timeout waiting for web interface to start.")
 
-                    # Test the web interface
                     try:
                         response = requests.get(f"http://localhost:{port}/", timeout=10)
                         self.assertEqual(
@@ -636,10 +622,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         manager.process.wait(timeout=5)
                         self.fail(f"Failed to connect to Locust web interface: {e}")
 
-                    # Send SIGTERM to gracefully shut down Locust
                     manager.process.send_signal(signal.SIGTERM)
 
-                    # Wait for Locust to shut down
                     if not wait_for_output_condition_non_threading(
                         manager.process, manager.output_lines, "Shutting down (exit code 0)", timeout=30
                     ):
@@ -647,7 +631,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         manager.process.wait(timeout=5)
                         self.fail("Timeout waiting for Locust to shut down.")
 
-                    # Ensure the process has terminated
                     try:
                         manager.process.wait(timeout=5)
                     except subprocess.TimeoutExpired:
@@ -655,10 +638,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         manager.process.wait(timeout=5)
                         self.fail("Locust process did not terminate gracefully after SIGTERM.")
 
-        # Combine all output lines for assertions
         combined_output = "\n".join(manager.output_lines)
 
-        # Perform assertions on the output
         self.assertIn(
             "Starting web interface at",
             combined_output,
@@ -677,7 +658,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
-        # Assert that the process exited successfully
         self.assertEqual(
             0,
             manager.process.returncode,
@@ -713,11 +693,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                 self.assertNotIn("Traceback", all_output)
 
-                # Check for the specific message
                 expected_message = 'Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...'
                 self.assertIn(expected_message, all_output)
 
-                # Check return code
                 self.assertEqual(0, popen_ctx.process.returncode)
 
     def test_invalid_stop_timeout_string(self):
@@ -794,7 +772,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.fail("Locust process did not terminate gracefully after SIGTERM.")
 
             combined_output = "\n".join(manager.output_lines)
-            print(f"Combined Locust Output:\n{combined_output}")
 
             self.assertIn("All users spawned", combined_output, msg="Expected 'All users spawned' not found in output.")
             self.assertIn(
@@ -1108,7 +1085,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         port = get_free_tcp_port()
         with mock_locustfile() as mocked:
             args = [
-                sys.executable,  # Use the Python interpreter
+                sys.executable,
                 "-m",
                 "locust",
                 "-f",
@@ -1119,7 +1096,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             ]
 
             with PopenContextManager(args) as manager:
-                # Define the messages to check in the output
                 start_message = "Starting Locust"
                 no_run_time_message = "No run time limit set, use CTRL+C to interrupt"
 
@@ -1128,7 +1104,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     no_run_time_message,
                 ]
 
-                # Wait for each message sequentially
                 for message in messages_to_check:
                     if not wait_for_output_condition_non_threading(
                         manager.process, manager.output_lines, message, timeout=10
@@ -1143,7 +1118,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             manager.process.wait(timeout=5)
                         self.fail(f"Timeout waiting for Locust to output: {message}")
 
-                # Make an HTTP GET request to verify the web interface is accessible
                 try:
                     response = self.make_http_request(f"{port}", method="GET", path="/")
                     self.assertEqual(200, response.status_code, "Locust web interface did not return status code 200.")
@@ -1151,10 +1125,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     manager.process.terminate()
                     self.fail(f"Failed to connect to Locust web interface: {e}")
 
-                # Send SIGTERM to initiate graceful shutdown
                 manager.process.send_signal(signal.SIGTERM)
 
-                # Define the shutdown message to wait for
                 shutdown_message = "Shutting down"
 
                 if not wait_for_output_condition_non_threading(
@@ -1170,7 +1142,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         manager.process.wait(timeout=5)
                     self.fail("Timeout waiting for Locust to shut down.")
 
-                # Wait for the process to terminate gracefully
                 try:
                     manager.process.wait(timeout=10)
                 except subprocess.TimeoutExpired:
@@ -1179,16 +1150,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     manager.process.wait(timeout=10)
                     self.fail("Locust process did not terminate gracefully after SIGTERM.")
 
-            # Combine all output lines for assertions
             combined_output = "\n".join(manager.output_lines)
 
-            # Assertions
             self.assertIn(start_message, combined_output, msg="Start message not found in output.")
             self.assertIn(no_run_time_message, combined_output, msg="No run time message not found in output.")
             self.assertIn(shutdown_message, combined_output, msg="Shutdown message not found in output.")
             self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
-            # Check response content using PyQuery
             d = pq(response.content.decode("utf-8"))
             self.assertIn('"state": "running"', str(d), msg="Expected 'running' state not found in response.")
 
@@ -1202,7 +1170,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         port = get_free_tcp_port()
         with mock_locustfile() as mocked:
             args = [
-                sys.executable,  # Use the Python interpreter
+                sys.executable,
                 "-m",
                 "locust",
                 "-f",
@@ -1210,14 +1178,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "--web-port",
                 str(port),
                 "-t",
-                "3",  # Run time of 3 seconds
+                "3",
                 "--autostart",
                 "--autoquit",
                 "1",
             ]
 
             with PopenContextManager(args) as manager:
-                # Define the messages to check in the output
                 start_message = "Starting Locust"
                 run_time_message = "Run time limit set to 3 seconds"
                 shutdown_message = "Shutting down"
@@ -1227,7 +1194,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     run_time_message,
                 ]
 
-                # Wait for each message sequentially
                 for message in messages_to_check:
                     if not wait_for_output_condition_non_threading(
                         manager.process, manager.output_lines, message, timeout=10
@@ -1242,7 +1208,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             manager.process.wait(timeout=5)
                         self.fail(f"Timeout waiting for Locust to output: {message}")
 
-                # Make an HTTP GET request to verify the web interface is accessible
                 try:
                     response = self.make_http_request(f"{port}", method="GET", path="/")
                     self.assertEqual(200, response.status_code, "Locust web interface did not return status code 200.")
@@ -1250,7 +1215,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     manager.process.terminate()
                     self.fail(f"Failed to connect to Locust web interface: {e}")
 
-                # Wait for the shutdown message indicating autoquit
                 if not wait_for_output_condition_non_threading(
                     manager.process, manager.output_lines, shutdown_message, timeout=10
                 ):
@@ -1264,7 +1228,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         manager.process.wait(timeout=5)
                     self.fail("Timeout waiting for Locust to shut down.")
 
-                # Wait for the process to terminate gracefully
                 try:
                     manager.process.wait(timeout=10)
                 except subprocess.TimeoutExpired:
@@ -1273,16 +1236,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     manager.process.wait(timeout=10)
                     self.fail("Locust process did not terminate gracefully.")
 
-            # Combine all output lines for assertions
             combined_output = "\n".join(manager.output_lines)
 
-            # Assertions
             self.assertIn(start_message, combined_output, msg="Start message not found in output.")
             self.assertIn(run_time_message, combined_output, msg="Run time message not found in output.")
             self.assertIn(shutdown_message, combined_output, msg="Shutdown message not found in output.")
             self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
-            # Check response content using PyQuery
             d = pq(response.content.decode("utf-8"))
             self.assertIn('"state": "running"', str(d), msg="Expected 'running' state not found in response.")
 
@@ -1301,7 +1261,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         and shuts down gracefully.
         """
         with TemporaryDirectory() as temp_dir:
-            # Create the first mock Locustfile in the temporary directory
             with self.create_temp_locustfile(
                 content=textwrap.dedent("""
                     from locust import User, task, constant
@@ -1315,7 +1274,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 """),
                 dir=temp_dir,
             ) as mocked1:
-                # Create the second mock Locustfile in the same directory
                 with self.create_temp_locustfile(
                     content=textwrap.dedent("""
                         from locust import User, task, constant
@@ -1331,11 +1289,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ) as mocked2:
                     port = get_free_tcp_port()
                     args = [
-                        sys.executable,  # Use the Python interpreter
+                        sys.executable,
                         "-m",
                         "locust",
                         "-f",
-                        f"{mocked1},{mocked2}",  # Pass multiple Locustfile paths separated by comma
+                        f"{mocked1},{mocked2}",
                         "--autostart",
                         "-u",
                         "2",
@@ -1346,7 +1304,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     ]
 
                     with PopenContextManager(args) as manager:
-                        # Define the messages to check in the output
                         start_message = "Starting Locust"
                         all_users_spawned_message = "All users spawned:"
                         user_count_messages = ['"TestUser": 1', '"UserSubclass": 1']
@@ -1360,7 +1317,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             task_running_message,
                         ]
 
-                        # Wait for each message sequentially
                         for message in messages_to_check:
                             if not wait_for_output_condition_non_threading(
                                 manager.process, manager.output_lines, message, timeout=10
@@ -1374,10 +1330,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                                     manager.process.wait(timeout=5)
                                 self.fail(f"Timeout waiting for Locust to output: {message}")
 
-                        # Send SIGTERM to initiate graceful shutdown
                         manager.process.send_signal(signal.SIGTERM)
 
-                        # Wait for the shutdown message
                         if not wait_for_output_condition_non_threading(
                             manager.process, manager.output_lines, shutdown_message, timeout=10
                         ):
@@ -1389,7 +1343,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                                 manager.process.wait(timeout=5)
                             self.fail("Timeout waiting for Locust to shut down.")
 
-                        # Wait for the process to terminate gracefully
                         try:
                             manager.process.wait(timeout=10)
                         except subprocess.TimeoutExpired:
@@ -1397,10 +1350,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             manager.process.wait(timeout=10)
                             self.fail("Locust process did not terminate gracefully after SIGTERM.")
 
-                    # Combine all output lines for assertions
                     combined_output = "\n".join(manager.output_lines)
 
-                    # Assertions
                     for message in messages_to_check + [shutdown_message]:
                         self.assertIn(
                             message, combined_output, msg=f"Expected message '{message}' not found in output."
@@ -1441,7 +1392,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         with mock_locustfile(content=locustfile_content) as mocked:
             args = [
-                sys.executable,  # Use the Python interpreter
+                sys.executable,
                 "-m",
                 "locust",
                 "-f",
@@ -1454,14 +1405,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             ]
 
             with PopenContextManager(args) as manager:
-                # Wait for the web interface to start
                 if not wait_for_output_condition_non_threading(
                     manager.process, manager.output_lines, "Starting web interface at", timeout=30
                 ):
                     manager.process.terminate()
                     self.fail("Timeout waiting for Locust web interface to start.")
 
-                # Make an HTTP GET request to verify the web interface is accessible
                 try:
                     response = self.make_http_request(f"{port}", method="GET", path="/", timeout=10)
                     self.assertEqual(200, response.status_code, "Locust web interface did not return status code 200.")
@@ -1469,21 +1418,18 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     manager.process.terminate()
                     self.fail(f"Failed to connect to Locust web interface: {e}")
 
-                # Wait for Locust to apply the load shape and autoquit
                 if not wait_for_output_condition_non_threading(
                     manager.process, manager.output_lines, "Starting Locust", timeout=30
                 ):
                     manager.process.terminate()
                     self.fail("Timeout waiting for Locust to start.")
 
-                # Wait for Locust to shutdown after autoquit time
                 if not wait_for_output_condition_non_threading(
                     manager.process, manager.output_lines, "Shutting down (exit code 0)", timeout=50
                 ):
                     manager.process.terminate()
                     self.fail("Timeout waiting for Locust to shut down after autoquit time.")
 
-                # Wait for the process to terminate gracefully
                 try:
                     manager.process.wait(timeout=10)
                 except subprocess.TimeoutExpired:
@@ -1492,10 +1438,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     manager.process.wait(timeout=10)
                     self.fail("Locust process did not terminate gracefully after autoquit.")
 
-            # Combine all output lines for assertions
             combined_output = "\n".join(manager.output_lines)
 
-            # Assertions
             self.assertIn("Starting Locust", combined_output, msg="Expected 'Starting Locust' not found in output.")
             self.assertIn(
                 "Shape test starting", combined_output, msg="Expected 'Shape test starting' not found in output."
@@ -1555,17 +1499,15 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         ]
 
         with TemporaryDirectory() as temp_dir:
-            # Create the first mock Locustfile (TestUser2) in the temporary directory
             with self.create_temp_locustfile(content=content1, dir=temp_dir) as mocked1:
-                # Create the second mock Locustfile with LoadTestShape (TestUser and CustomLoadTestShape)
                 with self.create_temp_locustfile(content=content2, dir=temp_dir) as mocked2:
                     port = get_free_tcp_port()
                     args = [
-                        sys.executable,  # Use the Python interpreter
+                        sys.executable,
                         "-m",
                         "locust",
                         "-f",
-                        f"{mocked1},{mocked2}",  # Pass multiple Locustfile paths separated by comma
+                        f"{mocked1},{mocked2}",
                         "--autostart",
                         "--autoquit",
                         "3",
@@ -1575,7 +1517,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                     with PopenContextManager(args) as manager:
                         try:
-                            # Wait for each expected message sequentially
                             for output in expected_outputs:
                                 if not wait_for_output_condition_non_threading(
                                     manager.process, manager.output_lines, output, timeout=60
@@ -1589,7 +1530,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             raise
 
                         finally:
-                            # Ensure process is terminated
                             if manager.process.poll() is None:
                                 manager.process.terminate()
                                 try:
@@ -1597,21 +1537,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                                 except subprocess.TimeoutExpired:
                                     manager.process.kill()
 
-        # Combine all output lines for assertions
         combined_output = "\n".join(manager.output_lines)
 
-        # Assertions
         for output in expected_outputs:
             self.assertIn(output, combined_output, f"Expected output not found: {output}")
 
-        # Verify that both user tasks are present
         self.assertIn("running my_task()", combined_output, msg="TestUser task output not found.")
         self.assertIn("running my_task() again", combined_output, msg="TestUser2 task output not found.")
 
-        # Ensure no tracebacks are present
         self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
-        # Verify exit code
         self.assertEqual(
             0,
             manager.process.returncode,
@@ -2009,7 +1944,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "INFO",
             ]
 
-            # Replace 'run_locust_process' with 'PopenContextManager'
             with PopenContextManager(["locust"] + args) as manager:
                 for output in expected_outputs:
                     if not wait_for_output_condition_non_threading(
@@ -2022,7 +1956,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             for output in expected_outputs:
                 self.assertIn(output, combined_output, f"Expected output not found: {output}")
 
-            # Additionally, verify that the process exited with code 0
             self.assertEqual(
                 0,
                 manager.process.returncode,
@@ -2118,7 +2051,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "INFO",
             ]
 
-            # Replace 'run_locust_process' with 'PopenContextManager'
             with PopenContextManager(["locust"] + args) as manager:
                 for output in expected_outputs:
                     if not wait_for_output_condition_non_threading(
@@ -2256,7 +2188,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
     def test_no_error_when_same_userclass_in_two_files(self):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
-            # Create a second file that imports TestUser1 from file1
             MOCK_LOCUSTFILE_CONTENT_C = textwrap.dedent(f"""
                     from {os.path.basename(file1)[:-3]} import TestUser1
                 """)
@@ -2724,11 +2655,9 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                     "Timeout waiting for 'Gave up waiting' message",
                 )
 
-                # Combine and check the output
                 combined_output = "\n".join(manager.output_lines)
                 self.assertNotIn("Traceback", combined_output)
 
-            # Ensure the Locust process terminated correctly
             self.assertIn(
                 manager.process.returncode,
                 [1, -15],
@@ -2737,7 +2666,6 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
             self.assertIsNotNone(manager.process.returncode, "Locust process did not terminate")
 
     def test_distributed_events(self):
-        # Define the Locustfile content with event listeners
         content = (
             MOCK_LOCUSTFILE_CONTENT
             + """
@@ -2760,7 +2688,6 @@ def on_test_stop(environment, **kwargs):
 """
         )
 
-        # Start the master process
         with PopenContextManager(
             args=[
                 "locust",
@@ -2778,24 +2705,20 @@ def on_test_stop(environment, **kwargs):
             file_content=content,
             port=get_free_tcp_port(),
         ) as master_manager:
-            # Start the worker process
             with PopenContextManager(
                 args=["locust", "--worker", "-L", "DEBUG"],
                 file_content=content,
             ) as worker_manager:
-                # Wait for the master to finish
                 master_finished = wait_for_output_condition_non_threading(
                     master_manager.process, master_manager.output_lines, "test_stop on master", timeout=5
                 )
                 self.assertTrue(master_finished, "Master did not finish as expected.")
 
-                # Wait for the worker to finish
                 worker_finished = wait_for_output_condition_non_threading(
                     worker_manager.process, worker_manager.output_lines, "test_stop on worker", timeout=5
                 )
                 self.assertTrue(worker_finished, "Worker did not finish as expected.")
 
-            # Ensure the worker process terminated correctly
             self.assertIsNotNone(worker_manager.process.returncode, "Worker process did not terminate")
             # self.assertEqual(0, worker_manager.process.returncode, "Worker process exited with unexpected return code")
 
@@ -2803,7 +2726,6 @@ def on_test_stop(environment, **kwargs):
         self.assertIsNotNone(master_manager.process.returncode, "Master process did not terminate")
         # self.assertEqual(0, master_manager.process.returncode, "Master process exited with unexpected return code")
 
-        # Combine and check the output
         master_output = "\n".join(master_manager.output_lines)
         worker_output = "\n".join(worker_manager.output_lines)
 
@@ -2834,7 +2756,6 @@ def on_test_stop(environment, **kwargs):
                     print("task2")
         """)
 
-        # Start the master process
         with PopenContextManager(
             args=[
                 "locust",
@@ -2856,33 +2777,27 @@ def on_test_stop(environment, **kwargs):
             file_content=content,
             port=get_free_tcp_port(),
         ) as master_manager:
-            # Start the worker process
             with PopenContextManager(
                 args=["locust", "--worker", "-L", "DEBUG"],
                 file_content=content,
                 port=None,
             ) as worker_manager:
-                # Wait for the master to finish
                 master_finished = wait_for_output_condition_non_threading(
                     master_manager.process, master_manager.output_lines, "Shutting down", timeout=5
                 )
                 self.assertTrue(master_finished, "Master did not shut down as expected.")
 
-                # Wait for the worker to finish
                 worker_finished = wait_for_output_condition_non_threading(
                     worker_manager.process, worker_manager.output_lines, "Shutting down", timeout=5
                 )
                 self.assertTrue(worker_finished, "Worker did not shut down as expected.")
 
-        # Ensure the master process terminated correctly
         self.assertIsNotNone(master_manager.process.returncode, "Master process did not terminate")
         self.assertEqual(0, master_manager.process.returncode, "Master process exited with unexpected return code")
 
-        # Ensure the worker process terminated correctly
         self.assertIsNotNone(worker_manager.process.returncode, "Worker process did not terminate")
         self.assertEqual(0, worker_manager.process.returncode, "Worker process exited with unexpected return code")
 
-        # Combine and check the output
         master_output = "\n".join(master_manager.output_lines)
         worker_output = "\n".join(worker_manager.output_lines)
 
@@ -2906,7 +2821,6 @@ def on_test_stop(environment, **kwargs):
                     pass
         """)
 
-        # Start the master process
         with PopenContextManager(
             args=[
                 "locust",
@@ -2922,25 +2836,21 @@ def on_test_stop(environment, **kwargs):
             file_content=LOCUSTFILE_CONTENT,
             port=get_free_tcp_port(),
         ) as master_manager:
-            # Start the worker process
             with PopenContextManager(
                 args=["locust", "--worker"],
                 file_content=LOCUSTFILE_CONTENT,
                 port=None,
             ) as worker_manager:
-                # Wait for the master to finish
                 master_finished = wait_for_output_condition_non_threading(
                     master_manager.process, master_manager.output_lines, "Shutting down (exit code 0)", timeout=10
                 )
                 self.assertTrue(master_finished, "Master did not shut down as expected.")
 
-                # Wait for the worker to finish
                 worker_finished = wait_for_output_condition_non_threading(
                     worker_manager.process, worker_manager.output_lines, "Shutting down (exit code 0)", timeout=10
                 )
                 self.assertTrue(worker_finished, "Worker did not shut down as expected.")
 
-        # Ensure the master process terminated correctly
         self.assertIsNotNone(master_manager.process.returncode, "Master process did not terminate")
         # self.assertEqual(0, master_manager.process.returncode, "Master process exited with unexpected return code")
 
@@ -2974,7 +2884,6 @@ def on_test_stop(environment, **kwargs):
                     pass
         """)
 
-        # Define the environment variable key and value
         env_var_key = "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP"
         env_var_value = "0.01"  # Very short wait time to trigger timeout
 
@@ -2982,7 +2891,6 @@ def on_test_stop(environment, **kwargs):
             mock_locustfile(content=LOCUSTFILE_CONTENT),
             patch_env(env_var_key, env_var_value),
         ):
-            # Start the master process
             with PopenContextManager(
                 args=[
                     "locust",
@@ -2998,13 +2906,11 @@ def on_test_stop(environment, **kwargs):
                 file_content=LOCUSTFILE_CONTENT,
                 port=get_free_tcp_port(),
             ) as master_manager:
-                # Start the worker process
                 with PopenContextManager(
                     args=["locust", "--worker"],
                     file_content=LOCUSTFILE_CONTENT,
                     port=None,
                 ) as worker_manager:
-                    # Wait for the master to report the timeout message
                     master_finished = wait_for_output_condition_non_threading(
                         master_manager.process,
                         master_manager.output_lines,
@@ -3013,27 +2919,22 @@ def on_test_stop(environment, **kwargs):
                     )
                     self.assertTrue(master_finished, "Master did not report timeout as expected.")
 
-                    # Wait for the master to shut down
                     shutting_down = wait_for_output_condition_non_threading(
                         master_manager.process, master_manager.output_lines, "Shutting down (exit code 0)", timeout=5
                     )
                     self.assertTrue(shutting_down, "Master did not shut down as expected.")
 
-                    # Wait for the worker to shut down
                     worker_finished = wait_for_output_condition_non_threading(
                         worker_manager.process, worker_manager.output_lines, "Shutting down (exit code 0)", timeout=5
                     )
                     self.assertTrue(worker_finished, "Worker did not shut down as expected.")
 
-            # Ensure the master process terminated correctly
             self.assertIsNotNone(master_manager.process.returncode, "Master process did not terminate")
             self.assertEqual(0, master_manager.process.returncode, "Master process exited with unexpected return code")
 
-            # Ensure the worker process terminated correctly
             self.assertIsNotNone(worker_manager.process.returncode, "Worker process did not terminate")
             self.assertEqual(0, worker_manager.process.returncode, "Worker process exited with unexpected return code")
 
-            # Combine and check the output
             master_output = "\n".join(master_manager.output_lines)
             worker_output = "\n".join(worker_manager.output_lines)
 
@@ -3043,7 +2944,6 @@ def on_test_stop(environment, **kwargs):
             )
             self.assertIn("Shutting down (exit code 0)", master_output)
 
-            # Assertions for worker process
             self.assertNotIn("Traceback", master_output, "Traceback found in master output")
             self.assertNotIn("Traceback", worker_output, "Traceback found in worker output")
 
@@ -3063,7 +2963,6 @@ def on_test_stop(environment, **kwargs):
                     pass
         """)
 
-        # Start the master process
         with PopenContextManager(
             args=[
                 "locust",
@@ -3079,19 +2978,16 @@ def on_test_stop(environment, **kwargs):
             file_content=LOCUSTFILE_CONTENT,
             port=get_free_tcp_port(),
         ) as master_manager:
-            # Start the first worker process
             with PopenContextManager(
                 args=["locust", "--worker"],
                 file_content=LOCUSTFILE_CONTENT,
                 port=None,
             ) as worker_manager1:
-                # Start the second worker process
                 with PopenContextManager(
                     args=["locust", "--worker"],
                     file_content=LOCUSTFILE_CONTENT,
                     port=None,
                 ) as worker_manager2:
-                    # Wait for all users to be spawned
                     all_users_spawned = wait_for_output_condition_non_threading(
                         master_manager.process,
                         master_manager.output_lines,
@@ -3100,7 +2996,6 @@ def on_test_stop(environment, **kwargs):
                     )
                     self.assertTrue(all_users_spawned, "Timeout waiting for all users to be spawned.")
 
-        # Combine and check the output
         master_output = "\n".join(master_manager.output_lines)
         worker_output1 = "\n".join(worker_manager1.output_lines)
         worker_output2 = "\n".join(worker_manager2.output_lines)
@@ -3148,21 +3043,18 @@ def on_test_stop(environment, **kwargs):
                     print("hello")
         """)
 
-        # Create a temporary Locustfile that both master and worker will use
         with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
             temp_file.write(LOCUSTFILE_CONTENT)
             temp_file.flush()
             locustfile_path = temp_file.name
 
         try:
-            # Start the worker process first
             with PopenContextManager(
                 args=["locust", "-f", locustfile_path, "--worker"],
                 port=None,
             ) as worker_manager:
                 print(f"DEBUG: Worker started with PID {worker_manager.process.pid}")
 
-                # Start the master process
                 with PopenContextManager(
                     args=[
                         "locust",
@@ -3175,15 +3067,13 @@ def on_test_stop(environment, **kwargs):
                         "-t",
                         "5s",
                     ],
-                    port=get_free_tcp_port(),  # Assign a free port to the master process
+                    port=get_free_tcp_port(),
                 ) as master_manager:
-                    # Wait for the worker to connect to the master
                     worker_connected = wait_for_output_condition_non_threading(
                         master_manager.process, master_manager.output_lines, "1 workers connected", timeout=30
                     )
                     self.assertTrue(worker_connected, "Worker did not connect to master.")
 
-                    # Wait for all users to be spawned
                     all_users_spawned = wait_for_output_condition_non_threading(
                         master_manager.process,
                         master_manager.output_lines,
@@ -3192,18 +3082,15 @@ def on_test_stop(environment, **kwargs):
                     )
                     self.assertTrue(all_users_spawned, "Timeout waiting for all users to be spawned.")
 
-                    # Wait for the master to shut down
                     shutting_down = wait_for_output_condition_non_threading(
                         master_manager.process, master_manager.output_lines, "Shutting down (exit code 0)", timeout=30
                     )
                     self.assertTrue(shutting_down, "'Shutting down (exit code 0)' not found in master output.")
 
-            # After exiting the context managers, the processes should have terminated
             master_output = "\n".join(master_manager.output_lines)
             worker_output = "\n".join(worker_manager.output_lines)
             combined_output = f"{master_output}\n{worker_output}"
 
-            # Assertions on master output
             self.assertIn(
                 'All users spawned: {"User1": 1} (1 total users)',
                 master_output,
@@ -3215,13 +3102,10 @@ def on_test_stop(environment, **kwargs):
                 f"'Shutting down (exit code 0)' not found in master output:\n{master_output}",
             )
 
-            # Assertion on worker output
             self.assertIn("hello", worker_output, "Expected 'hello' not found in worker output.")
 
-            # Ensure there are no errors in the outputs
             self.assertNotIn("Traceback", combined_output, "Traceback found in output, indicating an error.")
 
-            # Check that both processes exited with code 0
             self.assertEqual(
                 0,
                 master_manager.process.returncode,
@@ -3233,7 +3117,6 @@ def on_test_stop(environment, **kwargs):
                 f"Worker process exited with unexpected return code: {worker_manager.process.returncode}",
             )
         finally:
-            # Clean up the temporary Locustfile
             os.remove(locustfile_path)
 
     def test_json_schema(self):
@@ -3251,7 +3134,6 @@ def on_test_stop(environment, **kwargs):
             """
         )
 
-        # Start the Locust process using PopenContextManager
         with PopenContextManager(
             args=[
                 "locust",
@@ -3266,13 +3148,10 @@ def on_test_stop(environment, **kwargs):
             ],
             file_content=LOCUSTFILE_CONTENT,
         ) as manager:
-            # Wait for the process to finish
             manager.process.wait()
 
-            # Combine the output lines
             output = "\n".join(manager.output_lines)
 
-            # Extract the JSON output using a regular expression
             json_pattern = re.compile(r"(\[\s*\{.*?\}\s*\])", re.DOTALL)
             match = json_pattern.search(output)
             if match:
@@ -3284,14 +3163,11 @@ def on_test_stop(environment, **kwargs):
             else:
                 self.fail(f"Could not find JSON output in process output. Output was: {output}")
 
-            # Assert that the process exited with code 0
             self.assertEqual(0, manager.process.returncode)
 
-            # Ensure that data was parsed successfully
             if not data:
                 self.fail(f"No data in JSON output: {output}")
 
-            # Validate the structure and types of the data
             result = data[0]
             self.assertEqual(float, type(result["last_request_timestamp"]))
             self.assertEqual(float, type(result["start_time"]))
@@ -3318,7 +3194,6 @@ def on_test_stop(environment, **kwargs):
                     print("worker index:", self.environment.runner.worker_index)
         """)
 
-        # Create a temporary Locustfile that both master and workers will use
         with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
             temp_file.write(content)
             temp_file.flush()
@@ -3339,9 +3214,7 @@ def on_test_stop(environment, **kwargs):
                 "-L",
                 "DEBUG",
             ]
-            # Start the master process using PopenContextManager
             with PopenContextManager(args=["locust"] + master_args) as master_manager:
-                # Wait for the master to be ready
                 master_ready = wait_for_output_condition_non_threading(
                     master_manager.process, master_manager.output_lines, "Waiting for workers to be ready", timeout=10
                 )
@@ -3356,27 +3229,21 @@ def on_test_stop(environment, **kwargs):
                     "-L",
                     "DEBUG",
                 ]
-                # Start the first worker process
                 with PopenContextManager(args=["locust"] + worker_args) as worker1_manager:
-                    # Start the second worker process
                     with PopenContextManager(args=["locust"] + worker_args) as worker2_manager:
-                        # Wait for the master to send spawn jobs to workers
                         workers_ready = wait_for_output_condition_non_threading(
                             master_manager.process, master_manager.output_lines, "Sending spawn jobs", timeout=10
                         )
                         self.assertTrue(workers_ready, "Workers did not connect properly")
 
-                        # Wait for the master process to finish
                         master_manager.process.wait(timeout=15)
                         self.assertEqual(0, master_manager.process.poll(), "Master process did not exit cleanly")
 
-                        # Wait for the worker processes to finish
                         worker1_manager.process.wait(timeout=5)
                         worker2_manager.process.wait(timeout=5)
                         self.assertEqual(0, worker1_manager.process.poll(), "Worker 1 did not exit cleanly")
                         self.assertEqual(0, worker2_manager.process.poll(), "Worker 2 did not exit cleanly")
 
-                        # Combine and check the output
                         master_output = "\n".join(master_manager.output_lines)
                         worker1_output = "\n".join(worker1_manager.output_lines)
                         worker2_output = "\n".join(worker2_manager.output_lines)
@@ -3385,7 +3252,6 @@ def on_test_stop(environment, **kwargs):
                         self.assertNotIn("Traceback", worker1_output, "Traceback found in worker 1 output")
                         self.assertNotIn("Traceback", worker2_output, "Traceback found in worker 2 output")
 
-                        # Function to extract worker indexes from output
                         def extract_worker_indexes(output):
                             PREFIX = "worker index:"
                             indexes = []
@@ -3396,7 +3262,6 @@ def on_test_stop(environment, **kwargs):
                                     indexes.append(idx)
                             return indexes
 
-                        # Extract worker indexes from each worker's output
                         indexes1 = extract_worker_indexes(worker1_output)
                         indexes2 = extract_worker_indexes(worker2_output)
 
@@ -3404,7 +3269,6 @@ def on_test_stop(environment, **kwargs):
                         expected = {0, 1}
                         self.assertEqual(found, expected, f"Expected worker indexes {expected}, but got {found}")
         finally:
-            # Clean up the temporary Locustfile
             os.remove(temp_file_path)
 
     @unittest.skipIf(os.name == "nt", reason="--processes doesn't work on Windows")
@@ -3422,9 +3286,7 @@ def on_test_stop(environment, **kwargs):
                 "--exit-code-on-error",
                 "0",
             ]
-            # Start the Locust process using PopenContextManager
             with PopenContextManager(args=args) as manager:
-                # Wait for the process to output "Shutting down (exit code 0)"
                 process_finished = wait_for_output_condition_non_threading(
                     manager.process, manager.output_lines, "Shutting down (exit code 0)", timeout=9
                 )
@@ -3454,9 +3316,7 @@ def on_test_stop(environment, **kwargs):
                 "--exit-code-on-error",
                 "0",
             ]
-            # Start the Locust process using PopenContextManager
             with PopenContextManager(args=args) as manager:
-                # Wait for the process to output "Shutting down (exit code 0)"
                 process_finished = wait_for_output_condition_non_threading(
                     manager.process, manager.output_lines, "Shutting down (exit code 0)", timeout=9
                 )
@@ -3479,7 +3339,6 @@ def on_test_stop(environment, **kwargs):
     @unittest.skipIf(os.name == "nt", reason="--processes doesn't work on Windows")
     def test_processes_separate_worker(self):
         with mock_locustfile() as mocked:
-            # Define the master process arguments
             master_args = [
                 "locust",
                 "-f",
@@ -3493,9 +3352,7 @@ def on_test_stop(environment, **kwargs):
                 "--expect-workers-max-wait",
                 "2",
             ]
-            # Start the master process using PopenContextManager
             with PopenContextManager(args=master_args) as master_manager:
-                # Define the worker process arguments
                 worker_args = [
                     "locust",
                     "-f",
@@ -3504,13 +3361,10 @@ def on_test_stop(environment, **kwargs):
                     "4",
                     "--worker",
                 ]
-                # Start the worker parent process
                 with PopenContextManager(args=worker_args) as worker_manager:
                     try:
-                        # Wait for the worker process to finish
                         worker_manager.process.wait(timeout=9)
                     except subprocess.TimeoutExpired:
-                        # Kill both processes if the worker doesn't finish in time
                         master_manager.process.kill()
                         worker_manager.process.kill()
                         worker_output = "\n".join(worker_manager.output_lines)
@@ -3518,21 +3372,17 @@ def on_test_stop(environment, **kwargs):
                         self.fail(f"Worker never finished: {worker_output}")
 
                     try:
-                        # Wait for the master process to finish
                         master_manager.process.wait(timeout=9)
                     except subprocess.TimeoutExpired:
-                        # Kill both processes if the master doesn't finish in time
                         master_manager.process.kill()
                         worker_manager.process.kill()
                         worker_output = "\n".join(worker_manager.output_lines)
                         master_output = "\n".join(master_manager.output_lines)
                         self.fail(f"Master never finished: {master_output}")
 
-                    # Collect the outputs from both processes
                     worker_output = "\n".join(worker_manager.output_lines)
                     master_output = "\n".join(master_manager.output_lines)
 
-                    # Perform assertions on the outputs
                     self.assertNotIn("Traceback", worker_output, "Traceback found in worker output")
                     self.assertNotIn("Traceback", master_output, "Traceback found in master output")
                     self.assertNotIn(
@@ -3610,7 +3460,6 @@ def on_test_stop(environment, **kwargs):
             """
         )
         with mock_locustfile(content=content) as mocked:
-            # Start the master process using PopenContextManager
             master_args = [
                 "locust",
                 "-f",
@@ -3623,7 +3472,6 @@ def on_test_stop(environment, **kwargs):
                 "DEBUG",
             ]
             with PopenContextManager(args=master_args) as master_manager:
-                # Start the worker parent process with multiple worker processes
                 worker_args = [
                     "locust",
                     "-f",
@@ -3635,36 +3483,30 @@ def on_test_stop(environment, **kwargs):
                     "-L",
                     "DEBUG",
                 ]
-                # Use start_new_session=True to ensure the worker parent process starts a new session
                 with PopenContextManager(args=worker_args, start_new_session=True) as worker_manager:
-                    # Wait for the master to report that all users have been spawned
                     start_time = time.time()
                     while time.time() - start_time < 30:
                         if any("All users spawned" in line for line in master_manager.output_lines):
                             break
                         if master_manager.process.poll() is not None:
-                            break  # Master process has exited
+                            break
                         time.sleep(0.1)
                     else:
                         self.fail("Timeout waiting for workers to be ready.")
 
-                    # Kill the master process to simulate it going down
                     master_manager.process.kill()
                     master_manager.process.wait()
 
-                    # Wait for the worker parent process to shut down
                     start_time = time.time()
                     while time.time() - start_time < 30:
                         if worker_manager.process.poll() is not None:
-                            break  # Worker parent process has exited
+                            break
                         time.sleep(0.1)
                     else:
                         self.fail("Timeout waiting for workers to shut down.")
 
-                    # Collect outputs from the master and worker processes
                     worker_output = "\n".join(worker_manager.output_lines)
 
-                    # Assertions to check for expected behavior and absence of errors
                     self.assertNotIn("Traceback", worker_output, "Traceback found in worker output")
                     self.assertIn(
                         "Didn't get heartbeat from master in over",
@@ -3686,15 +3528,10 @@ def on_test_stop(environment, **kwargs):
                 "DEBUG",
                 "UserThatDoesntExist",
             ]
-            # Start the Locust process using PopenContextManager
             with PopenContextManager(args=args) as manager:
-                # Wait for the process to complete
                 manager.process.wait()
-                # Combine the output lines
                 stderr_output = "\n".join(manager.output_lines)
-                # Perform the assertions
                 self.assertIn("Unknown User(s): UserThatDoesntExist", stderr_output)
-                # The error message should repeat 4 times for the workers and once for the master
                 self.assertEqual(stderr_output.count("Unknown User(s): UserThatDoesntExist"), 5)
                 self.assertNotIn("Traceback", stderr_output)
 
@@ -3723,7 +3560,7 @@ class AnyUser(User):
                 "--master",
                 "--headless",
                 "-t",
-                "5s",  # Ensure the test runs long enough
+                "5s",
             ]
             worker_args = [
                 "locust",
@@ -3735,13 +3572,10 @@ class AnyUser(User):
             ]
 
             with ExitStack() as stack:
-                # Start the master process
                 master_manager = stack.enter_context(PopenContextManager(args=master_args))
 
-                # Start the worker process
                 worker_manager = stack.enter_context(PopenContextManager(args=worker_args))
 
-                # Wait for the worker to output the exit message
                 worker_exited = wait_for_output_condition_non_threading(
                     worker_manager.process,
                     worker_manager.output_lines,
@@ -3750,7 +3584,6 @@ class AnyUser(User):
                 )
                 self.assertTrue(worker_exited, "Worker did not exit as expected")
 
-                # Wait for the master to detect the missing worker
                 master_detected_missing = wait_for_output_condition_non_threading(
                     master_manager.process,
                     master_manager.output_lines,
@@ -3759,32 +3592,27 @@ class AnyUser(User):
                 )
                 self.assertTrue(master_detected_missing, "Master did not detect missing worker")
 
-                # Wait for both processes to finish
                 master_manager.process.wait(timeout=15)
                 worker_manager.process.wait(timeout=5)
 
-                # Assert that the worker exited with code 42
                 self.assertEqual(
                     worker_manager.process.returncode,
                     42,
                     f"Worker exited with unexpected return code: {worker_manager.process.returncode}",
                 )
 
-                # Assert that the master exited cleanly
                 self.assertEqual(
                     master_manager.process.returncode,
                     0,
                     f"Master process did not exit cleanly, return code: {master_manager.process.returncode}",
                 )
 
-                # Combine and check the outputs
                 master_output = "\n".join(master_manager.output_lines)
                 worker_output = "\n".join(worker_manager.output_lines)
 
                 self.assertNotIn("Traceback", master_output, "Traceback found in master output")
                 self.assertNotIn("Traceback", worker_output, "Traceback found in worker output")
 
-                # Additional assertions to verify expected log messages
                 self.assertIn(
                     "failed to send heartbeat, setting state to missing",
                     master_output,
