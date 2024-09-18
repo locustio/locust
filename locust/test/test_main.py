@@ -104,7 +104,8 @@ class PopenContextManager:
             try:
                 if platform.system() == "Windows":
                     # Send CTRL_BREAK_EVENT to allow graceful shutdown
-                    self.process.send_signal(signal.CTRL_BREAK_EVENT)
+                    os.kill(self.process.pid, signal.CTRL_BREAK_EVENT)
+
                 else:
                     self.process.terminate()
 
