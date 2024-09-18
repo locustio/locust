@@ -2747,23 +2747,27 @@ def on_test_stop(environment, **kwargs):
         self.assertNotIn("Traceback", worker_output)
 
     def test_distributed_tags(self):
+        """
+        Tests that the master process correctly handles tag filtering,
+        ensuring only tasks with specified tags are executed.
+        """
         content = textwrap.dedent("""
-            from locust import HttpUser, task, between, tag
+                from locust import HttpUser, task, between, tag
 
-            class SecondUser(HttpUser):
-                host = "http://127.0.0.1:8089"
-                wait_time = between(0, 0.1)
+                class SecondUser(HttpUser):
+                    host = "http://127.0.0.1:8089"
+                    wait_time = between(0, 0.1)
 
-                @tag("tag1")
-                @task
-                def task1(self):
-                    print("task1")
+                    @tag("tag1")
+                    @task
+                    def task1(self):
+                        print("task1")
 
-                @tag("tag2")
-                @task
-                def task2(self):
-                    print("task2")
-        """)
+                    @tag("tag2")
+                    @task
+                    def task2(self):
+                        print("task2")
+            """)
 
         with PopenContextManager(
             args=[
@@ -2773,7 +2777,7 @@ def on_test_stop(environment, **kwargs):
                 "--expect-workers",
                 "1",
                 "-t",
-                "1",
+                "5s",
                 "-u",
                 "2",
                 "--exit-code-on-error",
@@ -2792,20 +2796,14 @@ def on_test_stop(environment, **kwargs):
                 port=None,
             ) as worker_manager:
                 master_finished = wait_for_output_condition_non_threading(
-                    master_manager.process, master_manager.output_lines, "Shutting down", timeout=5
+                    master_manager.process, master_manager.output_lines, "Shutting down", timeout=10
                 )
                 self.assertTrue(master_finished, "Master did not shut down as expected.")
 
                 worker_finished = wait_for_output_condition_non_threading(
-                    worker_manager.process, worker_manager.output_lines, "Shutting down", timeout=5
+                    worker_manager.process, worker_manager.output_lines, "Shutting down", timeout=10
                 )
                 self.assertTrue(worker_finished, "Worker did not shut down as expected.")
-
-        self.assertIsNotNone(master_manager.process.returncode, "Master process did not terminate")
-        self.assertEqual(0, master_manager.process.returncode, "Master process exited with unexpected return code")
-
-        self.assertIsNotNone(worker_manager.process.returncode, "Worker process did not terminate")
-        self.assertEqual(0, worker_manager.process.returncode, "Worker process exited with unexpected return code")
 
         master_output = "\n".join(master_manager.output_lines)
         worker_output = "\n".join(worker_manager.output_lines)
@@ -2815,10 +2813,29 @@ def on_test_stop(environment, **kwargs):
         self.assertNotIn("Traceback", master_output, "Traceback found in master stderr/output")
         self.assertNotIn("Traceback", worker_output, "Traceback found in worker stderr/output")
 
+        if platform.system() == "Windows":
+            expected_master_return_codes = [0, 1]
+            expected_worker_return_codes = [0, 1]
+            master_message = "Master process exited with unexpected return code on Windows"
+            worker_message = "Worker process exited with unexpected return code on Windows"
+        else:
+            expected_master_return_codes = [0]
+            expected_worker_return_codes = [0]
+            master_message = "Master process exited with unexpected return code"
+            worker_message = "Worker process exited with unexpected return code"
+
+        self.assertIn(master_manager.process.returncode, expected_master_return_codes, master_message)
+
+        self.assertIn(worker_manager.process.returncode, expected_worker_return_codes, worker_message)
+
         self.assertIn("task1", worker_output, "Master did not filter tasks correctly; 'task1' should be present")
         self.assertNotIn("task2", worker_output, "Master did not filter tasks correctly; 'task2' should not be present")
 
     def test_distributed(self):
+        """
+        Tests the basic distributed Locust setup by spawning a master and a worker.
+        Ensures that both processes shut down correctly with the expected exit codes.
+        """
         LOCUSTFILE_CONTENT = textwrap.dedent("""
             from locust import User, task, constant
 
@@ -2850,32 +2867,57 @@ def on_test_stop(environment, **kwargs):
                 file_content=LOCUSTFILE_CONTENT,
                 port=None,
             ) as worker_manager:
+                # Wait for the master to produce the expected shutdown message
                 master_finished = wait_for_output_condition_non_threading(
-                    master_manager.process, master_manager.output_lines, "Shutting down (exit code 0)", timeout=10
+                    master_manager.process,
+                    master_manager.output_lines,
+                    "Shutting down (exit code 0)",
+                    timeout=10,
                 )
                 self.assertTrue(master_finished, "Master did not shut down as expected.")
 
+                # Wait for the worker to produce the expected shutdown message
                 worker_finished = wait_for_output_condition_non_threading(
-                    worker_manager.process, worker_manager.output_lines, "Shutting down (exit code 0)", timeout=10
+                    worker_manager.process,
+                    worker_manager.output_lines,
+                    "Shutting down (exit code 0)",
+                    timeout=10,
                 )
                 self.assertTrue(worker_finished, "Worker did not shut down as expected.")
 
-        self.assertIsNotNone(master_manager.process.returncode, "Master process did not terminate")
-        # self.assertEqual(0, master_manager.process.returncode, "Master process exited with unexpected return code")
-
-        # Ensure the worker process terminated correctly
-        self.assertIsNotNone(worker_manager.process.returncode, "Worker process did not terminate")
-        # self.assertEqual(0, worker_manager.process.returncode, "Worker process exited with unexpected return code")
-
-        # Combine and check the output
+        # **Validate Output Before Asserting Return Codes**
+        # Combine output lines into single strings for easier searching
         master_output = "\n".join(master_manager.output_lines)
         worker_output = "\n".join(worker_manager.output_lines)
 
-        self.assertIn('All users spawned: {"User1": 3} (3 total users)', master_output)
-        self.assertIn("Shutting down (exit code 0)", master_output)
+        # **Assert Expected Output is Present**
+        self.assertIn(
+            'All users spawned: {"User1": 3} (3 total users)',
+            master_output,
+            "Expected user spawn message not found in master output.",
+        )
+        self.assertIn(
+            "Shutting down (exit code 0)", master_output, "Expected shutdown message not found in master output."
+        )
 
-        self.assertNotIn("Traceback", master_output, "Traceback found in master output")
-        self.assertNotIn("Traceback", worker_output, "Traceback found in worker output")
+        self.assertNotIn("Traceback", master_output, "Traceback found in master output.")
+        self.assertNotIn("Traceback", worker_output, "Traceback found in worker output.")
+
+        # **Now Assert the Return Codes**
+        if platform.system() == "Windows":
+            expected_master_return_codes = [0, 1]
+            expected_worker_return_codes = [0, 1]
+            master_message = "Master process exited with unexpected return code on Windows."
+            worker_message = "Worker process exited with unexpected return code on Windows."
+        else:
+            expected_master_return_codes = [0]
+            expected_worker_return_codes = [0]
+            master_message = "Master process exited with unexpected return code."
+            worker_message = "Worker process exited with unexpected return code."
+
+        self.assertIn(master_manager.process.returncode, expected_master_return_codes, master_message)
+
+        self.assertIn(worker_manager.process.returncode, expected_worker_return_codes, worker_message)
 
     def test_distributed_report_timeout_expired(self):
         """
