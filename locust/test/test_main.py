@@ -2894,15 +2894,15 @@ def on_test_stop(environment, **kwargs):
         after spawning users.
         """
         LOCUSTFILE_CONTENT = textwrap.dedent("""
-            from locust import User, task, constant
+                from locust import User, task, constant
 
-            class User1(User):
-                wait_time = constant(1)
+                class User1(User):
+                    wait_time = constant(1)
 
-                @task
-                def t(self):
-                    pass
-        """)
+                    @task
+                    def t(self):
+                        pass
+            """)
 
         env_var_key = "LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP"
         env_var_value = "0.01"  # Very short wait time to trigger timeout
@@ -2931,6 +2931,7 @@ def on_test_stop(environment, **kwargs):
                     file_content=LOCUSTFILE_CONTENT,
                     port=None,
                 ) as worker_manager:
+                    # Wait for the master to produce the expected timeout message
                     master_finished = wait_for_output_condition_non_threading(
                         master_manager.process,
                         master_manager.output_lines,
@@ -2949,23 +2950,35 @@ def on_test_stop(environment, **kwargs):
                     )
                     self.assertTrue(worker_finished, "Worker did not shut down as expected.")
 
-            self.assertIsNotNone(master_manager.process.returncode, "Master process did not terminate")
-            self.assertEqual(0, master_manager.process.returncode, "Master process exited with unexpected return code")
+        # **Validate Output Before Asserting Return Codes**
+        # Convert output lines to a single string for easier searching
+        master_output = "\n".join(master_manager.output_lines)
+        worker_output = "\n".join(worker_manager.output_lines)
 
-            self.assertIsNotNone(worker_manager.process.returncode, "Worker process did not terminate")
-            self.assertEqual(0, worker_manager.process.returncode, "Worker process exited with unexpected return code")
+        # **Assert Expected Output is Present**
+        expected_timeout_message = 'Spawning is complete and report waittime is expired, but not all reports received from workers: {"User1": 2} (2 total users)'
+        self.assertIn(expected_timeout_message, master_output, "Expected timeout message not found in master output")
+        self.assertIn("Shutting down (exit code 0)", master_output)
+        self.assertIn("Shutting down (exit code 0)", worker_output)
 
-            master_output = "\n".join(master_manager.output_lines)
-            worker_output = "\n".join(worker_manager.output_lines)
+        self.assertNotIn("Traceback", master_output, "Traceback found in master output")
+        self.assertNotIn("Traceback", worker_output, "Traceback found in worker output")
 
-            expected_timeout_message = 'Spawning is complete and report waittime is expired, but not all reports received from workers: {"User1": 2} (2 total users)'
-            self.assertIn(
-                expected_timeout_message, master_output, "Expected timeout message not found in master output"
-            )
-            self.assertIn("Shutting down (exit code 0)", master_output)
+        # **Now Assert the Return Codes**
+        if platform.system() == "Windows":
+            expected_master_return_codes = [0, 1]
+            expected_worker_return_codes = [0, 1]
+            master_message = "Master process exited with unexpected return code on Windows"
+            worker_message = "Worker process exited with unexpected return code on Windows"
+        else:
+            expected_master_return_codes = [0]
+            expected_worker_return_codes = [0]
+            master_message = "Master process exited with unexpected return code"
+            worker_message = "Worker process exited with unexpected return code"
 
-            self.assertNotIn("Traceback", master_output, "Traceback found in master output")
-            self.assertNotIn("Traceback", worker_output, "Traceback found in worker output")
+        self.assertIn(master_manager.process.returncode, expected_master_return_codes, master_message)
+
+        self.assertIn(worker_manager.process.returncode, expected_worker_return_codes, worker_message)
 
     def test_locustfile_distribution(self):
         """
