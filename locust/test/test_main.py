@@ -217,6 +217,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup", output)
 
+    @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_custom_arguments(self):
         port = get_free_tcp_port()
         file_content = textwrap.dedent("""
