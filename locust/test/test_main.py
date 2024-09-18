@@ -14,10 +14,10 @@ import textwrap
 import time
 import unittest
 from contextlib import ExitStack, contextmanager
-from subprocess import DEVNULL, PIPE, STDOUT
+from subprocess import DEVNULL, PIPE, STDOUT, Popen
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from threading import Thread
-from typing import IO, Callable, Optional, cast
+from typing import IO, Callable, Optional, Union, cast
 from unittest import TestCase
 
 import gevent
@@ -43,13 +43,9 @@ def is_port_in_use(port: int) -> bool:
         return s.connect_ex(("localhost", port)) == 0
 
 
-class PollingTimeoutError(Exception):
-    """Custom exception for polling timeout."""
-
-    pass
-
-
-def wait_for_output_condition_non_threading(proc, output_lines, condition, timeout=30):
+def wait_for_output_condition_non_threading(
+    proc: Popen, output_lines: list[str], condition: str, timeout: int | float = 30
+) -> bool:
     start_time = time.time()
     while True:
         combined_output = "\n".join(output_lines)
@@ -79,12 +75,18 @@ class PopenContextManager:
             self.args += ["--web-port", str(port)]
 
     def __enter__(self):
+        creation_flags = 0
+        # Add CREATE_NEW_PROCESS_GROUP for Windows
+        if platform.system() == "Windows":
+            creation_flags = subprocess.CREATE_NEW_PROCESS_GROUP
+
         self.process = subprocess.Popen(
             self.args,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,
             bufsize=1,
+            creationflags=creation_flags,  # Windows-specific creation flag
             **self.kwargs,
             env={**os.environ, "PYTHONUNBUFFERED": "1"},
         )
@@ -96,8 +98,12 @@ class PopenContextManager:
 
     def __exit__(self, exc_type, exc_value, traceback):
         if self.process.poll() is None:
-            self.process.terminate()
-            self.process.wait()
+            try:
+                self.process.terminate()
+                self.process.wait(timeout=10)  # Wait for graceful termination
+            except subprocess.TimeoutExpired:
+                self.process.kill()  # Force kill if not terminated
+            self.process.wait()  # Ensure process has fully terminated
         self.stdout_reader.join()
         self.stderr_reader.join()
 
