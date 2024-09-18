@@ -56,6 +56,9 @@ def wait_for_output_condition_non_threading(
         gevent.sleep(0.1)
 
 
+import gevent
+
+
 class PopenContextManager:
     def __init__(self, args=None, file_content=None, port=None, **kwargs):
         self.args = ["locust"] if args is None else args
@@ -99,11 +102,21 @@ class PopenContextManager:
     def __exit__(self, exc_type, exc_value, traceback):
         if self.process.poll() is None:
             try:
-                self.process.terminate()
+                if platform.system() == "Windows":
+                    # Send CTRL_BREAK_EVENT to allow graceful shutdown
+                    self.process.send_signal(signal.CTRL_BREAK_EVENT)
+                else:
+                    self.process.terminate()
+
                 self.process.wait(timeout=10)  # Wait for graceful termination
             except subprocess.TimeoutExpired:
                 self.process.kill()  # Force kill if not terminated
-            self.process.wait()  # Ensure process has fully terminated
+            except Exception as e:
+                print(f"Error terminating process: {e}")
+            finally:
+                if self.process.poll() is None:
+                    self.process.kill()
+                self.process.wait()  # Ensure process has fully terminated
         self.stdout_reader.join()
         self.stderr_reader.join()
 
