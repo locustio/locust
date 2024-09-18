@@ -102,22 +102,11 @@ class PopenContextManager:
     def __exit__(self, exc_type, exc_value, traceback):
         if self.process.poll() is None:
             try:
-                if platform.system() == "Windows":
-                    # Send CTRL_BREAK_EVENT to allow graceful shutdown
-                    os.kill(self.process.pid, signal.CTRL_BREAK_EVENT)
-
-                else:
-                    self.process.terminate()
-
-                self.process.wait(timeout=10)  # Wait for graceful termination
+                self.process.terminate()
+                self.process.wait(timeout=10)
             except subprocess.TimeoutExpired:
-                self.process.kill()  # Force kill if not terminated
-            except Exception as e:
-                print(f"Error terminating process: {e}")
-            finally:
-                if self.process.poll() is None:
-                    self.process.kill()
-                self.process.wait()  # Ensure process has fully terminated
+                self.process.kill()
+            self.process.wait()
         self.stdout_reader.join()
         self.stderr_reader.join()
 
