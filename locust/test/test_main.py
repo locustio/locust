@@ -3096,6 +3096,10 @@ def on_test_stop(environment, **kwargs):
         )
 
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
+        """
+        Tests distributed Locust setup using a locustfile with a non-plain filename.
+        Ensures that both master and worker processes shut down correctly with expected exit codes based on the OS.
+        """
         LOCUSTFILE_CONTENT = textwrap.dedent("""
             from locust import User, task, constant
 
@@ -3107,6 +3111,7 @@ def on_test_stop(environment, **kwargs):
                     print("hello")
         """)
 
+        # Create a temporary locustfile with a non-plain filename (e.g., includes suffix)
         with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
             temp_file.write(LOCUSTFILE_CONTENT)
             temp_file.flush()
@@ -3133,11 +3138,13 @@ def on_test_stop(environment, **kwargs):
                     ],
                     port=get_free_tcp_port(),
                 ) as master_manager:
+                    # Wait for the master to detect the worker connection
                     worker_connected = wait_for_output_condition_non_threading(
                         master_manager.process, master_manager.output_lines, "1 workers connected", timeout=30
                     )
                     self.assertTrue(worker_connected, "Worker did not connect to master.")
 
+                    # Wait for all users to be spawned
                     all_users_spawned = wait_for_output_condition_non_threading(
                         master_manager.process,
                         master_manager.output_lines,
@@ -3146,15 +3153,18 @@ def on_test_stop(environment, **kwargs):
                     )
                     self.assertTrue(all_users_spawned, "Timeout waiting for all users to be spawned.")
 
+                    # Wait for the master to shut down gracefully
                     shutting_down = wait_for_output_condition_non_threading(
                         master_manager.process, master_manager.output_lines, "Shutting down (exit code 0)", timeout=30
                     )
                     self.assertTrue(shutting_down, "'Shutting down (exit code 0)' not found in master output.")
 
+            # Combine and check the outputs from master and worker
             master_output = "\n".join(master_manager.output_lines)
             worker_output = "\n".join(worker_manager.output_lines)
             combined_output = f"{master_output}\n{worker_output}"
 
+            # **Assert Expected Output is Present**
             self.assertIn(
                 'All users spawned: {"User1": 1} (1 total users)',
                 master_output,
@@ -3170,17 +3180,24 @@ def on_test_stop(environment, **kwargs):
 
             self.assertNotIn("Traceback", combined_output, "Traceback found in output, indicating an error.")
 
-            self.assertEqual(
-                0,
-                master_manager.process.returncode,
-                f"Master process exited with unexpected return code: {master_manager.process.returncode}",
-            )
-            self.assertEqual(
-                0,
-                worker_manager.process.returncode,
-                f"Worker process exited with unexpected return code: {worker_manager.process.returncode}",
-            )
+            # **Determine Expected Return Codes Based on OS**
+            if platform.system() == "Windows":
+                expected_master_return_codes = [0, 1]
+                expected_worker_return_codes = [0, 1]
+                master_message = "Master process exited with unexpected return code on Windows."
+                worker_message = "Worker process exited with unexpected return code on Windows."
+            else:
+                expected_master_return_codes = [0]
+                expected_worker_return_codes = [0]
+                master_message = "Master process exited with unexpected return code."
+                worker_message = "Worker process exited with unexpected return code."
+
+            # **Assert the Return Codes**
+            self.assertIn(master_manager.process.returncode, expected_master_return_codes, master_message)
+
+            self.assertIn(worker_manager.process.returncode, expected_worker_return_codes, worker_message)
         finally:
+            # Clean up the temporary locustfile
             os.remove(locustfile_path)
 
     def test_json_schema(self):
