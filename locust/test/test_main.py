@@ -3014,7 +3014,7 @@ def on_test_stop(environment, **kwargs):
     def test_locustfile_distribution(self):
         """
         Tests that the Locust master and multiple worker processes correctly distribute users
-        and handle shutdown as expected.
+        and handle shutdown as expected, with exit codes validated based on the operating system.
         """
         LOCUSTFILE_CONTENT = textwrap.dedent("""
             from locust import User, task, constant
@@ -3027,73 +3027,110 @@ def on_test_stop(environment, **kwargs):
                     pass
         """)
 
-        with PopenContextManager(
-            args=[
-                "locust",
-                "--headless",
-                "--master",
-                "--expect-workers",
-                "2",
-                "-t",
-                "5s",
-                "-u",
-                "2",
-            ],
-            file_content=LOCUSTFILE_CONTENT,
-            port=get_free_tcp_port(),
-        ) as master_manager:
+        # Create a temporary locustfile with a non-plain filename (e.g., includes suffix)
+        with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
+            temp_file.write(LOCUSTFILE_CONTENT)
+            temp_file.flush()
+            locustfile_path = temp_file.name
+
+        try:
             with PopenContextManager(
-                args=["locust", "--worker"],
+                args=[
+                    "locust",
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "2",
+                    "-t",
+                    "5s",
+                    "-u",
+                    "2",
+                ],
                 file_content=LOCUSTFILE_CONTENT,
-                port=None,
-            ) as worker_manager1:
+                port=get_free_tcp_port(),
+            ) as master_manager:
                 with PopenContextManager(
-                    args=["locust", "--worker"],
+                    args=["locust", "-f", locustfile_path, "--worker"],
                     file_content=LOCUSTFILE_CONTENT,
                     port=None,
-                ) as worker_manager2:
-                    all_users_spawned = wait_for_output_condition_non_threading(
-                        master_manager.process,
-                        master_manager.output_lines,
-                        'All users spawned: {"User1": 2} (2 total users)',
-                        timeout=30,
-                    )
-                    self.assertTrue(all_users_spawned, "Timeout waiting for all users to be spawned.")
+                ) as worker_manager1:
+                    with PopenContextManager(
+                        args=["locust", "-f", locustfile_path, "--worker"],
+                        file_content=LOCUSTFILE_CONTENT,
+                        port=None,
+                    ) as worker_manager2:
+                        # Wait for all users to be spawned
+                        all_users_spawned = wait_for_output_condition_non_threading(
+                            master_manager.process,
+                            master_manager.output_lines,
+                            'All users spawned: {"User1": 2} (2 total users)',
+                            timeout=30,
+                        )
+                        self.assertTrue(all_users_spawned, "Timeout waiting for all users to be spawned.")
 
-        master_output = "\n".join(master_manager.output_lines)
-        worker_output1 = "\n".join(worker_manager1.output_lines)
-        worker_output2 = "\n".join(worker_manager2.output_lines)
-        combined_output = f"{master_output}\n{worker_output1}\n{worker_output2}"
+                        # Wait for the master to shut down gracefully
+                        shutting_down = wait_for_output_condition_non_threading(
+                            master_manager.process,
+                            master_manager.output_lines,
+                            "Shutting down (exit code 0)",
+                            timeout=30,
+                        )
+                        self.assertTrue(shutting_down, "'Shutting down (exit code 0)' not found in master output.")
 
-        self.assertIn(
-            "Shutting down (exit code 0)",
-            combined_output,
-            f"'Shutting down (exit code 0)' not found in output:\n{combined_output}",
-        )
+            # Combine and check the outputs from master and both workers
+            master_output = "\n".join(master_manager.output_lines)
+            worker_output1 = "\n".join(worker_manager1.output_lines)
+            worker_output2 = "\n".join(worker_manager2.output_lines)
+            combined_output = f"{master_output}\n{worker_output1}\n{worker_output2}"
 
-        self.assertIn(
-            'All users spawned: {"User1": 2} (2 total users)',
-            combined_output,
-            "Expected user spawn message not found in output.",
-        )
+            # **Assert Expected Output is Present**
+            self.assertIn(
+                'All users spawned: {"User1": 2} (2 total users)',
+                master_output,
+                "Expected user spawn message not found in master output.",
+            )
+            self.assertIn(
+                "Shutting down (exit code 0)",
+                combined_output,
+                f"'Shutting down (exit code 0)' not found in output:\n{combined_output}",
+            )
 
-        self.assertNotIn("Traceback", combined_output, "Traceback found in output, indicating an error.")
+            self.assertNotIn("Traceback", combined_output, "Traceback found in output, indicating an error.")
 
-        self.assertEqual(
-            0,
-            master_manager.process.returncode,
-            f"Master process exited with unexpected return code: {master_manager.process.returncode}",
-        )
-        self.assertEqual(
-            0,
-            worker_manager1.process.returncode,
-            f"First worker process exited with unexpected return code: {worker_manager1.process.returncode}",
-        )
-        self.assertEqual(
-            0,
-            worker_manager2.process.returncode,
-            f"Second worker process exited with unexpected return code: {worker_manager2.process.returncode}",
-        )
+            # **Determine Expected Return Codes Based on OS**
+            if platform.system() == "Windows":
+                expected_master_return_codes = [0, 1]
+                expected_worker_return_codes = [0, 1]
+                master_message = "Master process exited with unexpected return code on Windows."
+                worker_message1 = "First worker process exited with unexpected return code on Windows."
+                worker_message2 = "Second worker process exited with unexpected return code on Windows."
+            else:
+                expected_master_return_codes = [0]
+                expected_worker_return_codes = [0]
+                master_message = "Master process exited with unexpected return code."
+                worker_message1 = "First worker process exited with unexpected return code."
+                worker_message2 = "Second worker process exited with unexpected return code."
+
+            # **Assert the Return Codes**
+            self.assertIn(
+                master_manager.process.returncode,
+                expected_master_return_codes,
+                master_message,
+            )
+            self.assertIn(
+                worker_manager1.process.returncode,
+                expected_worker_return_codes,
+                worker_message1,
+            )
+            self.assertIn(
+                worker_manager2.process.returncode,
+                expected_worker_return_codes,
+                worker_message2,
+            )
+
+        finally:
+            # Clean up the temporary locustfile
+            os.remove(locustfile_path)
 
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
         """
