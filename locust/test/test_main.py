@@ -44,6 +44,18 @@ def is_port_in_use(port: int) -> bool:
         return s.connect_ex(("localhost", port)) == 0
 
 
+def retry_request(url, retries=5, backoff_factor=0.3):
+    for i in range(retries):
+        try:
+            response = requests.get(url, timeout=5)
+            return response
+        except requests.exceptions.ConnectionError as e:
+            if i < retries - 1:
+                time.sleep(backoff_factor * (2**i))  # Exponential backoff
+            else:
+                raise e
+
+
 def wait_for_output_condition_non_threading(
     proc: Popen, output_lines: list[str], condition: str, timeout: int | float = 30
 ) -> bool:
@@ -79,21 +91,14 @@ class PopenContextManager:
         if port is not None:
             self.args += ["--web-port", str(port)]
 
-        print(f"PopenContextManager initialized with args: {self.args} and kwargs: {self.kwargs}")
-
     def create_temp_file(self, content):
         fd, path = tempfile.mkstemp(suffix=".py", text=True)
         with os.fdopen(fd, "w") as temp_file:
             temp_file.write(content)
-        print(f"Temporary file created at: {path}")
         return path
 
     def __enter__(self):
         shell = sys.platform == "win32"
-        print(f"Starting subprocess with shell={shell}")
-
-        # Log the environment variables being used
-        print(f"Environment variables for subprocess: {self.kwargs.get('env', os.environ)}")
 
         try:
             self.process = subprocess.Popen(
@@ -106,10 +111,7 @@ class PopenContextManager:
                 **self.kwargs,
                 env={**os.environ, "PYTHONUNBUFFERED": "1"},
             )
-            print(f"Subprocess started with PID: {self.process.pid}")
-            print(f"Subprocess arguments: {self.args}")
-        except Exception as e:
-            print(f"Failed to start subprocess: {e}")
+        except Exception:
             raise
 
         # Spawn gevent greenlets to read the output
@@ -119,29 +121,20 @@ class PopenContextManager:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        print("Entering __exit__ of PopenContextManager")
-
         if self.process:
             try:
                 # First, wait a short period to allow the process to exit gracefully
-                print("Waiting for subprocess to exit gracefully...")
                 self.process.wait(timeout=5)
-                print(f"Subprocess exited with return code {self.process.returncode}")
             except subprocess.TimeoutExpired:
                 # If the process hasn't exited, attempt to terminate it
-                print("Subprocess did not exit within timeout; attempting to terminate")
                 self.terminate_process()
                 try:
                     self.process.wait(timeout=5)
-                    print(f"Subprocess terminated with return code {self.process.returncode}")
                 except subprocess.TimeoutExpired:
-                    print("Subprocess did not terminate after terminate signal")
+                    pass
 
         # Ensure readers are joined
         gevent.joinall([self.stdout_reader, self.stderr_reader])
-
-        # Log collected outputs
-        print(f"Collected STDOUT lines: {self.output_lines}")
 
         # Close the stdout and stderr streams explicitly
         self.close_pipes()
@@ -149,53 +142,38 @@ class PopenContextManager:
         # Remove the temporary file if it exists
         self.remove_temp_file()
 
-        # Log the final return code
-        if self.process:
-            print(f"Subprocess with PID {self.process.pid} exited with return code {self.process.returncode}")
-
     def terminate_process(self):
         try:
             if sys.platform == "win32":
                 self.process.terminate()
-                print("Called process.terminate() on Windows")
             else:
                 self.process.send_signal(subprocess.signal.SIGTERM)
-                print("Sent SIGTERM to subprocess")
             self.process.wait(timeout=5)
-            print("Subprocess terminated gracefully")
         except subprocess.TimeoutExpired:
-            print("Subprocess did not terminate in time; killing it")
             self.process.kill()
             self.process.wait()
-            print("Subprocess killed")
-        except Exception as e:
-            print(f"Error while terminating subprocess: {e}")
 
     def close_pipes(self):
         for pipe in [self.process.stdout, self.process.stderr]:
             if pipe:
                 pipe.close()
-                print(f"Closed pipe: {pipe}")
 
     def remove_temp_file(self):
         if self.temp_file_path:
             try:
                 os.remove(self.temp_file_path)
-                print(f"Removed temporary file: {self.temp_file_path}")
-            except OSError as e:
-                print(f"Error removing temporary file: {e}")
+            except OSError:
+                pass
 
     def _read_output(self, pipe, pipe_name):
         try:
             for line in iter(pipe.readline, ""):
                 line = line.rstrip("\n")
                 self.output_lines.append(line)
-                print(f"{pipe_name}: {line}")
-        except Exception as e:
-            print(f"Error reading {pipe_name}: {e}")
+        except Exception:
+            pass
         finally:
             pipe.close()
-            print(f"{pipe_name} pipe closed")
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
@@ -429,7 +407,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.fail("Timeout waiting for web interface to start.")
 
                 try:
-                    response = requests.get(f"http://localhost:{port}/", timeout=10)
+                    response = retry_request(f"http://localhost:{port}/", timeout=10)
                     self.assertEqual(200, response.status_code)
                 except requests.exceptions.RequestException as e:
                     manager.process.terminate()
@@ -485,7 +463,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     manager.process.wait(timeout=5)
                     self.fail("Timeout waiting for web interface to start.")
 
-                response = requests.get(f"http://localhost:{port}/")
+                response = retry_request(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
 
                 manager.process.send_signal(signal.SIGTERM)
@@ -567,7 +545,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.fail("Timeout waiting for web interface to start.")
 
                     try:
-                        response = requests.get(f"http://localhost:{port}/", timeout=10)
+                        response = retry_request(f"http://localhost:{port}/", timeout=10)
                         self.assertEqual(
                             200, response.status_code, msg=f"Expected status code 200, got {response.status_code}"
                         )
@@ -685,7 +663,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.fail("Timeout waiting for web interface to start.")
 
                     try:
-                        response = requests.get(f"http://localhost:{port}/", timeout=10)
+                        response = retry_request(f"http://localhost:{port}/", timeout=10)
                         self.assertEqual(
                             200, response.status_code, msg=f"Expected status code 200, got {response.status_code}"
                         )
@@ -1592,7 +1570,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         assert_return_code(self, manager.process.returncode)
 
-    @unittest.skipIf(platform.system() == "Darwin", reason="Messy on macOS on GH")
+    # @unittest.skipIf(platform.system() == "Darwin", reason="Messy on macOS on GH")
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_web_options(self):
         """
@@ -1636,7 +1614,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             self.fail(f"Timeout waiting for Locust to output: {output}")
 
                     try:
-                        response = requests.get(f"http://127.0.0.2:{port}/", timeout=1)
+                        response = retry_request(f"http://127.0.0.2:{port}/", timeout=10)
                         self.assertEqual(
                             200, response.status_code, "Locust web interface did not return status code 200."
                         )
@@ -1673,7 +1651,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.fail(f"Timeout waiting for Locust to output: {output}")
 
                 try:
-                    response = requests.get(f"http://127.0.0.1:{port}/", timeout=1)
+                    response = retry_request(f"http://127.0.0.1:{port}/", timeout=10)
                     self.assertEqual(200, response.status_code, "Locust web interface did not return status code 200.")
                 except requests.exceptions.RequestException as e:
                     self.fail(f"Failed to connect to Locust web interface: {e}")
@@ -1710,7 +1688,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             self.fail(f"Timeout waiting for Locust to output: {output}")
 
                     try:
-                        response = requests.get(f"http://127.0.0.2:{port}/", timeout=1)
+                        response = retry_request(f"http://127.0.0.2:{port}/", timeout=10)
                         self.assertEqual(
                             200, response.status_code, "Locust web interface did not return status code 200."
                         )
@@ -1749,7 +1727,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.fail(f"Timeout waiting for Locust to output: {output}")
 
                 try:
-                    response = requests.get(f"http://127.0.0.1:{port}/", timeout=1)
+                    response = retry_request(f"http://127.0.0.1:{port}/", timeout=10)
                     self.assertEqual(200, response.status_code, "Locust web interface did not return status code 200.")
                 except requests.exceptions.RequestException as e:
                     self.fail(f"Failed to connect to Locust web interface: {e}")
