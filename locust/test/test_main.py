@@ -58,7 +58,7 @@ def wait_for_output_condition_non_threading(
 
 def assert_return_code(test_case, process_returncode, acceptable_codes=None):
     if acceptable_codes is None:
-        acceptable_codes = [0, 1] if sys.platform == "win32" else [0]
+        acceptable_codes = [0]
 
     test_case.assertIn(process_returncode, acceptable_codes, f"Process failed with return code {process_returncode}")
 
@@ -1832,8 +1832,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "10",
                 "-r",
                 "10",
-                "--loglevel",
-                "INFO",
             ]
 
             with PopenContextManager(["locust"] + args) as manager:
@@ -1889,8 +1887,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "1s",
                 "-u",
                 "3",
-                "--loglevel",
-                "INFO",
             ]
 
             with PopenContextManager(["locust"] + args) as manager:
@@ -1929,8 +1925,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "0",
                     "--run-time",
                     "2s",
-                    "--loglevel",
-                    "INFO",
                 ]
 
                 with PopenContextManager(["locust"] + args) as manager:
@@ -1988,8 +1982,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "10",
                 "User2",
                 "User3",
-                "--loglevel",
-                "INFO",
             ]
 
             with PopenContextManager(["locust"] + args) as manager:
@@ -2104,8 +2096,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "1",
                 "-r",
                 "1",
-                "--loglevel",
-                "INFO",
             ]
 
             with PopenContextManager(["locust"] + args) as manager:
@@ -2159,7 +2149,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         combined_output = "\n".join(manager.output_lines)
         self.assertIn("running my_task", combined_output)
-        self.assertEqual(0, manager.process.returncode, f"Process failed with return code {manager.process.returncode}")
+        self.assertEqual(0, manager.process.returncode)
 
     def test_error_when_duplicate_shape_class_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent("""
@@ -2196,8 +2186,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "1",
                 "-r",
                 "1",
-                "--loglevel",
-                "INFO",
             ]
 
             with PopenContextManager(["locust"] + args) as manager:
@@ -2237,8 +2225,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "--headless",
                 "--exit-code-on-error",
                 "0",
-                "--loglevel",
-                "INFO",
             ]
 
             with PopenContextManager(["locust"] + args) as manager:
@@ -2290,8 +2276,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "--exit-code-on-error=0",
                 "--users=1",
                 "--spawn-rate=1",
-                "--loglevel",
-                "INFO",
             ]
 
             with PopenContextManager(["locust"] + args) as manager:
@@ -2343,8 +2327,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "--users=1",
                 "--spawn-rate=1",
                 "--run-time=1s",
-                "--loglevel",
-                "INFO",
             ]
 
             with PopenContextManager(["locust"] + args) as manager:
@@ -2394,8 +2376,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 temp_dir,
                 "--headless",
                 "--exit-code-on-error=1",
-                "--loglevel",
-                "INFO",
             ]
 
             with PopenContextManager(["locust"] + args) as manager:
