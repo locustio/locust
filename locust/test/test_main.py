@@ -92,6 +92,9 @@ class PopenContextManager:
         shell = sys.platform == "win32"
         print(f"Starting subprocess with shell={shell}")
 
+        # Log the environment variables being used
+        print(f"Environment variables for subprocess: {self.kwargs.get('env', os.environ)}")
+
         try:
             self.process = subprocess.Popen(
                 self.args,
@@ -119,21 +122,20 @@ class PopenContextManager:
         print("Entering __exit__ of PopenContextManager")
 
         if self.process:
-            returncode = self.process.poll()
-            if returncode is None:
-                print("Subprocess is still running; attempting to terminate")
+            try:
+                # First, wait a short period to allow the process to exit gracefully
+                print("Waiting for subprocess to exit gracefully...")
+                self.process.wait(timeout=5)
+                print(f"Subprocess exited with return code {self.process.returncode}")
+            except subprocess.TimeoutExpired:
+                # If the process hasn't exited, attempt to terminate it
+                print("Subprocess did not exit within timeout; attempting to terminate")
                 self.terminate_process()
-                # After termination, wait for the process to exit
                 try:
                     self.process.wait(timeout=5)
                     print(f"Subprocess terminated with return code {self.process.returncode}")
                 except subprocess.TimeoutExpired:
-                    print("Subprocess did not terminate in time; killing it")
-                    self.process.kill()
-                    self.process.wait()
-                    print("Subprocess killed")
-            else:
-                print(f"Subprocess has already terminated with return code {returncode}")
+                    print("Subprocess did not terminate after terminate signal")
 
         # Ensure readers are joined
         gevent.joinall([self.stdout_reader, self.stderr_reader])
@@ -2662,23 +2664,23 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
         content = (
             MOCK_LOCUSTFILE_CONTENT
             + """
-from locust import events
-from locust.runners import MasterRunner
+    from locust import events
+    from locust.runners import MasterRunner
 
-@events.test_start.add_listener
-def on_test_start(environment, **kwargs):
-    if isinstance(environment.runner, MasterRunner):
-        print("test_start on master")
-    else:
-        print("test_start on worker")
+    @events.test_start.add_listener
+    def on_test_start(environment, **kwargs):
+        if isinstance(environment.runner, MasterRunner):
+            print("test_start on master")
+        else:
+            print("test_start on worker")
 
-@events.test_stop.add_listener
-def on_test_stop(environment, **kwargs):
-    if isinstance(environment.runner, MasterRunner):
-        print("test_stop on master")
-    else:
-        print("test_stop on worker")
-"""
+    @events.test_stop.add_listener
+    def on_test_stop(environment, **kwargs):
+        if isinstance(environment.runner, MasterRunner):
+            print("test_stop on master")
+        else:
+            print("test_stop on worker")
+    """
         )
 
         with PopenContextManager(
@@ -2712,10 +2714,26 @@ def on_test_stop(environment, **kwargs):
                 )
                 self.assertTrue(worker_finished, "Worker did not finish as expected.")
 
-            self.assertIsNotNone(worker_manager.process.returncode, "Worker process did not terminate")
+            # At this point, PopenContextManager's __exit__ is called for the worker
+            # Now, wait a bit to ensure the worker process has fully exited
+            try:
+                worker_manager.process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                self.fail("Worker process did not exit in time after the context manager.")
+
+        # At this point, PopenContextManager's __exit__ is called for the master
+        # Wait to ensure the master process has fully exited
+        try:
+            master_manager.process.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            self.fail("Master process did not exit in time after the context manager.")
 
         master_output = "\n".join(master_manager.output_lines)
         worker_output = "\n".join(worker_manager.output_lines)
+
+        # Log the outputs
+        print(f"Master output:\n{master_output}")
+        print(f"Worker output:\n{worker_output}")
 
         self.assertIn("test_start on master", master_output)
         self.assertIn("test_stop on master", master_output)
@@ -2727,9 +2745,18 @@ def on_test_stop(environment, **kwargs):
 
         print("Master output:\n", master_output)
         print("Worker output:\n", worker_output)
-        assert_return_code(self, worker_manager.process.returncode)
 
-        assert_return_code(self, master_manager.process.returncode)
+        # Log and assert return codes
+        print(f"Worker exit code: {worker_manager.process.returncode}")
+        print(f"Master exit code: {master_manager.process.returncode}")
+
+        # Assertions for return codes
+        self.assertEqual(
+            worker_manager.process.returncode, 0, f"Worker failed with return code {worker_manager.process.returncode}"
+        )
+        self.assertEqual(
+            master_manager.process.returncode, 0, f"Master failed with return code {master_manager.process.returncode}"
+        )
 
     def test_distributed_tags(self):
         """
