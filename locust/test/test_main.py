@@ -2603,15 +2603,6 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
             + """
 from locust import events
 from locust.runners import MasterRunner
-from locust import task, between, User
-
-class UserSubclass(User):
-    wait_time = between(1, 2)
-
-    @task
-    def my_task(self):
-        pass  # Simple task to ensure activity
-
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
     if isinstance(environment.runner, MasterRunner):
@@ -2627,56 +2618,50 @@ def on_test_stop(environment, **kwargs):
         print("test_stop on worker")
 """
         )
-
-        with PopenContextManager(
-            args=[
-                "locust",
-                "--headless",
-                "--master",
-                "--expect-workers",
-                "1",
-                "-t",
-                "1",
-                "--exit-code-on-error",
-                "0",
-                "-L",
-                "DEBUG",
-            ],
-            file_content=content,
-            port=get_free_tcp_port(),
-        ) as master_manager:
-            with PopenContextManager(
-                args=["locust", "--worker", "-L", "DEBUG"],
-                file_content=content,
-            ) as worker_manager:
-                master_finished = wait_for_output_condition_non_threading(
-                    master_manager.process, master_manager.output_lines, "test_stop on master", timeout=5
-                )
-                self.assertTrue(master_finished, "Master did not finish as expected.")
-
-                worker_finished = wait_for_output_condition_non_threading(
-                    worker_manager.process, worker_manager.output_lines, "test_stop on worker", timeout=5
-                )
-                self.assertTrue(worker_finished, "Worker did not finish as expected.")
-
-            self.assertIsNotNone(worker_manager.process.returncode, "Worker process did not terminate")
-
-        master_output = "\n".join(master_manager.output_lines)
-        worker_output = "\n".join(worker_manager.output_lines)
-
-        self.assertIn("test_start on master", master_output)
-        self.assertIn("test_stop on master", master_output)
-        self.assertNotIn("Traceback", master_output)
-
-        self.assertIn("test_start on worker", worker_output)
-        self.assertIn("test_stop on worker", worker_output)
-        self.assertNotIn("Traceback", worker_output)
-
-        print("Master output:\n", master_output)
-        print("Worker output:\n", worker_output)
-        assert_return_code(self, worker_manager.process.returncode)
-
-        assert_return_code(self, master_manager.process.returncode)
+        with mock_locustfile(content=content) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--headless",
+                    "--master",
+                    "--expect-workers",
+                    "1",
+                    "-t",
+                    "1",
+                    "--exit-code-on-error",
+                    "0",
+                    "-L",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            proc_worker = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--worker",
+                    "-L",
+                    "DEBUG",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+            stdout_worker, stderr_worker = proc_worker.communicate()
+            self.assertIn("test_start on master", stdout)
+            self.assertIn("test_stop on master", stdout)
+            self.assertIn("test_stop on worker", stdout_worker)
+            self.assertIn("test_start on worker", stdout_worker)
+            self.assertNotIn("Traceback", stderr)
+            self.assertNotIn("Traceback", stderr_worker)
+            self.assertEqual(0, proc.returncode)
+            self.assertEqual(0, proc_worker.returncode)
 
     def test_distributed_tags(self):
         """
