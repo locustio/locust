@@ -118,12 +118,22 @@ class PopenContextManager:
     def __exit__(self, exc_type, exc_value, traceback):
         print("Entering __exit__ of PopenContextManager")
 
-        # Only terminate if the process is still running
-        if self.process and self.process.poll() is None:
-            print("Subprocess is still running; attempting to terminate")
-            self.terminate_process()
-        else:
-            print("Subprocess has already terminated")
+        if self.process:
+            returncode = self.process.poll()
+            if returncode is None:
+                print("Subprocess is still running; attempting to terminate")
+                self.terminate_process()
+                # After termination, wait for the process to exit
+                try:
+                    self.process.wait(timeout=5)
+                    print(f"Subprocess terminated with return code {self.process.returncode}")
+                except subprocess.TimeoutExpired:
+                    print("Subprocess did not terminate in time; killing it")
+                    self.process.kill()
+                    self.process.wait()
+                    print("Subprocess killed")
+            else:
+                print(f"Subprocess has already terminated with return code {returncode}")
 
         # Ensure readers are joined
         gevent.joinall([self.stdout_reader, self.stderr_reader])
@@ -2689,7 +2699,7 @@ def on_test_stop(environment, **kwargs):
             port=get_free_tcp_port(),
         ) as master_manager:
             with PopenContextManager(
-                args=["locust", "--worker", "-L", "DEBUG"],
+                args=["locust", "--worker", "--exit-code-on-error", "0", "-L", "DEBUG"],
                 file_content=content,
             ) as worker_manager:
                 master_finished = wait_for_output_condition_non_threading(
