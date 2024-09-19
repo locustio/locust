@@ -2144,8 +2144,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "1",
                     "-r",
                     "1",
-                    "--loglevel",
-                    "INFO",
                 ]
 
                 with PopenContextManager(["locust"] + args) as manager:
@@ -2161,7 +2159,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         combined_output = "\n".join(manager.output_lines)
         self.assertIn("running my_task", combined_output)
-        assert_return_code(self, manager.process.returncode)
+        self.assertEqual(0, manager.process.returncode, f"Process failed with return code {manager.process.returncode}")
 
     def test_error_when_duplicate_shape_class_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent("""
