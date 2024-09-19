@@ -107,8 +107,9 @@ class PopenContextManager:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        # Ensure process termination
-        self.terminate_process()
+        # First, check if the process has already terminated
+        if self.process and self.process.poll() is None:
+            self.terminate_process()
 
         # Ensure readers are joined
         gevent.joinall([self.stdout_reader, self.stderr_reader])
