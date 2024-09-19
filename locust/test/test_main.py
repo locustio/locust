@@ -2669,17 +2669,23 @@ from locust.runners import MasterRunner
 
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
-    if isinstance(environment.runner, MasterRunner):
-        print("test_start on master")
-    else:
-        print("test_start on worker")
+    try:
+        if isinstance(environment.runner, MasterRunner):
+            print("test_start on master")
+        else:
+            print("test_start on worker")
+    except Exception as e:
+        print(f"Error in test_start listener: {e}")
 
 @events.test_stop.add_listener
 def on_test_stop(environment, **kwargs):
-    if isinstance(environment.runner, MasterRunner):
-        print("test_stop on master")
-    else:
-        print("test_stop on worker")
+    try:
+        if isinstance(environment.runner, MasterRunner):
+            print("test_stop on master")
+        else:
+            print("test_stop on worker")
+    except Exception as e:
+        print(f"Error in test_stop listener: {e}")
 """
         )
 
