@@ -2603,6 +2603,14 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
             + """
 from locust import events
 from locust.runners import MasterRunner
+from locust import task, between, User
+
+class UserSubclass(User):
+    wait_time = between(1, 2)
+
+    @task
+    def my_task(self):
+        pass  # Simple task to ensure activity
 
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
