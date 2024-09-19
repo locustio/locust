@@ -82,18 +82,12 @@ class PopenContextManager:
             self.args += ["--web-port", str(port)]
 
     def __enter__(self):
-        creation_flags = 0
-        # Add CREATE_NEW_PROCESS_GROUP for Windows
-        if platform.system() == "Windows":
-            creation_flags = subprocess.CREATE_NEW_PROCESS_GROUP
-
         self.process = subprocess.Popen(
             self.args,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             bufsize=1,
-            creationflags=creation_flags,  # Windows-specific creation flag
             **self.kwargs,
             env={**os.environ, "PYTHONUNBUFFERED": "1"},
         )
@@ -169,13 +163,6 @@ class ProcessIntegrationTest(TestCase):
 class StandaloneIntegrationTests(ProcessIntegrationTest):
     @contextmanager
     def create_temp_locustfile(self, content, dir=None):
-        """
-        Create a temporary Locustfile with the specified content.
-
-        :param content: The Python code to write into the Locustfile.
-        :param dir: Directory where the file should be created. Defaults to system temp directory.
-        :yield: The path to the created Locustfile.
-        """
         with NamedTemporaryFile(mode="w+", delete=False, suffix=".py", dir=dir) as temp_file:
             temp_file.write(content)
             temp_file.flush()
@@ -183,17 +170,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         os.unlink(temp_file.name)
 
     def make_http_request(self, port, method="GET", path="/", data=None, timeout=10):
-        """
-        Make an HTTP request to the Locust web interface.
-
-        :param port: Port number where Locust web interface is running.
-        :param method: HTTP method ("GET" or "POST").
-        :param path: URL path.
-        :param data: Data to send in the request (for POST).
-        :param timeout: Timeout for the HTTP request in seconds.
-        :return: Response object.
-        :raises requests.exceptions.RequestException: If the request fails.
-        """
         url = f"http://localhost:{port}{path}"
         if method.upper() == "GET":
             return requests.get(url, timeout=timeout)
@@ -690,10 +666,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     "1s",
                 ],
             ) as popen_ctx:
-                try:
-                    popen_ctx.process.wait(timeout=4)
-                except subprocess.TimeoutExpired:
-                    print("Process timed out")
+                popen_ctx.process.wait(timeout=4)
 
                 all_output = "\n".join(popen_ctx.output_lines)
 
@@ -2936,7 +2909,6 @@ def on_test_stop(environment, **kwargs):
                     pass
         """)
 
-        # Create a temporary locustfile with a non-plain filename (e.g., includes suffix)
         with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
             temp_file.write(LOCUSTFILE_CONTENT)
             temp_file.flush()
@@ -3006,7 +2978,6 @@ def on_test_stop(environment, **kwargs):
             assert_return_code(self, worker_manager2.process.returncode)
 
         finally:
-            # Clean up the temporary locustfile
             os.remove(locustfile_path)
 
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
@@ -3025,7 +2996,6 @@ def on_test_stop(environment, **kwargs):
                     print("hello")
         """)
 
-        # Create a temporary locustfile with a non-plain filename (e.g., includes suffix)
         with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
             temp_file.write(LOCUSTFILE_CONTENT)
             temp_file.flush()
