@@ -545,7 +545,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.fail("Timeout waiting for web interface to start.")
 
                     try:
-                        response = retry_request(f"http://localhost:{port}/", timeout=10)
+                        response = retry_request(f"http://localhost:{port}/")
                         self.assertEqual(
                             200, response.status_code, msg=f"Expected status code 200, got {response.status_code}"
                         )
@@ -663,7 +663,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.fail("Timeout waiting for web interface to start.")
 
                     try:
-                        response = retry_request(f"http://localhost:{port}/", timeout=10)
+                        response = retry_request(f"http://localhost:{port}/")
                         self.assertEqual(
                             200, response.status_code, msg=f"Expected status code 200, got {response.status_code}"
                         )
