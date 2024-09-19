@@ -2650,6 +2650,9 @@ def on_test_stop(environment, **kwargs):
         self.assertIn("test_start on worker", worker_output)
         self.assertIn("test_stop on worker", worker_output)
         self.assertNotIn("Traceback", worker_output)
+
+        print("Master output:\n", master_output)
+        print("Worker output:\n", worker_output)
         assert_return_code(self, master_manager.process.returncode)
 
     def test_distributed_tags(self):
