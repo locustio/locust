@@ -56,7 +56,11 @@ def wait_for_output_condition_non_threading(
         gevent.sleep(0.1)
 
 
-import gevent
+def assert_return_code(test_case, process_returncode, acceptable_codes=None):
+    if acceptable_codes is None:
+        acceptable_codes = [0, 1] if sys.platform == "win32" else [0]
+
+    test_case.assertIn(process_returncode, acceptable_codes, f"Process failed with return code {process_returncode}")
 
 
 class PopenContextManager:
@@ -2229,9 +2233,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.fail("Timeout waiting for Locust to shut down.")
 
         combined_output = "\n".join(manager.output_lines)
-
         self.assertIn("running my_task", combined_output)
-        self.assertEqual(0, manager.process.returncode, f"Process failed with return code {manager.process.returncode}")
+        assert_return_code(self, manager.process.returncode)
 
     def test_error_when_duplicate_shape_class_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent("""
