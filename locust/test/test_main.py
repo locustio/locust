@@ -107,7 +107,6 @@ class PopenContextManager:
         except Exception:
             raise
 
-        # Spawn gevent greenlets to read the output
         self.stdout_reader = gevent.spawn(self._read_output, self.process.stdout, "STDOUT")
         self.stderr_reader = gevent.spawn(self._read_output, self.process.stderr, "STDERR")
 
@@ -116,23 +115,18 @@ class PopenContextManager:
     def __exit__(self, exc_type, exc_value, traceback):
         if self.process:
             try:
-                # First, wait a short period to allow the process to exit gracefully
                 self.process.wait(timeout=5)
             except subprocess.TimeoutExpired:
-                # If the process hasn't exited, attempt to terminate it
                 self.terminate_process()
                 try:
                     self.process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
                     pass
 
-        # Ensure readers are joined
         gevent.joinall([self.stdout_reader, self.stderr_reader])
 
-        # Close the stdout and stderr streams explicitly
         self.close_pipes()
 
-        # Remove the temporary file if it exists
         self.remove_temp_file()
 
     def terminate_process(self):
@@ -208,7 +202,112 @@ class ProcessIntegrationTest(TestCase):
         return out
 
 
-class StandaloneIntegrationTests(ProcessIntegrationTest):
+def wait_for_output_condition(output_lines, condition, timeout=30, poll_interval=0.1):
+    """
+    Waits for a specific condition to appear in the output lines within the timeout period.
+    """
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        if any(condition in line for line in output_lines):
+            return True
+        time.sleep(poll_interval)
+    return False
+
+
+class BaseLocustTest(unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.manager = None
+        self.port = get_free_tcp_port()
+
+    def tearDown(self):
+        if self.manager and self.manager.process:
+            try:
+                self.manager.terminate_process()
+                self.manager.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                pass
+        super().tearDown()
+
+    def start_locust(self, args, file_content=None, timeout=30):
+        """
+        Starts Locust with specified arguments and optional file content.
+        """
+        self.manager = PopenContextManager(args=args, file_content=file_content, port=self.port)
+        self.manager.__enter__()
+
+        if not wait_for_output_condition(self.manager.output_lines, "Starting Locust", timeout):
+            self.fail("Timeout waiting for Locust to start.")
+
+        if not wait_for_output_condition(self.manager.output_lines, "Starting web interface at", timeout):
+            self.fail("Timeout waiting for web interface to start.")
+
+    def stop_locust(self, timeout=5):
+        """
+        Stops the Locust process gracefully.
+        """
+        if self.manager and self.manager.process:
+            try:
+                self.manager.process.terminate()
+                self.manager.process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                self.manager.terminate_process()
+
+    def perform_swarm(self, data, timeout=30):
+        """
+        Sends a POST request to the /swarm endpoint with the provided data.
+        """
+        url = f"http://127.0.0.1:{self.port}/swarm"
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            try:
+                response = requests.post(url, data=data)
+                return response
+            except requests.exceptions.ConnectionError:
+                time.sleep(0.1)
+        self.fail("Failed to connect to Locust swarm endpoint.")
+
+    def perform_request(self, method, url, data=None, timeout=30):
+        """
+        Sends an HTTP request with the specified method to the given URL.
+        Retries until timeout if the connection is refused.
+        """
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            try:
+                if method.lower() == "get":
+                    response = requests.get(url)
+                elif method.lower() == "post":
+                    response = requests.post(url, data=data)
+                else:
+                    self.fail(f"Unsupported HTTP method: {method}")
+                return response
+            except requests.exceptions.ConnectionError:
+                time.sleep(0.1)
+        self.fail(f"Failed to {method} {url} within {timeout} seconds.")
+
+    def assertOutputContains(self, output, substrings, msg=None):
+        for substring in substrings:
+            with self.subTest(substring=substring):
+                self.assertIn(substring, output, msg)
+
+    def assertOutputNotContains(self, output, substrings, msg=None):
+        for substring in substrings:
+            with self.subTest(substring=substring):
+                self.assertNotIn(substring, output, msg)
+
+    def assertOutputMatches(self, output, regex_patterns, msg=None):
+        for pattern in regex_patterns:
+            with self.subTest(pattern=pattern):
+                self.assertRegex(output, pattern, msg)
+
+    def assertOutputNotMatches(self, output, regex_patterns, msg=None):
+        for pattern in regex_patterns:
+            with self.subTest(pattern=pattern):
+                self.assertNotRegex(output, pattern, msg)
+
+
+class StandaloneIntegrationTests(BaseLocustTest):
     @contextmanager
     def create_temp_locustfile(self, content, dir=None):
         with NamedTemporaryFile(mode="w+", delete=False, suffix=".py", dir=dir) as temp_file:
@@ -247,7 +346,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_custom_arguments(self):
-        port = get_free_tcp_port()
+        """
+        Test that custom command-line arguments are correctly parsed and utilized.
+        """
         file_content = textwrap.dedent("""
             from locust import User, task, constant, events
             @events.init_command_line_parser.add_listener
@@ -260,53 +361,54 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     print(self.environment.parsed_options.custom_string_arg)
         """)
 
-        with PopenContextManager(
-            file_content=file_content,
-            args=[
-                sys.executable,
-                "-m",
-                "locust",
-                "--custom-string-arg",
-                "command_line_value",
-                "--web-port",
-                str(port),
-            ],
-        ) as manager:
-            if not wait_for_output_condition_non_threading(
-                manager.process, manager.output_lines, "Starting Locust", timeout=30
-            ):
-                self.fail("Timeout waiting for Locust to start.")
+        args = [
+            sys.executable,
+            "-m",
+            "locust",
+            "--custom-string-arg",
+            "command_line_value",
+            "--web-port",
+            str(self.port),
+        ]
 
-            if not wait_for_output_condition_non_threading(
-                manager.process, manager.output_lines, "Starting web interface at", timeout=30
-            ):
-                self.fail("Timeout waiting for web interface to start.")
+        self.start_locust(args=args, file_content=file_content, timeout=30)
 
-            response = requests.post(
-                f"http://127.0.0.1:{port}/swarm",
-                data={
-                    "user_count": 1,
-                    "spawn_rate": 1,
-                    "host": "https://localhost",
-                    "custom_string_arg": "web_form_value",
-                },
-            )
+        swarm_data = {
+            "user_count": 1,
+            "spawn_rate": 1,
+            "host": "https://localhost",
+            "custom_string_arg": "web_form_value",
+        }
+        response = self.perform_swarm(data=swarm_data, timeout=30)
 
-            self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response, "Swarm response should not be None.")
+        self.assertEqual(response.status_code, 200, "Swarm request did not return status code 200.")
 
-        combined_output = "\n".join(manager.output_lines)
-        self.assertRegex(
-            combined_output, r".*Shutting down[\S\s]*Aggregated.*", "No stats table printed after shutting down"
+        self.stop_locust(timeout=5)
+
+        combined_output = "\n".join(self.manager.output_lines)
+
+        self.assertOutputMatches(
+            combined_output, [r".*Shutting down[\S\s]*Aggregated.*"], "No stats table printed after shutting down."
         )
-        self.assertNotRegex(
-            combined_output, r".*Aggregated[\S\s]*Shutting down.*", "Stats table printed BEFORE shutting down"
+
+        self.assertOutputNotMatches(
+            combined_output, [r".*Aggregated[\S\s]*Shutting down.*"], "Stats table printed BEFORE shutting down."
         )
-        self.assertNotIn("command_line_value", combined_output)
-        self.assertIn("web_form_value", combined_output)
+
+        self.assertOutputNotContains(
+            combined_output, ["command_line_value"], "Command-line argument value should not appear in the output."
+        )
+
+        self.assertOutputContains(
+            combined_output, ["web_form_value"], "Web form argument value should appear in the output."
+        )
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_custom_exit_code(self):
-        port = get_free_tcp_port()
+        """
+        Test that a custom exit code is correctly set and handled.
+        """
         file_content = textwrap.dedent("""
             from locust import User, task, constant, events
             @events.quitting.add_listener
@@ -322,40 +424,33 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     print("running my_task()")
         """)
 
-        with PopenContextManager(
-            file_content=file_content,
-            args=[
-                sys.executable,
-                "-m",
-                "locust",
-                "--web-port",
-                str(port),
-            ],
-        ) as manager:
-            if not wait_for_output_condition_non_threading(
-                manager.process, manager.output_lines, "Starting Locust", timeout=30
-            ):
-                self.fail("Timeout waiting for Locust to start.")
+        args = [
+            sys.executable,
+            "-m",
+            "locust",
+            "--web-port",
+            str(self.port),
+        ]
 
-            if not wait_for_output_condition_non_threading(
-                manager.process, manager.output_lines, "Starting web interface at", timeout=30
-            ):
-                self.fail("Timeout waiting for web interface to start.")
+        self.start_locust(args=args, file_content=file_content, timeout=30)
 
-            manager.process.send_signal(signal.SIGTERM)
+        self.stop_locust(timeout=5)
 
-            manager.process.wait(timeout=3)
+        combined_output = "\n".join(self.manager.output_lines)
 
-        combined_output = "\n".join(manager.output_lines)
+        self.assertOutputContains(
+            combined_output,
+            ["Shutting down (exit code 42)", "Exit code in quit event 42"],
+            "Custom exit code messages not found in output.",
+        )
 
-        self.assertIn("Shutting down (exit code 42)", combined_output)
-        self.assertIn("Exit code in quit event 42", combined_output)
-        self.assertEqual(42, manager.process.returncode)
+        self.assertEqual(self.manager.process.returncode, 42, "Process did not exit with the custom exit code 42.")
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_percentile_parameter(self):
-        port = get_free_tcp_port()
-
+        """
+        Test that PERCENTILES_TO_CHART are correctly set and utilized.
+        """
         file_content = textwrap.dedent("""
             from locust import User, task, constant, events
             from locust import stats
@@ -367,108 +462,75 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     print("running my_task()")
         """)
 
-        with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
-            temp_file.write(file_content)
-            temp_file.flush()
-            temp_file_path = temp_file.name
+        args = [
+            sys.executable,
+            "-m",
+            "locust",
+            "--autostart",
+            "--web-port",
+            str(self.port),
+        ]
+
+        self.start_locust(args=args, file_content=file_content, timeout=30)
 
         try:
-            args = [
-                sys.executable,
-                "-m",
-                "locust",
-                "-f",
-                temp_file_path,
-                "--autostart",
-                "--web-port",
-                str(port),
-            ]
+            response = self.perform_request("get", f"http://localhost:{self.port}/", timeout=30)
+            self.assertEqual(200, response.status_code, "Failed to connect to Locust web interface.")
+        except requests.exceptions.RequestException as e:
+            self.stop_locust(timeout=5)
+            self.fail(f"Failed to connect to Locust web interface: {e}\nLocust output: {self.manager.output_lines}")
 
-            with PopenContextManager(args) as manager:
-                if not wait_for_output_condition_non_threading(
-                    manager.process, manager.output_lines, "Starting Locust", timeout=30
-                ):
-                    manager.process.terminate()
-                    manager.process.wait(timeout=5)
-                    self.fail("Timeout waiting for Locust to start.")
+        self.stop_locust(timeout=5)
 
-                if not wait_for_output_condition_non_threading(
-                    manager.process, manager.output_lines, "Starting web interface at", timeout=30
-                ):
-                    manager.process.terminate()
-                    manager.process.wait(timeout=5)
-                    self.fail("Timeout waiting for web interface to start.")
+        combined_output = "\n".join(self.manager.output_lines)
 
-                try:
-                    response = retry_request(f"http://localhost:{port}/")
-                    self.assertEqual(200, response.status_code)
-                except requests.exceptions.RequestException as e:
-                    manager.process.terminate()
-                    manager.process.wait(timeout=5)
-                    self.fail(f"Failed to connect to Locust web interface: {e}\nLocust output: {manager.output_lines}")
-
-                manager.process.send_signal(signal.SIGTERM)
-
-                manager.process.wait(timeout=5)
-
-            combined_output = "\n".join(manager.output_lines)
-
-            self.assertIn("Starting web interface at", combined_output)
-            self.assertIn("Starting Locust", combined_output)
-        finally:
-            os.unlink(temp_file_path)
+        self.assertOutputContains(
+            combined_output, ["Starting Locust", "Starting web interface at"], "Locust did not start correctly."
+        )
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_percentiles_to_statistics(self):
-        port = get_free_tcp_port()
-
+        """
+        Test that PERCENTILES_TO_STATISTICS are correctly set and utilized.
+        """
         file_content = textwrap.dedent("""
             from locust import User, task, constant, events
             from locust.stats import PERCENTILES_TO_STATISTICS
             PERCENTILES_TO_STATISTICS = [0.9, 0.99]
+
             class TestUser(User):
                 wait_time = constant(3)
+
                 @task
                 def my_task(self):
                     print("running my_task()")
         """)
 
-        with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
-            temp_file.write(file_content)
-            temp_file.flush()
-            temp_file_path = temp_file.name
+        args = [
+            sys.executable,
+            "-m",
+            "locust",
+            "--autostart",
+            "--web-port",
+            str(self.port),
+        ]
+
+        self.start_locust(args=args, file_content=file_content, timeout=30)
 
         try:
-            args = [sys.executable, "-m", "locust", "-f", temp_file_path, "--autostart", "--web-port", str(port)]
+            response = self.perform_request("get", f"http://localhost:{self.port}/", timeout=30)
+            self.assertEqual(200, response.status_code, "Failed to connect to Locust web interface.")
+        except requests.exceptions.RequestException as e:
+            self.stop_locust(timeout=5)
+            self.fail(f"Failed to connect to Locust web interface: {e}\nLocust output: {self.manager.output_lines}")
 
-            with PopenContextManager(args) as manager:
-                if not wait_for_output_condition_non_threading(
-                    manager.process, manager.output_lines, "Starting Locust", timeout=30
-                ):
-                    manager.process.terminate()
-                    manager.process.wait(timeout=5)
-                    self.fail("Timeout waiting for Locust to start.")
+        self.stop_locust(timeout=5)
 
-                if not wait_for_output_condition_non_threading(
-                    manager.process, manager.output_lines, "Starting web interface at", timeout=30
-                ):
-                    manager.process.terminate()
-                    manager.process.wait(timeout=5)
-                    self.fail("Timeout waiting for web interface to start.")
+        combined_output = "\n".join(self.manager.output_lines)
 
-                response = retry_request(f"http://localhost:{port}/")
-                self.assertEqual(200, response.status_code)
-
-                manager.process.send_signal(signal.SIGTERM)
-
-                manager.process.wait(timeout=5)
-
-            combined_output = "\n".join(manager.output_lines)
-
-            self.assertIn("Starting web interface at", combined_output)
-            self.assertIn("Starting Locust", combined_output)
-        finally:
-            os.unlink(temp_file_path)
+        self.assertOutputContains(
+            combined_output, ["Starting Locust", "Starting web interface at"], "Locust did not start correctly."
+        )
 
     def test_invalid_percentile_parameter(self):
         file_content = textwrap.dedent("""
@@ -1902,7 +1964,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 "-r",
                 "10",
             ]
-
             with PopenContextManager(["locust"] + args) as manager:
                 for output in expected_outputs:
                     if not wait_for_output_condition_non_threading(
