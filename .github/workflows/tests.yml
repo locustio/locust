@@ -133,16 +133,16 @@ jobs:
       matrix:
         include:
           # Static analysis and utilities
-          - { name: "Ruff", python: "3.11.9", os: ubuntu-latest, tox: "ruff" }
-          - { name: "Mypy", python: "3.11.9", os: ubuntu-latest, tox: "mypy" }
+          - { name: "Ruff", python: "3.12.5", os: ubuntu-latest, tox: "ruff" }
+          - { name: "Mypy", python: "3.12.5", os: ubuntu-latest, tox: "mypy" }
 
           # Verification of builds and other aspects          
-          - { name: "Docs Build", python: "3.11.9", os: ubuntu-latest, tox: "docs" }
+          - { name: "Docs Build", python: "3.12.5", os: ubuntu-latest, tox: "docs" }
 
           # OS Integration tests 
-          - { name: "Linux", python: "3.11.9", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
-          - { name: "Windows", python: '3.11.9', os: windows-latest, tox: fail_fast_test_main_external_package }
-          - { name: "MacOS", python: '3.11.9', os: macos-latest, tox: fail_fast_test_main_external_package }
+          - { name: "Linux", python: "3.12.5", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
+          - { name: "Windows", python: '3.12.5', os: windows-latest, tox: fail_fast_test_main_external_package }
+          - { name: "MacOS", python: '3.12.5', os: macos-latest, tox: fail_fast_test_main_external_package }
           
           # Unit tests on Python versions
           - { name: "Python 3.12", python: "3.12.5", os: ubuntu-latest, tox: py312 }
