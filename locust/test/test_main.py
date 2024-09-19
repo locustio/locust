@@ -29,7 +29,6 @@ from gevent.fileobject import FileObject
 
 gevent.monkey.patch_all()
 
-# from gevent.subprocess import PIPE, Popen
 from pyquery import PyQuery as pq
 from requests.exceptions import RequestException
 
