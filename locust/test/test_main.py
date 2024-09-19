@@ -402,7 +402,18 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             temp_file_path = temp_file.name
 
         try:
-            args = [sys.executable, "-m", "locust", "-f", temp_file_path, "--autostart", "--web-port", str(port)]
+            args = [
+                sys.executable,
+                "-m",
+                "locust",
+                "-f",
+                temp_file_path,
+                "--autostart",
+                "--web-port",
+                "--run-time",
+                "10s",
+                str(port),
+            ]
 
             with PopenContextManager(args) as manager:
                 if not wait_for_output_condition_non_threading(
