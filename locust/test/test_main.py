@@ -2638,7 +2638,6 @@ def on_test_stop(environment, **kwargs):
                 self.assertTrue(worker_finished, "Worker did not finish as expected.")
 
             self.assertIsNotNone(worker_manager.process.returncode, "Worker process did not terminate")
-            assert_return_code(self, worker_manager.process.returncode)
 
         master_output = "\n".join(master_manager.output_lines)
         worker_output = "\n".join(worker_manager.output_lines)
@@ -2653,6 +2652,8 @@ def on_test_stop(environment, **kwargs):
 
         print("Master output:\n", master_output)
         print("Worker output:\n", worker_output)
+        assert_return_code(self, worker_manager.process.returncode)
+
         assert_return_code(self, master_manager.process.returncode)
 
     def test_distributed_tags(self):
