@@ -550,11 +550,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
             self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
-            self.assertEqual(
-                0,
-                manager.process.returncode,
-                msg=f"Locust process exited with return code {manager.process.returncode}",
-            )
+            assert_return_code(self, manager.process.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_webserver_multiple_locustfiles_with_shape(self):
@@ -672,11 +668,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
-        self.assertEqual(
-            0,
-            manager.process.returncode,
-            msg=f"Locust process exited with return code {manager.process.returncode}",
-        )
+        assert_return_code(self, manager.process.returncode)
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
@@ -710,7 +702,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 expected_message = 'Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...'
                 self.assertIn(expected_message, all_output)
 
-                self.assertEqual(0, popen_ctx.process.returncode)
+                assert_return_code(self, popen_ctx.process.returncode)
 
     def test_invalid_stop_timeout_string(self):
         with mock_locustfile() as mocked:
@@ -793,17 +785,15 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 combined_output,
                 msg="Expected 'Shutting down (exit code 0)' not found in output.",
             )
-            self.assertEqual(
-                0,
-                manager.process.returncode,
-                msg=f"Locust process exited with return code {manager.process.returncode}",
-            )
+
             self.assertNotIn(
                 "Locust is running with the UserClass Picker Enabled",
                 combined_output,
                 msg="Unexpected 'UserClass Picker Enabled' message found in output.",
             )
             self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
+
+            assert_return_code(self, manager.process.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_run_headless_with_multiple_locustfiles(self):
@@ -880,12 +870,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertIn(
                         "Shutting down (exit code 0)", combined_output, msg="Expected shutdown message not found."
                     )
-                    self.assertEqual(
-                        0,
-                        manager.process.returncode,
-                        msg=f"Locust process exited with return code {manager.process.returncode}.",
-                    )
+
                     self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
+
+                    assert_return_code(self, manager.process.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_default_headless_spawn_options_with_shape(self):
@@ -976,12 +964,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 msg="Aggregated output not found before shutdown.",
             )
             self.assertIn(shutdown_message, combined_output, msg="Expected shutdown message not found.")
-            self.assertEqual(
-                0,
-                manager.process.returncode,
-                msg=f"Locust process exited with return code {manager.process.returncode}.",
-            )
             self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
+
+            assert_return_code(self, manager.process.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_run_headless_with_multiple_locustfiles_with_shape(self):
@@ -1082,12 +1067,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*",
                         msg="Aggregated output not found before shutdown.",
                     )
-                    self.assertEqual(
-                        0,
-                        manager.process.returncode,
-                        msg=f"Locust process exited with return code {manager.process.returncode}.",
-                    )
+
                     self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
+
+                    assert_return_code(self, manager.process.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_autostart_wo_run_time(self):
@@ -1260,12 +1243,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             d = pq(response.content.decode("utf-8"))
             self.assertIn('"state": "running"', str(d), msg="Expected 'running' state not found in response.")
 
-            # Verify exit code
-            # self.assertEqual(
-            #     0,
-            #     manager.process.returncode,
-            #     msg=f"Locust process exited with return code {manager.process.returncode}.",
-            # )
+            assert_return_code(self, manager.process.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_run_autostart_with_multiple_locustfiles(self):
@@ -1372,11 +1350,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         )
 
                     self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
-                    self.assertEqual(
-                        0,
-                        manager.process.returncode,
-                        msg=f"Locust process exited with return code {manager.process.returncode}.",
-                    )
+                    assert_return_code(self, manager.process.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_autostart_w_load_shape(self):
@@ -1462,12 +1436,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn(
                 "autoquit time reached", combined_output, msg="Expected 'autoquit time reached' not found in output."
             )
-            self.assertEqual(
-                0,
-                manager.process.returncode,
-                msg=f"Locust process exited with return code {manager.process.returncode}.",
-            )
             self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
+            assert_return_code(self, manager.process.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on Windows is hard")
     def test_autostart_multiple_locustfiles_with_shape(self):
@@ -1561,11 +1531,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         self.assertNotIn("Traceback", combined_output, msg="Unexpected traceback found in output.")
 
-        self.assertEqual(
-            0,
-            manager.process.returncode,
-            msg=f"Locust process exited with return code {manager.process.returncode}.",
-        )
+        assert_return_code(self, manager.process.returncode)
 
     @unittest.skipIf(platform.system() == "Darwin", reason="Messy on macOS on GH")
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
@@ -1911,11 +1877,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             self.assertRegex(combined_output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
 
-            self.assertEqual(
-                0,
-                manager.process.returncode,
-                f"Process failed with return code {manager.process.returncode}",
-            )
+            assert_return_code(self, manager.process.returncode)
 
     def test_warning_with_lower_user_count_than_fixed_count(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -1970,11 +1932,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             for output in expected_outputs:
                 self.assertIn(output, combined_output, f"Expected output not found: {output}")
 
-            self.assertEqual(
-                0,
-                manager.process.returncode,
-                f"Process failed with return code {manager.process.returncode}",
-            )
+            assert_return_code(self, manager.process.returncode)
 
     def test_with_package_as_locustfile(self):
         expected_outputs = [
@@ -2014,11 +1972,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             for output in expected_outputs:
                 self.assertIn(output, combined_output, f"Expected output not found: {output}")
 
-            self.assertEqual(
-                0,
-                manager.process.returncode,
-                f"Process failed with return code {manager.process.returncode}",
-            )
+            assert_return_code(self, manager.process.returncode)
 
     def test_command_line_user_selection(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -2342,7 +2296,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
         self.assertIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", combined_output)
         self.assertIn("The following option(s) will be ignored: --run-time", combined_output)
-        self.assertEqual(0, manager.process.returncode, "Process did not exit with return code 0 as expected.")
+        assert_return_code(self, manager.process.returncode)
 
     def test_shape_class_log_disabled_parameters(self):
         """
@@ -2392,7 +2346,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         for message in expected_messages:
             self.assertIn(message, combined_output)
 
-        self.assertEqual(0, manager.process.returncode, "Process did not exit with return code 0 as expected.")
+        assert_return_code(self, manager.process.returncode)
 
     def test_shape_class_with_use_common_options(self):
         """
@@ -2457,7 +2411,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         ]:
             self.assertNotIn(message, combined_output, f"Unexpected message found: {message}")
 
-        self.assertEqual(0, manager.process.returncode, "Process did not exit with return code 0 as expected.")
+        assert_return_code(self, manager.process.returncode)
 
     def test_error_when_locustfiles_directory_is_empty(self):
         """
@@ -2733,11 +2687,9 @@ def on_test_stop(environment, **kwargs):
                 self.assertTrue(worker_finished, "Worker did not finish as expected.")
 
             self.assertIsNotNone(worker_manager.process.returncode, "Worker process did not terminate")
-            # self.assertEqual(0, worker_manager.process.returncode, "Worker process exited with unexpected return code")
+            assert_return_code(self, worker_manager.process.returncode)
 
-        # Ensure the master process terminated correctly
-        self.assertIsNotNone(master_manager.process.returncode, "Master process did not terminate")
-        # self.assertEqual(0, master_manager.process.returncode, "Master process exited with unexpected return code")
+        assert_return_code(self, master_manager.process.returncode)
 
         master_output = "\n".join(master_manager.output_lines)
         worker_output = "\n".join(worker_manager.output_lines)
@@ -2817,23 +2769,11 @@ def on_test_stop(environment, **kwargs):
         self.assertNotIn("Traceback", master_output, "Traceback found in master stderr/output")
         self.assertNotIn("Traceback", worker_output, "Traceback found in worker stderr/output")
 
-        if platform.system() == "Windows":
-            expected_master_return_codes = [0, 1]
-            expected_worker_return_codes = [0, 1]
-            master_message = "Master process exited with unexpected return code on Windows"
-            worker_message = "Worker process exited with unexpected return code on Windows"
-        else:
-            expected_master_return_codes = [0]
-            expected_worker_return_codes = [0]
-            master_message = "Master process exited with unexpected return code"
-            worker_message = "Worker process exited with unexpected return code"
-
-        self.assertIn(master_manager.process.returncode, expected_master_return_codes, master_message)
-
-        self.assertIn(worker_manager.process.returncode, expected_worker_return_codes, worker_message)
-
         self.assertIn("task1", worker_output, "Master did not filter tasks correctly; 'task1' should be present")
         self.assertNotIn("task2", worker_output, "Master did not filter tasks correctly; 'task2' should not be present")
+
+        assert_return_code(self, master_manager.process.returncode)
+        assert_return_code(self, worker_manager.process.returncode)
 
     def test_distributed(self):
         """
@@ -2871,7 +2811,6 @@ def on_test_stop(environment, **kwargs):
                 file_content=LOCUSTFILE_CONTENT,
                 port=None,
             ) as worker_manager:
-                # Wait for the master to produce the expected shutdown message
                 master_finished = wait_for_output_condition_non_threading(
                     master_manager.process,
                     master_manager.output_lines,
@@ -2880,7 +2819,6 @@ def on_test_stop(environment, **kwargs):
                 )
                 self.assertTrue(master_finished, "Master did not shut down as expected.")
 
-                # Wait for the worker to produce the expected shutdown message
                 worker_finished = wait_for_output_condition_non_threading(
                     worker_manager.process,
                     worker_manager.output_lines,
@@ -2889,12 +2827,9 @@ def on_test_stop(environment, **kwargs):
                 )
                 self.assertTrue(worker_finished, "Worker did not shut down as expected.")
 
-        # **Validate Output Before Asserting Return Codes**
-        # Combine output lines into single strings for easier searching
         master_output = "\n".join(master_manager.output_lines)
         worker_output = "\n".join(worker_manager.output_lines)
 
-        # **Assert Expected Output is Present**
         self.assertIn(
             'All users spawned: {"User1": 3} (3 total users)',
             master_output,
@@ -2907,21 +2842,8 @@ def on_test_stop(environment, **kwargs):
         self.assertNotIn("Traceback", master_output, "Traceback found in master output.")
         self.assertNotIn("Traceback", worker_output, "Traceback found in worker output.")
 
-        # **Now Assert the Return Codes**
-        if platform.system() == "Windows":
-            expected_master_return_codes = [0, 1]
-            expected_worker_return_codes = [0, 1]
-            master_message = "Master process exited with unexpected return code on Windows."
-            worker_message = "Worker process exited with unexpected return code on Windows."
-        else:
-            expected_master_return_codes = [0]
-            expected_worker_return_codes = [0]
-            master_message = "Master process exited with unexpected return code."
-            worker_message = "Worker process exited with unexpected return code."
-
-        self.assertIn(master_manager.process.returncode, expected_master_return_codes, master_message)
-
-        self.assertIn(worker_manager.process.returncode, expected_worker_return_codes, worker_message)
+        assert_return_code(self, master_manager.process.returncode)
+        assert_return_code(self, worker_manager.process.returncode)
 
     def test_distributed_report_timeout_expired(self):
         """
@@ -2966,7 +2888,6 @@ def on_test_stop(environment, **kwargs):
                     file_content=LOCUSTFILE_CONTENT,
                     port=None,
                 ) as worker_manager:
-                    # Wait for the master to produce the expected timeout message
                     master_finished = wait_for_output_condition_non_threading(
                         master_manager.process,
                         master_manager.output_lines,
@@ -2985,12 +2906,9 @@ def on_test_stop(environment, **kwargs):
                     )
                     self.assertTrue(worker_finished, "Worker did not shut down as expected.")
 
-        # **Validate Output Before Asserting Return Codes**
-        # Convert output lines to a single string for easier searching
         master_output = "\n".join(master_manager.output_lines)
         worker_output = "\n".join(worker_manager.output_lines)
 
-        # **Assert Expected Output is Present**
         expected_timeout_message = 'Spawning is complete and report waittime is expired, but not all reports received from workers: {"User1": 2} (2 total users)'
         self.assertIn(expected_timeout_message, master_output, "Expected timeout message not found in master output")
         self.assertIn("Shutting down (exit code 0)", master_output)
@@ -2999,21 +2917,8 @@ def on_test_stop(environment, **kwargs):
         self.assertNotIn("Traceback", master_output, "Traceback found in master output")
         self.assertNotIn("Traceback", worker_output, "Traceback found in worker output")
 
-        # **Now Assert the Return Codes**
-        if platform.system() == "Windows":
-            expected_master_return_codes = [0, 1]
-            expected_worker_return_codes = [0, 1]
-            master_message = "Master process exited with unexpected return code on Windows"
-            worker_message = "Worker process exited with unexpected return code on Windows"
-        else:
-            expected_master_return_codes = [0]
-            expected_worker_return_codes = [0]
-            master_message = "Master process exited with unexpected return code"
-            worker_message = "Worker process exited with unexpected return code"
-
-        self.assertIn(master_manager.process.returncode, expected_master_return_codes, master_message)
-
-        self.assertIn(worker_manager.process.returncode, expected_worker_return_codes, worker_message)
+        assert_return_code(self, master_manager.process.returncode)
+        assert_return_code(self, worker_manager.process.returncode)
 
     def test_locustfile_distribution(self):
         """
@@ -3063,7 +2968,6 @@ def on_test_stop(environment, **kwargs):
                         file_content=LOCUSTFILE_CONTENT,
                         port=None,
                     ) as worker_manager2:
-                        # Wait for all users to be spawned
                         all_users_spawned = wait_for_output_condition_non_threading(
                             master_manager.process,
                             master_manager.output_lines,
@@ -3071,8 +2975,6 @@ def on_test_stop(environment, **kwargs):
                             timeout=30,
                         )
                         self.assertTrue(all_users_spawned, "Timeout waiting for all users to be spawned.")
-
-                        # Wait for the master to shut down gracefully
                         shutting_down = wait_for_output_condition_non_threading(
                             master_manager.process,
                             master_manager.output_lines,
@@ -3081,13 +2983,11 @@ def on_test_stop(environment, **kwargs):
                         )
                         self.assertTrue(shutting_down, "'Shutting down (exit code 0)' not found in master output.")
 
-            # Combine and check the outputs from master and both workers
             master_output = "\n".join(master_manager.output_lines)
             worker_output1 = "\n".join(worker_manager1.output_lines)
             worker_output2 = "\n".join(worker_manager2.output_lines)
             combined_output = f"{master_output}\n{worker_output1}\n{worker_output2}"
 
-            # **Assert Expected Output is Present**
             self.assertIn(
                 'All users spawned: {"User1": 2} (2 total users)',
                 master_output,
@@ -3101,36 +3001,9 @@ def on_test_stop(environment, **kwargs):
 
             self.assertNotIn("Traceback", combined_output, "Traceback found in output, indicating an error.")
 
-            # **Determine Expected Return Codes Based on OS**
-            if platform.system() == "Windows":
-                expected_master_return_codes = [0, 1]
-                expected_worker_return_codes = [0, 1]
-                master_message = "Master process exited with unexpected return code on Windows."
-                worker_message1 = "First worker process exited with unexpected return code on Windows."
-                worker_message2 = "Second worker process exited with unexpected return code on Windows."
-            else:
-                expected_master_return_codes = [0]
-                expected_worker_return_codes = [0]
-                master_message = "Master process exited with unexpected return code."
-                worker_message1 = "First worker process exited with unexpected return code."
-                worker_message2 = "Second worker process exited with unexpected return code."
-
-            # **Assert the Return Codes**
-            self.assertIn(
-                master_manager.process.returncode,
-                expected_master_return_codes,
-                master_message,
-            )
-            self.assertIn(
-                worker_manager1.process.returncode,
-                expected_worker_return_codes,
-                worker_message1,
-            )
-            self.assertIn(
-                worker_manager2.process.returncode,
-                expected_worker_return_codes,
-                worker_message2,
-            )
+            assert_return_code(self, master_manager.process.returncode)
+            assert_return_code(self, worker_manager1.process.returncode)
+            assert_return_code(self, worker_manager2.process.returncode)
 
         finally:
             # Clean up the temporary locustfile
@@ -3179,13 +3052,11 @@ def on_test_stop(environment, **kwargs):
                     ],
                     port=get_free_tcp_port(),
                 ) as master_manager:
-                    # Wait for the master to detect the worker connection
                     worker_connected = wait_for_output_condition_non_threading(
                         master_manager.process, master_manager.output_lines, "1 workers connected", timeout=30
                     )
                     self.assertTrue(worker_connected, "Worker did not connect to master.")
 
-                    # Wait for all users to be spawned
                     all_users_spawned = wait_for_output_condition_non_threading(
                         master_manager.process,
                         master_manager.output_lines,
@@ -3194,18 +3065,15 @@ def on_test_stop(environment, **kwargs):
                     )
                     self.assertTrue(all_users_spawned, "Timeout waiting for all users to be spawned.")
 
-                    # Wait for the master to shut down gracefully
                     shutting_down = wait_for_output_condition_non_threading(
                         master_manager.process, master_manager.output_lines, "Shutting down (exit code 0)", timeout=30
                     )
                     self.assertTrue(shutting_down, "'Shutting down (exit code 0)' not found in master output.")
 
-            # Combine and check the outputs from master and worker
             master_output = "\n".join(master_manager.output_lines)
             worker_output = "\n".join(worker_manager.output_lines)
             combined_output = f"{master_output}\n{worker_output}"
 
-            # **Assert Expected Output is Present**
             self.assertIn(
                 'All users spawned: {"User1": 1} (1 total users)',
                 master_output,
@@ -3221,24 +3089,9 @@ def on_test_stop(environment, **kwargs):
 
             self.assertNotIn("Traceback", combined_output, "Traceback found in output, indicating an error.")
 
-            # **Determine Expected Return Codes Based on OS**
-            if platform.system() == "Windows":
-                expected_master_return_codes = [0, 1]
-                expected_worker_return_codes = [0, 1]
-                master_message = "Master process exited with unexpected return code on Windows."
-                worker_message = "Worker process exited with unexpected return code on Windows."
-            else:
-                expected_master_return_codes = [0]
-                expected_worker_return_codes = [0]
-                master_message = "Master process exited with unexpected return code."
-                worker_message = "Worker process exited with unexpected return code."
-
-            # **Assert the Return Codes**
-            self.assertIn(master_manager.process.returncode, expected_master_return_codes, master_message)
-
-            self.assertIn(worker_manager.process.returncode, expected_worker_return_codes, worker_message)
+            assert_return_code(self, master_manager.process.returncode)
+            assert_return_code(self, worker_manager.process.returncode)
         finally:
-            # Clean up the temporary locustfile
             os.remove(locustfile_path)
 
     def test_json_schema(self):
