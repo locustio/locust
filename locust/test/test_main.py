@@ -92,12 +92,14 @@ class PopenContextManager:
             env={**os.environ, "PYTHONUNBUFFERED": "1"},
         )
 
+        # Spawn gevent greenlets to read the output
         self.stdout_reader = gevent.spawn(self._read_output, self.process.stdout)
         self.stderr_reader = gevent.spawn(self._read_output, self.process.stderr)
 
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        # Ensure process termination
         if self.process.poll() is None:
             try:
                 self.process.terminate()
@@ -105,9 +107,18 @@ class PopenContextManager:
             except subprocess.TimeoutExpired:
                 self.process.kill()
             self.process.wait()
+
+        # Ensure readers are joined
         self.stdout_reader.join()
         self.stderr_reader.join()
 
+        # Close the stdout and stderr streams explicitly
+        if self.process.stdout:
+            self.process.stdout.close()
+        if self.process.stderr:
+            self.process.stderr.close()
+
+        # Remove the temporary file if it exists
         if self.temp_file_path:
             try:
                 os.remove(self.temp_file_path)
@@ -115,10 +126,13 @@ class PopenContextManager:
                 print(f"Error removing temporary file: {e}")
 
     def _read_output(self, pipe):
-        for line in iter(pipe.readline, ""):
-            line = line.rstrip("\n")
-            self.output_lines.append(line)
-            # print(f"Captured output: {line}")
+        try:
+            for line in iter(pipe.readline, ""):
+                line = line.rstrip("\n")
+                self.output_lines.append(line)
+        finally:
+            # Ensure the pipe is closed after reading
+            pipe.close()
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
