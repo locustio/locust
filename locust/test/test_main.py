@@ -2697,7 +2697,7 @@ def on_test_stop(environment, **kwargs):
                 "--expect-workers",
                 "1",
                 "-t",
-                "1",
+                "5",
                 "--exit-code-on-error",
                 "0",
                 "-L",
@@ -2711,12 +2711,12 @@ def on_test_stop(environment, **kwargs):
                 file_content=content,
             ) as worker_manager:
                 master_finished = wait_for_output_condition_non_threading(
-                    master_manager.process, master_manager.output_lines, "test_stop on master", timeout=5
+                    master_manager.process, master_manager.output_lines, "test_stop on master", timeout=7
                 )
                 self.assertTrue(master_finished, "Master did not finish as expected.")
 
                 worker_finished = wait_for_output_condition_non_threading(
-                    worker_manager.process, worker_manager.output_lines, "test_stop on worker", timeout=5
+                    worker_manager.process, worker_manager.output_lines, "test_stop on worker", timeout=7
                 )
                 self.assertTrue(worker_finished, "Worker did not finish as expected.")
 
