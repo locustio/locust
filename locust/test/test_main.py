@@ -2664,23 +2664,23 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
         content = (
             MOCK_LOCUSTFILE_CONTENT
             + """
-    from locust import events
-    from locust.runners import MasterRunner
+from locust import events
+from locust.runners import MasterRunner
 
-    @events.test_start.add_listener
-    def on_test_start(environment, **kwargs):
-        if isinstance(environment.runner, MasterRunner):
-            print("test_start on master")
-        else:
-            print("test_start on worker")
+@events.test_start.add_listener
+def on_test_start(environment, **kwargs):
+    if isinstance(environment.runner, MasterRunner):
+        print("test_start on master")
+    else:
+        print("test_start on worker")
 
-    @events.test_stop.add_listener
-    def on_test_stop(environment, **kwargs):
-        if isinstance(environment.runner, MasterRunner):
-            print("test_stop on master")
-        else:
-            print("test_stop on worker")
-    """
+@events.test_stop.add_listener
+def on_test_stop(environment, **kwargs):
+    if isinstance(environment.runner, MasterRunner):
+        print("test_stop on master")
+    else:
+        print("test_stop on worker")
+"""
         )
 
         with PopenContextManager(
@@ -2714,26 +2714,10 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                 )
                 self.assertTrue(worker_finished, "Worker did not finish as expected.")
 
-            # At this point, PopenContextManager's __exit__ is called for the worker
-            # Now, wait a bit to ensure the worker process has fully exited
-            try:
-                worker_manager.process.wait(timeout=2)
-            except subprocess.TimeoutExpired:
-                self.fail("Worker process did not exit in time after the context manager.")
-
-        # At this point, PopenContextManager's __exit__ is called for the master
-        # Wait to ensure the master process has fully exited
-        try:
-            master_manager.process.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            self.fail("Master process did not exit in time after the context manager.")
+            self.assertIsNotNone(worker_manager.process.returncode, "Worker process did not terminate")
 
         master_output = "\n".join(master_manager.output_lines)
         worker_output = "\n".join(worker_manager.output_lines)
-
-        # Log the outputs
-        print(f"Master output:\n{master_output}")
-        print(f"Worker output:\n{worker_output}")
 
         self.assertIn("test_start on master", master_output)
         self.assertIn("test_stop on master", master_output)
@@ -2745,18 +2729,9 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
 
         print("Master output:\n", master_output)
         print("Worker output:\n", worker_output)
+        assert_return_code(self, worker_manager.process.returncode)
 
-        # Log and assert return codes
-        print(f"Worker exit code: {worker_manager.process.returncode}")
-        print(f"Master exit code: {master_manager.process.returncode}")
-
-        # Assertions for return codes
-        self.assertEqual(
-            worker_manager.process.returncode, 0, f"Worker failed with return code {worker_manager.process.returncode}"
-        )
-        self.assertEqual(
-            master_manager.process.returncode, 0, f"Master failed with return code {master_manager.process.returncode}"
-        )
+        assert_return_code(self, master_manager.process.returncode)
 
     def test_distributed_tags(self):
         """
