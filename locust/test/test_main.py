@@ -10,6 +10,7 @@ import signal
 import socket
 import subprocess
 import sys
+import tempfile
 import textwrap
 import time
 import unittest
@@ -72,22 +73,29 @@ class PopenContextManager:
         self.temp_file_path = None
 
         if file_content is not None:
-            with NamedTemporaryFile(mode="w+", delete=False, suffix=".py") as temp_file:
-                temp_file.write(file_content)
-                temp_file.flush()
-                self.temp_file_path = temp_file.name
+            self.temp_file_path = self.create_temp_file(file_content)
             self.args += ["-f", self.temp_file_path]
 
         if port is not None:
             self.args += ["--web-port", str(port)]
 
+    def create_temp_file(self, content):
+        fd, path = tempfile.mkstemp(suffix=".py", text=True)
+        with os.fdopen(fd, "w") as temp_file:
+            temp_file.write(content)
+        return path
+
     def __enter__(self):
+        # Use shell=True on Windows to properly handle PATH
+        shell = sys.platform == "win32"
+
         self.process = subprocess.Popen(
             self.args,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             bufsize=1,
+            shell=shell,
             **self.kwargs,
             env={**os.environ, "PYTHONUNBUFFERED": "1"},
         )
@@ -100,38 +108,48 @@ class PopenContextManager:
 
     def __exit__(self, exc_type, exc_value, traceback):
         # Ensure process termination
-        if self.process.poll() is None:
+        self.terminate_process()
+
+        # Ensure readers are joined
+        gevent.joinall([self.stdout_reader, self.stderr_reader])
+
+        # Close the stdout and stderr streams explicitly
+        self.close_pipes()
+
+        # Remove the temporary file if it exists
+        self.remove_temp_file()
+
+    def terminate_process(self):
+        if self.process and self.process.poll() is None:
             try:
-                self.process.terminate()
-                self.process.wait(timeout=10)
+                if sys.platform == "win32":
+                    self.process.terminate()
+                else:
+                    self.process.send_signal(15)  # SIGTERM
+                self.process.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 self.process.kill()
             self.process.wait()
 
-        # Ensure readers are joined
-        self.stdout_reader.join()
-        self.stderr_reader.join()
+    def close_pipes(self):
+        for pipe in [self.process.stdout, self.process.stderr]:
+            if pipe:
+                pipe.close()
 
-        # Close the stdout and stderr streams explicitly
-        if self.process.stdout:
-            self.process.stdout.close()
-        if self.process.stderr:
-            self.process.stderr.close()
-
-        # Remove the temporary file if it exists
+    def remove_temp_file(self):
         if self.temp_file_path:
             try:
                 os.remove(self.temp_file_path)
             except OSError as e:
                 print(f"Error removing temporary file: {e}")
 
+    @contextmanager
     def _read_output(self, pipe):
         try:
             for line in iter(pipe.readline, ""):
                 line = line.rstrip("\n")
                 self.output_lines.append(line)
         finally:
-            # Ensure the pipe is closed after reading
             pipe.close()
 
 
@@ -2603,6 +2621,7 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
             + """
 from locust import events
 from locust.runners import MasterRunner
+
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
     if isinstance(environment.runner, MasterRunner):
@@ -2618,50 +2637,56 @@ def on_test_stop(environment, **kwargs):
         print("test_stop on worker")
 """
         )
-        with mock_locustfile(content=content) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--headless",
-                    "--master",
-                    "--expect-workers",
-                    "1",
-                    "-t",
-                    "1",
-                    "--exit-code-on-error",
-                    "0",
-                    "-L",
-                    "DEBUG",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            proc_worker = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--worker",
-                    "-L",
-                    "DEBUG",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            stdout, stderr = proc.communicate()
-            stdout_worker, stderr_worker = proc_worker.communicate()
-            self.assertIn("test_start on master", stdout)
-            self.assertIn("test_stop on master", stdout)
-            self.assertIn("test_stop on worker", stdout_worker)
-            self.assertIn("test_start on worker", stdout_worker)
-            self.assertNotIn("Traceback", stderr)
-            self.assertNotIn("Traceback", stderr_worker)
-            self.assertEqual(0, proc.returncode)
-            self.assertEqual(0, proc_worker.returncode)
+
+        with PopenContextManager(
+            args=[
+                "locust",
+                "--headless",
+                "--master",
+                "--expect-workers",
+                "1",
+                "-t",
+                "1",
+                "--exit-code-on-error",
+                "0",
+                "-L",
+                "DEBUG",
+            ],
+            file_content=content,
+            port=get_free_tcp_port(),
+        ) as master_manager:
+            with PopenContextManager(
+                args=["locust", "--worker", "-L", "DEBUG"],
+                file_content=content,
+            ) as worker_manager:
+                master_finished = wait_for_output_condition_non_threading(
+                    master_manager.process, master_manager.output_lines, "test_stop on master", timeout=5
+                )
+                self.assertTrue(master_finished, "Master did not finish as expected.")
+
+                worker_finished = wait_for_output_condition_non_threading(
+                    worker_manager.process, worker_manager.output_lines, "test_stop on worker", timeout=5
+                )
+                self.assertTrue(worker_finished, "Worker did not finish as expected.")
+
+            self.assertIsNotNone(worker_manager.process.returncode, "Worker process did not terminate")
+
+        master_output = "\n".join(master_manager.output_lines)
+        worker_output = "\n".join(worker_manager.output_lines)
+
+        self.assertIn("test_start on master", master_output)
+        self.assertIn("test_stop on master", master_output)
+        self.assertNotIn("Traceback", master_output)
+
+        self.assertIn("test_start on worker", worker_output)
+        self.assertIn("test_stop on worker", worker_output)
+        self.assertNotIn("Traceback", worker_output)
+
+        print("Master output:\n", master_output)
+        print("Worker output:\n", worker_output)
+        assert_return_code(self, worker_manager.process.returncode)
+
+        assert_return_code(self, master_manager.process.returncode)
 
     def test_distributed_tags(self):
         """
