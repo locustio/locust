@@ -410,8 +410,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 temp_file_path,
                 "--autostart",
                 "--web-port",
-                "--run-time",
-                "10s",
                 str(port),
             ]
 
