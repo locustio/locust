@@ -79,40 +79,57 @@ class PopenContextManager:
         if port is not None:
             self.args += ["--web-port", str(port)]
 
+        print(f"PopenContextManager initialized with args: {self.args} and kwargs: {self.kwargs}")
+
     def create_temp_file(self, content):
         fd, path = tempfile.mkstemp(suffix=".py", text=True)
         with os.fdopen(fd, "w") as temp_file:
             temp_file.write(content)
+        print(f"Temporary file created at: {path}")
         return path
 
     def __enter__(self):
-        # Use shell=True on Windows to properly handle PATH
         shell = sys.platform == "win32"
+        print(f"Starting subprocess with shell={shell}")
 
-        self.process = subprocess.Popen(
-            self.args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            bufsize=1,
-            shell=shell,
-            **self.kwargs,
-            env={**os.environ, "PYTHONUNBUFFERED": "1"},
-        )
+        try:
+            self.process = subprocess.Popen(
+                self.args,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,
+                shell=shell,
+                **self.kwargs,
+                env={**os.environ, "PYTHONUNBUFFERED": "1"},
+            )
+            print(f"Subprocess started with PID: {self.process.pid}")
+            print(f"Subprocess arguments: {self.args}")
+        except Exception as e:
+            print(f"Failed to start subprocess: {e}")
+            raise
 
         # Spawn gevent greenlets to read the output
-        self.stdout_reader = gevent.spawn(self._read_output, self.process.stdout)
-        self.stderr_reader = gevent.spawn(self._read_output, self.process.stderr)
+        self.stdout_reader = gevent.spawn(self._read_output, self.process.stdout, "STDOUT")
+        self.stderr_reader = gevent.spawn(self._read_output, self.process.stderr, "STDERR")
 
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        # First, check if the process has already terminated
+        print("Entering __exit__ of PopenContextManager")
+
+        # Only terminate if the process is still running
         if self.process and self.process.poll() is None:
+            print("Subprocess is still running; attempting to terminate")
             self.terminate_process()
+        else:
+            print("Subprocess has already terminated")
 
         # Ensure readers are joined
         gevent.joinall([self.stdout_reader, self.stderr_reader])
+
+        # Log collected outputs
+        print(f"Collected STDOUT lines: {self.output_lines}")
 
         # Close the stdout and stderr streams explicitly
         self.close_pipes()
@@ -120,38 +137,53 @@ class PopenContextManager:
         # Remove the temporary file if it exists
         self.remove_temp_file()
 
+        # Log the final return code
+        if self.process:
+            print(f"Subprocess with PID {self.process.pid} exited with return code {self.process.returncode}")
+
     def terminate_process(self):
-        if self.process and self.process.poll() is None:
-            try:
-                if sys.platform == "win32":
-                    self.process.terminate()
-                else:
-                    self.process.send_signal(15)  # SIGTERM
-                self.process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self.process.kill()
+        try:
+            if sys.platform == "win32":
+                self.process.terminate()
+                print("Called process.terminate() on Windows")
+            else:
+                self.process.send_signal(subprocess.signal.SIGTERM)
+                print("Sent SIGTERM to subprocess")
+            self.process.wait(timeout=5)
+            print("Subprocess terminated gracefully")
+        except subprocess.TimeoutExpired:
+            print("Subprocess did not terminate in time; killing it")
+            self.process.kill()
             self.process.wait()
+            print("Subprocess killed")
+        except Exception as e:
+            print(f"Error while terminating subprocess: {e}")
 
     def close_pipes(self):
         for pipe in [self.process.stdout, self.process.stderr]:
             if pipe:
                 pipe.close()
+                print(f"Closed pipe: {pipe}")
 
     def remove_temp_file(self):
         if self.temp_file_path:
             try:
                 os.remove(self.temp_file_path)
+                print(f"Removed temporary file: {self.temp_file_path}")
             except OSError as e:
                 print(f"Error removing temporary file: {e}")
 
-    @contextmanager
-    def _read_output(self, pipe):
+    def _read_output(self, pipe, pipe_name):
         try:
             for line in iter(pipe.readline, ""):
                 line = line.rstrip("\n")
                 self.output_lines.append(line)
+                print(f"{pipe_name}: {line}")
+        except Exception as e:
+            print(f"Error reading {pipe_name}: {e}")
         finally:
             pipe.close()
+            print(f"{pipe_name} pipe closed")
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
