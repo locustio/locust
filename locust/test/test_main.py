@@ -407,7 +407,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.fail("Timeout waiting for web interface to start.")
 
                 try:
-                    response = retry_request(f"http://localhost:{port}/", timeout=10)
+                    response = retry_request(f"http://localhost:{port}/")
                     self.assertEqual(200, response.status_code)
                 except requests.exceptions.RequestException as e:
                     manager.process.terminate()
@@ -1614,7 +1614,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             self.fail(f"Timeout waiting for Locust to output: {output}")
 
                     try:
-                        response = retry_request(f"http://127.0.0.2:{port}/", timeout=10)
+                        response = retry_request(f"http://127.0.0.2:{port}/")
                         self.assertEqual(
                             200, response.status_code, "Locust web interface did not return status code 200."
                         )
@@ -1651,7 +1651,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.fail(f"Timeout waiting for Locust to output: {output}")
 
                 try:
-                    response = retry_request(f"http://127.0.0.1:{port}/", timeout=10)
+                    response = retry_request(f"http://127.0.0.1:{port}/")
                     self.assertEqual(200, response.status_code, "Locust web interface did not return status code 200.")
                 except requests.exceptions.RequestException as e:
                     self.fail(f"Failed to connect to Locust web interface: {e}")
@@ -1688,7 +1688,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             self.fail(f"Timeout waiting for Locust to output: {output}")
 
                     try:
-                        response = retry_request(f"http://127.0.0.2:{port}/", timeout=10)
+                        response = retry_request(f"http://127.0.0.2:{port}/")
                         self.assertEqual(
                             200, response.status_code, "Locust web interface did not return status code 200."
                         )
@@ -1727,7 +1727,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         self.fail(f"Timeout waiting for Locust to output: {output}")
 
                 try:
-                    response = retry_request(f"http://127.0.0.1:{port}/", timeout=10)
+                    response = retry_request(f"http://127.0.0.1:{port}/")
                     self.assertEqual(200, response.status_code, "Locust web interface did not return status code 200.")
                 except requests.exceptions.RequestException as e:
                     self.fail(f"Failed to connect to Locust web interface: {e}")
