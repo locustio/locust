@@ -118,7 +118,7 @@ class PopenContextManager:
         for line in iter(pipe.readline, ""):
             line = line.rstrip("\n")
             self.output_lines.append(line)
-            print(f"Captured output: {line}")
+            # print(f"Captured output: {line}")
 
 
 MOCK_LOCUSTFILE_CONTENT_A = textwrap.dedent(
