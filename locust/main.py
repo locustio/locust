@@ -487,6 +487,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             web_host = options.web_host
         if web_host:
             logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
+        if options.web_host_display_name:
+            logger.info(f"Starting web interface at {options.web_host_display_name}")
         else:
             if os.name == "nt":
                 logger.info(
