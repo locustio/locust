@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.31.7
+======
+* Log locust version earlier by @cyberw in https://github.com/locustio/locust/pull/2904
+* Improve Web UI Logging by @andrewbaldwin44 in https://github.com/locustio/locust/pull/2911
+
 2.31.6
 ======
 * Various documentation and type hint fixes.
