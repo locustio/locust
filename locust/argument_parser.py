@@ -425,6 +425,12 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_WEB_HOST",
     )
     web_ui_group.add_argument(
+        "--web-host-display-name",
+        type=str,
+        help=configargparse.SUPPRESS,
+        env_var="LOCUST_WEB_HOST_DISPLAY_NAME",
+    )
+    web_ui_group.add_argument(
         "--web-port",
         "-P",
         type=int,

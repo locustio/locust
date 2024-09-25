@@ -150,7 +150,7 @@ class WebUI:
             error_message = str(error)
             error_code = getattr(error, "code", 500)
             logger.log(
-                logging.INFO if error_code <= 404 else logging.ERROR,
+                logging.DEBUG if error_code <= 404 else logging.ERROR,
                 f"UI got request for {request.path}, but it resulted in a {error_code}: {error.name}",
             )
             return make_response(error_message, error_code)
