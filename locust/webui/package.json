@@ -72,7 +72,7 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-unused-imports": "^3.0.0",
-    "jsdom": "^22.1.0",
+    "jsdom": "^25.0.1",
     "msw": "^2.4.9",
     "prettier": "^3.0.3",
     "rollup": "^4.22.4",
