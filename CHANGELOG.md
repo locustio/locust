@@ -1,6 +1,19 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.31.7](https://github.com/locustio/locust/tree/2.31.7) (2024-09-25)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.6...2.31.7)
+
+**Merged pull requests:**
+
+- Fix Dependabot Complaints [\#2912](https://github.com/locustio/locust/pull/2912) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Improve Web UI Logging [\#2911](https://github.com/locustio/locust/pull/2911) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Pin python versions to avoid gh caching issue + always Install Dependencies, even when it looks like there was a cache hit [\#2907](https://github.com/locustio/locust/pull/2907) ([cyberw](https://github.com/cyberw))
+- Fix Login Manager Error Message [\#2905](https://github.com/locustio/locust/pull/2905) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Log locust version earlier [\#2904](https://github.com/locustio/locust/pull/2904) ([cyberw](https://github.com/cyberw))
+- Add Mongodb test example [\#2903](https://github.com/locustio/locust/pull/2903) ([guel-codes](https://github.com/guel-codes))
+
 ## [2.31.6](https://github.com/locustio/locust/tree/2.31.6) (2024-09-15)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.31.5...2.31.6)
@@ -21,7 +34,7 @@ The most important changes can also be found in [the documentation](https://docs
 
 - Add Error Message for Accessing Login Manager without --web-login [\#2902](https://github.com/locustio/locust/pull/2902) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
 - Update Webui README [\#2901](https://github.com/locustio/locust/pull/2901) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
-- fix: Add worker\_count = 1 to LocalRunner for parity with MasterRunner [\#2900](https://github.com/locustio/locust/pull/2900) ([tarkatronic](https://github.com/tarkatronic))
+- Add worker\_count = 1 to LocalRunner for parity with MasterRunner [\#2900](https://github.com/locustio/locust/pull/2900) ([tarkatronic](https://github.com/tarkatronic))
 - Remove redundant None in Any | None annotations [\#2892](https://github.com/locustio/locust/pull/2892) ([tdadela](https://github.com/tdadela))
 - Fix \_kl\_generator by filtering nonpositive User weights [\#2891](https://github.com/locustio/locust/pull/2891) ([tdadela](https://github.com/tdadela))
 - Update README.md [\#2889](https://github.com/locustio/locust/pull/2889) ([JonanOribe](https://github.com/JonanOribe))
