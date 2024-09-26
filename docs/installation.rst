@@ -3,9 +3,6 @@
 Installation
 ============
 
-Using system-installed Python and pip
--------------------------------------
-
 0. `Install Python <https://docs.python-guide.org/starting/installation/>`_ (if you dont already have it)
 
 1. Install Locust
