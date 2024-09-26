@@ -33,7 +33,7 @@ from gevent import pywsgi
 from . import __version__ as version
 from . import argument_parser
 from . import stats as stats_module
-from .html import DEFAULT_BUILD_PATH, get_html_report, render_template_from
+from .html_utils import DEFAULT_BUILD_PATH, get_html_report, render_template_from
 from .log import get_logs, greenlet_exception_logger
 from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
 from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
@@ -629,7 +629,7 @@ class WebUI:
             else None
         )
 
-        self.template_args = {
+        new_template_args = {
             "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
             "is_distributed": is_distributed,
@@ -656,8 +656,9 @@ class WebUI:
             "users": users,
             "percentiles_to_chart": stats_module.PERCENTILES_TO_CHART,
             "percentiles_to_statistics": stats_module.PERCENTILES_TO_STATISTICS,
-            "api_base_url": self.environment.parsed_options.api_base_url,
         }
+
+        self.template_args = {**self.template_args, **new_template_args}
 
     def _update_shape_class(self, shape_class_name):
         if shape_class_name:
