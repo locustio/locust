@@ -23,8 +23,8 @@ Using system-installed Python and pip
     locust |version| from /usr/local/lib/python3.12/site-packages/locust (Python 3.12.5)
 
 
-Using uvx
----------
+Using uvx (alternative)
+-----------------------
 
 0. `Install uv <https://github.com/astral-sh/uv?tab=readme-ov-file#installation>`_
 
