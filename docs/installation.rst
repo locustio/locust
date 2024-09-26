@@ -3,6 +3,10 @@
 Installation
 ============
 
+.. note::
+
+    Check `Troubleshooting Installation`_ if you encounter issues.
+
 0. `Install Python <https://docs.python-guide.org/starting/installation/>`_ (if you dont already have it)
 
 1. Install Locust
@@ -32,11 +36,6 @@ Using uvx (alternative)
 
     $ uvx locust -V
     locust |version| from /.../uv/.../locust (Python 3.12.5)
-
-.. note::
-
-    Check `Troubleshooting Installation`_ if you encounter issues.
-
 
 Done!
 -----
