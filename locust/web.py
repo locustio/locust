@@ -33,7 +33,7 @@ from gevent import pywsgi
 from . import __version__ as version
 from . import argument_parser
 from . import stats as stats_module
-from .html_utils import DEFAULT_BUILD_PATH, get_html_report, render_template_from
+from .html import DEFAULT_BUILD_PATH, get_html_report, render_template_from
 from .log import get_logs, greenlet_exception_logger
 from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
 from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
