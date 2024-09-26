@@ -27,7 +27,7 @@ export { tabConfig } from 'components/Tabs/Tabs.constants';
 export { store as locustStore } from 'redux/store';
 
 export type { IRootState } from 'redux/store';
-
+export type { IWindow } from 'types/window.types';
 export type { ITab } from 'types/tab.types';
 
 export interface IExtendedTableStructure<StatKey> {

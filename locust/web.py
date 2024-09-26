@@ -629,7 +629,7 @@ class WebUI:
             else None
         )
 
-        self.template_args = {
+        new_template_args = {
             "locustfile": self.environment.locustfile,
             "state": self.environment.runner.state,
             "is_distributed": is_distributed,
@@ -657,6 +657,8 @@ class WebUI:
             "percentiles_to_chart": stats_module.PERCENTILES_TO_CHART,
             "percentiles_to_statistics": stats_module.PERCENTILES_TO_STATISTICS,
         }
+
+        self.template_args = {**self.template_args, **new_template_args}
 
     def _update_shape_class(self, shape_class_name):
         if shape_class_name:
