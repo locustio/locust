@@ -64,10 +64,10 @@ def locust_init(environment, **kwargs):
 
             return redirect(url_for("index"))
 
-        @auth_blueprint.route("/login_submit")
+        @auth_blueprint.route("/login_submit", methods=["POST"])
         def login_submit():
-            username = request.args.get("username")
-            password = request.args.get("password")
+            username = request.form.get("username")
+            password = request.form.get("password")
 
             # Implement real password verification here
             if password:

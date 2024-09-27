@@ -37,7 +37,7 @@ export default function Auth({ authProviders, error, usernamePasswordCallback }:
           <Logo />
         </Box>
         {usernamePasswordCallback && (
-          <form action={usernamePasswordCallback}>
+          <form action={usernamePasswordCallback} method='POST'>
             <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2 }}>
               <TextField label='Username' name='username' />
               <TextField label='Password' name='password' type='password' />
