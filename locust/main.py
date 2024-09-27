@@ -5,6 +5,7 @@ import locust
 import atexit
 import errno
 import gc
+import importlib.metadata
 import inspect
 import json
 import logging
@@ -44,7 +45,10 @@ except ModuleNotFoundError as e:
         raise
 try:
     import locust_cloud  # pyright: ignore[reportMissingImports]
+
+    locust_cloud_version = f" (locust-cloud {importlib.metadata.version('locust-cloud')})"
 except ModuleNotFoundError as e:
+    locust_cloud_version = ""
     if e.msg != "No module named 'locust_cloud'":
         raise
 
@@ -200,7 +204,8 @@ def main():
 
     children = []
     logger = logging.getLogger(__name__)
-    logger.info(f"Starting Locust {version}")
+
+    logger.info(f"Starting Locust {version}{locust_cloud_version}")
 
     if options.processes:
         if os.name == "nt":
