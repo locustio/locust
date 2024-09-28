@@ -1019,7 +1019,7 @@ class MasterRunner(DistributedRunner):
                         # TODO: Test this situation
                         self.start(self.target_user_count, self.spawn_rate)
                 logger.info(
-                    f"Worker {client_id} (index {self.get_worker_index(client_id)}) reported as ready. {len(self.clients.ready + self.clients.running + self.clients.spawning)} workers connected."
+                    f"{client_id} (index {self.get_worker_index(client_id)}) reported as ready. {len(self.clients.ready + self.clients.running + self.clients.spawning)} workers connected."
                 )
                 if self.rebalancing_enabled() and self.state == STATE_RUNNING and self.spawning_completed:
                     self.start(self.target_user_count, self.spawn_rate)
@@ -1079,9 +1079,7 @@ class MasterRunner(DistributedRunner):
                     if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
                         # TODO: Test this situation
                         self.start(self.target_user_count, self.spawn_rate)
-                logger.info(
-                    f"Worker {msg.node_id} (index {self.get_worker_index(client_id)}) reported that it has stopped, removing from running workers"
-                )
+                logger.info(f"{msg.node_id} (index {self.get_worker_index(client_id)}) reported that it has stopped")
             elif msg.type == "heartbeat":
                 if msg.node_id in self.clients:
                     c = self.clients[msg.node_id]
