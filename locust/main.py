@@ -517,10 +517,10 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         web_ui = None
 
     if options.autostart and options.headless:
-        logger.warning("The --autostart argument is implied by --headless, no need to set both.")
+        logger.info("The --autostart argument is implied by --headless, no need to set both.")
 
     if options.autostart and options.worker:
-        logger.warning("The --autostart argument has no meaning on a worker.")
+        logger.info("The --autostart argument has no meaning on a worker.")
 
     def assign_equal_weights(environment, **kwargs):
         environment.assign_equal_weights()
