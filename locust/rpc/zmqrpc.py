@@ -4,19 +4,19 @@ from locust.util.exception_handler import retry
 import msgpack.exceptions as msgerr
 import zmq.error as zmqerr
 import zmq.green as zmq
-from urllib3.util.connection import HAS_IPV6
+from socket import getaddrinfo, IPPROTO_TCP, has_dualstack_ipv6
 
 from .protocol import Message
 
 
 class BaseSocket:
-    def __init__(self, sock_type):
+    def __init__(self, sock_type, ipv4_only):
         context = zmq.Context()
         self.socket = context.socket(sock_type)
 
         self.socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
         self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
-        if HAS_IPV6:
+        if has_dualstack_ipv6() and not ipv4_only:
             self.socket.setsockopt(zmq.IPV6, 1)
 
     @retry()
@@ -60,10 +60,15 @@ class BaseSocket:
     def close(self, linger=None):
         self.socket.close(linger=linger)
 
+    def ipv4_only(self, host, port) -> bool:
+        if str(getaddrinfo(host, port, proto=IPPROTO_TCP)).find("Family.AF_INET6") == -1:
+            return True
+        return False
+
 
 class Server(BaseSocket):
     def __init__(self, host, port):
-        BaseSocket.__init__(self, zmq.ROUTER)
+        BaseSocket.__init__(self, zmq.ROUTER, self.ipv4_only(host, port))
         if port == 0:
             self.port = self.socket.bind_to_random_port(f"tcp://{host}")
         else:
@@ -76,6 +81,6 @@ class Server(BaseSocket):
 
 class Client(BaseSocket):
     def __init__(self, host, port, identity):
-        BaseSocket.__init__(self, zmq.DEALER)
+        BaseSocket.__init__(self, zmq.DEALER, self.ipv4_only(host, port))
         self.socket.setsockopt(zmq.IDENTITY, identity.encode())
         self.socket.connect("tcp://%s:%i" % (host, port))
