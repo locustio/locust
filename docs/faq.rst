@@ -28,6 +28,33 @@ Control headers or other things about my HTTP requests
    requests first and then ask on Stack Overflow for additional Locust
    specific help if necessary.
 
+
+Basic auth (Authorization header) does not work after redirection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   `requests <https://requests.readthedocs.io/en/master/>`__ has a security mecanism that
+   drops the authorization header on domain change. It could occure when testing a SSO,
+   which is typically on a different domain and use mulitple redirections (30x).
+
+   Since ``allow_redirects=True`` is the default ``request`` behavior you'll have to turn it off,
+   handle manually the redirections and inject again the authorization header, ex::
+
+
+.. code-block:: python
+
+    response = self.client.post(
+             allow_redirects=False,
+             url=...)
+
+    while "location" in response.headers:
+        response = self.client.get(
+        allow_redirects=False,
+        url=response.headers['location'],
+        headers={
+          'Authorization': 'XXX'
+        }
+    )
+
+
 Create a Locust file based on a recorded browser session
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
