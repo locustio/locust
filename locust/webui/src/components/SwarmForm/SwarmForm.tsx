@@ -4,12 +4,14 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Alert,
   Box,
   Button,
   Container,
   TextField,
   Typography,
 } from '@mui/material';
+import { AlertColor } from '@mui/material/Alert';
 import { connect } from 'react-redux';
 
 import Form from 'components/Form/Form';
@@ -46,7 +48,13 @@ interface ISwarmForm
       | 'showUserclassPicker'
       | 'spawnRate'
       | 'numUsers'
-    > {}
+    > {
+  alert?: {
+    level?: AlertColor;
+    message: string;
+  };
+  isDisabled?: boolean;
+}
 
 function SwarmForm({
   availableShapeClasses,
@@ -60,6 +68,8 @@ function SwarmForm({
   setSwarm,
   showUserclassPicker,
   spawnRate,
+  alert,
+  isDisabled = false,
 }: ISwarmForm) {
   const [startSwarm] = useStartSwarmMutation();
   const [selectedUserClasses, setSelectedUserClasses] = useState(availableUserClasses);
@@ -143,7 +153,8 @@ function SwarmForm({
             </AccordionDetails>
           </Accordion>
           {!isEmpty(extraOptions) && <CustomParameters extraOptions={extraOptions} />}
-          <Button size='large' type='submit' variant='contained'>
+          {alert && <Alert severity={alert.level || 'info'}>{alert.message}</Alert>}
+          <Button disabled={isDisabled} size='large' type='submit' variant='contained'>
             Start
           </Button>
         </Box>
