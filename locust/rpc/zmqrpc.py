@@ -1,10 +1,11 @@
 from locust.exception import RPCError, RPCReceiveError, RPCSendError
 from locust.util.exception_handler import retry
 
+from socket import IPPROTO_TCP, getaddrinfo, has_dualstack_ipv6
+
 import msgpack.exceptions as msgerr
 import zmq.error as zmqerr
 import zmq.green as zmq
-from socket import getaddrinfo, IPPROTO_TCP, has_dualstack_ipv6
 
 from .protocol import Message
 
