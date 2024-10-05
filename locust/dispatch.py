@@ -311,16 +311,28 @@ class UsersDispatcher(Iterator):
         return self._users_on_workers
 
     def _remove_users_from_workers(self) -> dict[str, dict[str, int]]:
-        """Remove users from the workers until the target number of users is reached for the current dispatch iteration
+        """Remove users from the workers until the target number of users is reached for the current dispatch iteration.
 
         :return: The users that we want to run on the workers
         """
         current_user_count_target = max(
             self._current_user_count - self._user_count_per_dispatch_iteration, self._target_user_count
         )
+
+        # These are the user classes that are valid for removal.
+        user_class_names = [user_class.__name__ for user_class in self._user_classes]
+
         while True:
+            # Iterate right - left over _active users and pop user that matches class we want to remove 
+            index_to_pop = None
+            for i in range(len(self._active_users)-1, -1, -1):
+                if self._active_users[i][1] in user_class_names:
+                    index_to_pop = i
+                    break
+            if index_to_pop is None:
+                return self._users_on_workers
             try:
-                worker_node, user = self._active_users.pop()
+                worker_node, user = self._active_users.pop(i)
             except IndexError:
                 return self._users_on_workers
             self._users_on_workers[worker_node.id][user] -= 1
