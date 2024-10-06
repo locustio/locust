@@ -76,7 +76,7 @@ class Server(BaseSocket):
     def __init__(self, host, port):
         BaseSocket.__init__(self, zmq.ROUTER, self.ipv4_only(host, port))
         if port == 0:
-            self.port = self.socket.bind_to_random_port(f"tcp://{host}{base_url}")
+            self.port = self.socket.bind_to_random_port(f"tcp://{host}")
         else:
             try:
                 self.socket.bind("tcp://%s:%i" % (host, port))
