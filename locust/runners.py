@@ -1202,7 +1202,7 @@ class WorkerRunner(DistributedRunner):
     # the worker index is set on ACK, if master provided it (masters <= 2.10.2 do not provide it)
     worker_index = -1
 
-    def __init__(self, environment: Environment, master_host: str, base_url: str, master_port: int) -> None:
+    def __init__(self, environment: Environment, master_host: str, master_port: int, base_url: str = "") -> None:
         """
         :param environment: Environment instance
         :param master_host: Host/IP to use for connection to the master
