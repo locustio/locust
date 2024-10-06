@@ -146,7 +146,7 @@ class Environment:
             base_url=base_url,
         )
 
-    def create_worker_runner(self, master_host: str, master_port: int, base_url: str) -> WorkerRunner:
+    def create_worker_runner(self, master_host: str, master_port: int, base_url: str = "") -> WorkerRunner:
         """
         Create a :class:`WorkerRunner <locust.runners.WorkerRunner>` instance for this Environment
 
