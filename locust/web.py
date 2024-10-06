@@ -91,6 +91,7 @@ class WebUI:
         environment: Environment,
         host: str,
         port: int,
+        base_url: str,
         web_login: bool = False,
         tls_cert: str | None = None,
         tls_key: str | None = None,
@@ -117,6 +118,7 @@ class WebUI:
         self.environment = environment
         self.host = host
         self.port = port
+        self.base_url = base_url
         self.tls_cert = tls_cert
         self.tls_key = tls_key
         self.userclass_picker_is_active = userclass_picker_is_active
@@ -134,7 +136,6 @@ class WebUI:
         self.app.static_url_path = "/assets/"
         # ensures static js files work on Windows
         mimetypes.add_type("application/javascript", ".js")
-
         if self.web_login:
             self._login_manager = LoginManager()
             self._login_manager.init_app(self.app)
@@ -155,7 +156,7 @@ class WebUI:
             )
             return make_response(error_message, error_code)
 
-        @app.route("/assets/<path:path>")
+        @app.route(f"{self.base_url}/assets/<path:path>")
         def send_assets(path):
             directory = (
                 os.path.join(self.app.template_folder, "assets")
@@ -165,7 +166,7 @@ class WebUI:
 
             return send_from_directory(directory, path)
 
-        @app.route("/")
+        @app.route(f"{self.base_url}/")
         @self.auth_required_if_enabled
         def index() -> str | Response:
             if not environment.runner:
@@ -174,7 +175,7 @@ class WebUI:
 
             return render_template("index.html", template_args=self.template_args)
 
-        @app.route("/swarm", methods=["POST"])
+        @app.route(f"{self.base_url}/swarm", methods=["POST"])
         @self.auth_required_if_enabled
         def swarm() -> Response:
             assert request.method == "POST"
@@ -288,7 +289,7 @@ class WebUI:
             else:
                 return jsonify({"success": False, "message": "No runner", "host": environment.host})
 
-        @app.route("/stop")
+        @app.route(f"{self.base_url}/stop")
         @self.auth_required_if_enabled
         def stop() -> Response:
             if self._swarm_greenlet is not None:
@@ -298,7 +299,7 @@ class WebUI:
                 environment.runner.stop()
             return jsonify({"success": True, "message": "Test stopped"})
 
-        @app.route("/stats/reset")
+        @app.route(f"{self.base_url}/stats/reset")
         @self.auth_required_if_enabled
         def reset_stats() -> str:
             environment.events.reset_stats.fire()
@@ -307,7 +308,7 @@ class WebUI:
                 environment.runner.exceptions = {}
             return "ok"
 
-        @app.route("/stats/report")
+        @app.route(f"{self.base_url}/stats/report")
         @self.auth_required_if_enabled
         def stats_report() -> Response:
             theme = request.args.get("theme", "")
@@ -345,7 +346,7 @@ class WebUI:
             )
             return response
 
-        @app.route("/stats/requests/csv")
+        @app.route(f"{self.base_url}/stats/requests/csv")
         @self.auth_required_if_enabled
         def request_stats_csv() -> Response:
             data = StringIO()
@@ -353,7 +354,7 @@ class WebUI:
             self.stats_csv_writer.requests_csv(writer)
             return _download_csv_response(data.getvalue(), "requests")
 
-        @app.route("/stats/requests_full_history/csv")
+        @app.route(f"{self.base_url}/stats/requests_full_history/csv")
         @self.auth_required_if_enabled
         def request_stats_full_history_csv() -> Response:
             options = self.environment.parsed_options
@@ -371,7 +372,7 @@ class WebUI:
 
             return make_response("Error: Server was not started with option to generate full history.", 404)
 
-        @app.route("/stats/failures/csv")
+        @app.route(f"{self.base_url}/stats/failures/csv")
         @self.auth_required_if_enabled
         def failures_stats_csv() -> Response:
             data = StringIO()
@@ -379,7 +380,7 @@ class WebUI:
             self.stats_csv_writer.failures_csv(writer)
             return _download_csv_response(data.getvalue(), "failures")
 
-        @app.route("/stats/requests")
+        @app.route(f"{self.base_url}/stats/requests")
         @self.auth_required_if_enabled
         @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
         def request_stats() -> Response:
@@ -449,7 +450,7 @@ class WebUI:
 
             return jsonify(report)
 
-        @app.route("/exceptions")
+        @app.route(f"{self.base_url}/exceptions")
         @self.auth_required_if_enabled
         def exceptions() -> Response:
             return jsonify(
@@ -466,7 +467,7 @@ class WebUI:
                 }
             )
 
-        @app.route("/exceptions/csv")
+        @app.route(f"{self.base_url}/exceptions/csv")
         @self.auth_required_if_enabled
         def exceptions_csv() -> Response:
             data = StringIO()
@@ -474,7 +475,7 @@ class WebUI:
             self.stats_csv_writer.exceptions_csv(writer)
             return _download_csv_response(data.getvalue(), "exceptions")
 
-        @app.route("/tasks")
+        @app.route(f"{self.base_url}/tasks")
         @self.auth_required_if_enabled
         def tasks() -> dict[str, dict[str, dict[str, float]]]:
             runner = self.environment.runner
@@ -494,12 +495,12 @@ class WebUI:
             }
             return task_data
 
-        @app.route("/logs")
+        @app.route(f"{self.base_url}/logs")
         @self.auth_required_if_enabled
         def logs():
             return jsonify({"master": get_logs(), "workers": self.environment.worker_logs})
 
-        @app.route("/login")
+        @app.route(f"{self.base_url}/login")
         def login():
             if not self.web_login:
                 return redirect(url_for("index"))
@@ -509,7 +510,7 @@ class WebUI:
                 auth_args=self.auth_args,
             )
 
-        @app.route("/user", methods=["POST"])
+        @app.route(f"{self.base_url}/user", methods=["POST"])
         def update_user():
             assert request.method == "POST"
 

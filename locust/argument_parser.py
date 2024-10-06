@@ -202,7 +202,6 @@ See documentation for more details, including how to set options using a file or
         help="The Python file or module that contains your test, e.g. 'my_test.py'. Accepts multiple comma-separated .py files, a package name/directory or a url to a remote locustfile. Defaults to 'locustfile'.",
         env_var="LOCUST_LOCUSTFILE",
     )
-
     parser.add_argument(
         "--config",
         is_config_file_arg=True,
@@ -365,7 +364,7 @@ def setup_parser_arguments(parser):
     parser.add_argument(
         "-H",
         "--host",
-        metavar="<base url>",
+        metavar="<host>",
         help="Host to load test, in the following format: https://www.example.com",
         env_var="LOCUST_HOST",
     )
@@ -610,6 +609,22 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         default=5557,
         help="Port to connect to on master node. Defaults to 5557.",
         env_var="LOCUST_MASTER_NODE_PORT",
+    )
+
+    worker_group.add_argument(
+        '--master-base-url',
+        type=str,
+        default='',
+        help="Base URL for the MASTER (e.g., '/locust'). Default is empty (root path).",
+        env_var="MASTER_BASE_URL",
+    )
+
+    web_ui_group.add_argument(
+        '--base-url',
+        type=str,
+        default='',
+        help="Base URL for the web interface (e.g., '/locust'). Default is empty (root path).",
+        env_var="BASE_URL",
     )
 
     tag_group = parser.add_argument_group(
