@@ -497,16 +497,16 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         else:
             web_host = options.web_host
         if web_host:
-            logger.info(f"Starting web interface at {protocol}://{web_host}{options.base_url}:{options.web_port}")
+            logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}{options.base_url}")
         if options.web_host_display_name:
             logger.info(f"Starting web interface at {options.web_host_display_name}")
         else:
             if os.name == "nt":
                 logger.info(
-                    f"Starting web interface at {protocol}://localhost{options.base_url}:{options.web_port} (accepting connections from all network interfaces)"
+                    f"Starting web interface at {protocol}://localhost:{options.web_port}{options.base_url} (accepting connections from all network interfaces)"
                 )
             else:
-                logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}")
+                logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}{options.base_url}")
 
         web_ui = environment.create_web_ui(
             host=web_host,
