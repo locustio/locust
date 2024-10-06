@@ -79,8 +79,7 @@ class Server(BaseSocket):
             self.port = self.socket.bind_to_random_port(f"tcp://{host}{base_url}")
         else:
             try:
-                base_url = "" if base_url == "/" else base_url
-                self.socket.bind("tcp://%s%s:%i" % (host, base_url, port))
+                self.socket.bind("tcp://%s:%i" % (host, port))
                 self.port = port
             except zmqerr.ZMQError as e:
                 raise RPCError(f"Socket bind failure: {e}")
