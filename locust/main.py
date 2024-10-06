@@ -36,6 +36,7 @@ from .stats import (
 from .user.inspectuser import print_task_ratio, print_task_ratio_json
 from .util.load_locustfile import load_locustfile
 from .util.timespan import parse_timespan
+from .util.url import normalize_base_url
 
 # import external plugins if  installed to allow for registering custom arguments etc
 try:
@@ -168,6 +169,10 @@ def main():
 
     # parse all command line options
     options = parse_options()
+
+    # Normalize the base URL
+    options.base_url = normalize_base_url(options.base_url)
+    options.master_base_url = normalize_base_url(options.master_base_url)
 
     if options.headful:
         options.headless = False
@@ -450,11 +455,12 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         runner = environment.create_master_runner(
             master_bind_host=options.master_bind_host,
             master_bind_port=options.master_bind_port,
+            master_base_url=options.master_base_url,
         )
     elif options.worker:
         try:
-            runner = environment.create_worker_runner(options.master_host, options.master_port)
-            logger.debug("Connected to locust master: %s:%s", options.master_host, options.master_port)
+            runner = environment.create_worker_runner(options.master_host, options.master_port, options.master_base_url)
+            logger.debug("Connected to locust master: %s/%s:%s", options.master_host, options.base_url, options.master_port)
         except OSError as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
@@ -496,13 +502,13 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         else:
             web_host = options.web_host
         if web_host:
-            logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
+            logger.info(f"Starting web interface at {protocol}://{web_host}{options.base_url}:{options.web_port}")
         if options.web_host_display_name:
             logger.info(f"Starting web interface at {options.web_host_display_name}")
         else:
             if os.name == "nt":
                 logger.info(
-                    f"Starting web interface at {protocol}://localhost:{options.web_port} (accepting connections from all network interfaces)"
+                    f"Starting web interface at {protocol}://localhost{options.base_url}:{options.web_port} (accepting connections from all network interfaces)"
                 )
             else:
                 logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}")
@@ -510,6 +516,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         web_ui = environment.create_web_ui(
             host=web_host,
             port=options.web_port,
+            base_url=options.base_url,
             web_login=options.web_login,
             tls_cert=options.tls_cert,
             tls_key=options.tls_key,

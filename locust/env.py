@@ -72,7 +72,7 @@ class Environment:
         self.stats = RequestStats()
         """Reference to RequestStats instance"""
         self.host = host
-        """Base URL of the target system"""
+        """Host of the target system"""
         self.reset_stats = reset_stats
         """Determines if stats should be reset once all simulated users have been spawned"""
         if stop_timeout is not None:
@@ -131,7 +131,7 @@ class Environment:
         """
         return self._create_runner(LocalRunner)
 
-    def create_master_runner(self, master_bind_host="*", master_bind_port=5557) -> MasterRunner:
+    def create_master_runner(self, master_bind_host="*", master_bind_port=5557, master_base_url="") -> MasterRunner:
         """
         Create a :class:`MasterRunner <locust.runners.MasterRunner>` instance for this Environment
 
@@ -143,9 +143,10 @@ class Environment:
             MasterRunner,
             master_bind_host=master_bind_host,
             master_bind_port=master_bind_port,
+            master_base_url=master_base_url,
         )
 
-    def create_worker_runner(self, master_host: str, master_port: int) -> WorkerRunner:
+    def create_worker_runner(self, master_host: str, master_port: int, master_base_url: str) -> WorkerRunner:
         """
         Create a :class:`WorkerRunner <locust.runners.WorkerRunner>` instance for this Environment
 
@@ -159,12 +160,14 @@ class Environment:
             WorkerRunner,
             master_host=master_host,
             master_port=master_port,
+            master_base_url=master_base_url,
         )
 
     def create_web_ui(
         self,
         host="",
         port=8089,
+        base_url: str = "/",
         web_login: bool = False,
         tls_cert: str | None = None,
         tls_key: str | None = None,
@@ -199,6 +202,7 @@ class Environment:
             delayed_start=delayed_start,
             userclass_picker_is_active=userclass_picker_is_active,
             build_path=build_path,
+            base_url=base_url,
         )
         return self.web_ui
 
