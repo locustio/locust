@@ -172,8 +172,6 @@ def main():
 
     # Normalize the base URL
     options.base_url = normalize_base_url(options.base_url)
-    options.master_base_url = normalize_base_url(options.master_base_url)
-
     if options.headful:
         options.headless = False
 
@@ -450,12 +448,14 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         runner = environment.create_master_runner(
             master_bind_host=options.master_bind_host,
             master_bind_port=options.master_bind_port,
-            master_base_url=options.master_base_url,
+            base_url=options.base_url,
         )
     elif options.worker:
         try:
-            runner = environment.create_worker_runner(options.master_host, options.master_port, options.master_base_url)
-            logger.debug("Connected to locust master: %s/%s:%s", options.master_host, options.base_url, options.master_port)
+            runner = environment.create_worker_runner(options.master_host, options.master_port, options.base_url)
+            logger.debug(
+                "Connected to locust master: %s/%s:%s", options.master_host, options.base_url, options.master_port
+            )
         except OSError as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)

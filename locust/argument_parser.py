@@ -611,18 +611,10 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         env_var="LOCUST_MASTER_NODE_PORT",
     )
 
-    worker_group.add_argument(
-        '--master-base-url',
-        type=str,
-        default='',
-        help="Base URL for the MASTER (e.g., '/locust'). Default is empty (root path).",
-        env_var="MASTER_BASE_URL",
-    )
-
     web_ui_group.add_argument(
-        '--base-url',
+        "--base-url",
         type=str,
-        default='',
+        default="",
         help="Base URL for the web interface (e.g., '/locust'). Default is empty (root path).",
         env_var="BASE_URL",
     )

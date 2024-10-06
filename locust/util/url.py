@@ -14,6 +14,7 @@ def is_url(url: str) -> bool:
     except ValueError:
         return False
 
+
 def normalize_base_url(url: str) -> str:
     """Normalize the base URL to ensure consistent format."""
     if not url:

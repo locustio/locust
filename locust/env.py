@@ -131,7 +131,7 @@ class Environment:
         """
         return self._create_runner(LocalRunner)
 
-    def create_master_runner(self, master_bind_host="*", master_bind_port=5557, master_base_url="") -> MasterRunner:
+    def create_master_runner(self, master_bind_host="*", master_bind_port=5557, base_url="") -> MasterRunner:
         """
         Create a :class:`MasterRunner <locust.runners.MasterRunner>` instance for this Environment
 
@@ -143,10 +143,10 @@ class Environment:
             MasterRunner,
             master_bind_host=master_bind_host,
             master_bind_port=master_bind_port,
-            master_base_url=master_base_url,
+            base_url=base_url,
         )
 
-    def create_worker_runner(self, master_host: str, master_port: int, master_base_url: str) -> WorkerRunner:
+    def create_worker_runner(self, master_host: str, master_port: int, base_url: str) -> WorkerRunner:
         """
         Create a :class:`WorkerRunner <locust.runners.WorkerRunner>` instance for this Environment
 
@@ -160,7 +160,7 @@ class Environment:
             WorkerRunner,
             master_host=master_host,
             master_port=master_port,
-            master_base_url=master_base_url,
+            base_url=base_url,
         )
 
     def create_web_ui(
