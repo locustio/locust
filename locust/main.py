@@ -238,6 +238,7 @@ def main():
                 # remove options that dont make sense on worker
                 options.run_time = None
                 options.autostart = None
+                options.csv_prefix = None
                 break
         else:
             # we're in the parent process
