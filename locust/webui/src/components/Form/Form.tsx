@@ -6,6 +6,7 @@ interface IForm<IInputData extends BaseInputData> {
   children: React.ReactElement | React.ReactElement[];
   className?: string;
   onSubmit: (inputData: IInputData) => void;
+  onChange?: (formEvent: React.ChangeEvent<HTMLFormElement>) => void;
 }
 
 const FORM_INPUT_ELEMENTS = 'input, select, textarea';
@@ -32,6 +33,7 @@ const getInputValue = (inputElement: HTMLInputElement | HTMLSelectElement) => {
 export default function Form<IInputData extends BaseInputData>({
   children,
   onSubmit,
+  onChange,
 }: IForm<IInputData>) {
   const formSubmitHandler = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
@@ -53,5 +55,9 @@ export default function Form<IInputData extends BaseInputData>({
     [onSubmit],
   );
 
-  return <form onSubmit={formSubmitHandler}>{children}</form>;
+  return (
+    <form onChange={onChange} onSubmit={formSubmitHandler}>
+      {children}
+    </form>
+  );
 }

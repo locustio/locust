@@ -23,9 +23,9 @@ import Form from 'components/Form/Form';
 import Select from 'components/Form/Select';
 import Modal from 'components/Modal/Modal';
 import { useUpdateUserSettingsMutation } from 'redux/api/swarm';
-import { ISwarmState, swarmActions } from 'redux/slice/swarm.slice';
+import { swarmActions } from 'redux/slice/swarm.slice';
 import { IRootState } from 'redux/store';
-import { ISwarmUser } from 'types/swarm.types';
+import { ISwarmState, ISwarmUser } from 'types/swarm.types';
 import { toTitleCase } from 'utils/string';
 
 interface IDispatchProps {

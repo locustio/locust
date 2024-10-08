@@ -20,15 +20,10 @@ import CustomParameters from 'components/SwarmForm/SwarmCustomParameters';
 import SwarmUserClassPicker from 'components/SwarmForm/SwarmUserClassPicker';
 import { SWARM_STATE } from 'constants/swarm';
 import { useStartSwarmMutation } from 'redux/api/swarm';
-import { swarmActions, ISwarmState } from 'redux/slice/swarm.slice';
+import { swarmActions } from 'redux/slice/swarm.slice';
 import { IRootState } from 'redux/store';
+import { ISwarmFormInput, ISwarmState } from 'types/swarm.types';
 import { isEmpty } from 'utils/object';
-
-interface ISwarmFormInput extends Pick<ISwarmState, 'host' | 'spawnRate' | 'userCount'> {
-  runTime: string;
-  userClasses: string[];
-  shapeClass: string;
-}
 
 interface IDispatchProps {
   setSwarm: (swarmPayload: Partial<ISwarmState>) => void;
@@ -54,6 +49,7 @@ interface ISwarmForm
     message: string;
   };
   isDisabled?: boolean;
+  onFormChange?: (formData: React.ChangeEvent<HTMLFormElement>) => void;
 }
 
 function SwarmForm({
@@ -70,23 +66,39 @@ function SwarmForm({
   spawnRate,
   alert,
   isDisabled = false,
+  onFormChange,
 }: ISwarmForm) {
   const [startSwarm] = useStartSwarmMutation();
+  const [errorMessage, setErrorMessage] = useState('');
   const [selectedUserClasses, setSelectedUserClasses] = useState(availableUserClasses);
 
-  const onStartSwarm = (inputData: ISwarmFormInput) => {
-    setSwarm({
-      state: SWARM_STATE.RUNNING,
-      host: inputData.host || host,
-      runTime: inputData.runTime,
-      spawnRate: Number(inputData.spawnRate) || null,
-      numUsers: Number(inputData.userCount) || null,
-    });
-
-    startSwarm({
+  const onStartSwarm = async (inputData: ISwarmFormInput) => {
+    const { data } = await startSwarm({
       ...inputData,
       ...(showUserclassPicker && selectedUserClasses ? { userClasses: selectedUserClasses } : {}),
     });
+
+    if (data && data.success) {
+      setSwarm({
+        state: SWARM_STATE.RUNNING,
+        host: inputData.host || host,
+        runTime: inputData.runTime,
+        spawnRate: Number(inputData.spawnRate) || null,
+        numUsers: Number(inputData.userCount) || null,
+      });
+    } else {
+      setErrorMessage(data ? data.message : 'An unknown error occured.');
+    }
+  };
+
+  const handleSwarmFormChange = (formEvent: React.ChangeEvent<HTMLFormElement>) => {
+    if (errorMessage) {
+      setErrorMessage('');
+    }
+
+    if (onFormChange) {
+      onFormChange(formEvent);
+    }
   };
 
   return (
@@ -103,7 +115,7 @@ function SwarmForm({
           />
         </Box>
       )}
-      <Form<ISwarmFormInput> onSubmit={onStartSwarm}>
+      <Form<ISwarmFormInput> onChange={handleSwarmFormChange} onSubmit={onStartSwarm}>
         <Box
           sx={{
             marginBottom: 2,
@@ -153,7 +165,10 @@ function SwarmForm({
             </AccordionDetails>
           </Accordion>
           {!isEmpty(extraOptions) && <CustomParameters extraOptions={extraOptions} />}
-          {alert && <Alert severity={alert.level || 'info'}>{alert.message}</Alert>}
+          {alert && !errorMessage && (
+            <Alert severity={alert.level || 'info'}>{alert.message}</Alert>
+          )}
+          {errorMessage && <Alert severity={'error'}>{errorMessage}</Alert>}
           <Button disabled={isDisabled} size='large' type='submit' variant='contained'>
             Start
           </Button>
