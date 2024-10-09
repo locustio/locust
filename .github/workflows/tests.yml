@@ -94,17 +94,17 @@ jobs:
       
       # Set workflow metadata in one place so we can pull it out later
       - id: set_tag
-        run: echo "tag=$(poetry version -s)" >> "$GITHUB_OUTPUT"
+        run: echo "tag=$(poetry version -s)" | tee -a "$GITHUB_OUTPUT"
       - id: set_tag_short
-        run: echo "tag_short=$(poetry version -s | cut -d '.' -f1-3)" >> "$GITHUB_OUTPUT"
+        run: echo "tag_short=$(poetry version -s | cut -d '.' -f1-3)" | tee -a "$GITHUB_OUTPUT"
       - id: set_branch
-        run: echo "branch=${{ github.head_ref || github.ref_name }}" >> "$GITHUB_OUTPUT"
+        run: echo "branch=${{ github.head_ref || github.ref_name }}" | tee -a "$GITHUB_OUTPUT"
       - id: set_is_merge_commit
-        run: echo "is_merge_commit=$( [ $(git rev-list --count $GITHUB_SHA^@) -eq 2 ] && echo 'true' || echo 'false' )" >> "$GITHUB_OUTPUT"
+        run: echo "is_merge_commit=$( [ $(git rev-list --count $GITHUB_SHA^@) -eq 2 ] && echo 'true' || echo 'false' )" | tee -a "$GITHUB_OUTPUT"
       - id: set_is_tag_build
-        run: echo "is_tag_build=${{ startsWith(github.event.ref, 'refs/tags') }}" >> "$GITHUB_OUTPUT"
+        run: echo "is_tag_build=${{ startsWith(github.event.ref, 'refs/tags') }}" | tee -a "$GITHUB_OUTPUT"
       - id: set_python_version
-        run: echo "python_version=$(python -VV | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+        run: echo "python_version=$(python -VV | sha256sum | cut -d' ' -f1)" | tee -a "$GITHUB_OUTPUT"
 
   print_metadata:
     name: Display metadata for build
