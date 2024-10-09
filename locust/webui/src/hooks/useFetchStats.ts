@@ -90,7 +90,6 @@ export default function useFetchStats() {
 
   useInterval(updateStats, STATS_REFETCH_INTERVAL, {
     shouldRunInterval: !!statsData && shouldRunRefetchInterval,
-    // immediate: true,
   });
 
   useInterval(refetchStats, STATS_REFETCH_INTERVAL, {

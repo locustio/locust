@@ -1,10 +1,10 @@
-import ExceptionsTable from 'components/ExceptionsTable/ExceptionsTable';
+import ExceptionsTab from 'components/ExceptionsTab/ExceptionsTab';
 import FailuresTable from 'components/FailuresTable/FailuresTable';
 import LogViewer from 'components/LogViewer/LogViewer';
 import Reports from 'components/Reports/Reports';
 import StatsTable from 'components/StatsTable/StatsTable';
 import SwarmCharts from 'components/SwarmCharts/SwarmCharts';
-import SwarmRatios from 'components/SwarmRatios/SwarmRatios';
+import SwarmRatiosTab from 'components/SwarmRatiosTab/SwarmRatiosTab';
 import WorkersTable from 'components/WorkersTable/WorkersTable';
 import { LOG_VIEWER_KEY } from 'constants/logs';
 import { IRootState } from 'redux/store';
@@ -27,12 +27,12 @@ export const tabConfig = {
     title: 'Failures',
   },
   exceptions: {
-    component: ExceptionsTable,
+    component: ExceptionsTab,
     key: 'exceptions',
     title: 'Exceptions',
   },
   ratios: {
-    component: SwarmRatios,
+    component: SwarmRatiosTab,
     key: 'ratios',
     title: 'Current Ratio',
   },
