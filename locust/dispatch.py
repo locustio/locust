@@ -323,16 +323,16 @@ class UsersDispatcher(Iterator):
         user_class_names = [user_class.__name__ for user_class in self._user_classes]
 
         while True:
-            # Iterate right - left over _active users and pop user that matches class we want to remove 
+            # Iterate right - left over _active users and pop user that matches class we want to remove
             index_to_pop = None
-            for i in range(len(self._active_users)-1, -1, -1):
+            for i in range(len(self._active_users) - 1, -1, -1):
                 if self._active_users[i][1] in user_class_names:
                     index_to_pop = i
                     break
             if index_to_pop is None:
                 return self._users_on_workers
             try:
-                worker_node, user = self._active_users.pop(i)
+                worker_node, user = self._active_users.pop(index_to_pop)
             except IndexError:
                 return self._users_on_workers
             self._users_on_workers[worker_node.id][user] -= 1
