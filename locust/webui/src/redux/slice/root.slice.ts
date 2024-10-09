@@ -6,10 +6,11 @@ import notification, {
   INotificationState,
   NotificationAction,
 } from 'redux/slice/notification.slice';
-import swarm, { ISwarmState, SwarmAction } from 'redux/slice/swarm.slice';
+import swarm, { SwarmAction } from 'redux/slice/swarm.slice';
 import theme, { IThemeState, ThemeAction } from 'redux/slice/theme.slice';
 import ui, { IUiState, UiAction } from 'redux/slice/ui.slice';
 import url, { IUrlState, UrlAction } from 'redux/slice/url.slice';
+import { ISwarmState } from 'types/swarm.types';
 
 export interface IRootState {
   logViewer: ILogViewerState;

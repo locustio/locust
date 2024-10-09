@@ -3,10 +3,9 @@ import { connect } from 'react-redux';
 
 import Form from 'components/Form/Form';
 import { useStartSwarmMutation } from 'redux/api/swarm';
-import { ISwarmState, swarmActions } from 'redux/slice/swarm.slice';
+import { swarmActions } from 'redux/slice/swarm.slice';
 import { IRootState } from 'redux/store';
-
-type ISwarmFormInput = Pick<ISwarmState, 'spawnRate' | 'userCount'>;
+import { ISwarmFormInput, ISwarmState } from 'types/swarm.types';
 
 interface ISwarmForm extends ISwarmFormInput {
   onSubmit: () => void;

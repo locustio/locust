@@ -1,5 +1,4 @@
-import { ISwarmState } from 'redux/slice/swarm.slice';
-import { IReport, IReportTemplateArgs } from 'types/swarm.types';
+import { IReport, IReportTemplateArgs, ISwarmState } from 'types/swarm.types';
 import { ICharts } from 'types/ui.types';
 import { updateArraysAtProps } from 'utils/object';
 import { camelCaseKeys } from 'utils/string';

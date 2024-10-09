@@ -2,9 +2,9 @@ import { Box, Divider, Tooltip, Typography } from '@mui/material';
 import { connect } from 'react-redux';
 
 import { SWARM_STATE } from 'constants/swarm';
-import { ISwarmState } from 'redux/slice/swarm.slice';
 import { IUiState } from 'redux/slice/ui.slice';
 import { IRootState } from 'redux/store';
+import { ISwarmState } from 'types/swarm.types';
 
 interface ISwarmMonitor
   extends Pick<ISwarmState, 'isDistributed' | 'host' | 'state' | 'workerCount'>,
