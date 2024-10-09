@@ -49,7 +49,7 @@ export interface ISwarmState {
   history: IHistory[];
   host: string;
   isDistributed: boolean;
-  isShape: boolean | null;
+  hideCommonOptions?: boolean | null;
   locustfile: string;
   numUsers: number | null;
   overrideHostWarning: boolean;
