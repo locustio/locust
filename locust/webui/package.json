@@ -75,7 +75,6 @@
     "jsdom": "^25.0.1",
     "msw": "^2.4.9",
     "prettier": "^3.0.3",
-    "rollup": "^4.22.4",
     "typescript": "^5.2.2",
     "vitest": "^0.34.6",
     "vitest-webgl-canvas-mock": "^1.1.0"
