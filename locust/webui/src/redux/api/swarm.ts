@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-import { ISwarmFormInput } from 'types/swarm.types';
+import { IStartSwarmResponse, ISwarmFormInput } from 'types/swarm.types';
 import {
   IStatsResponse,
   ISwarmExceptionsResponse,
@@ -9,12 +9,6 @@ import {
 } from 'types/ui.types';
 import { createFormData } from 'utils/object';
 import { camelCaseKeys, snakeCaseKeys } from 'utils/string';
-
-interface IStartSwarmResponse {
-  success: boolean;
-  message: string;
-  host: string;
-}
 
 export const api = createApi({
   baseQuery: fetchBaseQuery(),

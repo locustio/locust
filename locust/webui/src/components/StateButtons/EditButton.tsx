@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Button } from '@mui/material';
 
 import Modal from 'components/Modal/Modal';
-import SwarmEditForm from 'components/SwarmForm/SwarmEditForm';
+import SwarmForm, { ISwarmFormProps } from 'components/SwarmForm/SwarmForm';
 
-export default function EditButton() {
+export default function EditButton(swarmFormProps: ISwarmFormProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -13,7 +13,7 @@ export default function EditButton() {
         Edit
       </Button>
       <Modal onClose={() => setOpen(false)} open={open}>
-        <SwarmEditForm onSubmit={() => setOpen(false)} />
+        <SwarmForm {...swarmFormProps} isEditSwarm onFormSubmit={() => setOpen(false)} />
       </Modal>
     </>
   );

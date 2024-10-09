@@ -94,3 +94,9 @@ export interface ISwarmFormInput
   userClasses?: string[];
   shapeClass?: string;
 }
+
+export interface IStartSwarmResponse {
+  success: boolean;
+  message: string;
+  host: string;
+}

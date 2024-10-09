@@ -29,6 +29,17 @@ interface IDispatchProps {
   setSwarm: (swarmPayload: Partial<ISwarmState>) => void;
 }
 
+export interface ISwarmFormProps {
+  alert?: {
+    level?: AlertColor;
+    message: string;
+  };
+  isDisabled?: boolean;
+  isEditSwarm?: boolean;
+  onFormChange?: (formData: React.ChangeEvent<HTMLFormElement>) => void;
+  onFormSubmit?: (inputData: ISwarmFormInput) => void;
+}
+
 interface ISwarmForm
   extends IDispatchProps,
     Pick<
@@ -43,14 +54,9 @@ interface ISwarmForm
       | 'showUserclassPicker'
       | 'spawnRate'
       | 'numUsers'
-    > {
-  alert?: {
-    level?: AlertColor;
-    message: string;
-  };
-  isDisabled?: boolean;
-  onFormChange?: (formData: React.ChangeEvent<HTMLFormElement>) => void;
-}
+      | 'userCount'
+    >,
+    ISwarmFormProps {}
 
 function SwarmForm({
   availableShapeClasses,
@@ -59,6 +65,7 @@ function SwarmForm({
   extraOptions,
   isShape,
   numUsers,
+  userCount,
   overrideHostWarning,
   runTime,
   setSwarm,
@@ -66,7 +73,9 @@ function SwarmForm({
   spawnRate,
   alert,
   isDisabled = false,
+  isEditSwarm = false,
   onFormChange,
+  onFormSubmit,
 }: ISwarmForm) {
   const [startSwarm] = useStartSwarmMutation();
   const [errorMessage, setErrorMessage] = useState('');
@@ -84,10 +93,14 @@ function SwarmForm({
         host: inputData.host || host,
         runTime: inputData.runTime,
         spawnRate: Number(inputData.spawnRate) || null,
-        numUsers: Number(inputData.userCount) || null,
+        userCount: Number(inputData.userCount),
       });
     } else {
       setErrorMessage(data ? data.message : 'An unknown error occured.');
+    }
+
+    if (onFormSubmit) {
+      onFormSubmit(inputData);
     }
   };
 
@@ -104,9 +117,9 @@ function SwarmForm({
   return (
     <Container maxWidth='md' sx={{ my: 2 }}>
       <Typography component='h2' noWrap variant='h6'>
-        Start new load test
+        {isEditSwarm ? 'Edit running load test' : 'Start new load test'}
       </Typography>
-      {showUserclassPicker && (
+      {!isEditSwarm && showUserclassPicker && (
         <Box marginBottom={2} marginTop={2}>
           <SwarmUserClassPicker
             availableUserClasses={availableUserClasses}
@@ -125,11 +138,11 @@ function SwarmForm({
             rowGap: 4,
           }}
         >
-          {showUserclassPicker && (
+          {!isEditSwarm && showUserclassPicker && (
             <Select label='Shape Class' name='shapeClass' options={availableShapeClasses} />
           )}
           <TextField
-            defaultValue={(isShape && '-') || numUsers || 1}
+            defaultValue={(isShape && '-') || userCount || numUsers || 1}
             disabled={!!isShape}
             label='Number of users (peak concurrency)'
             name='userCount'
@@ -141,36 +154,40 @@ function SwarmForm({
             name='spawnRate'
             title='Disabled for tests using LoadTestShape class'
           />
-          <TextField
-            defaultValue={host}
-            label={`Host ${
-              overrideHostWarning
-                ? '(setting this will override the host for the User classes)'
-                : ''
-            }`}
-            name='host'
-            title='Disabled for tests using LoadTestShape class'
-          />
-          <Accordion>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography>Advanced options</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
+          {!isEditSwarm && (
+            <>
               <TextField
-                defaultValue={runTime}
-                label='Run time (e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)'
-                name='runTime'
-                sx={{ width: '100%' }}
+                defaultValue={host}
+                label={`Host ${
+                  overrideHostWarning
+                    ? '(setting this will override the host for the User classes)'
+                    : ''
+                }`}
+                name='host'
+                title='Disabled for tests using LoadTestShape class'
               />
-            </AccordionDetails>
-          </Accordion>
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography>Advanced options</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <TextField
+                    defaultValue={runTime}
+                    label='Run time (e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)'
+                    name='runTime'
+                    sx={{ width: '100%' }}
+                  />
+                </AccordionDetails>
+              </Accordion>
+            </>
+          )}
           {!isEmpty(extraOptions) && <CustomParameters extraOptions={extraOptions} />}
           {alert && !errorMessage && (
             <Alert severity={alert.level || 'info'}>{alert.message}</Alert>
           )}
           {errorMessage && <Alert severity={'error'}>{errorMessage}</Alert>}
           <Button disabled={isDisabled} size='large' type='submit' variant='contained'>
-            Start
+            {isEditSwarm ? 'Update' : 'Start'}
           </Button>
         </Box>
       </Form>
@@ -186,6 +203,7 @@ const storeConnector = ({
     isShape,
     host,
     numUsers,
+    userCount,
     overrideHostWarning,
     runTime,
     spawnRate,
@@ -200,6 +218,7 @@ const storeConnector = ({
   overrideHostWarning,
   showUserclassPicker,
   numUsers,
+  userCount,
   runTime,
   spawnRate,
 });
