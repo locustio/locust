@@ -56,7 +56,7 @@ export default function useFetchStats() {
     const percentilesWithTime = Object.entries(currentResponseTimePercentiles).reduce(
       (percentiles, [key, value]) => ({
         ...percentiles,
-        [key]: [time, value],
+        [key]: [time, value || 0],
       }),
       {},
     );
@@ -90,6 +90,7 @@ export default function useFetchStats() {
 
   useInterval(updateStats, STATS_REFETCH_INTERVAL, {
     shouldRunInterval: !!statsData && shouldRunRefetchInterval,
+    // immediate: true,
   });
 
   useInterval(refetchStats, STATS_REFETCH_INTERVAL, {
