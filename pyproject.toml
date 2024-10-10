@@ -114,7 +114,7 @@ python = ">=3.9"
 
 gevent = [
     { version = ">=22.10.2", python = "<=3.12" },
-    { version = ">=24.10.1", python = ">3.13" },
+    { version = ">=24.10.1", python = ">3.12" },
 ]
 flask = ">=2.0.0"
 Werkzeug = ">=2.0.0"
