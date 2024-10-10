@@ -15,6 +15,7 @@ import { AlertColor } from '@mui/material/Alert';
 import { connect } from 'react-redux';
 
 import Form from 'components/Form/Form';
+import NumericField from 'components/Form/NumericField';
 import Select from 'components/Form/Select';
 import CustomParameters from 'components/SwarmForm/SwarmCustomParameters';
 import SwarmUserClassPicker from 'components/SwarmForm/SwarmUserClassPicker';
@@ -92,8 +93,8 @@ function SwarmForm({
         state: SWARM_STATE.RUNNING,
         host: inputData.host || host,
         runTime: inputData.runTime,
-        spawnRate: Number(inputData.spawnRate) || 0,
-        userCount: Number(inputData.userCount) || 0,
+        spawnRate: inputData.spawnRate,
+        userCount: inputData.userCount,
       });
     } else {
       setErrorMessage(data ? data.message : 'An unknown error occured.');
@@ -141,18 +142,20 @@ function SwarmForm({
           {!isEditSwarm && showUserclassPicker && (
             <Select label='Shape Class' name='shapeClass' options={availableShapeClasses} />
           )}
-          <TextField
+          <NumericField
             defaultValue={(hideCommonOptions && '0') || userCount || numUsers || 1}
             disabled={!!hideCommonOptions}
             label='Number of users (peak concurrency)'
             name='userCount'
+            required
             title={hideCommonOptions ? 'Disabled for tests using LoadTestShape class' : ''}
           />
-          <TextField
+          <NumericField
             defaultValue={(hideCommonOptions && '0') || spawnRate || 1}
             disabled={!!hideCommonOptions}
             label='Ramp up (users started/second)'
             name='spawnRate'
+            required
             title={hideCommonOptions ? 'Disabled for tests using LoadTestShape class' : ''}
           />
           {!isEditSwarm && (
@@ -165,6 +168,7 @@ function SwarmForm({
                     : ''
                 }`}
                 name='host'
+                required
               />
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
