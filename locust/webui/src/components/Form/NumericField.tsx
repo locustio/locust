@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TextField, TextFieldProps } from '@mui/material';
 
-export default function NumericField(textFieldProps: TextFieldProps) {
-  const [value, setValue] = useState<string>((textFieldProps.defaultValue as string) || '');
+export default function NumericField({ defaultValue, ...textFieldProps }: TextFieldProps) {
+  const [value, setValue] = useState<string>((defaultValue as string) || '');
 
   const filterNonNumeric = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (textFieldProps.onChange) {
@@ -19,12 +19,9 @@ export default function NumericField(textFieldProps: TextFieldProps) {
     setValue(event.target.value.replace(/[^0-9.]/g, ''));
   };
 
-  return (
-    <TextField
-      {...textFieldProps}
-      defaultValue={undefined}
-      onChange={filterNonNumeric}
-      value={value}
-    />
-  );
+  useEffect(() => {
+    setValue(defaultValue as string);
+  }, [defaultValue]);
+
+  return <TextField {...textFieldProps} onChange={filterNonNumeric} value={value} />;
 }

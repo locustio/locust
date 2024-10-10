@@ -8,6 +8,7 @@ import {
   Box,
   Button,
   Container,
+  SelectChangeEvent,
   TextField,
   Typography,
 } from '@mui/material';
@@ -49,6 +50,7 @@ interface ISwarmForm
       | 'availableUserClasses'
       | 'extraOptions'
       | 'hideCommonOptions'
+      | 'shapeUseCommonOptions'
       | 'host'
       | 'overrideHostWarning'
       | 'runTime'
@@ -65,6 +67,7 @@ function SwarmForm({
   host,
   extraOptions,
   hideCommonOptions,
+  shapeUseCommonOptions,
   numUsers,
   userCount,
   overrideHostWarning,
@@ -115,6 +118,15 @@ function SwarmForm({
     }
   };
 
+  const onShapeClassChange = (event: SelectChangeEvent<unknown>) => {
+    if (!shapeUseCommonOptions) {
+      const hasSelectedShapeClass = event.target.value !== availableShapeClasses[0];
+      setSwarm({
+        hideCommonOptions: hasSelectedShapeClass,
+      });
+    }
+  };
+
   return (
     <Container maxWidth='md' sx={{ my: 2 }}>
       <Typography component='h2' noWrap variant='h6'>
@@ -140,7 +152,12 @@ function SwarmForm({
           }}
         >
           {!isEditSwarm && showUserclassPicker && (
-            <Select label='Shape Class' name='shapeClass' options={availableShapeClasses} />
+            <Select
+              label='Shape Class'
+              name='shapeClass'
+              onChange={onShapeClassChange}
+              options={availableShapeClasses}
+            />
           )}
           <NumericField
             defaultValue={(hideCommonOptions && '0') || userCount || numUsers || 1}
@@ -168,7 +185,6 @@ function SwarmForm({
                     : ''
                 }`}
                 name='host'
-                required
               />
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -207,6 +223,7 @@ const storeConnector = ({
     availableUserClasses,
     extraOptions,
     hideCommonOptions,
+    shapeUseCommonOptions,
     host,
     numUsers,
     userCount,
@@ -220,6 +237,7 @@ const storeConnector = ({
   availableUserClasses,
   extraOptions,
   hideCommonOptions,
+  shapeUseCommonOptions,
   host,
   overrideHostWarning,
   showUserclassPicker,

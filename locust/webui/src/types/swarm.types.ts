@@ -50,6 +50,7 @@ export interface ISwarmState {
   host: string;
   isDistributed: boolean;
   hideCommonOptions?: boolean | null;
+  shapeUseCommonOptions?: boolean | null;
   locustfile: string;
   numUsers: number | null;
   overrideHostWarning: boolean;

@@ -46,7 +46,7 @@ describe('SwarmForm', () => {
     });
   });
 
-  test.only('should edit all inputs in the form', async () => {
+  test('should edit all inputs in the form', async () => {
     const { getByText, getByLabelText, getByRole } = renderWithProvider(<SwarmForm />, {
       swarm: {
         showUserclassPicker: true,
@@ -94,7 +94,7 @@ describe('SwarmForm', () => {
   });
 
   test('should allow selected user classes to be modified', async () => {
-    const { getByText, getAllByRole } = renderWithProvider(<SwarmForm />, {
+    const { getAllByRole, getByRole } = renderWithProvider(<SwarmForm />, {
       swarm: {
         showUserclassPicker: true,
         availableUserClasses: ['Class1', 'Class2'],
@@ -121,7 +121,7 @@ describe('SwarmForm', () => {
       fireEvent.click(getAllByRole('checkbox')[2]);
     });
     act(() => {
-      fireEvent.click(getByText('Start'));
+      fireEvent.click(getByRole('button', { name: 'Start' }));
     });
 
     await waitFor(async () => {

@@ -645,6 +645,8 @@ class WebUI:
                 self.environment.shape_class
                 and not (self.userclass_picker_is_active or self.environment.shape_class.use_common_options)
             ),
+            "shape_use_common_options": self.environment.shape_class
+            and self.environment.shape_class.use_common_options,
             "stats_history_enabled": options and options.stats_history_enabled,
             "tasks": dumps({}),
             "extra_options": extra_options,
