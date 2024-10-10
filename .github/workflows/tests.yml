@@ -145,6 +145,7 @@ jobs:
           - { name: "MacOS", python: '3.12.5', os: macos-latest, tox: fail_fast_test_main_external_package }
           
           # Unit tests on Python versions
+          - { name: "Python 3.13", python: "3.13.0", os: ubuntu-latest, tox: py313 }
           - { name: "Python 3.12", python: "3.12.5", os: ubuntu-latest, tox: py312 }
           - { name: "Python 3.11", python: "3.11.9", os: ubuntu-latest, tox: py311 }
           - { name: "Python 3.10", python: "3.10.14", os: ubuntu-latest, tox: py310 }
