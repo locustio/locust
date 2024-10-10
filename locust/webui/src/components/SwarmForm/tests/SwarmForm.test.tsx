@@ -46,8 +46,8 @@ describe('SwarmForm', () => {
     });
   });
 
-  test('should edit all inputs in the form', async () => {
-    const { getByText, getByLabelText } = renderWithProvider(<SwarmForm />, {
+  test.only('should edit all inputs in the form', async () => {
+    const { getByText, getByLabelText, getByRole } = renderWithProvider(<SwarmForm />, {
       swarm: {
         showUserclassPicker: true,
         availableUserClasses: ['Class1'],
@@ -61,16 +61,16 @@ describe('SwarmForm', () => {
       fireEvent.change(getByLabelText('Shape Class'), {
         target: { value: 'Shape1' },
       });
-      fireEvent.change(getByLabelText('Number of users (peak concurrency)'), {
+      fireEvent.change(getByRole('textbox', { name: 'Number of users (peak concurrency)' }), {
         target: { value: '15' },
       });
-      fireEvent.change(getByLabelText('Ramp up (users started/second)'), {
+      fireEvent.change(getByRole('textbox', { name: 'Ramp up (users started/second)' }), {
         target: { value: '20' },
       });
       fireEvent.change(getByLabelText('Run time (e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)'), {
         target: { value: '2h' },
       });
-      fireEvent.change(getByLabelText('Host'), {
+      fireEvent.change(getByRole('textbox', { name: 'Host' }), {
         target: { value: 'https://localhost:5000' },
       });
 

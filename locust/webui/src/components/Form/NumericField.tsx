@@ -19,5 +19,12 @@ export default function NumericField(textFieldProps: TextFieldProps) {
     setValue(event.target.value.replace(/[^0-9.]/g, ''));
   };
 
-  return <TextField {...textFieldProps} onInput={filterNonNumeric} value={value} />;
+  return (
+    <TextField
+      {...textFieldProps}
+      defaultValue={undefined}
+      onChange={filterNonNumeric}
+      value={value}
+    />
+  );
 }
