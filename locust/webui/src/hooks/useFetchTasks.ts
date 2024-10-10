@@ -22,5 +22,6 @@ export default function useFetchTasks() {
 
   useInterval(refetchTasks, 5000, {
     shouldRunInterval: shouldRunRefetchInterval,
+    immediate: true,
   });
 }

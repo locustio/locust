@@ -22,5 +22,6 @@ export default function useFetchExceptions() {
 
   useInterval(refetchExceptions, 5000, {
     shouldRunInterval: shouldRunRefetchInterval,
+    immediate: true,
   });
 }
