@@ -112,7 +112,7 @@ version_tuple = __version_tuple__
 [tool.poetry.dependencies]
 python = ">=3.9"
 
-gevent = ">=22.10.2"
+gevent = ">=24.10.2"
 flask = ">=2.0.0"
 Werkzeug = ">=2.0.0"
 requests = [
