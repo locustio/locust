@@ -8,6 +8,7 @@ import {
   Box,
   Button,
   Container,
+  SelectChangeEvent,
   TextField,
   Typography,
 } from '@mui/material';
@@ -15,6 +16,7 @@ import { AlertColor } from '@mui/material/Alert';
 import { connect } from 'react-redux';
 
 import Form from 'components/Form/Form';
+import NumericField from 'components/Form/NumericField';
 import Select from 'components/Form/Select';
 import CustomParameters from 'components/SwarmForm/SwarmCustomParameters';
 import SwarmUserClassPicker from 'components/SwarmForm/SwarmUserClassPicker';
@@ -47,7 +49,8 @@ interface ISwarmForm
       | 'availableShapeClasses'
       | 'availableUserClasses'
       | 'extraOptions'
-      | 'isShape'
+      | 'hideCommonOptions'
+      | 'shapeUseCommonOptions'
       | 'host'
       | 'overrideHostWarning'
       | 'runTime'
@@ -63,7 +66,8 @@ function SwarmForm({
   availableUserClasses,
   host,
   extraOptions,
-  isShape,
+  hideCommonOptions,
+  shapeUseCommonOptions,
   numUsers,
   userCount,
   overrideHostWarning,
@@ -92,8 +96,8 @@ function SwarmForm({
         state: SWARM_STATE.RUNNING,
         host: inputData.host || host,
         runTime: inputData.runTime,
-        spawnRate: Number(inputData.spawnRate) || null,
-        userCount: Number(inputData.userCount),
+        spawnRate: inputData.spawnRate,
+        userCount: inputData.userCount,
       });
     } else {
       setErrorMessage(data ? data.message : 'An unknown error occured.');
@@ -111,6 +115,15 @@ function SwarmForm({
 
     if (onFormChange) {
       onFormChange(formEvent);
+    }
+  };
+
+  const onShapeClassChange = (event: SelectChangeEvent<unknown>) => {
+    if (!shapeUseCommonOptions) {
+      const hasSelectedShapeClass = event.target.value !== availableShapeClasses[0];
+      setSwarm({
+        hideCommonOptions: hasSelectedShapeClass,
+      });
     }
   };
 
@@ -139,20 +152,28 @@ function SwarmForm({
           }}
         >
           {!isEditSwarm && showUserclassPicker && (
-            <Select label='Shape Class' name='shapeClass' options={availableShapeClasses} />
+            <Select
+              label='Shape Class'
+              name='shapeClass'
+              onChange={onShapeClassChange}
+              options={availableShapeClasses}
+            />
           )}
-          <TextField
-            defaultValue={(isShape && '-') || userCount || numUsers || 1}
-            disabled={!!isShape}
+          <NumericField
+            defaultValue={(hideCommonOptions && '0') || userCount || numUsers || 1}
+            disabled={!!hideCommonOptions}
             label='Number of users (peak concurrency)'
             name='userCount'
+            required
+            title={hideCommonOptions ? 'Disabled for tests using LoadTestShape class' : ''}
           />
-          <TextField
-            defaultValue={(isShape && '-') || spawnRate || 1}
-            disabled={!!isShape}
+          <NumericField
+            defaultValue={(hideCommonOptions && '0') || spawnRate || 1}
+            disabled={!!hideCommonOptions}
             label='Ramp up (users started/second)'
             name='spawnRate'
-            title='Disabled for tests using LoadTestShape class'
+            required
+            title={hideCommonOptions ? 'Disabled for tests using LoadTestShape class' : ''}
           />
           {!isEditSwarm && (
             <>
@@ -164,7 +185,6 @@ function SwarmForm({
                     : ''
                 }`}
                 name='host'
-                title='Disabled for tests using LoadTestShape class'
               />
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -173,9 +193,11 @@ function SwarmForm({
                 <AccordionDetails>
                   <TextField
                     defaultValue={runTime}
+                    disabled={!!hideCommonOptions}
                     label='Run time (e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)'
                     name='runTime'
                     sx={{ width: '100%' }}
+                    title={hideCommonOptions ? 'Disabled for tests using LoadTestShape class' : ''}
                   />
                 </AccordionDetails>
               </Accordion>
@@ -200,7 +222,8 @@ const storeConnector = ({
     availableShapeClasses,
     availableUserClasses,
     extraOptions,
-    isShape,
+    hideCommonOptions,
+    shapeUseCommonOptions,
     host,
     numUsers,
     userCount,
@@ -213,7 +236,8 @@ const storeConnector = ({
   availableShapeClasses,
   availableUserClasses,
   extraOptions,
-  isShape,
+  hideCommonOptions,
+  shapeUseCommonOptions,
   host,
   overrideHostWarning,
   showUserclassPicker,
