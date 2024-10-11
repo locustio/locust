@@ -2,6 +2,7 @@ from locust.exception import RPCError, RPCReceiveError, RPCSendError
 from locust.util.exception_handler import retry
 
 import socket as csocket
+from socket import gaierror, has_dualstack_ipv6
 
 import msgpack.exceptions as msgerr
 import zmq.error as zmqerr
@@ -17,7 +18,7 @@ class BaseSocket:
 
         self.socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
         self.socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 30)
-        if csocket.has_dualstack_ipv6() and not ipv4_only:
+        if has_dualstack_ipv6() and not ipv4_only:
             self.socket.setsockopt(zmq.IPV6, 1)
 
     @retry()
@@ -65,7 +66,7 @@ class BaseSocket:
         try:
             if str(csocket.getaddrinfo(host, port, proto=csocket.IPPROTO_TCP)).find("Family.AF_INET6") == -1:
                 return True
-        except csocket.gaierror as e:
+        except gaierror as e:
             print(f"Error resolving address: {e}")
             return False
         return False
