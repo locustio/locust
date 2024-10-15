@@ -77,7 +77,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         ).strip()
         self.assertTrue(output.startswith("Usage: locust [options] [UserClass"))
         self.assertIn("Common options:", output)
-        self.assertIn("-f <filename>, --locustfile <filename>", output)
+        self.assertIn("--locustfile <filename>", output)
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
 

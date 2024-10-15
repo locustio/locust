@@ -26,6 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
     "Topic :: Software Development :: Testing",
@@ -112,7 +113,10 @@ version_tuple = __version_tuple__
 [tool.poetry.dependencies]
 python = ">=3.9"
 
-gevent = ">=22.10.2"
+gevent = [
+    { version = ">=22.10.2", python = "<=3.12" },
+    { version = ">=24.10.1", python = ">3.13" },
+]
 flask = ">=2.0.0"
 Werkzeug = ">=2.0.0"
 requests = [
