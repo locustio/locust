@@ -1,4 +1,17 @@
-import { Alert, Box, Button, IconButton, TextField, Typography } from '@mui/material';
+import { useState } from 'react';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Button,
+  FormControl,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  TextField,
+  Typography,
+} from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
 
@@ -8,6 +21,10 @@ import useCreateTheme from 'hooks/useCreateTheme';
 import { IAuthArgs } from 'types/auth.types';
 
 export default function Auth({ authProviders, error, usernamePasswordCallback }: IAuthArgs) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleClickShowPassword = () => setShowPassword(!showPassword);
+
   const theme = useCreateTheme();
 
   return (
@@ -40,7 +57,22 @@ export default function Auth({ authProviders, error, usernamePasswordCallback }:
           <form action={usernamePasswordCallback} method='POST'>
             <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2 }}>
               <TextField label='Username' name='username' />
-              <TextField label='Password' name='password' type='password' />
+              <FormControl variant='outlined'>
+                <InputLabel htmlFor='password-field'>Password</InputLabel>
+                <OutlinedInput
+                  endAdornment={
+                    <InputAdornment position='end'>
+                      <IconButton edge='end' onClick={handleClickShowPassword}>
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                  id='password-field'
+                  label='Password'
+                  name='password'
+                  type={showPassword ? 'text' : 'password'}
+                />
+              </FormControl>
               {error && <Alert severity='error'>{error}</Alert>}
               <Button size='large' type='submit' variant='contained'>
                 Login
