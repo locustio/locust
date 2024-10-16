@@ -586,6 +586,12 @@ class ErrorResponse:
     def raise_for_status(self):
         raise self.error
 
+class LocustBadStatusCode(ConnectionError):
+    def __repr__(self):
+        repr_str = super().__repr__()
+        if self.kw_text:
+            return repr_str.replace(repr(self.url) + ", ", "")
+        return repr_str
 
 class LocustUserAgent(UserAgent):
     response_type = FastResponse
@@ -605,6 +611,11 @@ class LocustUserAgent(UserAgent):
             request.method, request.url_split.request_uri, body=request.payload, headers=request.headers
         )
         return self.response_type(resp, request=request, sent_request=resp._sent_request)
+    
+    def _verify_status(self, status_code,url = None):
+        """Hook for subclassing"""
+        if status_code not in self.valid_response_codes:
+            raise LocustBadStatusCode(url,code=status_code)
 
 
 class ResponseContextManager(FastResponse):
