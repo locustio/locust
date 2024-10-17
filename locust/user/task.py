@@ -1,11 +1,20 @@
 from __future__ import annotations
 
-from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleTask, RescheduleTaskImmediately, StopUser
+from locust.exception import (
+    InterruptTaskSet,
+    LocustError,
+    MissingWaitTimeError,
+    RescheduleTask,
+    RescheduleTaskImmediately,
+    StopUser,
+)
 
 import logging
 import random
 import traceback
+from abc import ABC, ABCMeta, abstractmethod
 from collections import deque
+from itertools import accumulate, cycle
 from time import time
 from typing import (
     TYPE_CHECKING,
@@ -40,10 +49,10 @@ def task(weight: TaskT) -> TaskT: ...
 
 
 @overload
-def task(weight: int) -> Callable[[TaskT], TaskT]: ...
+def task(weight: int | float) -> Callable[[TaskT], TaskT]: ...
 
 
-def task(weight: TaskT | int = 1) -> TaskT | Callable[[TaskT], TaskT]:
+def task(weight: TaskT | int | float = 1) -> TaskT | Callable[[TaskT], TaskT]:
     """
     Used as a convenience decorator to be able to declare tasks for a User or a TaskSet
     inline in the class. Example::
@@ -144,23 +153,26 @@ def get_tasks_from_base_classes(bases, class_dict):
         if hasattr(base, "tasks") and base.tasks:
             new_tasks += base.tasks
 
-    if "tasks" in class_dict and class_dict["tasks"] is not None:
-        tasks = class_dict["tasks"]
-        if isinstance(tasks, dict):
-            tasks = tasks.items()
-
-        for task in tasks:
-            if isinstance(task, tuple):
-                task, count = task
-                for _ in range(count):
-                    new_tasks.append(task)
-            else:
+    for key, value in class_dict.items():
+        if key == "tasks":
+            # we want to insert tasks from the tasks attribute at the point of it's declaration
+            # compared to methods declared with @task
+            tasks = value
+            if not (isinstance(tasks, dict) or isinstance(tasks, list)):
+                raise LocustError("'tasks' attribute must be list or dict")
+            if isinstance(tasks, dict):
+                tasks = tasks.items()
+            for task in tasks:
+                if isinstance(task, tuple):
+                    task, count = task
+                else:
+                    count = 1
+                task.locust_task_weight = count
                 new_tasks.append(task)
 
-    for item in class_dict.values():
-        if "locust_task_weight" in dir(item):
-            for i in range(item.locust_task_weight):
-                new_tasks.append(item)
+        if "locust_task_weight" in dir(value):
+            # method decorated with @task
+            new_tasks.append(value)
 
     return new_tasks
 
@@ -169,7 +181,6 @@ def filter_tasks_by_tags(
     task_holder: type[TaskHolder],
     tags: set[str] | None = None,
     exclude_tags: set[str] | None = None,
-    checked: dict[TaskT, bool] | None = None,
 ):
     """
     Function used by Environment to recursively remove any tasks/TaskSets from a TaskSet/User that
@@ -177,17 +188,10 @@ def filter_tasks_by_tags(
     """
 
     new_tasks = []
-    if checked is None:
-        checked = {}
     for task in task_holder.tasks:
-        if task in checked:
-            if checked[task]:
-                new_tasks.append(task)
-            continue
-
         passing = True
         if hasattr(task, "tasks"):
-            filter_tasks_by_tags(task, tags, exclude_tags, checked)
+            filter_tasks_by_tags(task, tags, exclude_tags)
             passing = len(task.tasks) > 0
         else:
             if tags is not None:
@@ -197,14 +201,13 @@ def filter_tasks_by_tags(
 
         if passing:
             new_tasks.append(task)
-        checked[task] = passing
 
     task_holder.tasks = new_tasks
     if not new_tasks:
         logging.warning(f"{task_holder.__name__} had no tasks left after filtering, instantiating it will fail!")
 
 
-class TaskSetMeta(type):
+class TaskSetMeta(ABCMeta):
     """
     Meta class for the main User class. It's used to allow User classes to specify task execution
     ratio using an {task:int} dict, or a [(task0,int), ..., (taskN,int)] list.
@@ -212,10 +215,10 @@ class TaskSetMeta(type):
 
     def __new__(mcs, classname, bases, class_dict):
         class_dict["tasks"] = get_tasks_from_base_classes(bases, class_dict)
-        return type.__new__(mcs, classname, bases, class_dict)
+        return super().__new__(mcs, classname, bases, class_dict)
 
 
-class TaskSet(metaclass=TaskSetMeta):
+class AbstractTaskSet(ABC, metaclass=TaskSetMeta):
     """
     Class defining a set of tasks that a User will execute.
 
@@ -280,7 +283,7 @@ class TaskSet(metaclass=TaskSetMeta):
         self._task_queue: deque = deque()
         self._time_start = time()
 
-        if isinstance(parent, TaskSet):
+        if isinstance(parent, AbstractTaskSet):
             self._user = parent.user
         else:
             self._user = parent
@@ -319,8 +322,13 @@ class TaskSet(metaclass=TaskSetMeta):
         """
         pass
 
+    @abstractmethod
+    def _setup_tasks(self):
+        pass
+
     @final
     def run(self):
+        self._setup_tasks()
         try:
             self.on_start()
         except InterruptTaskSet as e:
@@ -331,6 +339,27 @@ class TaskSet(metaclass=TaskSetMeta):
 
         while True:
             try:
+                if isinstance(self, DefaultTaskSet):
+                    if not self.user.tasks:
+                        extra_message = (
+                            ", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?"
+                            if getattr(self.user, "task", None)
+                            else "."
+                        )
+                        raise LocustError(
+                            f"No tasks defined on {self.user.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
+                        )
+                else:
+                    if not self.tasks:
+                        extra_message = (
+                            ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?"
+                            if getattr(self, "task", None)
+                            else "."
+                        )
+                        raise LocustError(
+                            f"No tasks defined on {self.__class__.__name__}{extra_message} use the @task decorator or set the 'tasks' attribute."
+                        )
+
                 if not self._task_queue:
                     self.schedule_task(self.get_next_task())
 
@@ -396,16 +425,9 @@ class TaskSet(metaclass=TaskSetMeta):
         else:
             self._task_queue.append(task_callable)
 
+    @abstractmethod
     def get_next_task(self):
-        if not self.tasks:
-            if getattr(self, "task", None):
-                extra_message = ", but you have set a 'task' attribute - maybe you meant to set 'tasks'?"
-            else:
-                extra_message = "."
-            raise Exception(
-                f"No tasks defined on {self.__class__.__name__}{extra_message} use the @task decorator or set the 'tasks' attribute of the TaskSet"
-            )
-        return random.choice(self.tasks)
+        pass
 
     def wait_time(self):
         """
@@ -464,22 +486,48 @@ class TaskSet(metaclass=TaskSetMeta):
         return self.user.client
 
 
-class DefaultTaskSet(TaskSet):
+class TaskSet(AbstractTaskSet):
+    def _setup_tasks(self):
+        self._task_weights = list(accumulate(map(lambda x: x.locust_task_weight, self.tasks)))
+
+    def get_next_task(self):
+        return random.choices(self.tasks, cum_weights=self._task_weights)[0]
+
+
+class SequentialTaskSet(TaskSet):
+    """
+    Class defining a sequence of tasks that a User will execute.
+
+    Works like TaskSet, but The order of declaration decides the order of execution.
+    Tasks can either be specified by setting the *tasks* attribute to a list of tasks, or by declaring tasks
+    as methods using the @task decorator. Weight determines the repetition of the task.
+
+    It's possible to combine the *tasks* attribute, with some tasks declared using
+    the @task decorator. The order of declaration is respected also in that case.
+    """
+
+    def _setup_tasks(self):
+        task_cycle = []
+        for t in self.tasks:
+            for _ in range(t.locust_task_weight):
+                task_cycle.append(t)
+        self._task_cycle = cycle(task_cycle)
+
+    def get_next_task(self):
+        return next(self._task_cycle)
+
+
+class DefaultTaskSet(AbstractTaskSet):
     """
     Default root TaskSet that executes tasks in User.tasks.
     It executes tasks declared directly on the Locust with the user instance as the task argument.
     """
 
+    def _setup_tasks(self):
+        self._task_weights = list(accumulate(map(lambda x: x.locust_task_weight, self.user.tasks)))
+
     def get_next_task(self):
-        if not self.user.tasks:
-            if getattr(self.user, "task", None):
-                extra_message = ", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?"
-            else:
-                extra_message = "."
-            raise Exception(
-                f"No tasks defined on {self.user.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
-            )
-        return random.choice(self.user.tasks)
+        return random.choices(self.user.tasks, cum_weights=self._task_weights)[0]
 
     def execute_task(self, task):
         if hasattr(task, "tasks") and issubclass(task, TaskSet):
