@@ -1,6 +1,6 @@
 from locust import FastHttpUser
 from locust.argument_parser import parse_options
-from locust.contrib.fasthttp import FastHttpSession, LocustBadStatusCode
+from locust.contrib.fasthttp import FastHttpSession
 from locust.exception import CatchResponseError, InterruptTaskSet, LocustError, ResponseError
 from locust.user import TaskSet, task
 from locust.util.load_locustfile import is_user_class
@@ -38,17 +38,24 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(r.request.url, r.url)
         self.assertEqual(r.request.headers.get("X-Test-Headers", ""), "hello")
 
+    def test_error_message(self):
+        s = self.get_client()
+        kwargs = {}
+
+        def on_request(**kw):
+            kwargs.update(kw)
+
+        self.environment.events.request.add_listener(on_request)
+        r = s.request("get", "/wrong_url", context={"foo": "bar"})
+        self.assertIn("/wrong_url", str(kwargs["exception"]))
+        self.assertIn(f"code={r.status_code}", str(kwargs["exception"]))
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
+
     def test_404(self):
         s = self.get_client()
         r = s.get("/does_not_exist")
         self.assertEqual(404, r.status_code)
         self.assertEqual(1, self.runner.stats.get("/does_not_exist", "GET").num_failures)
-
-    def test_error_message(self):
-        s = self.get_client()
-        r = s.get("/does_not_exist")
-        self.assertTrue(isinstance(r.error, LocustBadStatusCode))
-        self.assertEqual(repr(r.error), "LocustBadStatusCode(code=404)")
 
     def test_204(self):
         s = self.get_client()
