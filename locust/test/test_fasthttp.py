@@ -44,7 +44,7 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(404, r.status_code)
         self.assertEqual(1, self.runner.stats.get("/does_not_exist", "GET").num_failures)
 
-    def test_LocustBadStatusCode(self):
+    def test_error_message(self):
         s = self.get_client()
         r = s.get("/does_not_exist")
         self.assertTrue(isinstance(r.error, LocustBadStatusCode))
