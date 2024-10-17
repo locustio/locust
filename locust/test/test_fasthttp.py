@@ -1,6 +1,6 @@
 from locust import FastHttpUser
 from locust.argument_parser import parse_options
-from locust.contrib.fasthttp import FastHttpSession
+from locust.contrib.fasthttp import FastHttpSession, LocustBadStatusCode
 from locust.exception import CatchResponseError, InterruptTaskSet, LocustError, ResponseError
 from locust.user import TaskSet, task
 from locust.util.load_locustfile import is_user_class
@@ -43,6 +43,12 @@ class TestFastHttpSession(WebserverTestCase):
         r = s.get("/does_not_exist")
         self.assertEqual(404, r.status_code)
         self.assertEqual(1, self.runner.stats.get("/does_not_exist", "GET").num_failures)
+
+    def test_LocustBadStatusCode(self):
+            s = self.get_client()
+            r = s.get("/does_not_exist")
+            self.assertTrue(isinstance(r.error, LocustBadStatusCode))
+            self.assertEqual(repr(r.error), "LocustBadStatusCode(code=404)")
 
     def test_204(self):
         s = self.get_client()
