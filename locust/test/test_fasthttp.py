@@ -45,10 +45,10 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(1, self.runner.stats.get("/does_not_exist", "GET").num_failures)
 
     def test_LocustBadStatusCode(self):
-            s = self.get_client()
-            r = s.get("/does_not_exist")
-            self.assertTrue(isinstance(r.error, LocustBadStatusCode))
-            self.assertEqual(repr(r.error), "LocustBadStatusCode(code=404)")
+        s = self.get_client()
+        r = s.get("/does_not_exist")
+        self.assertTrue(isinstance(r.error, LocustBadStatusCode))
+        self.assertEqual(repr(r.error), "LocustBadStatusCode(code=404)")
 
     def test_204(self):
         s = self.get_client()
