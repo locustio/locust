@@ -10,7 +10,7 @@ from html import escape
 from io import StringIO
 from itertools import chain
 from json import dumps
-from time import time
+from time import localtime, strftime
 from typing import TYPE_CHECKING, Any
 
 import gevent
@@ -318,17 +318,24 @@ class WebUI:
             )
             if request.args.get("download"):
                 res = app.make_response(res)
-                res.headers["Content-Disposition"] = f"attachment;filename=report_{time()}.html"
+                # TODO:  Use host & startTime
+
+                res.headers["Content-Disposition"] = (
+                    f"attachment;filename={self.start} - Locust - "
+                    + f"{self.environment.locustfile} - {self.environment.host}.html",
+                )
             return res
 
         def _download_csv_suggest_file_name(suggest_filename_prefix: str) -> str:
             """Generate csv file download attachment filename suggestion.
 
             Arguments:
-            suggest_filename_prefix: Prefix of the filename to suggest for saving the download. Will be appended with timestamp.
+            suggest_filename_prefix: Prefix of the filename to suggest for saving the download.
+            Will be appended with timestamp.
             """
 
-            return f"{suggest_filename_prefix}_{time()}.csv"
+            # TODO:  Use host & startTime
+            return f"{strftime('%Y-%m-%d %Hh%M', localtime())}-{suggest_filename_prefix}.csv"
 
         def _download_csv_response(csv_data: str, filename_prefix: str) -> Response:
             """Generate csv file download response with 'csv_data'.
