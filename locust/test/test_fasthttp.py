@@ -38,6 +38,19 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(r.request.url, r.url)
         self.assertEqual(r.request.headers.get("X-Test-Headers", ""), "hello")
 
+    def test_error_message(self):
+        s = self.get_client()
+        kwargs = {}
+
+        def on_request(**kw):
+            kwargs.update(kw)
+
+        self.environment.events.request.add_listener(on_request)
+        r = s.request("get", "/wrong_url", context={"foo": "bar"})
+        self.assertIn("/wrong_url", str(kwargs["exception"]))
+        self.assertIn(f"code={r.status_code}", str(kwargs["exception"]))
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
+
     def test_404(self):
         s = self.get_client()
         r = s.get("/does_not_exist")
