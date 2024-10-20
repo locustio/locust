@@ -14,6 +14,8 @@ class BadUser(FastHttpUser):
         self.client.request("POST", "/checkout/confirm", json={"foo": "bar"})
 
 
+# This User will behave identically to BadUser long as things go well,
+# but give earlier and more detailed information if things go wrong:
 class GoodUser(FastHttpUser):
     @task
     def t(self):
