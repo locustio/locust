@@ -73,6 +73,7 @@ export interface IReport {
   showDownloadLink: boolean;
   startTime: string;
   endTime: string;
+  duration: string;
   host: string;
   charts: ICharts;
   requestsStatistics: ISwarmStat[];

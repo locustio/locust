@@ -33,6 +33,8 @@ If you install `pre-commit <https://pre-commit.com/>`_, linting and format check
 
 Before you open a pull request, make sure all the tests work. And if you are adding a feature, make sure it is documented (in ``docs/*.rst``).
 
+If you're in a hurry or don't have access to a development environment, you can simply use `Codespaces <https://github.com/features/codespaces>`_, the github cloud development environment.  On your fork page, just click on *Code* then on *Create codespace on <branch name>*, and voila, your ready to code and test.
+
 Testing your changes
 ====================
 
@@ -50,6 +52,18 @@ To only run a specific suite or specific test you can call `pytest <https://docs
 .. code-block:: console
 
     $ pytest locust/test/test_main.py::DistributedIntegrationTests::test_distributed_tags
+
+Debugging
+=========
+
+Debugging Locust is quite easy with Vscode: 
+
+- Place breakpoints, 
+- Select a python file or a scenario (ex: ```examples/basic.py``) 
+- Check that the Poetry virtualenv is correctly detected (bottom right)
+- Open the action *Debug using launch.json*. You will have the choice between debugging the python file, the scenario with WebUI or in headless mode.
+- It could be rerun with the F5 shortkey
+
 
 Formatting and linting
 ======================

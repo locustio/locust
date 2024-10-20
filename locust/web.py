@@ -10,7 +10,6 @@ from html import escape
 from io import StringIO
 from itertools import chain
 from json import dumps
-from time import localtime, strftime
 from typing import TYPE_CHECKING, Any
 
 import gevent
@@ -39,7 +38,7 @@ from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
 from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
-from .util.date import format_utc_timestamp
+from .util.date import format_safe_timestamp
 from .util.timespan import parse_timespan
 
 if TYPE_CHECKING:
@@ -318,11 +317,10 @@ class WebUI:
             )
             if request.args.get("download"):
                 res = app.make_response(res)
-                # TODO:  Use host & startTime
-
+                host = self.environment.host or "no host"
                 res.headers["Content-Disposition"] = (
-                    f"attachment;filename={self.start} - Locust - "
-                    + f"{self.environment.locustfile} - {self.environment.host}.html",
+                    f"attachment;filename=Locust - {format_safe_timestamp(self.environment.stats.start_time)} - "
+                    + f"{self.environment.locustfile} - {host}.html"
                 )
             return res
 
@@ -333,9 +331,11 @@ class WebUI:
             suggest_filename_prefix: Prefix of the filename to suggest for saving the download.
             Will be appended with timestamp.
             """
-
-            # TODO:  Use host & startTime
-            return f"{strftime('%Y-%m-%d %Hh%M', localtime())}-{suggest_filename_prefix}.csv"
+            host = self.environment.host or "no host"
+            return (
+                f"Locust - {format_safe_timestamp(self.environment.stats.start_time)} - "
+                + f"{self.environment.locustfile} - {host} - {suggest_filename_prefix}.csv"
+            )
 
         def _download_csv_response(csv_data: str, filename_prefix: str) -> Response:
             """Generate csv file download response with 'csv_data'.
