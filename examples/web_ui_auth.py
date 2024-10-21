@@ -76,7 +76,7 @@ def locust_init(environment, **kwargs):
 
                 return redirect(url_for("index"))
 
-            environment.web_ui.auth_args = {**environment.web_ui.auth_args, "error": "Invalid username or password"}
+            session["auth_error"] = "Invalid username or password"
 
             return redirect(url_for("login"))
 

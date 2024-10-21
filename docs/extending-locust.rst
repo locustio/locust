@@ -152,6 +152,9 @@ Whether you are using username / password authentication, an auth provider, or b
 to the ``login_manager``. The ``user_loader`` should return ``None`` to deny authentication or return a User object when
 authentication to the app should be granted.
 
+To display errors on the login page, such as an incorrect username / password combination, you may store the ``auth_error``
+on the session object: ``session["auth_error"] = "Incorrect username or password"``.
+
 A full example can be seen `in the auth example <https://github.com/locustio/locust/tree/master/examples/web_ui_auth.py>`_.
 
 

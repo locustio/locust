@@ -24,6 +24,7 @@ from flask import (
     request,
     send_file,
     send_from_directory,
+    session,
     url_for,
 )
 from flask_cors import CORS
@@ -504,6 +505,8 @@ class WebUI:
             if not self.web_login:
                 return redirect(url_for("index"))
 
+            self.auth_args["error"] = session.get("auth_error", None)
+
             return render_template_from(
                 "auth.html",
                 auth_args=self.auth_args,
@@ -573,6 +576,7 @@ class WebUI:
         def wrapper(*args, **kwargs):
             if self.web_login:
                 try:
+                    session["auth_error"] = None
                     return login_required(view_func)(*args, **kwargs)
                 except Exception as e:
                     return f"Locust auth exception: {e} See https://docs.locust.io/en/stable/extending-locust.html#adding-authentication-to-the-web-ui for configuring authentication."
