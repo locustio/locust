@@ -2157,6 +2157,20 @@ lint = ["docutils-stubs", "flake8", "mypy"]
 test = ["pytest"]
 
 [[package]]
+name = "sphinxcontrib-googleanalytics"
+version = "0.4"
+description = "Sphinx extension googleanalytics"
+optional = false
+python-versions = "*"
+files = [
+    {file = "sphinxcontrib-googleanalytics-0.4.tar.gz", hash = "sha256:4b19c1f0fce5df6c7da5633201b64a9e5b0cb3210a14fdb4134942ceee8c5d12"},
+    {file = "sphinxcontrib_googleanalytics-0.4-py3-none-any.whl", hash = "sha256:a6574983f9a58e5864ec10d34dc99914c4d647108b22c9249c8f0038b0cb18b3"},
+]
+
+[package.dependencies]
+Sphinx = ">=0.6"
+
+[[package]]
 name = "sphinxcontrib-htmlhelp"
 version = "2.0.1"
 description = "sphinxcontrib-htmlhelp is a sphinx extension which renders HTML help files"
@@ -2460,4 +2474,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9"
-content-hash = "fe62e2430b2750fb006f7fe225752ad640c1f7f218340ad7f61536efcc2c8151"
+content-hash = "9e58a176725655fe7b74069776ba86492cdc74c7f34b9c2a1788da9fba924e8e"
