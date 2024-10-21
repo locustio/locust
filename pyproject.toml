@@ -178,6 +178,7 @@ sphinxcontrib-htmlhelp = "2.0.1"
 sphinxcontrib-jsmath = "1.0.1"
 sphinxcontrib-qthelp = "1.0.3"
 sphinxcontrib-serializinghtml = "1.1.10"
+sphinxcontrib-googleanalytics = ">=0.4"
 
 [tool.poetry.scripts]
 locust = "locust.main:main"

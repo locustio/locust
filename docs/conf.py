@@ -96,6 +96,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_search.extension",
     "sphinx_rtd_theme",
+    "sphinxcontrib.googleanalytics",
 ]
 
 # autoclass options
@@ -161,6 +162,9 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_css_files = ["_static/theme-overrides.css", "_static/css/rtd_sphinx_search.min.css"]
 
+# Google Analytics ID
+googleanalytics_id = "G-MCG99XYF9M"
+googleanalytics_enabled = True
 
 # HTML theme
 # html_theme = "haiku"

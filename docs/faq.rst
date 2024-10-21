@@ -36,7 +36,7 @@ Basic auth (Authorization header) does not work after redirection
    which is typically on a different domain and use mulitple redirections (30x).
 
    Since ``allow_redirects=True`` is the default ``request`` behavior you'll have to turn it off,
-   handle manually the redirections and inject again the authorization header, ex::
+   handle manually the redirections and inject again the authorization header, ex:
 
 
 .. code-block:: python
