@@ -1,30 +1,20 @@
-import { useState } from 'react';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import {
-  Alert,
-  Box,
-  Button,
-  FormControl,
-  IconButton,
-  InputAdornment,
-  InputLabel,
-  OutlinedInput,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Button, IconButton, TextField, Typography } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
 
 import Logo from 'assets/Logo';
+import CustomInput from 'components/Form/CustomInput';
+import PasswordField from 'components/Form/PasswordField';
 import DarkLightToggle from 'components/Layout/Navbar/DarkLightToggle';
 import useCreateTheme from 'hooks/useCreateTheme';
 import { IAuthArgs } from 'types/auth.types';
 
-export default function Auth({ authProviders, error, usernamePasswordCallback }: IAuthArgs) {
-  const [showPassword, setShowPassword] = useState(false);
-
-  const handleClickShowPassword = () => setShowPassword(!showPassword);
-
+export default function Auth({
+  authProviders,
+  customForm,
+  error,
+  usernamePasswordCallback,
+}: IAuthArgs) {
   const theme = useCreateTheme();
 
   return (
@@ -53,29 +43,27 @@ export default function Auth({ authProviders, error, usernamePasswordCallback }:
         <Box sx={{ display: 'flex', justifyContent: 'center', columnGap: 2 }}>
           <Logo />
         </Box>
-        {usernamePasswordCallback && (
+        {usernamePasswordCallback && !customForm && (
           <form action={usernamePasswordCallback} method='POST'>
             <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2 }}>
               <TextField label='Username' name='username' />
-              <FormControl variant='outlined'>
-                <InputLabel htmlFor='password-field'>Password</InputLabel>
-                <OutlinedInput
-                  endAdornment={
-                    <InputAdornment position='end'>
-                      <IconButton edge='end' onClick={handleClickShowPassword}>
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                  id='password-field'
-                  label='Password'
-                  name='password'
-                  type={showPassword ? 'text' : 'password'}
-                />
-              </FormControl>
+              <PasswordField />
               {error && <Alert severity='error'>{error}</Alert>}
               <Button size='large' type='submit' variant='contained'>
                 Login
+              </Button>
+            </Box>
+          </form>
+        )}
+        {customForm && (
+          <form action={customForm.callbackUrl} method='POST'>
+            <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2 }}>
+              {customForm.inputs.map((inputProps, index) => (
+                <CustomInput key={`custom-form-input-${index}`} {...inputProps} />
+              ))}
+              {error && <Alert severity='error'>{error}</Alert>}
+              <Button size='large' type='submit' variant='contained'>
+                {customForm.submitButtonText || 'Login'}
               </Button>
             </Box>
           </form>
