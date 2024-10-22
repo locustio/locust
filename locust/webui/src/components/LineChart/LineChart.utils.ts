@@ -14,7 +14,6 @@ import {
 } from 'components/LineChart/LineChart.types';
 import { ICharts } from 'types/ui.types';
 import { formatLocaleString } from 'utils/date';
-import { padStart } from 'utils/number';
 
 export const getSeriesData = <ChartType>({
   charts,
