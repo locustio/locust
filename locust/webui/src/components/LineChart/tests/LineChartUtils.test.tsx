@@ -76,13 +76,7 @@ describe('createOptions', () => {
 
     const formattedValue = options.xAxis.axisLabel.formatter(mockTimestamps[0]);
 
-    expect(formattedValue.split(':').length).toBe(3);
-
-    const [hours, minutes, seconds] = formattedValue.split(':');
-
-    expect(hours.length).toBe(2);
-    expect(minutes.length).toBe(2);
-    expect(seconds.length).toBe(2);
+    expect(formattedValue).toEqual(new Date(mockTimestamps[0]).toLocaleTimeString());
   });
 
   test('should format the tooltip as expected', () => {
