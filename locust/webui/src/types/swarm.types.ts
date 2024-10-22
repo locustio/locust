@@ -10,7 +10,7 @@ import {
   ISwarmException,
 } from 'types/ui.types';
 
-export interface IExtraOptionParameter extends Omit<ICustomInput, 'name'> {
+export interface IExtraOptionParameter extends Omit<ICustomInput, 'name' | 'label'> {
   helpText: string | null;
 }
 

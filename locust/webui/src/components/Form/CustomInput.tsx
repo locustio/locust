@@ -34,7 +34,7 @@ export default function CustomInput({
   }
 
   if (isSecret) {
-    return <PasswordField label={label} name={name} />;
+    return <PasswordField defaultValue={defaultValue} label={label} name={name} />;
   }
 
   return (
