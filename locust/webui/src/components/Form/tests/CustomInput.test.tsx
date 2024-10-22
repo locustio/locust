@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import CustomInput from 'components/Form/CustomInput';
 import { renderWithProvider } from 'test/testUtils';
 
-describe('SwarmCustomParameters', () => {
+describe('CustomInput', () => {
   test('renders a text field', () => {
     const fieldName = 'textField';
     const fieldLabel = 'Text Field';

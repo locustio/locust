@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 import PasswordField from 'components/Form/PasswordField';
 import { renderWithProvider } from 'test/testUtils';
 
-describe('SwarmCustomParameters', () => {
+describe('PasswordField', () => {
   test('renders a password field', () => {
     const fieldName = 'passwordField';
     const fieldLabel = 'Password Field';
