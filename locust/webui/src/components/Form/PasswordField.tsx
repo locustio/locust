@@ -8,7 +8,7 @@ export default function PasswordField({
   name = 'password',
   label = 'Password',
   defaultValue,
-}: Pick<ICustomInput, 'name' | 'label' | 'defaultValue'>) {
+}: Partial<Pick<ICustomInput, 'name' | 'label' | 'defaultValue'>>) {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClickShowPassword = () => setShowPassword(!showPassword);
