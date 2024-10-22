@@ -56,15 +56,7 @@ const createYAxis = <ChartType>({
   } as YAXisComponentOption;
 };
 
-const formatTimeAxis = (value: string) => {
-  const date = new Date(value);
-
-  return [
-    padStart(date.getHours(), 2),
-    padStart(date.getMinutes(), 2),
-    padStart(date.getSeconds(), 2),
-  ].join(':');
-};
+const formatTimeAxis = (value: string) => new Date(value).toLocaleTimeString();
 
 const renderChartTooltipValue = <ChartType>({
   chartValueFormatter,
