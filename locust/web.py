@@ -317,10 +317,10 @@ class WebUI:
             )
             if request.args.get("download"):
                 res = app.make_response(res)
-                host = self.environment.host or "no host"
+                host = f"_{self.environment.host}" if self.environment.host else ""
                 res.headers["Content-Disposition"] = (
-                    f"attachment;filename=Locust - {format_safe_timestamp(self.environment.stats.start_time)} - "
-                    + f"{self.environment.locustfile} - {host}.html"
+                    f"attachment;filename=Locust_{format_safe_timestamp(self.environment.stats.start_time)}_"
+                    + f"{self.environment.locustfile}{host}.html"
                 )
             return res
 
@@ -331,10 +331,10 @@ class WebUI:
             suggest_filename_prefix: Prefix of the filename to suggest for saving the download.
             Will be appended with timestamp.
             """
-            host = self.environment.host or "no host"
+            host = f"_{self.environment.host}" if self.environment.host else ""
             return (
-                f"Locust - {format_safe_timestamp(self.environment.stats.start_time)} - "
-                + f"{self.environment.locustfile} - {host} - {suggest_filename_prefix}.csv"
+                f"Locust_{format_safe_timestamp(self.environment.stats.start_time)}_"
+                + f"{self.environment.locustfile}{host}_{suggest_filename_prefix}.csv"
             )
 
         def _download_csv_response(csv_data: str, filename_prefix: str) -> Response:
