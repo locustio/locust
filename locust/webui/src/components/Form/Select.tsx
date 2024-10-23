@@ -26,7 +26,9 @@ export default function Select({
       </InputLabel>
       <MuiSelect
         {...inputProps}
-        defaultValue={defaultValue || (multiple && options) || options[0]}
+        defaultValue={
+          inputProps.value ? undefined : defaultValue || (multiple && options) || options[0]
+        }
         id={name}
         label={label}
         multiple={multiple}

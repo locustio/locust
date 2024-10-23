@@ -150,7 +150,7 @@ def run_single_user(
         _env.events.init.fire(environment=_env, runner=None, web_ui=None)
         # uncaught events will be suppressed, so check if that happened
         if locust.log.unhandled_greenlet_exception:
-            raise Exception("Unhandled exception in init")
+            os._exit(1)
 
     # do the things that the Runner usually does
     _env.user_classes = [user_class]

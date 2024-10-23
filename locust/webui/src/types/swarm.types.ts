@@ -1,3 +1,4 @@
+import { ICustomInput } from 'types/form.types';
 import { ITab } from 'types/tab.types';
 import { ITableStructure } from 'types/table.types';
 import {
@@ -9,11 +10,8 @@ import {
   ISwarmException,
 } from 'types/ui.types';
 
-export interface IExtraOptionParameter {
-  choices: string[] | null;
-  defaultValue: string | number | boolean | null;
+export interface IExtraOptionParameter extends Omit<ICustomInput, 'name' | 'label'> {
   helpText: string | null;
-  isSecret: boolean;
 }
 
 export interface IExtraOptions {

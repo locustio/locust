@@ -20,7 +20,9 @@ export default function NumericField({ defaultValue, ...textFieldProps }: TextFi
   };
 
   useEffect(() => {
-    setValue(defaultValue as string);
+    if (defaultValue) {
+      setValue(defaultValue as string);
+    }
   }, [defaultValue]);
 
   return <TextField {...textFieldProps} onChange={filterNonNumeric} value={value} />;

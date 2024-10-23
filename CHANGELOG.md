@@ -1,6 +1,44 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.32.0](https://github.com/locustio/locust/tree/2.32.0) (2024-10-15)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.8...2.32.0)
+
+**Fixed bugs:**
+
+- logfile is erroniously written when there are many workers.   [\#2927](https://github.com/locustio/locust/issues/2927)
+- Form field for users, spawn rate, and run time still visible in UI although CustomShape defined without use\_common\_options. [\#2924](https://github.com/locustio/locust/issues/2924)
+- --html with --process 4 then get ValueError: StatsEntry.use\_response\_times\_cache must be set to True  [\#2908](https://github.com/locustio/locust/issues/2908)
+- IPV6 check doesn't work as expected on AWS EKS [\#2787](https://github.com/locustio/locust/issues/2787)
+
+**Merged pull requests:**
+
+- Log deprecation warning for Python 3.9 [\#2940](https://github.com/locustio/locust/pull/2940) ([cyberw](https://github.com/cyberw))
+- Run tests on python 3.13 too [\#2939](https://github.com/locustio/locust/pull/2939) ([cyberw](https://github.com/cyberw))
+- Web UI - Fix Line Chart [\#2935](https://github.com/locustio/locust/pull/2935) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Modern UI - Fix Hide Common Options [\#2934](https://github.com/locustio/locust/pull/2934) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Allow alerts and errors on new and edit form [\#2932](https://github.com/locustio/locust/pull/2932) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add error message to swarm form [\#2930](https://github.com/locustio/locust/pull/2930) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Disable --csv for workers when using --processes. [\#2929](https://github.com/locustio/locust/pull/2929) ([cyberw](https://github.com/cyberw))
+- Decide if ipv6 can work [\#2923](https://github.com/locustio/locust/pull/2923) ([nc-marco](https://github.com/nc-marco))
+- Webui Add Form Alert [\#2922](https://github.com/locustio/locust/pull/2922) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add faq item: Basic auth \(Authorization header\) does not work after redirection [\#2921](https://github.com/locustio/locust/pull/2921) ([obriat](https://github.com/obriat))
+- Add CSRF example [\#2920](https://github.com/locustio/locust/pull/2920) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Web UI Add Exports for Library [\#2919](https://github.com/locustio/locust/pull/2919) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- lower log level for unnecessary --autostart argument [\#2918](https://github.com/locustio/locust/pull/2918) ([cyberw](https://github.com/cyberw))
+
+## [2.31.8](https://github.com/locustio/locust/tree/2.31.8) (2024-09-28)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.7...2.31.8)
+
+**Merged pull requests:**
+
+- Log locust-cloud version if it is installed [\#2916](https://github.com/locustio/locust/pull/2916) ([cyberw](https://github.com/cyberw))
+- Web UI Auth submit should submit a POST request [\#2915](https://github.com/locustio/locust/pull/2915) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Url in template arg [\#2914](https://github.com/locustio/locust/pull/2914) ([fletelli42](https://github.com/fletelli42))
+- Fix RTD versioning with a deep git clone [\#2913](https://github.com/locustio/locust/pull/2913) ([mquinnfd](https://github.com/mquinnfd))
+
 ## [2.31.7](https://github.com/locustio/locust/tree/2.31.7) (2024-09-25)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.31.6...2.31.7)

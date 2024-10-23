@@ -34,6 +34,7 @@ export { default as Modal } from 'components/Modal/Modal';
 export { default as useCreateTheme } from 'hooks/useCreateTheme';
 export { tabConfig } from 'components/Tabs/Tabs.constants';
 export { store as locustStore } from 'redux/store';
+export { pushQuery } from 'utils/url';
 
 export type { IRootState } from 'redux/store';
 export type { IWindow } from 'types/window.types';
