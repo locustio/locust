@@ -1,7 +1,6 @@
 import { DefaultLabelFormatterCallbackParams, ECharts } from 'echarts';
 import { describe, expect, test, vi } from 'vitest';
 
-import { CHART_THEME } from 'components/LineChart/LineChart.constants';
 import { ILineChartTooltipFormatterParams } from 'components/LineChart/LineChart.types';
 import {
   getSeriesData,
@@ -188,11 +187,10 @@ describe('createMarkLine', () => {
       markers: [mockTimestamps[1]],
     };
 
-    const options = createMarkLine(markChartsWithMarkers, false);
+    const options = createMarkLine(markChartsWithMarkers);
 
     expect(options.symbol).toBe('none');
     expect(options.data).toEqual([{ xAxis: markChartsWithMarkers.markers[0] }]);
-    expect(options.lineStyle.color).toBe(CHART_THEME.LIGHT.axisColor);
   });
 
   test('should create multiple mark lines', () => {
@@ -201,7 +199,7 @@ describe('createMarkLine', () => {
       markers: [mockTimestamps[1], mockTimestamps[3]],
     };
 
-    const options = createMarkLine(markChartsWithMarkers, false);
+    const options = createMarkLine(markChartsWithMarkers);
 
     expect(options.data).toEqual([
       { xAxis: markChartsWithMarkers.markers[0] },
@@ -214,21 +212,11 @@ describe('createMarkLine', () => {
       ...mockCharts,
       markers: [mockTimestamps[1]],
     };
-    const options = createMarkLine(markChartsWithMarkers, false);
+    const options = createMarkLine(markChartsWithMarkers);
 
     expect(options.label.formatter({ dataIndex: 0 } as DefaultLabelFormatterCallbackParams)).toBe(
       'Run #1',
     );
-  });
-
-  test('should use dark mode when isDarkMode', () => {
-    const markChartsWithMarkers = {
-      ...mockCharts,
-      markers: [mockTimestamps[1]],
-    };
-    const options = createMarkLine(markChartsWithMarkers, true);
-
-    expect(options.lineStyle.color).toBe(CHART_THEME.DARK.axisColor);
   });
 });
 
