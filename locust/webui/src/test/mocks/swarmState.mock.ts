@@ -36,6 +36,7 @@ export const swarmReportMock: IReport = {
   showDownloadLink: true,
   startTime: '2024-02-26 12:13:26',
   endTime: '2024-02-26 12:13:26',
+  duration: '0 seconds',
   host: 'http://0.0.0.0:8089/',
   exceptionsStatistics: [],
   requestsStatistics: [],

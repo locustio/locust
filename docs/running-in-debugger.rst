@@ -21,7 +21,17 @@ It implicitly registers an event handler for the :ref:`request <extending_locust
 
 You can configure exactly what is printed by specifying parameters to :py:func:`run_single_user <locust.debug.run_single_user>`.
 
-Make sure you have enabled gevent in your debugger settings. In VS Code's ``launch.json`` it looks like this:
+Make sure you have enabled gevent in your debugger settings. 
+
+Debugging Locust is quite easy with Vscode:
+
+- Place breakpoints
+- Select a python file or a scenario (ex: ```examples/basic.py``)
+- Check that the Poetry virtualenv is correctly detected (bottom right)
+- Open the action *Debug using launch.json*. You will have the choice between debugging the python file, the scenario with WebUI or in headless mode
+- It could be rerun with the F5 shortkey
+
+VS Code's ``launch.json`` looks like this:
 
 .. literalinclude:: ../.vscode/launch.json
     :language: json

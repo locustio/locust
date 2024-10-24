@@ -10,7 +10,7 @@
             "gevent": true
         },
         {
-            "name": "Run locust",
+            "name": "Run current locust scenario headless, 5 users",
             "type": "python",
             "request": "launch",
             "module": "locust",
@@ -19,6 +19,18 @@
                 "${file}",
                 "--headless",
                 "--users=5"
+            ],
+            "console": "integratedTerminal",
+            "gevent": true
+        },
+        {
+            "name": "Run current locust scenario with WebUI",
+            "type": "python",
+            "request": "launch",
+            "module": "locust",
+            "args": [
+                "-f",
+                "${file}"
             ],
             "console": "integratedTerminal",
             "gevent": true

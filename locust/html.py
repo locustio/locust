@@ -12,7 +12,7 @@ from . import stats as stats_module
 from .runners import STATE_STOPPED, STATE_STOPPING, MasterRunner
 from .stats import sort_stats, update_stats_history
 from .user.inspectuser import get_ratio
-from .util.date import format_utc_timestamp
+from .util.date import format_duration, format_utc_timestamp
 
 PERCENTILES_FOR_HTML_REPORT = [0.50, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
 DEFAULT_BUILD_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui", "dist")
@@ -88,6 +88,7 @@ def get_html_report(
             ],
             "start_time": start_time,
             "end_time": end_time,
+            "duration": format_duration(stats.start_time, stats.last_request_timestamp),
             "host": escape(str(host)),
             "history": history,
             "show_download_link": show_download_link,
