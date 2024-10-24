@@ -19,6 +19,10 @@ interface IBaseChartType extends ILineChartMarkers, ILineChartTimeAxis {
   [key: string]: any;
 }
 
+interface ILineChartProps<ChartType extends IBaseChartType> extends ILineChart<ChartType> {
+  shouldReplaceMergeLines?: boolean;
+}
+
 export default function LineChart<ChartType extends IBaseChartType>({
   charts,
   title,
@@ -28,7 +32,8 @@ export default function LineChart<ChartType extends IBaseChartType>({
   splitAxis,
   yAxisLabels,
   scatterplot,
-}: ILineChart<ChartType>) {
+  shouldReplaceMergeLines = false,
+}: ILineChartProps<ChartType>) {
   const [chart, setChart] = useState<ECharts | null>(null);
   const isDarkMode = useSelector(({ theme: { isDarkMode } }) => isDarkMode);
 
@@ -77,11 +82,11 @@ export default function LineChart<ChartType extends IBaseChartType>({
           ...echartsOptions,
           data: charts[key],
           ...(splitAxis ? { yAxisIndex: yAxisIndex || index } : {}),
-          ...(index === 0 ? { markLine: createMarkLine<ChartType>(charts, isDarkMode) } : {}),
+          ...(index === 0 ? { markLine: createMarkLine<ChartType>(charts) } : {}),
         })),
       });
     }
-  }, [charts, chart, lines, isDarkMode]);
+  }, [charts, chart, lines]);
 
   useEffect(() => {
     if (chart) {
@@ -110,9 +115,12 @@ export default function LineChart<ChartType extends IBaseChartType>({
 
   useEffect(() => {
     if (chart) {
-      chart.setOption({
-        series: getSeriesData<ChartType>({ charts, lines, scatterplot }),
-      });
+      chart.setOption(
+        {
+          series: getSeriesData<ChartType>({ charts, lines, scatterplot }),
+        },
+        shouldReplaceMergeLines ? { replaceMerge: ['series'] } : undefined,
+      );
     }
   }, [lines]);
 
