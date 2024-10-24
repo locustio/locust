@@ -9,7 +9,7 @@ If you're not getting the desired/expected throughput there are a number of thin
 Concurrency
 -----------
 
-Increase the number of Users. To fully utilize your target system you may need a lot of concurrent requests. Note that spawn rate/ramp up does not change peak load, it only changes how fast you get there. `Wait times <writing-a-locustfile.html#wait-time>`_ and sleeps *do* impact throughput. You can find a whole blog post on this topic `here <https://www.locust.cloud/blog/closed-vs-open-workload-models>`__.
+Increase the number of Users. To fully utilize your target system you may need a lot of concurrent requests. Note that spawn rate/ramp up does not change peak load, it only changes how fast you get there. High `wait times <writing-a-locustfile.html#wait-time>`_ and sleeps *do* impact throughput, so that may make it necessary to launch even more Users. You can find a whole blog post on this topic `here <https://www.locust.cloud/blog/closed-vs-open-workload-models>`__.
 
 Load generation performance
 ---------------------------
