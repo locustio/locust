@@ -117,6 +117,7 @@ class mocked_options:
         self.heartbeat_interval = 1
         self.stop_timeout = 0.0
         self.connection_broken = False
+        self.exclude_from_aggregation = None
 
     def reset_stats(self):
         pass

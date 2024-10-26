@@ -98,6 +98,16 @@ class TestRequestStats(unittest.TestCase):
         self.assertAlmostEqual(s2.total_rps, 1 / 5.0)
         self.assertEqual(self.stats.total.total_rps, 10 / 5.0)
 
+    def test_total_exclude_from_aggregation(self):
+        before_count = self.stats.num_requests
+        # First without exclusion
+        self.stats.log_request("CUSTOM", "some_name", 1337, 1337)
+        self.assertEqual(self.stats.num_requests, before_count + 1)
+        # Second with exclusion
+        self.stats.exclude_from_aggregation = r"CUSTOM"
+        self.stats.log_request("CUSTOM", "some_name", 1337, 1337)
+        self.assertEqual(self.stats.num_requests, before_count + 1)
+
     def test_rps_less_than_one_second(self):
         s = StatsEntry(self.stats, "percentile_test", "GET")
         for i in range(10):

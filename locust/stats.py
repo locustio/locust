@@ -5,6 +5,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import signal
 import time
 from abc import abstractmethod
@@ -13,6 +14,7 @@ from collections.abc import Iterable
 from copy import copy
 from html import escape
 from itertools import chain
+from re import Pattern
 from types import FrameType
 from typing import TYPE_CHECKING, Any, Callable, NoReturn, Protocol, TypedDict, TypeVar, cast
 
@@ -184,14 +186,17 @@ class RequestStats:
     Class that holds the request statistics. Accessible in a User from self.environment.stats
     """
 
-    def __init__(self, use_response_times_cache=True):
+    def __init__(self, use_response_times_cache=True, exclude_from_aggregation: str | Pattern[str] | None = None):
         """
         :param use_response_times_cache: The value of use_response_times_cache will be set for each StatsEntry()
                                          when they are created. Settings it to False saves some memory and CPU
                                          cycles which we can do on Worker nodes where the response_times_cache
                                          is not needed.
+        :param exclude_from_aggregation: Define which logs method or name should be excluded from "Aggretated"
+                                         stats. Default will accept all the logs. Regexp is allowed.
         """
         self.use_response_times_cache = use_response_times_cache
+        self.exclude_from_aggregation = exclude_from_aggregation
         self.entries: dict[tuple[str, str], StatsEntry] = EntriesDict(self)
         self.errors: dict[str, StatsError] = {}
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
@@ -217,8 +222,16 @@ class RequestStats:
     def start_time(self):
         return self.total.start_time
 
+    def exclude_from_total(self, method: str, name: str):
+        if self.exclude_from_aggregation:
+            found_in_method = re.search(self.exclude_from_aggregation, method)
+            found_in_name = re.search(self.exclude_from_aggregation, name)
+            return found_in_method or found_in_name
+        return False
+
     def log_request(self, method: str, name: str, response_time: int, content_length: int) -> None:
-        self.total.log(response_time, content_length)
+        if not self.exclude_from_total(method, name):
+            self.total.log(response_time, content_length)
         self.entries[(name, method)].log(response_time, content_length)
 
     def log_error(self, method: str, name: str, error: Exception | str | None) -> None:
