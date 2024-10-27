@@ -36,6 +36,7 @@ def get_html_report(
     if end_ts := stats.last_request_timestamp:
         end_time = format_utc_timestamp(end_ts)
     else:
+        end_ts = stats.start_time
         end_time = start_time
 
     host = None
@@ -88,7 +89,7 @@ def get_html_report(
             ],
             "start_time": start_time,
             "end_time": end_time,
-            "duration": format_duration(stats.start_time, stats.last_request_timestamp),
+            "duration": format_duration(stats.start_time, end_ts),
             "host": escape(str(host)),
             "history": history,
             "show_download_link": show_download_link,
