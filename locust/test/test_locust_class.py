@@ -60,7 +60,8 @@ class TestTaskSet(LocustTestCase):
             wait_time = constant(0.5)
 
         l = MyUser(self.environment)
-        self.assertRaisesRegex(Exception, "No tasks defined on MyUser.*", l.run)
+        # to make sure exception is not raised
+        l.run()
         MyUser.task = object()
         self.assertRaisesRegex(Exception, ".*but you have set a 'task' attribute.*", l.run)
 

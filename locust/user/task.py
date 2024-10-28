@@ -480,7 +480,7 @@ class DefaultTaskSet(TaskSet):
                 )
             else:
                 logger.warning(f"No tasks defined on {self.user.__class__.__name__}. {warning_message}")
-                raise StopUser
+                raise StopUser()
         return random.choice(self.user.tasks)
 
     def execute_task(self, task):
