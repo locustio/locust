@@ -472,13 +472,15 @@ class DefaultTaskSet(TaskSet):
 
     def get_next_task(self):
         if not self.user.tasks:
+            warning_message = "Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
             if getattr(self.user, "task", None):
-                extra_message = ", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?"
+                extra_message = f", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?"
+                raise Exception(
+                    f"No tasks defined on {self.user.__class__.__name__}{extra_message}{warning_message}"
+                )
             else:
-                extra_message = "."
-            raise Exception(
-                f"No tasks defined on {self.user.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
-            )
+                logger.warning(f"No tasks defined on {self.user.__class__.__name__}. {warning_message}")
+                raise StopUser
         return random.choice(self.user.tasks)
 
     def execute_task(self, task):
