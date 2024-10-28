@@ -475,9 +475,7 @@ class DefaultTaskSet(TaskSet):
             warning_message = "Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
             if getattr(self.user, "task", None):
                 extra_message = ", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?"
-                raise Exception(
-                    f"No tasks defined on {self.user.__class__.__name__}{extra_message}{warning_message}"
-                )
+                raise Exception(f"No tasks defined on {self.user.__class__.__name__}{extra_message}{warning_message}")
             else:
                 logger.warning(f"No tasks defined on {self.user.__class__.__name__}. {warning_message}")
                 raise StopUser()
