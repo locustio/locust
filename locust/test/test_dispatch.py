@@ -4191,11 +4191,11 @@ class TestSpawnDespwSpecificUserClasses(unittest.TestCase):
         sleep_time = 0.2  # Speed-up test
 
         users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1], user_classes=user_classes)
-        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=9)
-
-        users_dispatcher._wait_between_dispatch = sleep_time
 
         # Add equal spread of Users 1, 2, 3
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=9)
+        users_dispatcher._wait_between_dispatch = sleep_time
+
         self.assertDictEqual(
             next(users_dispatcher),
             {
@@ -4212,5 +4212,4 @@ class TestSpawnDespwSpecificUserClasses(unittest.TestCase):
                 "1": {"User1": 3, "User2": 0, "User3": 3},
             },
         )
-
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
