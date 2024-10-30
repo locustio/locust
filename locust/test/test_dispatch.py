@@ -4168,3 +4168,71 @@ def _user_count(d: dict[str, dict[str, int]]) -> int:
 
 def _user_count_on_worker(d: dict[str, dict[str, int]], worker_node_id: str) -> int:
     return sum(d[worker_node_id].values())
+
+
+class TestSpawnDespwSpecificUserClasses(unittest.TestCase):
+    def test_add_then_remove_specific_user_classes(self):
+        """
+        Adds multiple users classes and then individualy removes them, checking only specified user classes are removed.
+        """
+
+        class User1(User):
+            weight = 1
+
+        class User2(User):
+            weight = 1
+
+        class User3(User):
+            weight = 1
+
+        user_classes = [User1, User2, User3]
+        worker_node1 = WorkerNode("1")
+
+        sleep_time = 0.2  # Speed-up test
+
+        users_dispatcher = UsersDispatcher(worker_nodes=[worker_node1], user_classes=user_classes)
+        users_dispatcher.new_dispatch(target_user_count=9, spawn_rate=9)
+
+        users_dispatcher._wait_between_dispatch = sleep_time
+
+        # Add equal spread of Users 1, 2, 3
+        ts = time.perf_counter()
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 3, "User2": 3, "User3": 3},
+            },
+        )
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+
+        # Now remove All instances of User2
+        users_dispatcher.new_dispatch(target_user_count=6, spawn_rate=3, user_classes=[User2])
+
+        ts = time.perf_counter()
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 3, "User2": 0, "User3": 3},
+            },
+        )
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+
+        # Now remove only 1 instance of User3
+        users_dispatcher.new_dispatch(target_user_count=5, spawn_rate=1, user_classes=[User3])
+
+        ts = time.perf_counter()
+        self.assertDictEqual(
+            next(users_dispatcher),
+            {
+                "1": {"User1": 3, "User2": 0, "User3": 2},
+            },
+        )
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
+
+        ts = time.perf_counter()
+        self.assertRaises(StopIteration, lambda: next(users_dispatcher))
+        delta = time.perf_counter() - ts
+        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
