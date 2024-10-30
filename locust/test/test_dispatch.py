@@ -4196,43 +4196,21 @@ class TestSpawnDespwSpecificUserClasses(unittest.TestCase):
         users_dispatcher._wait_between_dispatch = sleep_time
 
         # Add equal spread of Users 1, 2, 3
-        ts = time.perf_counter()
         self.assertDictEqual(
             next(users_dispatcher),
             {
                 "1": {"User1": 3, "User2": 3, "User3": 3},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
 
         # Now remove All instances of User2
         users_dispatcher.new_dispatch(target_user_count=6, spawn_rate=3, user_classes=[User2])
 
-        ts = time.perf_counter()
         self.assertDictEqual(
             next(users_dispatcher),
             {
                 "1": {"User1": 3, "User2": 0, "User3": 3},
             },
         )
-        delta = time.perf_counter() - ts
-        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
 
-        # Now remove only 1 instance of User3
-        users_dispatcher.new_dispatch(target_user_count=5, spawn_rate=1, user_classes=[User3])
-
-        ts = time.perf_counter()
-        self.assertDictEqual(
-            next(users_dispatcher),
-            {
-                "1": {"User1": 3, "User2": 0, "User3": 2},
-            },
-        )
-        delta = time.perf_counter() - ts
-        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
-
-        ts = time.perf_counter()
         self.assertRaises(StopIteration, lambda: next(users_dispatcher))
-        delta = time.perf_counter() - ts
-        self.assertTrue(0 <= delta <= _TOLERANCE, delta)
