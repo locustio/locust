@@ -11,7 +11,7 @@ from io import StringIO
 from itertools import chain
 from json import dumps
 from time import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import gevent
 from flask import (
@@ -53,6 +53,34 @@ greenlet_exception_handler = greenlet_exception_logger(logger)
 DEFAULT_CACHE_TIME = 2.0
 
 
+class InputField(TypedDict):
+    label: str
+    name: str
+    default_value: bool | None
+    choices: list[str] | None
+    is_secret: bool | None
+
+
+class CustomForm(TypedDict):
+    inputs: list[InputField] | None
+    callback_url: str
+    submit_button_text: str | None
+
+
+class AuthProvider(TypedDict):
+    label: str | None
+    callback_url: str
+    icon_url: str | None
+
+
+class AuthArgs(TypedDict, total=False):
+    custom_form: CustomForm
+    auth_providers: AuthProvider
+    username_password_callback: str
+    error: str
+    info: str
+
+
 class WebUI:
     """
     Sets up and runs a Flask web app that can start and stop load tests using the
@@ -84,7 +112,7 @@ class WebUI:
     """Arguments used to render index.html for the web UI. Must be used with custom templates
     extending index.html."""
 
-    auth_args: dict[str, Any]
+    auth_args: AuthArgs
     """Arguments used to render auth.html for the web UI auth page. Must be used when configuring auth"""
 
     def __init__(
@@ -506,6 +534,7 @@ class WebUI:
                 return redirect(url_for("index"))
 
             self.auth_args["error"] = session.get("auth_error", None)
+            self.auth_args["info"] = session.get("auth_info", None)
 
             return render_template_from(
                 "auth.html",
@@ -577,6 +606,7 @@ class WebUI:
             if self.web_login:
                 try:
                     session["auth_error"] = None
+                    session["auth_info"] = None
                     return login_required(view_func)(*args, **kwargs)
                 except Exception as e:
                     return f"Locust auth exception: {e} See https://docs.locust.io/en/stable/extending-locust.html#adding-authentication-to-the-web-ui for configuring authentication."
