@@ -36,7 +36,7 @@ Basic auth (Authorization header) does not work after redirection
    which is typically on a different domain and use mulitple redirections (30x).
 
    Since ``allow_redirects=True`` is the default ``request`` behavior you'll have to turn it off,
-   handle manually the redirections and inject again the authorization header, ex::
+   handle manually the redirections and inject again the authorization header, ex:
 
 
 .. code-block:: python
@@ -58,7 +58,7 @@ Basic auth (Authorization header) does not work after redirection
 Create a Locust file based on a recorded browser session
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   Try using `Transformer <https://transformer.readthedocs.io/>`__
+   Try using `har2locust <https://github.com/SvenskaSpel/har2locust>`__
 
 How to run a Docker container of Locust in Windows Subsystem for Linux (Windows 10 users)?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

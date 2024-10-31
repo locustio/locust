@@ -1,3 +1,4 @@
+import { ICustomInput } from 'types/form.types';
 import { ITab } from 'types/tab.types';
 import { ITableStructure } from 'types/table.types';
 import {
@@ -9,11 +10,8 @@ import {
   ISwarmException,
 } from 'types/ui.types';
 
-export interface IExtraOptionParameter {
-  choices: string[] | null;
-  defaultValue: string | number | boolean | null;
+export interface IExtraOptionParameter extends Omit<ICustomInput, 'name' | 'label'> {
   helpText: string | null;
-  isSecret: boolean;
 }
 
 export interface IExtraOptions {
@@ -49,7 +47,8 @@ export interface ISwarmState {
   history: IHistory[];
   host: string;
   isDistributed: boolean;
-  isShape: boolean | null;
+  hideCommonOptions?: boolean | null;
+  shapeUseCommonOptions?: boolean | null;
   locustfile: string;
   numUsers: number | null;
   overrideHostWarning: boolean;
@@ -93,4 +92,10 @@ export interface ISwarmFormInput
   runTime?: string;
   userClasses?: string[];
   shapeClass?: string;
+}
+
+export interface IStartSwarmResponse {
+  success: boolean;
+  message: string;
+  host: string;
 }

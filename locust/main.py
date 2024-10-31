@@ -239,6 +239,7 @@ def main():
                 options.run_time = None
                 options.autostart = None
                 options.csv_prefix = None
+                options.html_file = None
                 break
         else:
             # we're in the parent process
@@ -307,6 +308,9 @@ def main():
                 atexit.register(kill_workers, children)
 
     greenlet_exception_handler = greenlet_exception_logger(logger)
+
+    if sys.version_info < (3, 10):
+        logger.warning("Python 3.9 support is deprecated and will be removed soon")
 
     if options.stop_timeout:
         try:

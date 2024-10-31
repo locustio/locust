@@ -1,5 +1,5 @@
 import CloseIcon from '@mui/icons-material/Close';
-import { Box, IconButton, Modal as MuiModal } from '@mui/material';
+import { Container, IconButton, Modal as MuiModal } from '@mui/material';
 
 interface IModal {
   open: boolean;
@@ -10,13 +10,13 @@ interface IModal {
 export default function Modal({ open, onClose, children }: IModal) {
   return (
     <MuiModal onClose={onClose} open={open}>
-      <Box
+      <Container
+        maxWidth='md'
         sx={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: 'md',
           maxHeight: '90vh',
           overflowY: 'auto',
           display: 'flex',
@@ -37,7 +37,7 @@ export default function Modal({ open, onClose, children }: IModal) {
           <CloseIcon />
         </IconButton>
         {children}
-      </Box>
+      </Container>
     </MuiModal>
   );
 }

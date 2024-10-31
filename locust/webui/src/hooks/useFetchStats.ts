@@ -56,7 +56,7 @@ export default function useFetchStats() {
     const percentilesWithTime = Object.entries(currentResponseTimePercentiles).reduce(
       (percentiles, [key, value]) => ({
         ...percentiles,
-        [key]: [time, value],
+        [key]: [time, value || 0],
       }),
       {},
     );

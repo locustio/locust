@@ -30,9 +30,11 @@ export { default as NewTestButton } from 'components/StateButtons/NewTestButton'
 export { default as ResetButton } from 'components/StateButtons/ResetButton';
 export { default as StopButton } from 'components/StateButtons/StopButton';
 export { default as Logo } from 'assets/Logo';
+export { default as Modal } from 'components/Modal/Modal';
 export { default as useCreateTheme } from 'hooks/useCreateTheme';
 export { tabConfig } from 'components/Tabs/Tabs.constants';
 export { store as locustStore } from 'redux/store';
+export { pushQuery } from 'utils/url';
 
 export type { IRootState } from 'redux/store';
 export type { IWindow } from 'types/window.types';

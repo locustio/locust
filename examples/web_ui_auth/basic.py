@@ -9,10 +9,9 @@ For more information, see https://docs.locust.io/en/stable/extending-locust.html
 
 from locust import HttpUser, events, task
 
-import json
 import os
 
-from flask import Blueprint, make_response, redirect, request, session, url_for
+from flask import Blueprint, redirect, request, session, url_for
 from flask_login import UserMixin, login_user
 
 
@@ -33,12 +32,12 @@ class AuthUser(UserMixin):
 auth_blueprint = Blueprint("auth", "web_ui_auth")
 
 
-def load_user(user_id):
-    return AuthUser(session.get("username"))
+def load_user(username):
+    return AuthUser(username)
 
 
 @events.init.add_listener
-def locust_init(environment, **kwargs):
+def locust_init(environment, **_kwargs):
     if environment.web_ui:
         environment.web_ui.login_manager.user_loader(load_user)
 
@@ -71,12 +70,11 @@ def locust_init(environment, **kwargs):
 
             # Implement real password verification here
             if password:
-                session["username"] = username
                 login_user(AuthUser(username))
 
                 return redirect(url_for("index"))
 
-            environment.web_ui.auth_args = {**environment.web_ui.auth_args, "error": "Invalid username or password"}
+            session["auth_error"] = "Invalid username or password"
 
             return redirect(url_for("login"))
 
