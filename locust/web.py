@@ -53,7 +53,7 @@ greenlet_exception_handler = greenlet_exception_logger(logger)
 DEFAULT_CACHE_TIME = 2.0
 
 
-class InputField(TypedDict):
+class InputField(TypedDict, total=False):
     label: str
     name: str
     default_value: bool | None
@@ -61,13 +61,13 @@ class InputField(TypedDict):
     is_secret: bool | None
 
 
-class CustomForm(TypedDict):
+class CustomForm(TypedDict, total=False):
     inputs: list[InputField] | None
     callback_url: str
     submit_button_text: str | None
 
 
-class AuthProvider(TypedDict):
+class AuthProvider(TypedDict, total=False):
     label: str | None
     callback_url: str
     icon_url: str | None
@@ -75,7 +75,7 @@ class AuthProvider(TypedDict):
 
 class AuthArgs(TypedDict, total=False):
     custom_form: CustomForm
-    auth_providers: AuthProvider
+    auth_providers: list[AuthProvider]
     username_password_callback: str
     error: str
     info: str
