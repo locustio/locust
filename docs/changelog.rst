@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.32.1
+======
+* Various WebUI fixes (most only relevant for https://locust.cloud)
+* LocustBadStatusCode without url param in fasthttp https://github.com/locustio/locust/pull/2944
+
 2.32.0
 ======
 * Explicitly support Python 3.13 https://github.com/locustio/locust/pull/2939

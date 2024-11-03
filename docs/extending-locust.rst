@@ -154,7 +154,9 @@ to the ``login_manager``. The ``user_loader`` should return ``None`` to deny aut
 authentication to the app should be granted.
 
 To display errors on the login page, such as an incorrect username / password combination, you may store the ``auth_error``
-on the session object: ``session["auth_error"] = "Incorrect username or password"``.
+on the session object: ``session["auth_error"] = "Incorrect username or password"``. If you have non-erroneous information
+you would like to display to the user, you can opt instead to set ``auth_info`` on the session object:
+``session["auth_info"] = "Successfully created new user!"``
 
 A full example can be seen `in the auth example <https://github.com/locustio/locust/tree/master/examples/web_ui_auth/basic.py>`_.
 

@@ -58,7 +58,7 @@ Basic auth (Authorization header) does not work after redirection
 Create a Locust file based on a recorded browser session
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   Try using `Transformer <https://transformer.readthedocs.io/>`__
+   Try using `har2locust <https://github.com/SvenskaSpel/har2locust>`__
 
 How to run a Docker container of Locust in Windows Subsystem for Linux (Windows 10 users)?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

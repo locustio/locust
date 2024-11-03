@@ -6,7 +6,6 @@ import {
   ScatterSeriesOption,
 } from 'echarts';
 
-import { CHART_THEME } from 'components/LineChart/LineChart.constants';
 import {
   ILineChart,
   ILineChartZoomEvent,
@@ -142,16 +141,12 @@ export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
   },
 });
 
-export const createMarkLine = <ChartType extends Pick<ICharts, 'markers'>>(
-  charts: ChartType,
-  isDarkMode: boolean,
-) => ({
+export const createMarkLine = <ChartType extends Pick<ICharts, 'markers'>>(charts: ChartType) => ({
   symbol: 'none',
   label: {
     formatter: (params: DefaultLabelFormatterCallbackParams) => `Run #${params.dataIndex + 1}`,
     padding: [0, 0, 8, 0],
   },
-  lineStyle: { color: isDarkMode ? CHART_THEME.DARK.axisColor : CHART_THEME.LIGHT.axisColor },
   data: (charts.markers || []).map((timeMarker: string) => ({ xAxis: timeMarker })),
 });
 
