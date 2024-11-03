@@ -1181,6 +1181,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         # make sure host appears in the report
         self.assertIn("https://test.com/", html_report_content)
         self.assertIn('"show_download_link": false', html_report_content)
+        self.assertRegex(html_report_content, r'"start_time": "\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z"')
+        self.assertRegex(html_report_content, r'"end_time": "\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z"')
+        self.assertRegex(html_report_content, r'"duration": "\d* seconds?"')
 
     def test_run_with_userclass_picker(self):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:

@@ -1,19 +1,16 @@
-import decimal
-import numbers
-import re
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 
 def format_utc_timestamp(unix_timestamp):
-    return datetime.fromtimestamp(unix_timestamp, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.fromtimestamp(int(unix_timestamp), timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def format_safe_timestamp(unix_timestamp):
-    return datetime.fromtimestamp(unix_timestamp).strftime("%Y-%m-%d-%Hh%M")
+    return datetime.fromtimestamp(int(unix_timestamp)).strftime("%Y-%m-%d-%Hh%M")
 
 
 def format_duration(start_time, end_time):
-    seconds = end_time - start_time
+    seconds = int(end_time) - int(start_time)
     days = seconds // 86400
     hours = (seconds % 86400) // 3600
     minutes = (seconds % 3600) // 60

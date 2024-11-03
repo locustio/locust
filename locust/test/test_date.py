@@ -1,10 +1,8 @@
+from locust.util.date import format_duration, format_safe_timestamp, format_utc_timestamp
+
 from datetime import datetime
 
 import pytest
-
-from locust.util.date import format_duration, format_safe_timestamp, format_utc_timestamp
-
-from .testcases import LocustTestCase
 
 dates_checks = [
     {
@@ -72,17 +70,17 @@ dates_checks = [
 
 @pytest.mark.parametrize("check", dates_checks)
 def test_format_utc_timestamp(check):
-    assert format_utc_timestamp(int(check["datetime"].timestamp())) == check["utc_timestamp"]
+    assert format_utc_timestamp(check["datetime"].timestamp()) == check["utc_timestamp"]
 
 
 @pytest.mark.parametrize("check", dates_checks)
 def test_format_safe_timestamp(check):
-    assert format_safe_timestamp(int(check["datetime"].timestamp())) == check["safe_timestamp"]
+    assert format_safe_timestamp(check["datetime"].timestamp()) == check["safe_timestamp"]
 
 
 @pytest.mark.parametrize("check", dates_checks)
 def test_format_duration(check):
     global dates_checks
-    start_time = int(dates_checks[0]["datetime"].timestamp())
-    end_time = int(check["datetime"].timestamp())
+    start_time = dates_checks[0]["datetime"].timestamp()
+    end_time = check["datetime"].timestamp()
     assert format_duration(start_time, end_time) == check["duration"]
