@@ -10,7 +10,7 @@
             "gevent": true
         },
         {
-            "name": "Run locust",
+            "name": "Run locust headless",
             "type": "python",
             "request": "launch",
             "module": "locust",
@@ -19,6 +19,22 @@
                 "${file}",
                 "--headless",
                 "--users=5"
+            ],
+            "console": "integratedTerminal",
+            "gevent": true
+        },
+        {
+            "name": "Run locust, autostart",
+            "type": "python",
+            "request": "launch",
+            "module": "locust",
+            "args": [
+                "-f",
+                "${file}",
+                "--users=5",
+                "--autostart",
+                "--print-stats",
+                "-L=ERROR"
             ],
             "console": "integratedTerminal",
             "gevent": true
