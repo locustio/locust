@@ -13,11 +13,3 @@ def is_url(url: str) -> bool:
             return False
     except ValueError:
         return False
-
-
-def normalize_base_url(url: str) -> str:
-    """Normalize the base URL to ensure consistent format."""
-    if not url:
-        return "/"
-    url = url.strip("/")
-    return f"/{url}" if url else "/"

@@ -642,7 +642,7 @@ class MasterRunner(DistributedRunner):
     :class:`WorkerRunners <WorkerRunner>` will aggregated.
     """
 
-    def __init__(self, environment, master_bind_host, master_bind_port, base_url) -> None:
+    def __init__(self, environment, master_bind_host, master_bind_port) -> None:
         """
         :param environment: Environment instance
         :param master_bind_host: Host/interface to use for incoming worker connections
@@ -656,7 +656,6 @@ class MasterRunner(DistributedRunner):
         self.spawning_completed = False
         self.worker_indexes: dict[str, int] = {}
         self.worker_index_max = 0
-        self.base_url = base_url
 
         self.clients = WorkerNodes()
         try:
@@ -1202,7 +1201,7 @@ class WorkerRunner(DistributedRunner):
     # the worker index is set on ACK, if master provided it (masters <= 2.10.2 do not provide it)
     worker_index = -1
 
-    def __init__(self, environment: Environment, master_host: str, master_port: int, base_url: str = "") -> None:
+    def __init__(self, environment: Environment, master_host: str, master_port: int) -> None:
         """
         :param environment: Environment instance
         :param master_host: Host/IP to use for connection to the master
@@ -1217,7 +1216,6 @@ class WorkerRunner(DistributedRunner):
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.master_host = master_host
         self.master_port = master_port
-        self.base_url = base_url
         self.logs: list[str] = []
         self.worker_cpu_warning_emitted = False
         self._users_dispatcher: UsersDispatcher | None = None
@@ -1477,11 +1475,11 @@ class WorkerRunner(DistributedRunner):
         if not success:
             if self.retry < 3:
                 logger.debug(
-                    f"Failed to connect to master {self.master_host}:{self.master_port}{self.base_url}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
+                    f"Failed to connect to master {self.master_host}:{self.master_port}{self.environment.parsed_options.base_path}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
                 )
             else:
                 logger.warning(
-                    f"Failed to connect to master {self.master_host}:{self.master_port}{self.base_url}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
+                    f"Failed to connect to master {self.master_host}:{self.master_port}{self.environment.parsed_options.base_path}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
                 )
             if self.retry > CONNECT_RETRY_COUNT:
                 raise ConnectionError()

@@ -69,7 +69,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
     def test_web_ui_no_runner(self):
         env = Environment()
-        web_ui = WebUI(env, "127.0.0.1", 0, base_url="")
+        web_ui = WebUI(env, "127.0.0.1", 0)
         gevent.sleep(0.01)
         try:
             response = requests.get("http://127.0.0.1:%i/" % web_ui.server.server_port)

@@ -72,7 +72,7 @@ class Environment:
         self.stats = RequestStats()
         """Reference to RequestStats instance"""
         self.host = host
-        """Host of the target system"""
+        """Base URL of the target system"""
         self.reset_stats = reset_stats
         """Determines if stats should be reset once all simulated users have been spawned"""
         if stop_timeout is not None:
@@ -131,7 +131,7 @@ class Environment:
         """
         return self._create_runner(LocalRunner)
 
-    def create_master_runner(self, master_bind_host="*", master_bind_port=5557, base_url="") -> MasterRunner:
+    def create_master_runner(self, master_bind_host="*", master_bind_port=5557) -> MasterRunner:
         """
         Create a :class:`MasterRunner <locust.runners.MasterRunner>` instance for this Environment
 
@@ -143,10 +143,9 @@ class Environment:
             MasterRunner,
             master_bind_host=master_bind_host,
             master_bind_port=master_bind_port,
-            base_url=base_url,
         )
 
-    def create_worker_runner(self, master_host: str, master_port: int, base_url: str = "") -> WorkerRunner:
+    def create_worker_runner(self, master_host: str, master_port: int) -> WorkerRunner:
         """
         Create a :class:`WorkerRunner <locust.runners.WorkerRunner>` instance for this Environment
 
@@ -160,14 +159,13 @@ class Environment:
             WorkerRunner,
             master_host=master_host,
             master_port=master_port,
-            base_url=base_url,
         )
 
     def create_web_ui(
         self,
         host="",
         port=8089,
-        base_url: str = "/",
+        base_path: str | None = None,
         web_login: bool = False,
         tls_cert: str | None = None,
         tls_key: str | None = None,
@@ -202,7 +200,7 @@ class Environment:
             delayed_start=delayed_start,
             userclass_picker_is_active=userclass_picker_is_active,
             build_path=build_path,
-            base_url=base_url,
+            base_path=base_path,
         )
         return self.web_ui
 
