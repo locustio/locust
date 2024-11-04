@@ -492,6 +492,11 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     if not options.headless and not options.worker:
         protocol = "https" if options.tls_cert and options.tls_key else "http"
 
+        if options.web_base_path and options.web_base_path[0] != "/":
+            logger.error(
+                f"Invalid format for --web-base-path argument ({options.web_base_path}): the url path must start with a slash."
+            )
+            sys.exit(1)
         if options.web_host == "*":
             # special check for "*" so that we're consistent with --master-bind-host
             web_host = ""
