@@ -121,7 +121,7 @@ class WebUI:
         environment: Environment,
         host: str,
         port: int,
-        base_path: str | None = None,
+        web_base_path: str | None = None,
         web_login: bool = False,
         tls_cert: str | None = None,
         tls_key: str | None = None,
@@ -164,7 +164,7 @@ class WebUI:
         self.app.template_folder = build_path or DEFAULT_BUILD_PATH
         self.app.static_url_path = "/assets/"
 
-        app_blueprint = Blueprint("locust", __name__, url_prefix=base_path)
+        app_blueprint = Blueprint("locust", __name__, url_prefix=web_base_path)
         # ensures static js files work on Windows
         mimetypes.add_type("application/javascript", ".js")
         if self.web_login:

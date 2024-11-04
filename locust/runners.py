@@ -1475,11 +1475,11 @@ class WorkerRunner(DistributedRunner):
         if not success:
             if self.retry < 3:
                 logger.debug(
-                    f"Failed to connect to master {self.master_host}:{self.master_port}{self.environment.parsed_options.base_path}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
+                    f"Failed to connect to master {self.master_host}:{self.master_port}{self.environment.parsed_options.web_base_path}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
                 )
             else:
                 logger.warning(
-                    f"Failed to connect to master {self.master_host}:{self.master_port}{self.environment.parsed_options.base_path}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
+                    f"Failed to connect to master {self.master_host}:{self.master_port}{self.environment.parsed_options.web_base_path}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
                 )
             if self.retry > CONNECT_RETRY_COUNT:
                 raise ConnectionError()

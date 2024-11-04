@@ -455,7 +455,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         try:
             runner = environment.create_worker_runner(options.master_host, options.master_port)
             logger.debug(
-                "Connected to locust master: %s:%s%s", options.master_host, options.master_port, options.base_path
+                "Connected to locust master: %s:%s%s", options.master_host, options.master_port, options.web_base_path
             )
         except OSError as e:
             logger.error("Failed to connect to the Locust master: %s", e)
@@ -498,21 +498,21 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         else:
             web_host = options.web_host
         if web_host:
-            logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}{options.base_path}")
+            logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}{options.web_base_path}")
         if options.web_host_display_name:
             logger.info(f"Starting web interface at {options.web_host_display_name}")
         else:
             if os.name == "nt":
                 logger.info(
-                    f"Starting web interface at {protocol}://localhost:{options.web_port}{options.base_path} (accepting connections from all network interfaces)"
+                    f"Starting web interface at {protocol}://localhost:{options.web_port}{options.web_base_path} (accepting connections from all network interfaces)"
                 )
             else:
-                logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}{options.base_path}")
+                logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}{options.web_base_path}")
 
         web_ui = environment.create_web_ui(
             host=web_host,
             port=options.web_port,
-            base_path=options.base_path,
+            web_base_path=options.web_base_path,
             web_login=options.web_login,
             tls_cert=options.tls_cert,
             tls_key=options.tls_key,

@@ -36,14 +36,14 @@ def load_user(username):
 @events.init.add_listener
 def locust_init(environment, **_kwargs):
     if environment.web_ui:
-        auth_blueprint = Blueprint("auth", "web_ui_auth", url_prefix=environment.parsed_options.base_path)
+        auth_blueprint = Blueprint("auth", "web_ui_auth", url_prefix=environment.parsed_options.web_base_path)
 
         environment.web_ui.login_manager.user_loader(load_user)
 
         environment.web_ui.app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
 
         environment.web_ui.auth_args = {
-            "username_password_callback": f"{environment.parsed_options.base_path}/login_submit",
+            "username_password_callback": f"{environment.parsed_options.web_base_path}/login_submit",
             "auth_providers": [
                 {
                     "label": "Github",

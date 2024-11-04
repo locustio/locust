@@ -613,11 +613,11 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
     )
 
     web_ui_group.add_argument(
-        "--base-path",
+        "--web-base-path",
         type=str,
         default="",
         help="Base path for the web interface (e.g., '/locust'). Default is empty (root path).",
-        env_var="BASE_PATH",
+        env_var="LOCUST_web_base_path",
     )
 
     tag_group = parser.add_argument_group(
