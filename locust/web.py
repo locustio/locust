@@ -40,7 +40,7 @@ from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
 from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
-from .util.date import format_utc_timestamp
+from .util.date import format_safe_timestamp
 from .util.timespan import parse_timespan
 
 if TYPE_CHECKING:
@@ -347,17 +347,25 @@ class WebUI:
             )
             if request.args.get("download"):
                 res = app.make_response(res)
-                res.headers["Content-Disposition"] = f"attachment;filename=report_{time()}.html"
+                host = f"_{self.environment.host}" if self.environment.host else ""
+                res.headers["Content-Disposition"] = (
+                    f"attachment;filename=Locust_{format_safe_timestamp(self.environment.stats.start_time)}_"
+                    + f"{self.environment.locustfile}{host}.html"
+                )
             return res
 
         def _download_csv_suggest_file_name(suggest_filename_prefix: str) -> str:
             """Generate csv file download attachment filename suggestion.
 
             Arguments:
-            suggest_filename_prefix: Prefix of the filename to suggest for saving the download. Will be appended with timestamp.
+            suggest_filename_prefix: Prefix of the filename to suggest for saving the download.
+            Will be appended with timestamp.
             """
-
-            return f"{suggest_filename_prefix}_{time()}.csv"
+            host = f"_{self.environment.host}" if self.environment.host else ""
+            return (
+                f"Locust_{format_safe_timestamp(self.environment.stats.start_time)}_"
+                + f"{self.environment.locustfile}{host}_{suggest_filename_prefix}.csv"
+            )
 
         def _download_csv_response(csv_data: str, filename_prefix: str) -> Response:
             """Generate csv file download response with 'csv_data'.
