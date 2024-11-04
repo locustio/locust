@@ -170,7 +170,7 @@ class WebUI:
         if self.web_login:
             self._login_manager = LoginManager()
             self._login_manager.init_app(self.app)
-            self._login_manager.login_view = "login"
+            self._login_manager.login_view = "locust.login"
 
         if environment.runner:
             self.update_template_args()
@@ -534,7 +534,7 @@ class WebUI:
         @app_blueprint.route("/login")
         def login():
             if not self.web_login:
-                return redirect(url_for("index"))
+                return redirect(url_for("locust.index"))
 
             self.auth_args["error"] = session.get("auth_error", None)
             self.auth_args["info"] = session.get("auth_info", None)
@@ -552,6 +552,8 @@ class WebUI:
             self.environment.update_user_class(user_settings)
 
             return {}, 201
+
+        app.register_blueprint(app_blueprint)
 
     @property
     def login_manager(self):
