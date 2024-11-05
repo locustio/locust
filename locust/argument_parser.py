@@ -612,6 +612,14 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         env_var="LOCUST_MASTER_NODE_PORT",
     )
 
+    web_ui_group.add_argument(
+        "--web-base-path",
+        type=str,
+        default="",
+        help="Base path for the web interface (e.g., '/locust'). Default is empty (root path).",
+        env_var="LOCUST_web_base_path",
+    )
+
     tag_group = parser.add_argument_group(
         "Tag options",
         "Locust tasks can be tagged using the @tag decorator. These options let specify which tasks to include or exclude during a test.",
