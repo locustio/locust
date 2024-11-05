@@ -73,7 +73,6 @@ def mocked_rpc(raise_on_close=True):
             self.outbox.append(message)
 
         def send_to_client(self, message):
-            print(message)
             self.outbox.append(message)
 
         @classmethod
