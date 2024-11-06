@@ -617,7 +617,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         type=str,
         default="",
         help="Base path for the web interface (e.g., '/locust'). Default is empty (root path).",
-        env_var="LOCUST_web_base_path",
+        env_var="LOCUST_WEB_BASE_PATH",
     )
 
     tag_group = parser.add_argument_group(
