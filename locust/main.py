@@ -69,6 +69,7 @@ def create_environment(
     available_user_classes=None,
     available_shape_classes=None,
     available_user_tasks=None,
+    override_user_weights=None,
 ):
     """
     Create an Environment instance from options
@@ -85,6 +86,7 @@ def create_environment(
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
         available_user_tasks=available_user_tasks,
+        override_user_weights=override_user_weights,
     )
 
 
@@ -355,21 +357,7 @@ It's not high enough for load testing, and the OS didn't allow locust to increas
 See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."""
             )
 
-    # create locust Environment
-    locustfile_path = None if not locustfile else os.path.basename(locustfile)
-
-    environment = create_environment(
-        user_classes,
-        options,
-        events=locust.events,
-        shape_class=shape_class,
-        locustfile=locustfile_path,
-        parsed_locustfiles=locustfiles,
-        available_user_classes=available_user_classes,
-        available_shape_classes=available_shape_classes,
-        available_user_tasks=available_user_tasks,
-    )
-
+    user_new_weights: list[dict] = []
     if options.config_users:
         for json_user_config in options.config_users:
             try:
@@ -387,12 +375,10 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                 if isinstance(user_config, list):
                     for config in user_config:
                         ensure_user_class_name(config)
-
-                        environment.update_user_class(config)
+                        user_new_weights.append(config)
                 else:
                     ensure_user_class_name(user_config)
-
-                    environment.update_user_class(user_config)
+                    user_new_weights.append(user_config)
             except json.decoder.JSONDecodeError as e:
                 logger.error(f"The --config-users argument must be in valid JSON string or file: {e}")
                 sys.exit(-1)
@@ -404,6 +390,22 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             except Exception as e:
                 logger.exception(e)
                 sys.exit(-1)
+
+    # create locust Environment
+    locustfile_path = None if not locustfile else os.path.basename(locustfile)
+
+    environment = create_environment(
+        user_classes,
+        options,
+        events=locust.events,
+        shape_class=shape_class,
+        locustfile=locustfile_path,
+        parsed_locustfiles=locustfiles,
+        available_user_classes=available_user_classes,
+        available_shape_classes=available_shape_classes,
+        available_user_tasks=available_user_tasks,
+        override_user_weights=user_new_weights,
+    )
 
     if (
         shape_class

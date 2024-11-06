@@ -37,6 +37,7 @@ class Environment:
         available_user_classes: dict[str, User] | None = None,
         available_shape_classes: dict[str, LoadTestShape] | None = None,
         available_user_tasks: dict[str, list[TaskSet | Callable]] | None = None,
+        override_user_weights: list[dict] | None = None,
         dispatcher_class: type[UsersDispatcher] = UsersDispatcher,
     ):
         self.runner: Runner | None = None
@@ -104,6 +105,9 @@ class Environment:
         """A user dispatcher class that decides how users are spawned, default :class:`UsersDispatcher <locust.dispatch.UsersDispatcher>`"""
         self.worker_logs: dict[str, list[str]] = {}
         """Captured logs from all connected workers"""
+
+        for user_dict in override_user_weights:
+            self.update_user_class(user_dict)
 
         self._remove_user_classes_with_weight_zero()
         self._validate_user_class_name_uniqueness()
