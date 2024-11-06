@@ -425,6 +425,12 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_WEB_HOST",
     )
     web_ui_group.add_argument(
+        "--web-host-display-name",
+        type=str,
+        help=configargparse.SUPPRESS,
+        env_var="LOCUST_WEB_HOST_DISPLAY_NAME",
+    )
+    web_ui_group.add_argument(
         "--web-port",
         "-P",
         type=int,
@@ -604,6 +610,14 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         default=5557,
         help="Port to connect to on master node. Defaults to 5557.",
         env_var="LOCUST_MASTER_NODE_PORT",
+    )
+
+    web_ui_group.add_argument(
+        "--web-base-path",
+        type=str,
+        default="",
+        help="Base path for the web interface (e.g., '/locust'). Default is empty (root path).",
+        env_var="LOCUST_WEB_BASE_PATH",
     )
 
     tag_group = parser.add_argument_group(

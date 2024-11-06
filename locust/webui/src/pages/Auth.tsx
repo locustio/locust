@@ -3,11 +3,19 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
 
 import Logo from 'assets/Logo';
+import CustomInput from 'components/Form/CustomInput';
+import PasswordField from 'components/Form/PasswordField';
 import DarkLightToggle from 'components/Layout/Navbar/DarkLightToggle';
 import useCreateTheme from 'hooks/useCreateTheme';
 import { IAuthArgs } from 'types/auth.types';
 
-export default function Auth({ authProviders, error, usernamePasswordCallback }: IAuthArgs) {
+export default function Auth({
+  authProviders,
+  customForm,
+  error,
+  info,
+  usernamePasswordCallback,
+}: IAuthArgs) {
   const theme = useCreateTheme();
 
   return (
@@ -29,6 +37,7 @@ export default function Auth({ authProviders, error, usernamePasswordCallback }:
           rowGap: 4,
           boxShadow: 24,
           borderRadius: 4,
+          width: 400,
           border: '3px solid black',
           p: 4,
         }}
@@ -36,14 +45,29 @@ export default function Auth({ authProviders, error, usernamePasswordCallback }:
         <Box sx={{ display: 'flex', justifyContent: 'center', columnGap: 2 }}>
           <Logo />
         </Box>
-        {usernamePasswordCallback && (
-          <form action={usernamePasswordCallback}>
+        {usernamePasswordCallback && !customForm && (
+          <form action={usernamePasswordCallback} method='POST'>
             <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2 }}>
               <TextField label='Username' name='username' />
-              <TextField label='Password' name='password' type='password' />
+              <PasswordField />
+              {info && <Alert severity='info'>{info}</Alert>}
               {error && <Alert severity='error'>{error}</Alert>}
               <Button size='large' type='submit' variant='contained'>
                 Login
+              </Button>
+            </Box>
+          </form>
+        )}
+        {customForm && (
+          <form action={customForm.callbackUrl} method='POST'>
+            <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2 }}>
+              {customForm.inputs.map((inputProps, index) => (
+                <CustomInput key={`custom-form-input-${index}`} {...inputProps} />
+              ))}
+              {info && <Alert severity='info'>{info}</Alert>}
+              {error && <Alert severity='error'>{error}</Alert>}
+              <Button size='large' type='submit' variant='contained'>
+                {customForm.submitButtonText || 'Login'}
               </Button>
             </Box>
           </form>

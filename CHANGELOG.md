@@ -1,6 +1,85 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.32.0](https://github.com/locustio/locust/tree/2.32.0) (2024-10-15)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.8...2.32.0)
+
+**Fixed bugs:**
+
+- logfile is erroniously written when there are many workers.   [\#2927](https://github.com/locustio/locust/issues/2927)
+- Form field for users, spawn rate, and run time still visible in UI although CustomShape defined without use\_common\_options. [\#2924](https://github.com/locustio/locust/issues/2924)
+- --html with --process 4 then get ValueError: StatsEntry.use\_response\_times\_cache must be set to True  [\#2908](https://github.com/locustio/locust/issues/2908)
+- IPV6 check doesn't work as expected on AWS EKS [\#2787](https://github.com/locustio/locust/issues/2787)
+
+**Merged pull requests:**
+
+- Log deprecation warning for Python 3.9 [\#2940](https://github.com/locustio/locust/pull/2940) ([cyberw](https://github.com/cyberw))
+- Run tests on python 3.13 too [\#2939](https://github.com/locustio/locust/pull/2939) ([cyberw](https://github.com/cyberw))
+- Web UI - Fix Line Chart [\#2935](https://github.com/locustio/locust/pull/2935) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Modern UI - Fix Hide Common Options [\#2934](https://github.com/locustio/locust/pull/2934) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Allow alerts and errors on new and edit form [\#2932](https://github.com/locustio/locust/pull/2932) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add error message to swarm form [\#2930](https://github.com/locustio/locust/pull/2930) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Disable --csv for workers when using --processes. [\#2929](https://github.com/locustio/locust/pull/2929) ([cyberw](https://github.com/cyberw))
+- Decide if ipv6 can work [\#2923](https://github.com/locustio/locust/pull/2923) ([nc-marco](https://github.com/nc-marco))
+- Webui Add Form Alert [\#2922](https://github.com/locustio/locust/pull/2922) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add faq item: Basic auth \(Authorization header\) does not work after redirection [\#2921](https://github.com/locustio/locust/pull/2921) ([obriat](https://github.com/obriat))
+- Add CSRF example [\#2920](https://github.com/locustio/locust/pull/2920) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Web UI Add Exports for Library [\#2919](https://github.com/locustio/locust/pull/2919) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- lower log level for unnecessary --autostart argument [\#2918](https://github.com/locustio/locust/pull/2918) ([cyberw](https://github.com/cyberw))
+
+## [2.31.8](https://github.com/locustio/locust/tree/2.31.8) (2024-09-28)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.7...2.31.8)
+
+**Merged pull requests:**
+
+- Log locust-cloud version if it is installed [\#2916](https://github.com/locustio/locust/pull/2916) ([cyberw](https://github.com/cyberw))
+- Web UI Auth submit should submit a POST request [\#2915](https://github.com/locustio/locust/pull/2915) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Url in template arg [\#2914](https://github.com/locustio/locust/pull/2914) ([fletelli42](https://github.com/fletelli42))
+- Fix RTD versioning with a deep git clone [\#2913](https://github.com/locustio/locust/pull/2913) ([mquinnfd](https://github.com/mquinnfd))
+
+## [2.31.7](https://github.com/locustio/locust/tree/2.31.7) (2024-09-25)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.6...2.31.7)
+
+**Merged pull requests:**
+
+- Fix Dependabot Complaints [\#2912](https://github.com/locustio/locust/pull/2912) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Improve Web UI Logging [\#2911](https://github.com/locustio/locust/pull/2911) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Pin python versions to avoid gh caching issue + always Install Dependencies, even when it looks like there was a cache hit [\#2907](https://github.com/locustio/locust/pull/2907) ([cyberw](https://github.com/cyberw))
+- Fix Login Manager Error Message [\#2905](https://github.com/locustio/locust/pull/2905) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Log locust version earlier [\#2904](https://github.com/locustio/locust/pull/2904) ([cyberw](https://github.com/cyberw))
+- Add Mongodb test example [\#2903](https://github.com/locustio/locust/pull/2903) ([guel-codes](https://github.com/guel-codes))
+
+## [2.31.6](https://github.com/locustio/locust/tree/2.31.6) (2024-09-15)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.5...2.31.6)
+
+**Fixed bugs:**
+
+- RPS vs Total Running Users [\#2895](https://github.com/locustio/locust/issues/2895)
+- Overwriting weight by config-users may lead to crash [\#2852](https://github.com/locustio/locust/issues/2852)
+- FastHttpSession requests typing for the json argument should support lists [\#2842](https://github.com/locustio/locust/issues/2842)
+- Dockerfile warning [\#2811](https://github.com/locustio/locust/issues/2811)
+
+**Closed issues:**
+
+- Cleaning up the build process [\#2857](https://github.com/locustio/locust/issues/2857)
+- Simplify GitHub Actions using install-poetry [\#2822](https://github.com/locustio/locust/issues/2822)
+
+**Merged pull requests:**
+
+- Add Error Message for Accessing Login Manager without --web-login [\#2902](https://github.com/locustio/locust/pull/2902) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Update Webui README [\#2901](https://github.com/locustio/locust/pull/2901) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add worker\_count = 1 to LocalRunner for parity with MasterRunner [\#2900](https://github.com/locustio/locust/pull/2900) ([tarkatronic](https://github.com/tarkatronic))
+- Remove redundant None in Any | None annotations [\#2892](https://github.com/locustio/locust/pull/2892) ([tdadela](https://github.com/tdadela))
+- Fix \_kl\_generator by filtering nonpositive User weights [\#2891](https://github.com/locustio/locust/pull/2891) ([tdadela](https://github.com/tdadela))
+- Update README.md [\#2889](https://github.com/locustio/locust/pull/2889) ([JonanOribe](https://github.com/JonanOribe))
+- Filename from URL Should Strip Query Params [\#2887](https://github.com/locustio/locust/pull/2887) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Simplify Generator annotations - PEP 696 [\#2886](https://github.com/locustio/locust/pull/2886) ([tdadela](https://github.com/tdadela))
+- Fix FastHttpSession.request json typing [\#2885](https://github.com/locustio/locust/pull/2885) ([tdadela](https://github.com/tdadela))
+
 ## [2.31.5](https://github.com/locustio/locust/tree/2.31.5) (2024-08-30)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.31.4...2.31.5)

@@ -4,11 +4,39 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.32.1
+======
+* Various WebUI fixes (most only relevant for https://locust.cloud)
+* LocustBadStatusCode without url param in fasthttp https://github.com/locustio/locust/pull/2944
+
+2.32.0
+======
+* Explicitly support Python 3.13 https://github.com/locustio/locust/pull/2939
+* Log deprecation warning for Python 3.9 https://github.com/locustio/locust/pull/2940
+* Decide if ipv6 can work (especially relevant for EKS) https://github.com/locustio/locust/pull/2923
+* Various minor fixes
+
+2.31.8
+======
+* Minor fixes, nothing worth mentioning.
+
+2.31.7
+======
+* Log locust version earlier https://github.com/locustio/locust/pull/2904
+* Improve Web UI Logging https://github.com/locustio/locust/pull/2911
+
+2.31.6
+======
+* Various documentation and type hint fixes.
+* Fix issue when using --config-users to set weight to 0 https://github.com/locustio/locust/pull/2891
+* Add worker_count = 1 to LocalRunner for parity with MasterRunner https://github.com/locustio/locust/pull/2900/files
+* Tiny WebUI fixes https://github.com/locustio/locust/pull/2901, https://github.com/locustio/locust/pull/2902
+
 2.31.5
 ======
-* WebUI: Correct types for form select by @andrewbaldwin44 in https://github.com/locustio/locust/pull/2872
-* Web UI Remove Scroll to Zoom by @andrewbaldwin44 in https://github.com/locustio/locust/pull/2876
-* Webui Remove chart initial data fetch by @andrewbaldwin44 in https://github.com/locustio/locust/pull/2878
+* WebUI: Correct types for form select https://github.com/locustio/locust/pull/2872
+* Web UI Remove Scroll to Zoom https://github.com/locustio/locust/pull/2876
+* Webui Remove chart initial data fetch https://github.com/locustio/locust/pull/2878
 * Improved Build Pipeline https://github.com/locustio/locust/pull/2873, https://github.com/locustio/locust/pull/2879, https://github.com/locustio/locust/pull/2880
 
 2.31.4
@@ -119,7 +147,7 @@ For full details of the Locust changelog, please see https://github.com/locustio
 * Web UI Modern Auth https://github.com/locustio/locust/pull/2538
 * Customization Feature for Percentile Display on Statistics Page https://github.com/locustio/locust/pull/2550
 * Allow User weight adjustment (and task selection) in UI when running with --class-picker, or on command line with --config-users argument https://github.com/locustio/locust/pull/2559
-* Optimize memory usage when using --processes by @cyberw in https://github.com/locustio/locust/pull/2564
+* Optimize memory usage when using --processes https://github.com/locustio/locust/pull/2564
 
 2.20.1
 ======
@@ -215,13 +243,13 @@ For full details of the Locust changelog, please see https://github.com/locustio
 
 2.13.1
 ======
-* Document har2locust (auto generation of locustfiles from browser recordings) by @cyberw in https://github.com/locustio/locust/pull/2259
+* Document har2locust (auto generation of locustfiles from browser recordings) https://github.com/locustio/locust/pull/2259
 * Dont reset connection to worker if master receives a corrupted zmq message by @marcinh in https://github.com/locustio/locust/pull/2266
 * Other minor fixes
 
 2.13.0
 ======
-* Add the ability to set default_headers on FastHttpUser by @cyberw in https://github.com/locustio/locust/pull/2231
+* Add the ability to set default_headers on FastHttpUser https://github.com/locustio/locust/pull/2231
 * Web UI: URL link on the host name for easy navigation by @JonanOribe in https://github.com/locustio/locust/pull/2228
 * Add support for time strings for --stop timeout (e.g. "5m30s") @cyberw in https://github.com/locustio/locust/pull/2239
 

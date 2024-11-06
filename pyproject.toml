@@ -26,6 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
     "Topic :: Software Development :: Testing",
@@ -112,7 +113,10 @@ version_tuple = __version_tuple__
 [tool.poetry.dependencies]
 python = ">=3.9"
 
-gevent = ">=22.10.2"
+gevent = [
+    { version = ">=22.10.2", python = "<=3.12" },
+    { version = ">=24.10.1", python = ">3.13" },
+]
 flask = ">=2.0.0"
 Werkzeug = ">=2.0.0"
 requests = [
@@ -144,7 +148,7 @@ twine = "^5.1.1"
 optional = true
 
 [tool.poetry.group.test.dependencies]
-cryptography = "^42.0.8"
+cryptography = "^43.0.1"
 pyquery = "^2.0.0"
 mock = "^5.1.0"
 mypy = "1.11.2"
@@ -152,6 +156,7 @@ retry = "^0.9.2"
 ruff = "0.3.7"
 tox = "^4.16.0"
 types-requests = "^2.32.0.20240622"
+pytest = "^8.3.3"
 
 [tool.poetry.group.docs]
 optional = true
@@ -174,6 +179,7 @@ sphinxcontrib-htmlhelp = "2.0.1"
 sphinxcontrib-jsmath = "1.0.1"
 sphinxcontrib-qthelp = "1.0.3"
 sphinxcontrib-serializinghtml = "1.1.10"
+sphinxcontrib-googleanalytics = ">=0.4"
 
 [tool.poetry.scripts]
 locust = "locust.main:main"

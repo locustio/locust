@@ -6,7 +6,6 @@ import {
   ScatterSeriesOption,
 } from 'echarts';
 
-import { CHART_THEME } from 'components/LineChart/LineChart.constants';
 import {
   ILineChart,
   ILineChartZoomEvent,
@@ -14,7 +13,6 @@ import {
 } from 'components/LineChart/LineChart.types';
 import { ICharts } from 'types/ui.types';
 import { formatLocaleString } from 'utils/date';
-import { padStart } from 'utils/number';
 
 export const getSeriesData = <ChartType>({
   charts,
@@ -56,15 +54,7 @@ const createYAxis = <ChartType>({
   } as YAXisComponentOption;
 };
 
-const formatTimeAxis = (value: string) => {
-  const date = new Date(value);
-
-  return [
-    padStart(date.getHours(), 2),
-    padStart(date.getMinutes(), 2),
-    padStart(date.getSeconds(), 2),
-  ].join(':');
-};
+const formatTimeAxis = (value: string) => new Date(value).toLocaleTimeString();
 
 const renderChartTooltipValue = <ChartType>({
   chartValueFormatter,
@@ -118,7 +108,8 @@ export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
   },
   xAxis: {
     type: 'time',
-    startValue: (charts.time || [''])[0],
+    min: (charts.time || [new Date().toISOString()])[0],
+    startValue: (charts.time || [])[0],
     axisLabel: {
       formatter: formatTimeAxis,
     },
@@ -150,16 +141,12 @@ export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
   },
 });
 
-export const createMarkLine = <ChartType extends Pick<ICharts, 'markers'>>(
-  charts: ChartType,
-  isDarkMode: boolean,
-) => ({
+export const createMarkLine = <ChartType extends Pick<ICharts, 'markers'>>(charts: ChartType) => ({
   symbol: 'none',
   label: {
     formatter: (params: DefaultLabelFormatterCallbackParams) => `Run #${params.dataIndex + 1}`,
     padding: [0, 0, 8, 0],
   },
-  lineStyle: { color: isDarkMode ? CHART_THEME.DARK.axisColor : CHART_THEME.LIGHT.axisColor },
   data: (charts.markers || []).map((timeMarker: string) => ({ xAxis: timeMarker })),
 });
 

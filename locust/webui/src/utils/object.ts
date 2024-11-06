@@ -8,7 +8,11 @@ export function shallowMerge<ObjectA, ObjectB>(objectA: ObjectA, objectB: Object
   };
 }
 
-export const createFormData = (inputData: { [key: string]: string | string[] }) => {
+export const createFormData = <
+  IInputdata extends Record<string, any> = { [key: string]: string | string[] },
+>(
+  inputData: IInputdata,
+) => {
   const formData = new URLSearchParams();
 
   for (const [key, value] of Object.entries(inputData)) {

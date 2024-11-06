@@ -4,7 +4,7 @@ Further reading / knowledgebase
 
 - :ref:`extensions`.
 
-- An unmaintained list of Locust `articles, blog posts, reviews, and walkthroughs <https://github.com/orgs/locustio/discussions/2752>`_.
+- An list of Locust `articles, blog posts, reviews, and walkthroughs <https://github.com/orgs/locustio/discussions/2752>`_.
 
 - :ref:`Common questions and answers about Locust <faq>`.
 

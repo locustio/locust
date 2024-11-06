@@ -34,8 +34,3 @@ official Locust docker image as a base image::
 
     FROM locustio/locust
     RUN pip3 install some-python-package
-
-Running Locust using Kubernetes
-===============================
-
-See :ref:`Helm charts for Locust <helm>`

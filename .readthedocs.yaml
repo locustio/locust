@@ -6,6 +6,8 @@ build:
   tools:
     python: "3.11"
   jobs:
+    post_checkout:
+      - git fetch --unshallow || true
     post_create_environment:
       - python -m pip install poetry
       - python -m poetry self add "poetry-dynamic-versioning[plugin]"

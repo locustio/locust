@@ -55,7 +55,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.stats = self.environment.stats
 
         self.web_ui = self.environment.create_web_ui("127.0.0.1", 0)
-        self.web_ui.app.view_functions["request_stats"].clear_cache()
+        self.web_ui.app.view_functions["locust.request_stats"].clear_cache()
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
 
@@ -148,7 +148,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         data = json.loads(requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).text)
         self.assertEqual(2, len(data["stats"]))  # old value should be cached now
 
-        self.web_ui.app.view_functions["request_stats"].clear_cache()
+        self.web_ui.app.view_functions["locust.request_stats"].clear_cache()
 
         data = json.loads(requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).text)
         self.assertEqual(3, len(data["stats"]))  # this should no longer be cached
@@ -1208,7 +1208,7 @@ class TestWebUIFullHistory(LocustTestCase, _HeaderCheckMixin):
             self.environment, stats.PERCENTILES_TO_REPORT, self.STATS_BASE_NAME, full_history=True
         )
         self.web_ui = self.environment.create_web_ui("127.0.0.1", 0, stats_csv_writer=self.stats_csv_writer)
-        self.web_ui.app.view_functions["request_stats"].clear_cache()
+        self.web_ui.app.view_functions["locust.request_stats"].clear_cache()
         gevent.sleep(0.01)
         self.web_port = self.web_ui.server.server_port
 

@@ -3,8 +3,9 @@
 Installation
 ============
 
-Using system-installed Python and pip
--------------------------------------
+.. note::
+
+    Check `Troubleshooting Installation`_ if you encounter issues.
 
 0. `Install Python <https://docs.python-guide.org/starting/installation/>`_ (if you dont already have it)
 
@@ -23,8 +24,8 @@ Using system-installed Python and pip
     locust |version| from /usr/local/lib/python3.12/site-packages/locust (Python 3.12.5)
 
 
-Using uvx
----------
+Using uvx (alternative)
+-----------------------
 
 0. `Install uv <https://github.com/astral-sh/uv?tab=readme-ov-file#installation>`_
 
@@ -35,11 +36,6 @@ Using uvx
 
     $ uvx locust -V
     locust |version| from /.../uv/.../locust (Python 3.12.5)
-
-.. note::
-
-    Check `Troubleshooting Installation`_ if you encounter issues.
-
 
 Done!
 -----

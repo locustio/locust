@@ -169,6 +169,7 @@ class Environment:
         self,
         host="",
         port=8089,
+        web_base_path: str | None = None,
         web_login: bool = False,
         tls_cert: str | None = None,
         tls_key: str | None = None,
@@ -203,6 +204,7 @@ class Environment:
             delayed_start=delayed_start,
             userclass_picker_is_active=userclass_picker_is_active,
             build_path=build_path,
+            web_base_path=web_base_path,
         )
         return self.web_ui
 

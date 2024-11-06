@@ -137,13 +137,14 @@ source code.
 Adding Authentication to the Web UI
 ===================================
 
-Locust uses `Flask-Login <https://pypi.org/project/Flask-Login/>`_ to handle authentication. The ``login_manager`` is
-exposed on ``environment.web_ui.app``, allowing the flexibility for you to implement any kind of auth that you would like!
+Locust uses `Flask-Login <https://pypi.org/project/Flask-Login/>`_ to handle authentication when the ``--web-login`` flag is present.
+The ``login_manager`` is exposed on ``environment.web_ui.app``, allowing the flexibility for you to implement any kind of auth that
+you would like!
 
 To use username / password authentication, simply provide a ``username_password_callback`` to the ``environment.web_ui.auth_args``.
 You are responsible for defining the route for the callback and implementing the authentication.
 
-Authentication providers can additionally be configured to allow authentication from 3rd parties such as GitHub or an SSO.
+Authentication providers can additionally be configured to allow authentication from 3rd parties such as GitHub or an SSO provider.
 Simply provide a list of desired ``auth_providers``. You may specify the ``label`` and ``icon`` for display on the button.
 The ``callback_url`` will be the url that the button directs to. You will be responsible for defining the callback route as
 well as the authentication with the 3rd party.
@@ -152,7 +153,19 @@ Whether you are using username / password authentication, an auth provider, or b
 to the ``login_manager``. The ``user_loader`` should return ``None`` to deny authentication or return a User object when
 authentication to the app should be granted.
 
-A full example can be seen `in the auth example <https://github.com/locustio/locust/tree/master/examples/web_ui_auth.py>`_.
+To display errors on the login page, such as an incorrect username / password combination, you may store the ``auth_error``
+on the session object: ``session["auth_error"] = "Incorrect username or password"``. If you have non-erroneous information
+you would like to display to the user, you can opt instead to set ``auth_info`` on the session object:
+``session["auth_info"] = "Successfully created new user!"``
+
+A full example can be seen `in the auth example <https://github.com/locustio/locust/tree/master/examples/web_ui_auth/basic.py>`_.
+
+In certain situations you may wish to further extend the fields present in the auth form. To achieve this, pass a ``custom_form`` dict
+to the ``environment.web_ui.auth_args``. In this case, the fields will be represented by a list of ``inputs``, the callback url is
+configured by the ``custom_form.callback_url``, and the submit button may optionally be configured using the ``custom_form.submit_button_text``.
+The fields in the auth form may be a text, select, checkbox, or secret password field.
+
+For a full example see `configuring the custom_form in the auth example <https://github.com/locustio/locust/tree/master/examples/web_ui_auth/custom_form.py>`_.
 
 
 Run a background greenlet

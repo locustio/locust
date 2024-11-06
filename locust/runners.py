@@ -437,6 +437,7 @@ class LocalRunner(Runner):
         # but it makes it easier to write tests that work for both local and distributed runs
         self.worker_index = 0
         self.client_id = socket.gethostname() + "_" + uuid4().hex
+        self.worker_count = 1
         # Only when running in standalone mode (non-distributed)
         self._local_worker_node = WorkerNode(id="local")
         self._local_worker_node.user_classes_count = self.user_classes_count
@@ -1018,7 +1019,7 @@ class MasterRunner(DistributedRunner):
                         # TODO: Test this situation
                         self.start(self.target_user_count, self.spawn_rate)
                 logger.info(
-                    f"Worker {client_id} (index {self.get_worker_index(client_id)}) reported as ready. {len(self.clients.ready + self.clients.running + self.clients.spawning)} workers connected."
+                    f"{client_id} (index {self.get_worker_index(client_id)}) reported as ready. {len(self.clients.ready + self.clients.running + self.clients.spawning)} workers connected."
                 )
                 if self.rebalancing_enabled() and self.state == STATE_RUNNING and self.spawning_completed:
                     self.start(self.target_user_count, self.spawn_rate)
@@ -1078,9 +1079,7 @@ class MasterRunner(DistributedRunner):
                     if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
                         # TODO: Test this situation
                         self.start(self.target_user_count, self.spawn_rate)
-                logger.info(
-                    f"Worker {msg.node_id} (index {self.get_worker_index(client_id)}) reported that it has stopped, removing from running workers"
-                )
+                logger.info(f"{msg.node_id} (index {self.get_worker_index(client_id)}) reported that it has stopped")
             elif msg.type == "heartbeat":
                 if msg.node_id in self.clients:
                     c = self.clients[msg.node_id]
@@ -1217,6 +1216,7 @@ class WorkerRunner(DistributedRunner):
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.master_host = master_host
         self.master_port = master_port
+        self.web_base_path = environment.parsed_options.web_base_path if environment.parsed_options else ""
         self.logs: list[str] = []
         self.worker_cpu_warning_emitted = False
         self._users_dispatcher: UsersDispatcher | None = None
@@ -1476,11 +1476,11 @@ class WorkerRunner(DistributedRunner):
         if not success:
             if self.retry < 3:
                 logger.debug(
-                    f"Failed to connect to master {self.master_host}:{self.master_port}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
+                    f"Failed to connect to master {self.master_host}:{self.master_port}{self.web_base_path}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
                 )
             else:
                 logger.warning(
-                    f"Failed to connect to master {self.master_host}:{self.master_port}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
+                    f"Failed to connect to master {self.master_host}:{self.master_port}{self.web_base_path}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
                 )
             if self.retry > CONNECT_RETRY_COUNT:
                 raise ConnectionError()

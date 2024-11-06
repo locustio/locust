@@ -26,7 +26,7 @@ describe('HtmlReport', () => {
       getByText(
         `${formatLocaleString(swarmReportMock.startTime)} - ${formatLocaleString(
           swarmReportMock.endTime,
-        )}`,
+        )} (${swarmReportMock.duration})`,
       ),
     ).toBeTruthy();
   });

@@ -5,6 +5,7 @@ import locust
 import atexit
 import errno
 import gc
+import importlib.metadata
 import inspect
 import json
 import logging
@@ -44,7 +45,10 @@ except ModuleNotFoundError as e:
         raise
 try:
     import locust_cloud  # pyright: ignore[reportMissingImports]
+
+    locust_cloud_version = f" (locust-cloud {importlib.metadata.version('locust-cloud')})"
 except ModuleNotFoundError as e:
+    locust_cloud_version = ""
     if e.msg != "No module named 'locust_cloud'":
         raise
 
@@ -201,6 +205,9 @@ def main():
             sys.exit(1)
 
     children = []
+    logger = logging.getLogger(__name__)
+
+    logger.info(f"Starting Locust {version}{locust_cloud_version}")
 
     if options.processes:
         if os.name == "nt":
@@ -233,6 +240,8 @@ def main():
                 # remove options that dont make sense on worker
                 options.run_time = None
                 options.autostart = None
+                options.csv_prefix = None
+                options.html_file = None
                 break
         else:
             # we're in the parent process
@@ -300,8 +309,10 @@ def main():
 
                 atexit.register(kill_workers, children)
 
-    logger = logging.getLogger(__name__)
     greenlet_exception_handler = greenlet_exception_logger(logger)
+
+    if sys.version_info < (3, 10):
+        logger.warning("Python 3.9 support is deprecated and will be removed soon")
 
     if options.stop_timeout:
         try:
@@ -445,7 +456,9 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     elif options.worker:
         try:
             runner = environment.create_worker_runner(options.master_host, options.master_port)
-            logger.debug("Connected to locust master: %s:%s", options.master_host, options.master_port)
+            logger.debug(
+                "Connected to locust master: %s:%s%s", options.master_host, options.master_port, options.web_base_path
+            )
         except OSError as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
@@ -481,24 +494,32 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     if not options.headless and not options.worker:
         protocol = "https" if options.tls_cert and options.tls_key else "http"
 
+        if options.web_base_path and options.web_base_path[0] != "/":
+            logger.error(
+                f"Invalid format for --web-base-path argument ({options.web_base_path}): the url path must start with a slash."
+            )
+            sys.exit(1)
         if options.web_host == "*":
             # special check for "*" so that we're consistent with --master-bind-host
             web_host = ""
         else:
             web_host = options.web_host
         if web_host:
-            logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
+            logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}{options.web_base_path}")
+        if options.web_host_display_name:
+            logger.info(f"Starting web interface at {options.web_host_display_name}")
         else:
             if os.name == "nt":
                 logger.info(
-                    f"Starting web interface at {protocol}://localhost:{options.web_port} (accepting connections from all network interfaces)"
+                    f"Starting web interface at {protocol}://localhost:{options.web_port}{options.web_base_path} (accepting connections from all network interfaces)"
                 )
             else:
-                logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}")
+                logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}{options.web_base_path}")
 
         web_ui = environment.create_web_ui(
             host=web_host,
             port=options.web_port,
+            web_base_path=options.web_base_path,
             web_login=options.web_login,
             tls_cert=options.tls_cert,
             tls_key=options.tls_key,
@@ -511,10 +532,10 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         web_ui = None
 
     if options.autostart and options.headless:
-        logger.warning("The --autostart argument is implied by --headless, no need to set both.")
+        logger.info("The --autostart argument is implied by --headless, no need to set both.")
 
     if options.autostart and options.worker:
-        logger.warning("The --autostart argument has no meaning on a worker.")
+        logger.info("The --autostart argument has no meaning on a worker.")
 
     def assign_equal_weights(environment, **kwargs):
         environment.assign_equal_weights()
@@ -688,7 +709,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     gevent.signal_handler(signal.SIGTERM, sig_term_handler)
 
     try:
-        logger.info(f"Starting Locust {version}")
         if options.class_picker:
             logger.info("Locust is running with the UserClass Picker Enabled")
         if options.autostart and not options.headless:

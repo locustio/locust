@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
+import { IStartSwarmResponse, ISwarmFormInput } from 'types/swarm.types';
 import {
   IStatsResponse,
   ISwarmExceptionsResponse,
@@ -29,7 +30,7 @@ export const api = createApi({
       transformResponse: camelCaseKeys<ILogsResponse>,
     }),
 
-    startSwarm: builder.mutation({
+    startSwarm: builder.mutation<IStartSwarmResponse, ISwarmFormInput>({
       query: body => ({
         url: 'swarm',
         method: 'POST',

@@ -56,7 +56,7 @@ jobs:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        # if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root --no-plugins
 
       # Install node and yarn in order to build the front end during packaging  
@@ -94,17 +94,17 @@ jobs:
       
       # Set workflow metadata in one place so we can pull it out later
       - id: set_tag
-        run: echo "tag=$(poetry version -s)" >> "$GITHUB_OUTPUT"
+        run: echo "tag=$(poetry version -s)" | tee -a "$GITHUB_OUTPUT"
       - id: set_tag_short
-        run: echo "tag_short=$(poetry version -s | cut -d '.' -f1-3)" >> "$GITHUB_OUTPUT"
+        run: echo "tag_short=$(poetry version -s | cut -d '.' -f1-3)" | tee -a "$GITHUB_OUTPUT"
       - id: set_branch
-        run: echo "branch=${{ github.head_ref || github.ref_name }}" >> "$GITHUB_OUTPUT"
+        run: echo "branch=${{ github.head_ref || github.ref_name }}" | tee -a "$GITHUB_OUTPUT"
       - id: set_is_merge_commit
-        run: echo "is_merge_commit=$( [ $(git rev-list --count $GITHUB_SHA^@) -eq 2 ] && echo 'true' || echo 'false' )" >> "$GITHUB_OUTPUT"
+        run: echo "is_merge_commit=$( [ $(git rev-list --count $GITHUB_SHA^@) -eq 2 ] && echo 'true' || echo 'false' )" | tee -a "$GITHUB_OUTPUT"
       - id: set_is_tag_build
-        run: echo "is_tag_build=${{ startsWith(github.event.ref, 'refs/tags') }}" >> "$GITHUB_OUTPUT"
+        run: echo "is_tag_build=${{ startsWith(github.event.ref, 'refs/tags') }}" | tee -a "$GITHUB_OUTPUT"
       - id: set_python_version
-        run: echo "python_version=$(python -VV | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+        run: echo "python_version=$(python -VV | sha256sum | cut -d' ' -f1)" | tee -a "$GITHUB_OUTPUT"
 
   print_metadata:
     name: Display metadata for build
@@ -133,22 +133,23 @@ jobs:
       matrix:
         include:
           # Static analysis and utilities
-          - { name: "Ruff", python: "3.11", os: ubuntu-latest, tox: "ruff" }
-          - { name: "Mypy", python: "3.10", os: ubuntu-latest, tox: "mypy" }
+          - { name: "Ruff", python: "3.12.5", os: ubuntu-latest, tox: "ruff" }
+          - { name: "Mypy", python: "3.12.5", os: ubuntu-latest, tox: "mypy" }
 
           # Verification of builds and other aspects          
-          - { name: "Docs Build", python: "3.10", os: ubuntu-latest, tox: "docs" }
+          - { name: "Docs Build", python: "3.12.5", os: ubuntu-latest, tox: "docs" }
 
           # OS Integration tests 
-          - { name: "Linux", python: "3.12", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
-          - { name: "Windows", python: '3.12', os: windows-latest, tox: fail_fast_test_main_external_package }
-          - { name: "MacOS", python: '3.12', os: macos-latest, tox: fail_fast_test_main_external_package }
+          - { name: "Linux", python: "3.12.5", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
+          - { name: "Windows", python: '3.12.5', os: windows-latest, tox: fail_fast_test_main_external_package }
+          - { name: "MacOS", python: '3.12.5', os: macos-latest, tox: fail_fast_test_main_external_package }
           
           # Unit tests on Python versions
-          - { name: "Python 3.12", python: "3.12", os: ubuntu-latest, tox: py312 }
-          - { name: "Python 3.11", python: "3.11", os: ubuntu-latest, tox: py311 }
-          - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, tox: py310 }
-          - { name: "Python 3.9", python: "3.9", os: ubuntu-latest, tox: py39 }
+          - { name: "Python 3.13", python: "3.13.0", os: ubuntu-latest, tox: py313 }
+          - { name: "Python 3.12", python: "3.12.5", os: ubuntu-latest, tox: py312 }
+          - { name: "Python 3.11", python: "3.11.9", os: ubuntu-latest, tox: py311 }
+          - { name: "Python 3.10", python: "3.10.14", os: ubuntu-latest, tox: py310 }
+          - { name: "Python 3.9", python: "3.9.20", os: ubuntu-latest, tox: py39 }
 
     steps:
       - uses: actions/checkout@v4
@@ -180,7 +181,7 @@ jobs:
           path: .venv
           key: venv-tox-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        # if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root --with test,docs --no-plugins
 
       # Grab the built artifacts to ensure we're testing what we eventually publish

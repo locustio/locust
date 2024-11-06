@@ -66,7 +66,8 @@ For Locust to be able to pass data to your React frontend, place the following s
 
 To load the favicon, place the link in your head:
 ```html
-<link rel="icon" href="./assets/favicon.png" />
+<link rel="shortcut icon" href="./assets/favicon-light.png" media="(prefers-color-scheme: light)">
+<link rel="shortcut icon" href="./assets/favicon-dark.png" media="(prefers-color-scheme: dark)">
 ```
 
 Lastly, you must configure Locust to point to your own React build output. To achieve this, you can use the flag `--build-path` and provide the **absolute** path to your build directory.

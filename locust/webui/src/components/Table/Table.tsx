@@ -7,8 +7,8 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
-import Markdown from 'react-markdown';
 
+import Markdown from 'components/Markdown/Markdown';
 import useSortByField, { ISortByFieldOptions } from 'hooks/useSortByField';
 import { ITableStructure } from 'types/table.types';
 import { roundToDecimalPlaces } from 'utils/number';
@@ -44,7 +44,7 @@ function TableRowContent({ content, formatter, round, markdown }: ITableRowConte
   }
 
   if (markdown) {
-    return <Markdown skipHtml={false}>{content as string}</Markdown>;
+    return <Markdown content={content as string} />;
   }
 
   return content;
