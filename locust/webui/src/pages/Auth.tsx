@@ -6,6 +6,7 @@ import Logo from 'assets/Logo';
 import CustomInput from 'components/Form/CustomInput';
 import PasswordField from 'components/Form/PasswordField';
 import DarkLightToggle from 'components/Layout/Navbar/DarkLightToggle';
+import Markdown from 'components/Markdown/Markdown';
 import useCreateTheme from 'hooks/useCreateTheme';
 import { IAuthArgs } from 'types/auth.types';
 
@@ -50,7 +51,7 @@ export default function Auth({
             <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2 }}>
               <TextField label='Username' name='username' />
               <PasswordField />
-              {info && <Alert severity='info'>{info}</Alert>}
+              {info && <Alert severity='info'>{<Markdown content={info} />}</Alert>}
               {error && <Alert severity='error'>{error}</Alert>}
               <Button size='large' type='submit' variant='contained'>
                 Login
@@ -64,7 +65,7 @@ export default function Auth({
               {customForm.inputs.map((inputProps, index) => (
                 <CustomInput key={`custom-form-input-${index}`} {...inputProps} />
               ))}
-              {info && <Alert severity='info'>{info}</Alert>}
+              {info && <Alert severity='info'>{<Markdown content={info} />}</Alert>}
               {error && <Alert severity='error'>{error}</Alert>}
               <Button size='large' type='submit' variant='contained'>
                 {customForm.submitButtonText || 'Login'}
