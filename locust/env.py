@@ -106,8 +106,9 @@ class Environment:
         self.worker_logs: dict[str, list[str]] = {}
         """Captured logs from all connected workers"""
 
-        for user_dict in override_user_weights:
-            self.update_user_class(user_dict)
+        if override_user_weights:
+            for user_dict in override_user_weights:
+                self.update_user_class(user_dict)
 
         self._remove_user_classes_with_weight_zero()
         self._validate_user_class_name_uniqueness()
