@@ -585,11 +585,12 @@ class TestCsvStats(LocustTestCase):
     def test_stats_history(self):
         env1 = Environment(events=locust.events, catch_exceptions=False)
         runner1 = env1.create_master_runner("127.0.0.1", 5558)
+        runner1.state = "running"
         env2 = Environment(events=locust.events, catch_exceptions=False)
         runner2 = env2.create_worker_runner("127.0.0.1", 5558)
         greenlet1 = gevent.spawn(stats_history, runner1)
         greenlet2 = gevent.spawn(stats_history, runner2)
-        gevent.sleep(1)
+        gevent.sleep(0.1)
         hs1 = runner1.stats.history
         hs2 = runner2.stats.history
         gevent.kill(greenlet1)

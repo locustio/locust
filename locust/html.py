@@ -53,7 +53,8 @@ def get_html_report(
         {**exc, "nodes": ", ".join(exc["nodes"])} for exc in environment.runner.exceptions.values()
     ]
 
-    update_stats_history(environment.runner)
+    if stats.history and stats.history[-1]["time"] < end_time:
+        update_stats_history(environment.runner, end_time)
     history = stats.history
 
     is_distributed = isinstance(environment.runner, MasterRunner)

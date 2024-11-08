@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.32.2
+======
+* Better html report file names https://github.com/locustio/locust/pull/2947
+* Fix Incorrectly Updating Stat History https://github.com/locustio/locust/pull/2972
+* Various WebUI fixes (most only relevant for https://locust.cloud)
+
 2.32.1
 ======
 * Various WebUI fixes (most only relevant for https://locust.cloud)
