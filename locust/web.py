@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, TypedDict
 
 import gevent
 from flask import (
+    Blueprint,
     Flask,
     Response,
     jsonify,
@@ -120,6 +121,7 @@ class WebUI:
         environment: Environment,
         host: str,
         port: int,
+        web_base_path: str | None = None,
         web_login: bool = False,
         tls_cert: str | None = None,
         tls_key: str | None = None,
@@ -161,20 +163,21 @@ class WebUI:
         self.auth_args = {}
         self.app.template_folder = build_path or DEFAULT_BUILD_PATH
         self.app.static_url_path = "/assets/"
+
+        app_blueprint = Blueprint("locust", __name__, url_prefix=web_base_path)
         # ensures static js files work on Windows
         mimetypes.add_type("application/javascript", ".js")
-
         if self.web_login:
             self._login_manager = LoginManager()
             self._login_manager.init_app(self.app)
-            self._login_manager.login_view = "login"
+            self._login_manager.login_view = "locust.login"
 
         if environment.runner:
             self.update_template_args()
         if not delayed_start:
             self.start()
 
-        @app.errorhandler(Exception)
+        @app_blueprint.errorhandler(Exception)
         def handle_exception(error):
             error_message = str(error)
             error_code = getattr(error, "code", 500)
@@ -184,7 +187,7 @@ class WebUI:
             )
             return make_response(error_message, error_code)
 
-        @app.route("/assets/<path:path>")
+        @app_blueprint.route("/assets/<path:path>")
         def send_assets(path):
             directory = (
                 os.path.join(self.app.template_folder, "assets")
@@ -194,7 +197,7 @@ class WebUI:
 
             return send_from_directory(directory, path)
 
-        @app.route("/")
+        @app_blueprint.route("/")
         @self.auth_required_if_enabled
         def index() -> str | Response:
             if not environment.runner:
@@ -203,7 +206,7 @@ class WebUI:
 
             return render_template("index.html", template_args=self.template_args)
 
-        @app.route("/swarm", methods=["POST"])
+        @app_blueprint.route("/swarm", methods=["POST"])
         @self.auth_required_if_enabled
         def swarm() -> Response:
             assert request.method == "POST"
@@ -317,7 +320,7 @@ class WebUI:
             else:
                 return jsonify({"success": False, "message": "No runner", "host": environment.host})
 
-        @app.route("/stop")
+        @app_blueprint.route("/stop")
         @self.auth_required_if_enabled
         def stop() -> Response:
             if self._swarm_greenlet is not None:
@@ -327,7 +330,7 @@ class WebUI:
                 environment.runner.stop()
             return jsonify({"success": True, "message": "Test stopped"})
 
-        @app.route("/stats/reset")
+        @app_blueprint.route("/stats/reset")
         @self.auth_required_if_enabled
         def reset_stats() -> str:
             environment.events.reset_stats.fire()
@@ -336,7 +339,7 @@ class WebUI:
                 environment.runner.exceptions = {}
             return "ok"
 
-        @app.route("/stats/report")
+        @app_blueprint.route("/stats/report")
         @self.auth_required_if_enabled
         def stats_report() -> Response:
             theme = request.args.get("theme", "")
@@ -382,7 +385,7 @@ class WebUI:
             )
             return response
 
-        @app.route("/stats/requests/csv")
+        @app_blueprint.route("/stats/requests/csv")
         @self.auth_required_if_enabled
         def request_stats_csv() -> Response:
             data = StringIO()
@@ -390,7 +393,7 @@ class WebUI:
             self.stats_csv_writer.requests_csv(writer)
             return _download_csv_response(data.getvalue(), "requests")
 
-        @app.route("/stats/requests_full_history/csv")
+        @app_blueprint.route("/stats/requests_full_history/csv")
         @self.auth_required_if_enabled
         def request_stats_full_history_csv() -> Response:
             options = self.environment.parsed_options
@@ -408,7 +411,7 @@ class WebUI:
 
             return make_response("Error: Server was not started with option to generate full history.", 404)
 
-        @app.route("/stats/failures/csv")
+        @app_blueprint.route("/stats/failures/csv")
         @self.auth_required_if_enabled
         def failures_stats_csv() -> Response:
             data = StringIO()
@@ -416,7 +419,7 @@ class WebUI:
             self.stats_csv_writer.failures_csv(writer)
             return _download_csv_response(data.getvalue(), "failures")
 
-        @app.route("/stats/requests")
+        @app_blueprint.route("/stats/requests")
         @self.auth_required_if_enabled
         @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
         def request_stats() -> Response:
@@ -486,7 +489,7 @@ class WebUI:
 
             return jsonify(report)
 
-        @app.route("/exceptions")
+        @app_blueprint.route("/exceptions")
         @self.auth_required_if_enabled
         def exceptions() -> Response:
             return jsonify(
@@ -503,7 +506,7 @@ class WebUI:
                 }
             )
 
-        @app.route("/exceptions/csv")
+        @app_blueprint.route("/exceptions/csv")
         @self.auth_required_if_enabled
         def exceptions_csv() -> Response:
             data = StringIO()
@@ -511,7 +514,7 @@ class WebUI:
             self.stats_csv_writer.exceptions_csv(writer)
             return _download_csv_response(data.getvalue(), "exceptions")
 
-        @app.route("/tasks")
+        @app_blueprint.route("/tasks")
         @self.auth_required_if_enabled
         def tasks() -> dict[str, dict[str, dict[str, float]]]:
             runner = self.environment.runner
@@ -531,15 +534,15 @@ class WebUI:
             }
             return task_data
 
-        @app.route("/logs")
+        @app_blueprint.route("/logs")
         @self.auth_required_if_enabled
         def logs():
             return jsonify({"master": get_logs(), "workers": self.environment.worker_logs})
 
-        @app.route("/login")
+        @app_blueprint.route("/login")
         def login():
             if not self.web_login:
-                return redirect(url_for("index"))
+                return redirect(url_for("locust.index"))
 
             self.auth_args["error"] = session.get("auth_error", None)
             self.auth_args["info"] = session.get("auth_info", None)
@@ -549,7 +552,7 @@ class WebUI:
                 auth_args=self.auth_args,
             )
 
-        @app.route("/user", methods=["POST"])
+        @app_blueprint.route("/user", methods=["POST"])
         def update_user():
             assert request.method == "POST"
 
@@ -557,6 +560,8 @@ class WebUI:
             self.environment.update_user_class(user_settings)
 
             return {}, 201
+
+        app.register_blueprint(app_blueprint)
 
     @property
     def login_manager(self):

@@ -2,6 +2,7 @@ import { Checkbox, FormControlLabel, TextField } from '@mui/material';
 
 import PasswordField from 'components/Form/PasswordField';
 import Select from 'components/Form/Select';
+import Markdown from 'components/Markdown/Markdown';
 import { ICustomInput } from 'types/form.types';
 
 export default function CustomInput({
@@ -27,7 +28,7 @@ export default function CustomInput({
     return (
       <FormControlLabel
         control={<Checkbox defaultChecked={defaultValue} />}
-        label={label}
+        label={<Markdown content={label} />}
         name={name}
       />
     );

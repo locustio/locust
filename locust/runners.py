@@ -1216,6 +1216,7 @@ class WorkerRunner(DistributedRunner):
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.master_host = master_host
         self.master_port = master_port
+        self.web_base_path = environment.parsed_options.web_base_path if environment.parsed_options else ""
         self.logs: list[str] = []
         self.worker_cpu_warning_emitted = False
         self._users_dispatcher: UsersDispatcher | None = None
@@ -1475,11 +1476,11 @@ class WorkerRunner(DistributedRunner):
         if not success:
             if self.retry < 3:
                 logger.debug(
-                    f"Failed to connect to master {self.master_host}:{self.master_port}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
+                    f"Failed to connect to master {self.master_host}:{self.master_port}{self.web_base_path}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
                 )
             else:
                 logger.warning(
-                    f"Failed to connect to master {self.master_host}:{self.master_port}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
+                    f"Failed to connect to master {self.master_host}:{self.master_port}{self.web_base_path}, retry {self.retry}/{CONNECT_RETRY_COUNT}."
                 )
             if self.retry > CONNECT_RETRY_COUNT:
                 raise ConnectionError()
