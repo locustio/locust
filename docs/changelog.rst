@@ -6,6 +6,11 @@ For full details of the Locust changelog, please see https://github.com/locustio
 
 2.32.1
 ======
+* Better html report file names https://github.com/locustio/locust/pull/2947
+* Various WebUI fixes (most only relevant for https://locust.cloud)
+
+2.32.1
+======
 * Various WebUI fixes (most only relevant for https://locust.cloud)
 * LocustBadStatusCode without url param in fasthttp https://github.com/locustio/locust/pull/2944
 
