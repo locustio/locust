@@ -4,7 +4,7 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
-2.32.1
+2.32.2
 ======
 * Better html report file names https://github.com/locustio/locust/pull/2947
 * Fix Incorrectly Updating Stat History https://github.com/locustio/locust/pull/2972
