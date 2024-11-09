@@ -574,10 +574,11 @@ class DistributedRunner(Runner):
 
 
 class WorkerNode:
-    def __init__(self, id: str, state=STATE_INIT, heartbeat_liveness=HEARTBEAT_LIVENESS) -> None:
+    def __init__(self, id: str, state=STATE_INIT, heartbeat_liveness: int = HEARTBEAT_LIVENESS) -> None:
         self.id: str = id
         self.state = state
-        self.heartbeat = heartbeat_liveness
+        self.heartbeat: int = heartbeat_liveness
+        self.heartbeat_liveness: int = heartbeat_liveness
         self.cpu_usage: int = 0
         self.cpu_warning_emitted = False
         self.memory_usage: int = 0
@@ -1083,7 +1084,7 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "heartbeat":
                 if msg.node_id in self.clients:
                     c = self.clients[msg.node_id]
-                    c.heartbeat = HEARTBEAT_LIVENESS
+                    c.heartbeat = c.heartbeat_liveness
                     client_state = msg.data["state"]
                     if c.state == STATE_MISSING:
                         logger.info(f"Worker {str(c.id)} self-healed with heartbeat, setting state to {client_state}.")
