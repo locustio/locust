@@ -295,8 +295,7 @@ class Environment:
     def _validate_shape_class_instance(self):
         if self.shape_class is not None and not isinstance(self.shape_class, LoadTestShape):
             raise ValueError(
-                "shape_class should be instance of LoadTestShape or subclass LoadTestShape, but got: %s"
-                % self.shape_class
+                f"shape_class should be instance of LoadTestShape or subclass LoadTestShape, but got: {self.shape_class}"
             )
 
     @property
