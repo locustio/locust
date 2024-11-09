@@ -439,7 +439,7 @@ class LocalRunner(Runner):
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.worker_count = 1
         # Only when running in standalone mode (non-distributed)
-        self._local_worker_node = WorkerNode(id="local")
+        self._local_worker_node = WorkerNode(id="local", heartbeat_liveness=HEARTBEAT_LIVENESS)
         self._local_worker_node.user_classes_count = self.user_classes_count
 
         # register listener that's logs the exception for the local runner
