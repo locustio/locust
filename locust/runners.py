@@ -1025,7 +1025,9 @@ class MasterRunner(DistributedRunner):
                 # if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
             elif msg.type == "locustfile":
-                if msg.data["version"][0:4] == __version__[0:4]:
+                if not msg.data["version"]:
+                    logger.error("A very old worker version requested locustfile. This probably won't work.")
+                elif msg.data["version"][0:4] == __version__[0:4]:
                     logger.debug(
                         f"A worker ({msg.node_id}) running a different patch version ({msg.data['version']}) connected, master version is {__version__}"
                     )
