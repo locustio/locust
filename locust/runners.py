@@ -248,7 +248,7 @@ class Runner:
                         "While stopping users, we encountered a user that didn't have proper args %s", user_greenlet
                     )
                     continue
-                if type(user) == self.user_classes_by_name[user_class]:
+                if type(user) is self.user_classes_by_name[user_class]:
                     to_stop.append(user)
 
             if not to_stop:
