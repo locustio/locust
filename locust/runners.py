@@ -217,7 +217,7 @@ class Runner:
                 n += 1
                 if n % 10 == 0 or n == spawn_count:
                     logger.debug("%i users spawned" % self.user_count)
-            logger.debug("All users of class %s spawned" % user_class)
+            logger.debug(f"All users of class {user_class} spawned")
             return new_users
 
         new_users: list[User] = []
@@ -256,7 +256,7 @@ class Runner:
 
             while True:
                 user_to_stop: User = to_stop.pop()
-                logger.debug("Stopping %s" % user_to_stop.greenlet.name)
+                logger.debug(f"Stopping {user_to_stop.greenlet.name}")
                 if user_to_stop.greenlet is greenlet.getcurrent():
                     # User called runner.quit(), so don't block waiting for killing to finish
                     user_to_stop.group.killone(user_to_stop.greenlet, block=False)
@@ -272,8 +272,7 @@ class Runner:
 
         if not stop_group.join(timeout=self.environment.stop_timeout):
             logger.info(
-                "Not all users finished their tasks & terminated in %s seconds. Stopping them..."
-                % self.environment.stop_timeout
+                f"Not all users finished their tasks & terminated in {self.environment.stop_timeout} seconds. Stopping them..."
             )
             stop_group.kill(block=True)
 
@@ -495,7 +494,7 @@ class LocalRunner(Runner):
                 user_classes_spawn_count: dict[str, int] = {}
                 user_classes_stop_count: dict[str, int] = {}
                 user_classes_count = dispatched_users[self._local_worker_node.id]
-                logger.debug("Ramping to %s" % _format_user_classes_count_for_log(user_classes_count))
+                logger.debug(f"Ramping to {_format_user_classes_count_for_log(user_classes_count)}")
                 for user_class_name, user_class_count in user_classes_count.items():
                     if self.user_classes_count[user_class_name] > user_class_count:
                         user_classes_stop_count[user_class_name] = (
@@ -558,7 +557,7 @@ class LocalRunner(Runner):
         :param msg_type: The type of the message to emulate sending
         :param data: Optional data to include
         """
-        logger.debug("Running locally: sending %s message to self" % msg_type)
+        logger.debug(f"Running locally: sending {msg_type} message to self")
         if msg_type in self.custom_messages:
             listener, concurrent = self.custom_messages[msg_type]
             msg = Message(msg_type, data, "local")
@@ -877,7 +876,7 @@ class MasterRunner(DistributedRunner):
 
             if send_stop_to_client:
                 for client in self.clients.all:
-                    logger.debug("Sending stop message to worker %s" % client.id)
+                    logger.debug(f"Sending stop message to worker {client.id}")
                     self.server.send_to_client(Message("stop", None, client.id))
 
                 # Give an additional 60s for all workers to stop
@@ -987,8 +986,7 @@ class MasterRunner(DistributedRunner):
                     logger.error(f"RPCError: {e}. Will reset RPC server.")
                 else:
                     logger.debug(
-                        "RPCError when receiving from worker: %s (but no workers were expected to be connected anyway)"
-                        % (e)
+                        f"RPCError when receiving from worker: {e} (but no workers were expected to be connected anyway)"
                     )
                 self.connection_broken = True
                 gevent.sleep(FALLBACK_INTERVAL)
@@ -1410,7 +1408,7 @@ class WorkerRunner(DistributedRunner):
                 # master says we have finished spawning (happens only once during a normal rampup)
                 self.environment.events.spawning_complete.fire(user_count=msg.data["user_count"])
             elif msg.type in self.custom_messages:
-                logger.debug("Received %s message from master" % msg.type)
+                logger.debug(f"Received {msg.type} message from master")
                 listener, concurrent = self.custom_messages[msg.type]
                 if not concurrent:
                     listener(environment=self.environment, msg=msg)
@@ -1454,7 +1452,7 @@ class WorkerRunner(DistributedRunner):
         :param data: Optional data to send
         :param client_id: (unused)
         """
-        logger.debug("Sending %s message to master" % msg_type)
+        logger.debug(f"Sending {msg_type} message to master")
         self.client.send(Message(msg_type, data, self.client_id))
 
     def _send_stats(self) -> None:
