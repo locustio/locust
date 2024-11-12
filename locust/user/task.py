@@ -1,7 +1,13 @@
 from __future__ import annotations
 
-from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleTask, RescheduleTaskImmediately, \
-    StopUser, NoTaskToRun
+from locust.exception import (
+    InterruptTaskSet,
+    MissingWaitTimeError,
+    RescheduleTask,
+    RescheduleTaskImmediately,
+    StopUser,
+    NoTaskToRun,
+)
 
 import logging
 import random
