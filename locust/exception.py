@@ -76,3 +76,8 @@ class RPCReceiveError(Exception):
 
 class RunnerAlreadyExistsError(Exception):
     pass
+
+class NoTaskToRun(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+        self.exit_code = 1

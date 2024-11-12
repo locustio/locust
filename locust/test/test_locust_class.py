@@ -6,7 +6,7 @@ from locust.exception import (
     RescheduleTask,
     RescheduleTaskImmediately,
     ResponseError,
-    StopUser,
+    StopUser, NoTaskToRun,
 )
 
 import gevent
@@ -60,8 +60,7 @@ class TestTaskSet(LocustTestCase):
             wait_time = constant(0.5)
 
         l = MyUser(self.environment)
-        # to make sure exception is not raised
-        l.run()
+        self.assertRaisesRegex(NoTaskToRun, "No tasks defined on MyUser.*", l.run)
         MyUser.task = object()
         self.assertRaisesRegex(Exception, ".*but you have set a 'task' attribute.*", l.run)
 

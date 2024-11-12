@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleTask, RescheduleTaskImmediately, StopUser
+from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleTask, RescheduleTaskImmediately, \
+    StopUser, NoTaskToRun
 
 import logging
 import random
@@ -361,6 +362,8 @@ class TaskSet(metaclass=TaskSetMeta):
                 except Exception:
                     logging.error("Uncaught exception in on_stop: \n%s", traceback.format_exc())
                 raise
+            except NoTaskToRun:
+                raise
             except Exception as e:
                 self.user.environment.events.user_error.fire(user_instance=self, exception=e, tb=e.__traceback__)
                 if self.user.environment.catch_exceptions:
@@ -477,8 +480,7 @@ class DefaultTaskSet(TaskSet):
                 extra_message = ", but you have set a 'task' attribute on your class - maybe you meant to set 'tasks'?"
                 raise Exception(f"No tasks defined on {self.user.__class__.__name__}{extra_message}{warning_message}")
             else:
-                logger.warning(f"No tasks defined on {self.user.__class__.__name__}. {warning_message}")
-                raise StopUser()
+                raise NoTaskToRun(f"No tasks defined on {self.user.__class__.__name__}. {warning_message}")
         return random.choice(self.user.tasks)
 
     def execute_task(self, task):

@@ -1390,7 +1390,7 @@ class MyUser(HttpUser):
             stdout, stderr = proc.communicate()
             self.assertIn("MyUser had no tasks left after filtering", stderr)
             self.assertIn("No tasks defined on MyUser", stderr)
-            self.assertEqual(0, proc.returncode)
+            self.assertEqual(1, proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_graceful_exit_when_keyboard_interrupt(self):
