@@ -1473,6 +1473,8 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
                     "2",
                     "--expect-workers-max-wait",
                     "1",
+                    "-L",
+                    "DEBUG",
                 ],
                 stdout=PIPE,
                 stderr=PIPE,

@@ -587,11 +587,18 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                     logger.error("Gave up waiting for workers to connect")
                     runner.quit()
                     sys.exit(1)
-                logging.info(
-                    "Waiting for workers to be ready, %s of %s connected",
-                    len(runner.clients.ready),
-                    options.expect_workers,
-                )
+                if time.monotonic() - start_time > 5:
+                    logging.info(
+                        "Waiting for workers to be ready, %s of %s connected",
+                        len(runner.clients.ready),
+                        options.expect_workers,
+                    )
+                else:
+                    logging.debug(
+                        "Waiting for workers to be ready, %s of %s connected",
+                        len(runner.clients.ready),
+                        options.expect_workers,
+                    )
                 # TODO: Handle KeyboardInterrupt and send quit signal to workers that are started.
                 #       Right now, if the user sends a ctrl+c, the master will not gracefully
                 #       shutdown resulting in all the already started workers to stay active.
