@@ -59,15 +59,18 @@ class LocustArgumentParser(configargparse.ArgumentParser):
         Arguments:
             include_in_web_ui: If True (default), the argument will show in the UI.
             is_secret: If True (default is False) and include_in_web_ui is True, the argument will show in the UI with a password masked text input.
+            is_required: If True (default is False) and include_in_web_ui is True, the argument will show in the UI as a required form field.
 
         Returns:
             argparse.Action: the new argparse action
         """
         include_in_web_ui = kwargs.pop("include_in_web_ui", True)
         is_secret = kwargs.pop("is_secret", False)
+        is_required = kwargs.pop("is_required", False)
         action = super().add_argument(*args, **kwargs)
         action.include_in_web_ui = include_in_web_ui
         action.is_secret = is_secret
+        action.is_required = is_required
         return action
 
     @property
@@ -80,6 +83,14 @@ class LocustArgumentParser(configargparse.ArgumentParser):
             a.dest: a
             for a in self._actions
             if a.dest in self.args_included_in_web_ui and hasattr(a, "is_secret") and a.is_secret
+        }
+
+    @property
+    def required_args_included_in_web_ui(self) -> dict[str, configargparse.Action]:
+        return {
+            a.dest: a
+            for a in self._actions
+            if a.dest in self.args_included_in_web_ui and hasattr(a, "is_required") and a.is_required
         }
 
 
@@ -798,6 +809,7 @@ def default_args_dict() -> dict:
 class UIExtraArgOptions(NamedTuple):
     default_value: str
     is_secret: bool
+    is_required: bool
     help_text: str
     choices: list[str] | None = None
 
@@ -813,6 +825,7 @@ def ui_extra_args_dict(args=None) -> dict[str, dict[str, Any]]:
         k: UIExtraArgOptions(
             default_value=v,
             is_secret=k in parser.secret_args_included_in_web_ui,
+            is_required=k in parser.required_args_included_in_web_ui,
             help_text=parser.args_included_in_web_ui[k].help,
             choices=parser.args_included_in_web_ui[k].choices,
         )._asdict()

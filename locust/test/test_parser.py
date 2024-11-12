@@ -373,6 +373,7 @@ class TestArgumentParser(LocustTestCase):
             parser.add_argument("--a1", help="a1 help")
             parser.add_argument("--a2", help="a2 help", include_in_web_ui=False)
             parser.add_argument("--a3", help="a3 help", is_secret=True)
+            parser.add_argument("--a4", help="a3 help", is_required=True)
 
         args = ["-u", "666", "--a1", "v1", "--a2", "v2", "--a3", "v3"]
         options = parse_options(args=args)
@@ -384,6 +385,7 @@ class TestArgumentParser(LocustTestCase):
         self.assertIn("a1", extra_args)
         self.assertNotIn("a2", extra_args)
         self.assertIn("a3", extra_args)
+        self.assertIn("a4", extra_args)
         self.assertEqual("v1", extra_args["a1"]["default_value"])
 
 
