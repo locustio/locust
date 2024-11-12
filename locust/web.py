@@ -60,6 +60,7 @@ class InputField(TypedDict, total=False):
     default_value: bool | None
     choices: list[str] | None
     is_secret: bool | None
+    is_required: bool | None
 
 
 class CustomForm(TypedDict, total=False):

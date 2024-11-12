@@ -11,6 +11,7 @@ export default function CustomInput({
   defaultValue,
   choices,
   isSecret,
+  isRequired,
 }: ICustomInput) {
   if (choices) {
     return (
@@ -19,6 +20,7 @@ export default function CustomInput({
         label={label}
         name={name}
         options={choices}
+        required={isRequired}
         sx={{ width: '100%' }}
       />
     );
@@ -27,7 +29,7 @@ export default function CustomInput({
   if (typeof defaultValue === 'boolean') {
     return (
       <FormControlLabel
-        control={<Checkbox defaultChecked={defaultValue} />}
+        control={<Checkbox defaultChecked={defaultValue} required={isRequired} />}
         label={<Markdown content={label} />}
         name={name}
       />
@@ -35,7 +37,14 @@ export default function CustomInput({
   }
 
   if (isSecret) {
-    return <PasswordField defaultValue={defaultValue} label={label} name={name} />;
+    return (
+      <PasswordField
+        defaultValue={defaultValue}
+        isRequired={isRequired}
+        label={label}
+        name={name}
+      />
+    );
   }
 
   return (
@@ -43,6 +52,7 @@ export default function CustomInput({
       defaultValue={defaultValue}
       label={label}
       name={name}
+      required={isRequired}
       sx={{ width: '100%' }}
       type='text'
     />

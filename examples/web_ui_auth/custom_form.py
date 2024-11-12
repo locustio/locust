@@ -53,6 +53,8 @@ def locust_init(environment, **_kwargs):
                     {
                         "label": "Username",
                         "name": "username",
+                        # make field required
+                        "is_required": True,
                     },
                     # boolean checkmark field
                     {"label": "Admin", "name": "is_admin", "default_value": False},

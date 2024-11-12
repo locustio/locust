@@ -8,7 +8,8 @@ export default function PasswordField({
   name = 'password',
   label = 'Password',
   defaultValue,
-}: Partial<Pick<ICustomInput, 'name' | 'label' | 'defaultValue'>>) {
+  isRequired,
+}: Partial<Pick<ICustomInput, 'name' | 'label' | 'defaultValue' | 'isRequired'>>) {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClickShowPassword = () => setShowPassword(!showPassword);
@@ -28,6 +29,7 @@ export default function PasswordField({
         id={`${label}-${name}-field`}
         label={label}
         name={name}
+        required={isRequired}
         type={showPassword ? 'text' : 'password'}
       />
     </FormControl>

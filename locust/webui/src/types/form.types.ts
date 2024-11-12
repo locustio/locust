@@ -4,4 +4,5 @@ export interface ICustomInput {
   choices?: string[] | null;
   defaultValue?: string | number | boolean | null;
   isSecret?: boolean;
+  isRequired?: boolean;
 }
