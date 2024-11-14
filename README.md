@@ -47,7 +47,26 @@ Locust makes it easy to run load tests distributed over multiple machines. It is
 
 Locust has a user friendly web interface that shows the progress of your test in real-time. You can even change the load while the test is running. It can also be run without the UI, making it easy to use for CI/CD testing.
 
-<img src="docs/images/bottlenecked_server.png" alt="Locust UI charts" height="100" width="200"/> <img src="docs/images/webui-running-statistics.png" alt="Locust UI stats" height="100" width="200"/> <img src="docs/images/locust_workers.png" alt="Locust UI workers" height="100" width="200"/> <img src="docs/images/webui-splash-screenshot.png" alt="Locust UI start test" height="100" width="200"/>
+<picture>
+<source media="(prefers-color-scheme: light)" srcset="docs/images/bottlenecked-server-light.png" alt="Locust UI charts" height="100" width="200"/>
+<source media="(prefers-color-scheme: dark)" srcset="docs/images/bottlenecked-server-dark.png" alt="Locust UI charts" height="100" width="200"/>
+<img src="docs/images/bottlenecked-server-light.png" alt="Locust UI charts" height="100" width="200"/> 
+</picture>
+<picture>
+<source media="(prefers-color-scheme: light)" srcset="docs/images/webui-running-statistics-light.png" alt="Locust UI stats" height="100" width="200"/>
+<source media="(prefers-color-scheme: dark)" srcset="docs/images/webui-running-statistics-dark.png" alt="Locust UI stats" height="100" width="200"/>
+<img src="docs/images/webui-running-statistics-light.png" alt="Locust UI stats" height="100" width="200"/>
+</picture>
+<picture>
+<source media="(prefers-color-scheme: light)" srcset="docs/images/locust-workers-light.png" alt="Locust UI workers" height="100" width="200"/>
+<source media="(prefers-color-scheme: dark)" srcset="docs/images/locust-workers-dark.png" alt="Locust UI workers" height="100" width="200"/>
+<img src="docs/images/locust-workers-light.png" alt="Locust UI workers" height="100" width="200"/>
+</picture>
+<picture>
+<source media="(prefers-color-scheme: light)" srcset="docs/images/webui-splash-light.png" alt="Locust UI start test" height="100" width="200"/>
+<source media="(prefers-color-scheme: dark)" srcset="docs/images/webui-splash-dark.png" alt="Locust UI start test" height="100" width="200"/>
+<img src="docs/images/webui-splash-light.png" alt="Locust UI start test" height="100" width="200"/>
+</picture>
 
 #### Can test any system
 
