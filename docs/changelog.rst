@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.32.3
+======
+* Add option for Extra Options to be Required https://github.com/locustio/locust/pull/2981
+* Use debug log level for first 5s of waiting for workers to be ready https://github.com/locustio/locust/pull/2982
+* Ensure we never use old version of setuptools https://github.com/locustio/locust/pull/2988
+
 2.32.2
 ======
 * Better html report file names https://github.com/locustio/locust/pull/2947
