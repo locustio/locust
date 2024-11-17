@@ -1,6 +1,26 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.32.3](https://github.com/locustio/locust/tree/2.32.3) (2024-11-17)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.32.2...2.32.3)
+
+**Fixed bugs:**
+
+- Setuptools CVE-2022-40897 [\#2986](https://github.com/locustio/locust/issues/2986)
+- master crash with different version worker [\#2975](https://github.com/locustio/locust/issues/2975)
+
+**Merged pull requests:**
+
+- Ensure we never use old version of setuptools [\#2988](https://github.com/locustio/locust/pull/2988) ([cyberw](https://github.com/cyberw))
+- README Themed Screenshots [\#2985](https://github.com/locustio/locust/pull/2985) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- When specifying locustfile fia url, output start of response text when it wasnt valid python [\#2983](https://github.com/locustio/locust/pull/2983) ([cyberw](https://github.com/cyberw))
+- Use debug log level for first 5s of waiting for workers to be ready. [\#2982](https://github.com/locustio/locust/pull/2982) ([cyberw](https://github.com/cyberw))
+- Add option for Extra Options to be Required [\#2981](https://github.com/locustio/locust/pull/2981) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Update ruff mypy [\#2978](https://github.com/locustio/locust/pull/2978) ([tdadela](https://github.com/tdadela))
+- Fix crash with older worker version requesting locustfile from master [\#2976](https://github.com/locustio/locust/pull/2976) ([cyberw](https://github.com/cyberw))
+- Use f-strings instead of old style string interpolation [\#2974](https://github.com/locustio/locust/pull/2974) ([tdadela](https://github.com/tdadela))
+
 ## [2.32.2](https://github.com/locustio/locust/tree/2.32.2) (2024-11-08)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.32.1...2.32.2)
