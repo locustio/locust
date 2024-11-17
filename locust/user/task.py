@@ -3,10 +3,10 @@ from __future__ import annotations
 from locust.exception import (
     InterruptTaskSet,
     MissingWaitTimeError,
+    NoTaskToRun,
     RescheduleTask,
     RescheduleTaskImmediately,
     StopUser,
-    NoTaskToRun,
 )
 
 import logging
