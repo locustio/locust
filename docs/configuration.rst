@@ -55,6 +55,22 @@ You can specify an additional file using the ``--config`` flag.
 
     $ locust --config custom_config.conf
 
+Here's a minimalistic example of the configuration file supported by Locust:
+
+No Options are selected which would make Locust run e.g. headless or distributed.
+Have a look later in this article for :ref:`All available configuration options`
+
+locust.conf
+--------------
+
+.. code-block:: ini
+
+    locustfile = locust_files/my_locust_file.py
+    host = https://target-system
+    users = 1
+    spawn-rate = 
+    run-time = 1m
+
 Here's a quick example of the configuration files supported by Locust:
 
 locust.conf
