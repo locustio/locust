@@ -66,10 +66,11 @@ locust.conf
 .. code-block:: ini
 
     locustfile = locust_files/my_locust_file.py
+    headless = true
     host = https://target-system
-    users = 1
-    spawn-rate = 
     run-time = 1m
+    spawn-rate = 
+    users = 1    
 
 Here's a quick example of the configuration files supported by Locust:
 
