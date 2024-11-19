@@ -138,7 +138,7 @@ Yarn
 
     $ yarn --version
 
-- Next in web, install all dependencies
+- Next, install all dependencies
 
 .. code-block:: console
 
@@ -149,9 +149,9 @@ Yarn
 Developing
 ----------
 
-To develop the frontend, run ``yarn dev``. This will start the Vite dev server and allow for viewing and editing the frontend, without needing to a run a locust web server
+To develop while running a locust instance, run ``yarn watch``. This will output the static files to the ``dist`` directory. Vite will automatically detect any changed files and re-build as needed. Simply refresh the page to view the changes
 
-To develop while running a locust instance, run ``yarn dev:watch``. This will output the static files to the ``dist`` directory. Vite will automatically detect any changed files and re-build as needed. Simply refresh the page to view the changes
+In certain situations (usually when styling), you may want to develop the frontend without running a locust instance. Running ``yarn dev`` will start the Vite dev server and allow for viewing your changes.
 
 To compile the webui, run ``yarn build``
 

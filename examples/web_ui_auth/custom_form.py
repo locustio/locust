@@ -55,6 +55,9 @@ def locust_init(environment, **_kwargs):
                         "name": "username",
                         # make field required
                         "is_required": True,
+                        # override input type for HTML validation
+                        # applies if !is_secret and !choices, and default_value is string | None
+                        "type": "email",
                     },
                     # boolean checkmark field
                     {"label": "Admin", "name": "is_admin", "default_value": False},

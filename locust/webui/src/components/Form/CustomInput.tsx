@@ -8,6 +8,7 @@ import { ICustomInput } from 'types/form.types';
 export default function CustomInput({
   name,
   label,
+  type = 'text',
   defaultValue,
   choices,
   isSecret,
@@ -54,7 +55,7 @@ export default function CustomInput({
       name={name}
       required={isRequired}
       sx={{ width: '100%' }}
-      type='text'
+      type={type}
     />
   );
 }
