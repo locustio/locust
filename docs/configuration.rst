@@ -57,7 +57,6 @@ You can specify an additional file using the ``--config`` flag.
 
 Here's a minimalistic example of the configuration file supported by Locust:
 
-No Options are selected which would make Locust run e.g. headless or distributed.
 Have a look later in this article for :ref:`All available configuration options`
 
 locust.conf
