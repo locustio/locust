@@ -163,7 +163,8 @@ A full example can be seen `in the auth example <https://github.com/locustio/loc
 In certain situations you may wish to further extend the fields present in the auth form. To achieve this, pass a ``custom_form`` dict
 to the ``environment.web_ui.auth_args``. In this case, the fields will be represented by a list of ``inputs``, the callback url is
 configured by the ``custom_form.callback_url``, and the submit button may optionally be configured using the ``custom_form.submit_button_text``.
-The fields in the auth form may be a text, select, checkbox, or secret password field.
+The fields in the auth form may be a text, select, checkbox, or secret password field. You may additionally override the HTML input type for
+specific field validation (e.g. type=email).
 
 For a full example see `configuring the custom_form in the auth example <https://github.com/locustio/locust/tree/master/examples/web_ui_auth/custom_form.py>`_.
 

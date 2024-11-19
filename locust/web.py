@@ -57,6 +57,7 @@ DEFAULT_CACHE_TIME = 2.0
 class InputField(TypedDict, total=False):
     label: str
     name: str
+    type: str | None
     default_value: bool | None
     choices: list[str] | None
     is_secret: bool | None
