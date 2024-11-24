@@ -92,10 +92,10 @@ def greenlet_exception_logger(logger, level=logging.CRITICAL):
     """
 
     def exception_handler(greenlet):
-        if greenlet.exc_info[0] == SystemExit:
+        if greenlet.exc_info[0] is SystemExit:
             logger.log(
                 min(logging.INFO, level),  # dont use higher than INFO for this, because it sounds way to urgent
-                "sys.exit(%s) called (use log level DEBUG for callstack)" % greenlet.exc_info[1],
+                f"sys.exit({greenlet.exc_info[1]}) called (use log level DEBUG for callstack)",
             )
             logger.log(logging.DEBUG, "Unhandled exception in greenlet: %s", greenlet, exc_info=greenlet.exc_info)
         else:

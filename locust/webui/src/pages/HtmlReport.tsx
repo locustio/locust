@@ -42,6 +42,7 @@ export default function HtmlReport({
   showDownloadLink,
   startTime,
   endTime,
+  duration,
   charts,
   host,
   exceptionsStatistics,
@@ -75,7 +76,7 @@ export default function HtmlReport({
             <Box sx={{ display: 'flex', columnGap: 0.5 }}>
               <Typography fontWeight={600}>During:</Typography>
               <Typography>
-                {formatLocaleString(startTime)} - {formatLocaleString(endTime)}
+                {formatLocaleString(startTime)} - {formatLocaleString(endTime)} ({duration})
               </Typography>
             </Box>
 

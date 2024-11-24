@@ -9,6 +9,7 @@ export interface IAuthProviders {
 export interface IAuthArgs {
   usernamePasswordCallback?: string;
   error?: string;
+  info?: string;
   authProviders?: IAuthProviders[];
   customForm?: {
     inputs: ICustomInput[];

@@ -455,7 +455,9 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     elif options.worker:
         try:
             runner = environment.create_worker_runner(options.master_host, options.master_port)
-            logger.debug("Connected to locust master: %s:%s", options.master_host, options.master_port)
+            logger.debug(
+                "Connected to locust master: %s:%s%s", options.master_host, options.master_port, options.web_base_path
+            )
         except OSError as e:
             logger.error("Failed to connect to the Locust master: %s", e)
             sys.exit(-1)
@@ -491,26 +493,32 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     if not options.headless and not options.worker:
         protocol = "https" if options.tls_cert and options.tls_key else "http"
 
+        if options.web_base_path and options.web_base_path[0] != "/":
+            logger.error(
+                f"Invalid format for --web-base-path argument ({options.web_base_path}): the url path must start with a slash."
+            )
+            sys.exit(1)
         if options.web_host == "*":
             # special check for "*" so that we're consistent with --master-bind-host
             web_host = ""
         else:
             web_host = options.web_host
         if web_host:
-            logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}")
+            logger.info(f"Starting web interface at {protocol}://{web_host}:{options.web_port}{options.web_base_path}")
         if options.web_host_display_name:
             logger.info(f"Starting web interface at {options.web_host_display_name}")
         else:
             if os.name == "nt":
                 logger.info(
-                    f"Starting web interface at {protocol}://localhost:{options.web_port} (accepting connections from all network interfaces)"
+                    f"Starting web interface at {protocol}://localhost:{options.web_port}{options.web_base_path} (accepting connections from all network interfaces)"
                 )
             else:
-                logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}")
+                logger.info(f"Starting web interface at {protocol}://0.0.0.0:{options.web_port}{options.web_base_path}")
 
         web_ui = environment.create_web_ui(
             host=web_host,
             port=options.web_port,
+            web_base_path=options.web_base_path,
             web_login=options.web_login,
             tls_cert=options.tls_cert,
             tls_key=options.tls_key,
@@ -547,7 +555,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             logger.info("--run-time limit reached, stopping test")
             runner.stop()
             if options.autoquit != -1:
-                logger.debug("Autoquit time limit set to %s seconds" % options.autoquit)
+                logger.debug(f"Autoquit time limit set to {options.autoquit} seconds")
                 time.sleep(options.autoquit)
                 logger.info("--autoquit time reached, shutting down")
                 runner.quit()
@@ -580,11 +588,18 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                     logger.error("Gave up waiting for workers to connect")
                     runner.quit()
                     sys.exit(1)
-                logging.info(
-                    "Waiting for workers to be ready, %s of %s connected",
-                    len(runner.clients.ready),
-                    options.expect_workers,
-                )
+                if time.monotonic() - start_time > 5:
+                    logging.info(
+                        "Waiting for workers to be ready, %s of %s connected",
+                        len(runner.clients.ready),
+                        options.expect_workers,
+                    )
+                else:
+                    logging.debug(
+                        "Waiting for workers to be ready, %s of %s connected",
+                        len(runner.clients.ready),
+                        options.expect_workers,
+                    )
                 # TODO: Handle KeyboardInterrupt and send quit signal to workers that are started.
                 #       Right now, if the user sends a ctrl+c, the master will not gracefully
                 #       shutdown resulting in all the already started workers to stay active.

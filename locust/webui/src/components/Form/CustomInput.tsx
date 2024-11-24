@@ -2,14 +2,17 @@ import { Checkbox, FormControlLabel, TextField } from '@mui/material';
 
 import PasswordField from 'components/Form/PasswordField';
 import Select from 'components/Form/Select';
+import Markdown from 'components/Markdown/Markdown';
 import { ICustomInput } from 'types/form.types';
 
 export default function CustomInput({
   name,
   label,
+  type = 'text',
   defaultValue,
   choices,
   isSecret,
+  isRequired,
 }: ICustomInput) {
   if (choices) {
     return (
@@ -18,6 +21,7 @@ export default function CustomInput({
         label={label}
         name={name}
         options={choices}
+        required={isRequired}
         sx={{ width: '100%' }}
       />
     );
@@ -26,15 +30,22 @@ export default function CustomInput({
   if (typeof defaultValue === 'boolean') {
     return (
       <FormControlLabel
-        control={<Checkbox defaultChecked={defaultValue} />}
-        label={label}
+        control={<Checkbox defaultChecked={defaultValue} required={isRequired} />}
+        label={<Markdown content={label} />}
         name={name}
       />
     );
   }
 
   if (isSecret) {
-    return <PasswordField defaultValue={defaultValue} label={label} name={name} />;
+    return (
+      <PasswordField
+        defaultValue={defaultValue}
+        isRequired={isRequired}
+        label={label}
+        name={name}
+      />
+    );
   }
 
   return (
@@ -42,8 +53,9 @@ export default function CustomInput({
       defaultValue={defaultValue}
       label={label}
       name={name}
+      required={isRequired}
       sx={{ width: '100%' }}
-      type='text'
+      type={type}
     />
   );
 }

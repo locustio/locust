@@ -17,6 +17,9 @@ const createTheme = (mode: PaletteMode) =>
           ':root': {
             '--footer-height': '40px',
           },
+          p: {
+            margin: 0,
+          },
         },
       },
     },

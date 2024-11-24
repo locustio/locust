@@ -33,6 +33,8 @@ If you install `pre-commit <https://pre-commit.com/>`_, linting and format check
 
 Before you open a pull request, make sure all the tests work. And if you are adding a feature, make sure it is documented (in ``docs/*.rst``).
 
+If you're in a hurry or don't have access to a development environment, you can simply use `Codespaces <https://github.com/features/codespaces>`_, the github cloud development environment.  On your fork page, just click on *Code* then on *Create codespace on <branch name>*, and voila, your ready to code and test.
+
 Testing your changes
 ====================
 
@@ -50,6 +52,11 @@ To only run a specific suite or specific test you can call `pytest <https://docs
 .. code-block:: console
 
     $ pytest locust/test/test_main.py::DistributedIntegrationTests::test_distributed_tags
+
+Debugging
+=========
+
+See: :ref:`running-in-debugger`.
 
 Formatting and linting
 ======================
@@ -131,7 +138,7 @@ Yarn
 
     $ yarn --version
 
-- Next in web, install all dependencies
+- Next, install all dependencies
 
 .. code-block:: console
 
@@ -142,9 +149,9 @@ Yarn
 Developing
 ----------
 
-To develop the frontend, run ``yarn dev``. This will start the Vite dev server and allow for viewing and editing the frontend, without needing to a run a locust web server
+To develop while running a locust instance, run ``yarn watch``. This will output the static files to the ``dist`` directory. Vite will automatically detect any changed files and re-build as needed. Simply refresh the page to view the changes
 
-To develop while running a locust instance, run ``yarn dev:watch``. This will output the static files to the ``dist`` directory. Vite will automatically detect any changed files and re-build as needed. Simply refresh the page to view the changes
+In certain situations (usually when styling), you may want to develop the frontend without running a locust instance. Running ``yarn dev`` will start the Vite dev server and allow for viewing your changes.
 
 To compile the webui, run ``yarn build``
 

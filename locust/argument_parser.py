@@ -59,15 +59,18 @@ class LocustArgumentParser(configargparse.ArgumentParser):
         Arguments:
             include_in_web_ui: If True (default), the argument will show in the UI.
             is_secret: If True (default is False) and include_in_web_ui is True, the argument will show in the UI with a password masked text input.
+            is_required: If True (default is False) and include_in_web_ui is True, the argument will show in the UI as a required form field.
 
         Returns:
             argparse.Action: the new argparse action
         """
         include_in_web_ui = kwargs.pop("include_in_web_ui", True)
         is_secret = kwargs.pop("is_secret", False)
+        is_required = kwargs.pop("is_required", False)
         action = super().add_argument(*args, **kwargs)
         action.include_in_web_ui = include_in_web_ui
         action.is_secret = is_secret
+        action.is_required = is_required
         return action
 
     @property
@@ -80,6 +83,14 @@ class LocustArgumentParser(configargparse.ArgumentParser):
             a.dest: a
             for a in self._actions
             if a.dest in self.args_included_in_web_ui and hasattr(a, "is_secret") and a.is_secret
+        }
+
+    @property
+    def required_args_included_in_web_ui(self) -> dict[str, configargparse.Action]:
+        return {
+            a.dest: a
+            for a in self._actions
+            if a.dest in self.args_included_in_web_ui and hasattr(a, "is_required") and a.is_required
         }
 
 
@@ -151,14 +162,18 @@ def download_locustfile_from_url(url: str) -> str:
     """
     try:
         response = requests.get(url)
-        # Check if response is valid python code
-        ast.parse(response.text)
     except requests.exceptions.RequestException as e:
         sys.stderr.write(f"Failed to get locustfile from: {url}. Exception: {e}")
         sys.exit(1)
-    except SyntaxError:
-        sys.stderr.write(f"Failed to get locustfile from: {url}. Response is not valid python code.")
-        sys.exit(1)
+    else:
+        try:
+            # Check if response is valid python code
+            ast.parse(response.text)
+        except SyntaxError:
+            sys.stderr.write(
+                f"Failed to get locustfile from: {url}. Response was not valid python code: '{response.text[:100]}'"
+            )
+            sys.exit(1)
 
     with open(os.path.join(tempfile.gettempdir(), urlparse(url).path.split("/")[-1]), "w") as locustfile:
         locustfile.write(response.text)
@@ -612,6 +627,14 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         env_var="LOCUST_MASTER_NODE_PORT",
     )
 
+    web_ui_group.add_argument(
+        "--web-base-path",
+        type=str,
+        default="",
+        help="Base path for the web interface (e.g., '/locust'). Default is empty (root path).",
+        env_var="LOCUST_WEB_BASE_PATH",
+    )
+
     tag_group = parser.add_argument_group(
         "Tag options",
         "Locust tasks can be tagged using the @tag decorator. These options let specify which tasks to include or exclude during a test.",
@@ -799,6 +822,7 @@ def default_args_dict() -> dict:
 class UIExtraArgOptions(NamedTuple):
     default_value: str
     is_secret: bool
+    is_required: bool
     help_text: str
     choices: list[str] | None = None
 
@@ -814,6 +838,7 @@ def ui_extra_args_dict(args=None) -> dict[str, dict[str, Any]]:
         k: UIExtraArgOptions(
             default_value=v,
             is_secret=k in parser.secret_args_included_in_web_ui,
+            is_required=k in parser.required_args_included_in_web_ui,
             help_text=parser.args_included_in_web_ui[k].help,
             choices=parser.args_included_in_web_ui[k].choices,
         )._asdict()

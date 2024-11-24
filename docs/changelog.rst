@@ -4,6 +4,23 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.32.3
+======
+* Add option for Extra Options to be Required https://github.com/locustio/locust/pull/2981
+* Use debug log level for first 5s of waiting for workers to be ready https://github.com/locustio/locust/pull/2982
+* Ensure we never use old version of setuptools https://github.com/locustio/locust/pull/2988
+
+2.32.2
+======
+* Better html report file names https://github.com/locustio/locust/pull/2947
+* Fix Incorrectly Updating Stat History https://github.com/locustio/locust/pull/2972
+* Various WebUI fixes (most only relevant for https://locust.cloud)
+
+2.32.1
+======
+* Various WebUI fixes (most only relevant for https://locust.cloud)
+* LocustBadStatusCode without url param in fasthttp https://github.com/locustio/locust/pull/2944
+
 2.32.0
 ======
 * Explicitly support Python 3.13 https://github.com/locustio/locust/pull/2939

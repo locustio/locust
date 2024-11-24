@@ -915,9 +915,9 @@ def sort_stats(stats: dict[Any, S]) -> list[S]:
     return [stats[key] for key in sorted(stats.keys())]
 
 
-def update_stats_history(runner: Runner) -> None:
+def update_stats_history(runner: Runner, timestamp: str | None = None) -> None:
     stats = runner.stats
-    timestamp = format_utc_timestamp(time.time())
+    timestamp = timestamp or format_utc_timestamp(time.time())
     current_response_time_percentiles = {
         f"response_time_percentile_{percentile}": [
             timestamp,
@@ -942,7 +942,8 @@ def stats_history(runner: Runner) -> None:
     while True:
         if not runner.stats.total.use_response_times_cache:
             break
-        if runner.state != "stopped":
+
+        if runner.state != "ready" and runner.state != "stopped":
             update_stats_history(runner)
 
         gevent.sleep(HISTORY_STATS_INTERVAL_SEC)

@@ -34,9 +34,6 @@ class AuthUser(UserMixin):
         return self.username
 
 
-auth_blueprint = Blueprint("auth", "web_ui_auth")
-
-
 def load_user(user_id):
     return AuthUser(user_id)
 
@@ -44,6 +41,8 @@ def load_user(user_id):
 @events.init.add_listener
 def locust_init(environment, **_kwargs):
     if environment.web_ui:
+        auth_blueprint = Blueprint("auth", "web_ui_auth", url_prefix=environment.parsed_options.web_base_path)
+
         environment.web_ui.login_manager.user_loader(load_user)
 
         environment.web_ui.app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
@@ -54,6 +53,11 @@ def locust_init(environment, **_kwargs):
                     {
                         "label": "Username",
                         "name": "username",
+                        # make field required
+                        "is_required": True,
+                        # override input type for HTML validation
+                        # applies if !is_secret and !choices, and default_value is string | None
+                        "type": "email",
                     },
                     # boolean checkmark field
                     {"label": "Admin", "name": "is_admin", "default_value": False},
@@ -70,7 +74,7 @@ def locust_init(environment, **_kwargs):
                         "is_secret": True,
                     },
                 ],
-                "callback_url": "/login_submit",
+                "callback_url": f"{environment.parsed_options.web_base_path}/login_submit",
                 "submit_button_text": "Submit",
             },
         }
@@ -86,7 +90,7 @@ def locust_init(environment, **_kwargs):
             if password != confirm_password:
                 session["auth_error"] = "Passwords do not match!"
 
-                return redirect(url_for("login"))
+                return redirect(url_for("locust.login"))
 
             # Implement real password verification here
             if password:
@@ -98,10 +102,10 @@ def locust_init(environment, **_kwargs):
 
                 login_user(AuthUser(username))
 
-                return redirect(url_for("index"))
+                return redirect(url_for("locust.index"))
 
             session["auth_error"] = "Invalid username or password"
 
-            return redirect(url_for("login"))
+            return redirect(url_for("locust.login"))
 
         environment.web_ui.app.register_blueprint(auth_blueprint)
