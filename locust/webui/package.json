@@ -22,7 +22,7 @@
     "build:report": "vite build --config vite.report.config.ts",
     "watch:ui": "vite build --watch",
     "watch:report": "vite build --config vite.lib.config.ts --watch",
-    "build": "yarn clean && npm-run-all --parallel build:ui build:report",
+    "build": "yarn clean && yarn build:ui & yarn build:report",
     "clean": "rimraf dist",
     "lint": "eslint './src/**/*.{ts,tsx}'",
     "format": "prettier --write '**/**/*.{ts,tsx}'",
@@ -56,30 +56,34 @@
     "react-markdown": "^9.0.0",
     "react-redux": "^9.1.2",
     "rimraf": "^6.0.1",
-    "vite": "^5.4.8",
+    "vite": "^6.0.1",
     "vite-plugin-checker": "^0.8.0",
-    "vite-plugin-dts": "^4.2.2",
-    "vite-plugin-singlefile": "^2.0.2",
-    "vite-tsconfig-paths": "^4.3.2"
+    "vite-plugin-dts": "^4.3.0",
+    "vite-plugin-singlefile": "^2.0.3",
+    "vite-tsconfig-paths": "^5.1.3"
   },
   "devDependencies": {
+    "@eslint/compat": "^1.2.3",
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.15.0",
     "@testing-library/react": "^14.1.0",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "eslint": "^8.50.0",
-    "eslint-plugin-import": "^2.28.1",
+    "@types/node": "^22.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.12.1",
+    "@typescript-eslint/parser": "^8.12.1",
+    "eslint": "^9.15.0",
+    "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prettier": "^5.2.1",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-unused-imports": "^3.0.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "jsdom": "^25.0.1",
-    "msw": "^2.4.9",
+    "msw": "^2.6.6",
     "prettier": "^3.0.3",
-    "typescript": "^5.2.2",
-    "vitest": "^0.34.6",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.6",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=21.1.0"
   }
 }
