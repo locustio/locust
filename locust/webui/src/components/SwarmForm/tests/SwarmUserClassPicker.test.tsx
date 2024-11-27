@@ -66,7 +66,9 @@ describe('SwarmUserClassPicker', () => {
     });
 
     Object.entries(mockUsers).forEach(([key, value]) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(getByText(key)).to.be.ok;
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(getByText(value.host)).to.be.ok;
     });
   });

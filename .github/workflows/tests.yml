@@ -60,10 +60,10 @@ jobs:
         run: poetry install --no-interaction --no-root --no-plugins
 
       # Install node and yarn in order to build the front end during packaging  
-      - name: Set Node.js 20.x
+      - name: Set Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: 'yarn'
           cache-dependency-path: locust/webui/yarn.lock
       - name: Install Yarn
@@ -246,10 +246,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set Node.js 20.x
+      - name: Set Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: 'yarn'
           cache-dependency-path: locust/webui/yarn.lock
       - uses: borales/actions-yarn@v5
