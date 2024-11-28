@@ -10,7 +10,7 @@ describe('Reports', () => {
     const link = getByText('Download requests CSV');
 
     expect(link).toBeTruthy();
-    expect(link.getAttribute('href')).toBe('/stats/requests/csv');
+    expect(link.getAttribute('href')).toBe('./stats/requests/csv');
   });
 
   test('renders a link to download failures CSV', () => {
@@ -19,7 +19,7 @@ describe('Reports', () => {
     const link = getByText('Download failures CSV');
 
     expect(link).toBeTruthy();
-    expect(link.getAttribute('href')).toBe('/stats/failures/csv');
+    expect(link.getAttribute('href')).toBe('./stats/failures/csv');
   });
 
   test('renders a link to download exceptions CSV', () => {
@@ -28,7 +28,7 @@ describe('Reports', () => {
     const link = getByText('Download exceptions CSV');
 
     expect(link).toBeTruthy();
-    expect(link.getAttribute('href')).toBe('/exceptions/csv');
+    expect(link.getAttribute('href')).toBe('./exceptions/csv');
   });
 
   test('renders a link to download stats history CSV when enabled', () => {
@@ -41,7 +41,7 @@ describe('Reports', () => {
     const link = getByText('Download full request statistics history CSV');
 
     expect(link).toBeTruthy();
-    expect(link.getAttribute('href')).toBe('/stats/requests_full_history/csv');
+    expect(link.getAttribute('href')).toBe('./stats/requests_full_history/csv');
   });
 
   test('does not render a link to download stats history CSV when disabled', () => {
@@ -60,7 +60,7 @@ describe('Reports', () => {
     const link = getByText('Download Report');
 
     expect(link).toBeTruthy();
-    expect(link.getAttribute('href')).toBe('/stats/report?theme=dark');
+    expect(link.getAttribute('href')).toBe('./stats/report?theme=dark');
   });
 
   test('renders a link to download the report in light mode when theme is light', () => {
@@ -71,7 +71,7 @@ describe('Reports', () => {
     const link = getByText('Download Report');
 
     expect(link).toBeTruthy();
-    expect(link.getAttribute('href')).toBe('/stats/report?theme=light');
+    expect(link.getAttribute('href')).toBe('./stats/report?theme=light');
   });
 
   test('renders links to download extended CSV files', () => {

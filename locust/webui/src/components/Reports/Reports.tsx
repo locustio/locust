@@ -15,24 +15,24 @@ function Reports({
   return (
     <List sx={{ display: 'flex', flexDirection: 'column' }}>
       <ListItem>
-        <Link href='/stats/requests/csv'>Download requests CSV</Link>
+        <Link href='./stats/requests/csv'>Download requests CSV</Link>
       </ListItem>
       {statsHistoryEnabled && (
         <ListItem>
-          <Link href='/stats/requests_full_history/csv'>
+          <Link href='./stats/requests_full_history/csv'>
             Download full request statistics history CSV
           </Link>
         </ListItem>
       )}
       <ListItem>
-        <Link href='/stats/failures/csv'>Download failures CSV</Link>
+        <Link href='./stats/failures/csv'>Download failures CSV</Link>
       </ListItem>
       <ListItem>
-        <Link href='/exceptions/csv'>Download exceptions CSV</Link>
+        <Link href='./exceptions/csv'>Download exceptions CSV</Link>
       </ListItem>
       <ListItem>
         <Link
-          href={`/stats/report?theme=${isDarkMode ? THEME_MODE.DARK : THEME_MODE.LIGHT}`}
+          href={`./stats/report?theme=${isDarkMode ? THEME_MODE.DARK : THEME_MODE.LIGHT}`}
           target='_blank'
         >
           Download Report
