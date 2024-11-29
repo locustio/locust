@@ -550,8 +550,7 @@ class WebUI:
             self.auth_args["info"] = session.get("auth_info", None)
 
             return render_template_from(
-                "auth.html",
-                auth_args=self.auth_args,
+                "auth.html", auth_args=self.auth_args, auth_title=self.auth_args.get("title", "Locust")
             )
 
         @app_blueprint.route("/user", methods=["POST"])
