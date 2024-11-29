@@ -24,12 +24,13 @@ export default function useFetchStats() {
   const shouldRunRefetchInterval =
     swarm.state === SWARM_STATE.SPAWNING || swarm.state == SWARM_STATE.RUNNING;
 
-  const updateStats = () => {
+  useEffect(() => {
     if (!statsData) {
       return;
     }
 
     const {
+      state,
       currentResponseTimePercentiles,
       extendedStats,
       stats,
@@ -80,17 +81,9 @@ export default function useFetchStats() {
       userCount,
     });
     updateCharts(newChartEntry);
-  };
 
-  useEffect(() => {
-    if (statsData) {
-      setSwarm({ state: statsData.state });
-    }
-  }, [statsData && statsData.state]);
-
-  useInterval(updateStats, STATS_REFETCH_INTERVAL, {
-    shouldRunInterval: !!statsData && shouldRunRefetchInterval,
-  });
+    setSwarm({ state });
+  }, [statsData]);
 
   useInterval(refetchStats, STATS_REFETCH_INTERVAL, {
     shouldRunInterval: shouldRunRefetchInterval,
