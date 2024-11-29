@@ -73,6 +73,9 @@ export default function Auth({
             </Box>
           </form>
         )}
+        {info && !customForm && !usernamePasswordCallback && (
+          <Alert severity='info'>{<Markdown content={info} />}</Alert>
+        )}
         {authProviders && (
           <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 1 }}>
             {authProviders.map(({ label, callbackUrl, iconUrl }, index) => (
