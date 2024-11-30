@@ -41,9 +41,6 @@ describe('useFetchStats', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2000);
     });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(2000);
-    });
 
     expect(store.getState().ui.stats).toEqual(statsResponseTransformed.stats);
   });
@@ -67,9 +64,6 @@ describe('useFetchStats', () => {
       store.dispatch(swarmActions.setSwarm({ state: SWARM_STATE.RUNNING }));
     });
 
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(2000);
-    });
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2000);
     });
