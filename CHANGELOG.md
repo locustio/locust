@@ -1,6 +1,28 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.32.4](https://github.com/locustio/locust/tree/2.32.4) (2024-12-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.32.3...2.32.4)
+
+**Fixed bugs:**
+
+- Number of requests lower than expected in web UI [\#3000](https://github.com/locustio/locust/issues/3000)
+- Reports download links do not contain web-base-path [\#2998](https://github.com/locustio/locust/issues/2998)
+- Setuptools CVE-2024-6345  [\#2995](https://github.com/locustio/locust/issues/2995)
+- When using exclude-tags to exclude more than two tags, this setting will not take effect [\#2994](https://github.com/locustio/locust/issues/2994)
+
+**Merged pull requests:**
+
+- Allow showing auth info on blank page [\#3002](https://github.com/locustio/locust/pull/3002) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Number of requests lower than expected in web UI [\#3001](https://github.com/locustio/locust/pull/3001) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Webui links should be relative [\#2999](https://github.com/locustio/locust/pull/2999) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Dependency and node version bump [\#2997](https://github.com/locustio/locust/pull/2997) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Fix example in docs [\#2993](https://github.com/locustio/locust/pull/2993) ([daniloakamine](https://github.com/daniloakamine))
+- Add Input Type to Login Form [\#2992](https://github.com/locustio/locust/pull/2992) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Update configuration.rst to show minimalistic config example [\#2990](https://github.com/locustio/locust/pull/2990) ([vkuehn](https://github.com/vkuehn))
+- Fix README Images for PyPi [\#2989](https://github.com/locustio/locust/pull/2989) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.32.3](https://github.com/locustio/locust/tree/2.32.3) (2024-11-17)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.32.2...2.32.3)
