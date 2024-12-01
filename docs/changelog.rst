@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.32.4
+======
+* Minor doc updates https://github.com/locustio/locust/pull/2990, https://github.com/locustio/locust/pull/2989, https://github.com/locustio/locust/pull/2993
+* UI fixes and dependency updates https://github.com/locustio/locust/pull/2992 https://github.com/locustio/locust/pull/2997, https://github.com/locustio/locust/pull/3002, https://github.com/locustio/locust/pull/2999
+* Fix missing last requests in web UI https://github.com/locustio/locust/pull/3001
+
 2.32.3
 ======
 * Add option for Extra Options to be Required https://github.com/locustio/locust/pull/2981
