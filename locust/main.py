@@ -705,8 +705,27 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         logger.info("Got SIGTERM signal")
         shutdown()
 
+    def process_html_filename(options) -> None:
+        num_users = options.num_users
+        spawn_rate = options.spawn_rate
+        run_time = options.run_time
+
+        option_mapping = {
+            "{u}": num_users,
+            "{r}": spawn_rate,
+            "{t}": run_time,
+        }
+
+        html_filename = options.html_file
+
+        for option_term, option_value in option_mapping.items():
+            html_filename = html_filename.replace(option_term, str(int(option_value)))
+
+        options.html_file = html_filename
+
     def save_html_report():
         html_report = get_html_report(environment, show_download_link=False)
+        process_html_filename(options)
         logger.info("writing html report to file: %s", options.html_file)
         with open(options.html_file, "w", encoding="utf-8") as file:
             file.write(html_report)
