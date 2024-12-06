@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from operator import methodcaller
+from re import Pattern
 from typing import Callable, TypeVar
 
 from configargparse import Namespace
@@ -27,6 +28,7 @@ class Environment:
         tags: list[str] | None = None,
         locustfile: str | None = None,
         exclude_tags: list[str] | None = None,
+        exclude_from_aggregation: str | Pattern[str] | None = None,
         events: Events | None = None,
         host: str | None = None,
         reset_stats=False,
@@ -69,7 +71,8 @@ class Environment:
         """If set, only tasks that are tagged by tags in this list will be executed. Leave this as None to use the one from parsed_options"""
         self.exclude_tags = exclude_tags
         """If set, only tasks that aren't tagged by tags in this list will be executed. Leave this as None to use the one from parsed_options"""
-        self.stats = RequestStats()
+        self.exclude_from_aggregation = exclude_from_aggregation
+        self.stats = RequestStats(exclude_from_aggregation=exclude_from_aggregation)
         """Reference to RequestStats instance"""
         self.host = host
         """Base URL of the target system"""
@@ -154,7 +157,9 @@ class Environment:
         """
         # Create a new RequestStats with use_response_times_cache set to False to save some memory
         # and CPU cycles, since the response_times_cache is not needed for Worker nodes
-        self.stats = RequestStats(use_response_times_cache=False)
+        self.stats = RequestStats(
+            use_response_times_cache=False, exclude_from_aggregation=self.exclude_from_aggregation
+        )
         return self._create_runner(
             WorkerRunner,
             master_host=master_host,

@@ -109,6 +109,8 @@ class TestArgumentParser(LocustTestCase):
                 "-t",
                 "5m",
                 "--reset-stats",
+                "--exclude-from-aggregation",
+                "CUSTOM",
                 "--stop-timeout",
                 "5",
                 "MyUserClass",
@@ -120,6 +122,7 @@ class TestArgumentParser(LocustTestCase):
         self.assertEqual("5m", options.run_time)
         self.assertTrue(options.reset_stats)
         self.assertEqual("5", options.stop_timeout)
+        self.assertEqual("CUSTOM", options.exclude_from_aggregation)
         self.assertEqual(["MyUserClass"], options.user_classes)
         # check default arg
         self.assertEqual(8089, options.web_port)
@@ -132,6 +135,7 @@ class TestArgumentParser(LocustTestCase):
         os.environ["LOCUST_RESET_STATS"] = "true"
         os.environ["LOCUST_STOP_TIMEOUT"] = "5"
         os.environ["LOCUST_USER_CLASSES"] = "MyUserClass"
+        os.environ["LOCUST_EXCLUDE_FROM_AGGREGATION"] = "CUSTOM"
         options = parse_options(args=[])
 
         self.assertEqual("locustfile.py", options.locustfile)
@@ -141,6 +145,7 @@ class TestArgumentParser(LocustTestCase):
         self.assertTrue(options.reset_stats)
         self.assertEqual("5", options.stop_timeout)
         self.assertEqual(["MyUserClass"], options.user_classes)
+        self.assertEqual("CUSTOM", options.exclude_from_aggregation)
         # check default arg
         self.assertEqual(8089, options.web_port)
 
