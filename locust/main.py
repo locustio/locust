@@ -477,6 +477,22 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             )
             sys.exit(1)
 
+    if options.max_run_time:
+        if options.worker:
+            logger.info("--max-run-time specified for a worker node will be ignored.")
+        try:
+            options.max_run_time = parse_timespan(options.max_run_time)
+        except ValueError:
+            logger.error(
+                f"Invalid --max-run-time argument ({options.max_run_time}), accepted formats are for example 120, 120s, 2m, 3h, 3h30m10s."
+            )
+            sys.exit(1)
+        if options.run_time is None or options.max_run_time < options.run_time:
+            logger.info(
+                f"Applying --max-run-time cap: run time reduced from {options.run_time if options.run_time else 'undefined'} to {options.max_run_time}."
+            )
+            options.run_time = options.max_run_time
+
     if options.csv_prefix:
         base_csv_file = os.path.basename(options.csv_prefix)
         base_csv_dir = options.csv_prefix[: -len(base_csv_file)]

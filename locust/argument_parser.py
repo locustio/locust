@@ -417,6 +417,12 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_RUN_TIME",
     )
     parser.add_argument(
+        "--max-run-time",
+        metavar="<time string>",
+        help="Maximum allowed run time that caps or overrides the --run-time setting. Accepts the same formats as run-time, e.g. (300s, 20m, 3h, 1h30m, etc.).",
+        env_var="LOCUST_MAX_RUN_TIME",
+    )
+    parser.add_argument(
         "-l",
         "--list",
         action="store_true",
