@@ -544,6 +544,9 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     # Fire locust init event which can be used by end-users' code to run setup code that
     # need access to the Environment, Runner or WebUI.
     environment.events.init.fire(environment=environment, runner=runner, web_ui=web_ui)
+    if log.unhandled_greenlet_exception:
+        # treat exceptions in init handlers as fatal. They are already logged so no need to log anything more.
+        sys.exit(1)
 
     if web_ui:
         web_ui.start()
