@@ -1442,6 +1442,39 @@ class MyUser(HttpUser):
             # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
             self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
 
+    def test_exception_in_init_event(self):
+        with mock_locustfile(
+            content=textwrap.dedent(
+                """
+            from locust import User, task, constant, events
+            @events.init.add_listener
+            def _(*args, **kw):
+                raise Exception("something went wrong")
+
+            class TestUser(User):
+                wait_time = constant(10)
+                @task
+                def my_task(self):
+                    pass
+                    """
+            )
+        ) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "https://test.com/",
+                ],
+                stdout=PIPE,
+                stderr=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate(timeout=3)
+            self.assertIn("something went wrong", stderr)
+            self.assertEqual(1, proc.returncode)
+
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
     failed_port_check = False
