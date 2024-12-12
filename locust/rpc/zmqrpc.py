@@ -64,6 +64,8 @@ class BaseSocket:
 
     def ipv4_only(self, host, port) -> bool:
         try:
+            if host == "*":
+                return False
             if str(csocket.getaddrinfo(host, port, proto=csocket.IPPROTO_TCP)).find("Family.AF_INET6") == -1:
                 return True
         except gaierror as e:
