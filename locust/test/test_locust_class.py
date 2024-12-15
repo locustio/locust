@@ -3,6 +3,7 @@ from locust.env import Environment
 from locust.exception import (
     CatchResponseError,
     InterruptTaskSet,
+    LocustError,
     RescheduleTask,
     RescheduleTaskImmediately,
     ResponseError,
@@ -34,35 +35,33 @@ class TestTaskSet(LocustTestCase):
 
         l = MyTasks(self.locust)
 
-        t1_count = len([t for t in l.tasks if t == t1])
-        t2_count = len([t for t in l.tasks if t == t2])
+        t1_count = [t for t in l.tasks if t == t1][0].locust_task_weight
+        t2_count = [t for t in l.tasks if t == t2][0].locust_task_weight
 
         self.assertEqual(t1_count, 5)
         self.assertEqual(t2_count, 2)
 
     def test_tasks_missing_gives_user_friendly_exception(self):
         class MyTasks(TaskSet):
-            tasks = None
+            tasks = []
 
         class MyUser(User):
             wait_time = constant(0.5)
             tasks = [MyTasks]
 
         l = MyTasks(MyUser(self.environment))
-        self.assertRaisesRegex(Exception, "No tasks defined on MyTasks.*", l.run)
-        l.tasks = []
-        self.assertRaisesRegex(Exception, "No tasks defined on MyTasks.*", l.run)
+        self.assertRaisesRegex(LocustError, "No tasks defined on MyTasks.*", l.run)
         MyTasks.task = object()
-        self.assertRaisesRegex(Exception, ".*but you have set a 'task' attribute.*", l.run)
+        self.assertRaisesRegex(LocustError, ".*but you have set a 'task' attribute.*", l.run)
 
     def test_tasks_missing_from_user_gives_user_friendly_exception(self):
         class MyUser(User):
             wait_time = constant(0.5)
 
         l = MyUser(self.environment)
-        self.assertRaisesRegex(Exception, "No tasks defined on MyUser.*", l.run)
+        self.assertRaisesRegex(LocustError, "No tasks defined on MyUser.*", l.run)
         MyUser.task = object()
-        self.assertRaisesRegex(Exception, ".*but you have set a 'task' attribute.*", l.run)
+        self.assertRaisesRegex(LocustError, ".*but you have set a 'task' attribute.*", l.run)
 
     def test_task_decorator_ratio(self):
         t1 = lambda l: None
@@ -82,10 +81,10 @@ class TestTaskSet(LocustTestCase):
 
         l = MyTasks(self.locust)
 
-        t1_count = len([t for t in l.tasks if t == t1])
-        t2_count = len([t for t in l.tasks if t == t2])
-        t3_count = len([t for t in l.tasks if t.__name__ == MyTasks.t3.__name__])
-        t4_count = len([t for t in l.tasks if t.__name__ == MyTasks.t4.__name__])
+        t1_count = [t for t in l.tasks if t == t1][0].locust_task_weight
+        t2_count = [t for t in l.tasks if t == t2][0].locust_task_weight
+        t3_count = [t for t in l.tasks if t.__name__ == MyTasks.t3.__name__][0].locust_task_weight
+        t4_count = [t for t in l.tasks if t.__name__ == MyTasks.t4.__name__][0].locust_task_weight
 
         self.assertEqual(t1_count, 5)
         self.assertEqual(t2_count, 2)
@@ -103,8 +102,8 @@ class TestTaskSet(LocustTestCase):
                 pass
 
         l = MyUser(self.environment)
-        self.assertEqual(2, len([t for t in l.tasks if t.__name__ == MyUser.t1.__name__]))
-        self.assertEqual(3, len([t for t in l.tasks if t.__name__ == MyUser.t2.__name__]))
+        self.assertEqual(2, [t for t in l.tasks if t.__name__ == MyUser.t1.__name__][0].locust_task_weight)
+        self.assertEqual(3, [t for t in l.tasks if t.__name__ == MyUser.t2.__name__][0].locust_task_weight)
 
     def test_tasks_on_abstract_locust(self):
         class AbstractUser(User):
@@ -120,8 +119,9 @@ class TestTaskSet(LocustTestCase):
                 pass
 
         l = MyUser(self.environment)
-        self.assertEqual(2, len([t for t in l.tasks if t.__name__ == MyUser.t1.__name__]))
-        self.assertEqual(3, len([t for t in l.tasks if t.__name__ == MyUser.t2.__name__]))
+
+        self.assertEqual(2, [t for t in l.tasks if t.__name__ == MyUser.t1.__name__][0].locust_task_weight)
+        self.assertEqual(3, [t for t in l.tasks if t.__name__ == MyUser.t2.__name__][0].locust_task_weight)
 
     def test_taskset_on_abstract_locust(self):
         v = [0]
@@ -281,6 +281,7 @@ class TestTaskSet(LocustTestCase):
                 self.t2_executed = True
 
         taskset = MyTasks(self.locust)
+        taskset._setup_tasks()
         taskset.schedule_task(taskset.get_next_task())
         taskset.execute_next_task()
         self.assertTrue(taskset.t1_executed)
@@ -311,7 +312,8 @@ class TestTaskSet(LocustTestCase):
                 pass
 
         taskset = MyTaskSet(self.locust)
-        self.assertEqual(len(taskset.tasks), 1)
+        task_count = [t for t in taskset.tasks if t.__name__ == MyTaskSet.t1.__name__][0].locust_task_weight
+        self.assertEqual(task_count, 1)
 
         class MyTaskSet2(TaskSet):
             @task()
@@ -319,7 +321,8 @@ class TestTaskSet(LocustTestCase):
                 pass
 
         taskset = MyTaskSet2(self.locust)
-        self.assertEqual(len(taskset.tasks), 1)
+        task_count = [t for t in taskset.tasks if t.__name__ == MyTaskSet2.t1.__name__][0].locust_task_weight
+        self.assertEqual(task_count, 1)
 
         class MyTaskSet3(TaskSet):
             @task(3)
@@ -327,7 +330,8 @@ class TestTaskSet(LocustTestCase):
                 pass
 
         taskset = MyTaskSet3(self.locust)
-        self.assertEqual(len(taskset.tasks), 3)
+        task_count = [t for t in taskset.tasks if t.__name__ == MyTaskSet3.t1.__name__][0].locust_task_weight
+        self.assertEqual(task_count, 3)
 
     def test_wait_function(self):
         class MyTaskSet(TaskSet):
@@ -352,6 +356,7 @@ class TestTaskSet(LocustTestCase):
 
         self.sub_locust_task_executed = False
         loc = MyTaskSet(self.locust)
+        loc._setup_tasks()
         loc.schedule_task(loc.get_next_task())
         self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
         self.assertTrue(self.locust.sub_locust_task_executed)
@@ -369,6 +374,7 @@ class TestTaskSet(LocustTestCase):
 
         self.sub_locust_task_executed = False
         loc = MyTaskSet(self.locust)
+        loc._setup_tasks()
         loc.schedule_task(loc.get_next_task())
         self.assertRaises(RescheduleTaskImmediately, lambda: loc.execute_next_task())
         self.assertTrue(self.locust.sub_locust_task_executed)
