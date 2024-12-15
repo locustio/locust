@@ -3,6 +3,7 @@ from locust.env import Environment
 from locust.exception import (
     CatchResponseError,
     InterruptTaskSet,
+    NoTaskToRun,
     RescheduleTask,
     RescheduleTaskImmediately,
     ResponseError,
@@ -60,7 +61,7 @@ class TestTaskSet(LocustTestCase):
             wait_time = constant(0.5)
 
         l = MyUser(self.environment)
-        self.assertRaisesRegex(Exception, "No tasks defined on MyUser.*", l.run)
+        self.assertRaisesRegex(NoTaskToRun, "No tasks defined on MyUser.*", l.run)
         MyUser.task = object()
         self.assertRaisesRegex(Exception, ".*but you have set a 'task' attribute.*", l.run)
 
