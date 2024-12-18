@@ -134,6 +134,7 @@ Flask-Login = ">=0.6.3"
 Flask-Cors = ">=3.0.10"
 pywin32 = { version = "*", markers = "sys_platform == 'win32'" }
 setuptools = ">=70.0.0"
+aiohttp = "^3.11.10"
 
 [tool.poetry.group.dev]
 optional = true
