@@ -285,7 +285,7 @@ class WebUI:
                     if isinstance(parsed_options_value, bool):
                         parsed_options_dict[key] = value == "true"
                     elif parsed_options_value is None:
-                        parsed_options_dict[key] = parsed_options_value
+                        parsed_options_dict[key] = value or None
                     else:
                         parsed_options_dict[key] = type(parsed_options_dict[key])(value)
 
