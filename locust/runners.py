@@ -438,7 +438,7 @@ class LocalRunner(Runner):
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.worker_count = 1
         # Only when running in standalone mode (non-distributed)
-        self._local_worker_node = WorkerNode(id="local")
+        self._local_worker_node = WorkerNode(id="local", heartbeat_liveness=HEARTBEAT_LIVENESS)
         self._local_worker_node.user_classes_count = self.user_classes_count
 
         # register listener that's logs the exception for the local runner
@@ -573,10 +573,11 @@ class DistributedRunner(Runner):
 
 
 class WorkerNode:
-    def __init__(self, id: str, state=STATE_INIT, heartbeat_liveness=HEARTBEAT_LIVENESS) -> None:
+    def __init__(self, id: str, state=STATE_INIT, heartbeat_liveness: int = HEARTBEAT_LIVENESS) -> None:
         self.id: str = id
         self.state = state
-        self.heartbeat = heartbeat_liveness
+        self.heartbeat: int = heartbeat_liveness
+        self.heartbeat_liveness: int = heartbeat_liveness
         self.cpu_usage: int = 0
         self.cpu_warning_emitted = False
         self.memory_usage: int = 0
@@ -1083,7 +1084,7 @@ class MasterRunner(DistributedRunner):
             elif msg.type == "heartbeat":
                 if msg.node_id in self.clients:
                     c = self.clients[msg.node_id]
-                    c.heartbeat = HEARTBEAT_LIVENESS
+                    c.heartbeat = c.heartbeat_liveness
                     client_state = msg.data["state"]
                     if c.state == STATE_MISSING:
                         logger.info(f"Worker {str(c.id)} self-healed with heartbeat, setting state to {client_state}.")
