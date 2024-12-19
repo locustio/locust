@@ -96,10 +96,7 @@ def _construct_basic_auth_str(username, password):
 
 
 def insecure_ssl_context_factory():
-    context = gevent.ssl.create_default_context()
-    context.check_hostname = False
-    context.verify_mode = gevent.ssl.CERT_NONE
-    return context
+    return gevent.ssl._create_unverified_context()
 
 
 class FastHttpSession:
