@@ -161,16 +161,16 @@ class TestLocustRunner(LocustRunnerTestCase):
 
     def test_cpu_warning(self):
         _monitor_interval = runners.CPU_MONITOR_INTERVAL
-        runners.CPU_MONITOR_INTERVAL = 2.0
+        runners.CPU_MONITOR_INTERVAL = 0.1
         try:
 
             class CpuUser(User):
-                wait_time = constant(0.001)
-
                 @task
                 def cpu_task(self):
-                    for i in range(1000000):
-                        _ = 3 / 2
+                    for i in range(10):
+                        for j in range(1000000):
+                            _ = 3 / 2
+                        time.sleep(0.0001)  # let other greenlets run, like the cpu monitor
 
             environment = Environment(user_classes=[CpuUser])
             environment._cpu_warning_event_triggered = False
@@ -181,6 +181,7 @@ class TestLocustRunner(LocustRunnerTestCase):
 
             environment.events.cpu_warning.add_listener(cpu_warning)
             runner = LocalRunner(environment)
+            time.sleep(0.2)  # let first checks run
             self.assertFalse(runner.cpu_warning_emitted)
             runner.spawn_users({CpuUser.__name__: 1}, wait=False)
             sleep(2.5)

@@ -52,7 +52,7 @@ STATE_INIT, STATE_SPAWNING, STATE_RUNNING, STATE_CLEANUP, STATE_STOPPING, STATE_
 ]
 WORKER_REPORT_INTERVAL = 3.0
 WORKER_LOG_REPORT_INTERVAL = 10
-CPU_MONITOR_INTERVAL = 5.0
+CPU_MONITOR_INTERVAL = 10.0
 CPU_WARNING_THRESHOLD = 90
 HEARTBEAT_INTERVAL = 1
 HEARTBEAT_LIVENESS = 3
@@ -283,6 +283,7 @@ class Runner:
     def monitor_cpu_and_memory(self) -> NoReturn:
         process = psutil.Process()
         while True:
+            gevent.sleep(CPU_MONITOR_INTERVAL)
             self.current_cpu_usage = process.cpu_percent()
             self.current_memory_usage = process.memory_info().rss
             if self.current_cpu_usage > CPU_WARNING_THRESHOLD:
@@ -296,7 +297,6 @@ class Runner:
             self.environment.events.usage_monitor.fire(
                 environment=self.environment, cpu_usage=self.current_cpu_usage, memory_usage=self.current_memory_usage
             )
-            gevent.sleep(CPU_MONITOR_INTERVAL)
 
     @abstractmethod
     def start(
