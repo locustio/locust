@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.32.5
+======
+* Treat exceptions in init event handler as fatal https://github.com/locustio/locust/pull/3009
+* FastHttpUser: Fix SSL certificate loading performance issue https://github.com/locustio/locust/pull/3013
+* Delay CPU usage checks to make it less likely to generate false positives during process startup https://github.com/locustio/locust/pull/3014
+
 2.32.4
 ======
 * Minor doc updates https://github.com/locustio/locust/pull/2990, https://github.com/locustio/locust/pull/2989, https://github.com/locustio/locust/pull/2993
