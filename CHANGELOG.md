@@ -1,6 +1,17 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.32.5](https://github.com/locustio/locust/tree/2.32.5) (2024-12-22)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.32.4...2.32.5)
+
+**Merged pull requests:**
+
+- Make cpu usage check sleep BEFORE the first check, and make it slightly less frequent [\#3014](https://github.com/locustio/locust/pull/3014) ([cyberw](https://github.com/cyberw))
+- FastHttpUser: Fix ssl loading performance issue by avoiding to load certs when they wont be used anyway [\#3013](https://github.com/locustio/locust/pull/3013) ([cyberw](https://github.com/cyberw))
+- Treat exceptions in init event handler as fatal [\#3009](https://github.com/locustio/locust/pull/3009) ([cyberw](https://github.com/cyberw))
+- Add create store export [\#3004](https://github.com/locustio/locust/pull/3004) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.32.4](https://github.com/locustio/locust/tree/2.32.4) (2024-12-01)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.32.3...2.32.4)
