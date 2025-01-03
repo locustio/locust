@@ -567,8 +567,8 @@ class LocalRunner(Runner):
 
 
 class DistributedRunner(Runner):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, environment) -> None:
+        super().__init__(environment)
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
 
