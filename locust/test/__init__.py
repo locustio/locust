@@ -13,3 +13,10 @@ try:
     changed_rlimit = True
 except Exception:
     changed_rlimit = False
+
+import os
+
+# Clean environment from stuff you might have lying around
+del os.environ["LOCUST_WEB_LOGIN"]
+# Ensure locust-cloud is not loaded during tests
+del os.environ["PGHOST"]
