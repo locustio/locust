@@ -16,7 +16,7 @@ Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then
     # clone the repo:
     $ git clone git://github.com/<YourName>/locust.git
 
-    # install the poetry build system, see https://python-poetry.org/docs/#installation
+    # install the poetry build system, version 1.8.5, see https://python-poetry.org/docs/#installation
 
     # install the required poetry plugins:
     $ poetry self add "poethepoet[poetry_plugin]"
