@@ -40,6 +40,7 @@ jobs:
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
+          version: 1.8.5
           virtualenvs-create: true
           virtualenvs-in-project: true
           virtualenvs-path: .venv
@@ -165,6 +166,7 @@ jobs:
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
+          version: 1.8.5
           virtualenvs-create: true
           virtualenvs-in-project: true
           virtualenvs-path: .venv

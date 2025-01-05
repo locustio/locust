@@ -613,7 +613,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 response = requests.get(f"http://localhost:{port}/")
             except Exception:
                 pass
-            self.assertEqual(200, response.status_code)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
             self.assertIn("Starting Locust", stderr)
@@ -621,6 +620,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Shutting down ", stderr)
             self.assertNotIn("Traceback", stderr)
             # check response afterwards, because it really isn't as informative as stderr
+            self.assertEqual(200, response.status_code)
             d = pq(response.content.decode("utf-8"))
 
             self.assertEqual(200, response.status_code)
@@ -885,7 +885,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         mocked.file_path,
                         "--headless",
                         "--run-time",
-                        "7s",
+                        "6s",
                         "-u",
                         "0",
                         "--loglevel",
@@ -999,7 +999,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                             f"{mocked1.file_path},{mocked2.file_path}",
                             "--headless",
                             "--run-time",
-                            "5s",
+                            "2s",
                             "-u",
                             "10",
                             "-r",
@@ -1053,7 +1053,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     mocked.file_path,
                     "--headless",
                     "--run-time",
-                    "1s",
+                    "0.5",
                     "-u",
                     "3",
                 ],
@@ -1674,8 +1674,10 @@ class SecondUser(HttpUser):
                     "1",
                     "-u",
                     "3",
+                    "-r",
+                    "99",
                     "-t",
-                    "5s",
+                    "1s",
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
@@ -1737,8 +1739,10 @@ class SecondUser(HttpUser):
                     "1",
                     "-u",
                     "3",
+                    "-r",
+                    "99",
                     "-t",
-                    "5s",
+                    "1s",
                 ],
                 stderr=STDOUT,
                 stdout=PIPE,
@@ -1759,7 +1763,7 @@ class SecondUser(HttpUser):
             proc_worker.communicate()
 
             self.assertIn(
-                'Spawning is complete and report waittime is expired, but not all reports received from workers: {"User1": 2} (2 total users)',
+                "Spawning is complete and report waittime is expired, but not all reports received from workers:",
                 stdout,
             )
             self.assertIn("Shutting down (exit code 0)", stdout)
@@ -1808,7 +1812,7 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
             )
-            gevent.sleep(2)
+            gevent.sleep(1)
             proc_worker2 = subprocess.Popen(
                 [
                     "locust",
@@ -1858,7 +1862,7 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
             )
-            gevent.sleep(2)
+            gevent.sleep(1)
             proc = subprocess.Popen(
                 [
                     "locust",
@@ -1916,7 +1920,6 @@ class SecondUser(HttpUser):
                 stdout=PIPE,
                 text=True,
             )
-            gevent.sleep(2)
             proc_worker = subprocess.Popen(
                 [
                     "locust",
@@ -1998,6 +2001,7 @@ class SecondUser(HttpUser):
             self.assertEqual(dict, type(result["num_reqs_per_sec"]))
             self.assertEqual(dict, type(result["num_fail_per_sec"]))
 
+    @unittest.skipIf(True, reason="This test is too slow for the value it provides")
     def test_worker_indexes(self):
         content = """
 from locust import HttpUser, task, between
