@@ -3,6 +3,13 @@ API
 ###
 
 
+FastHttpSession class
+=====================
+
+.. autoclass:: locust.contrib.fasthttp.FastHttpSession
+    :members: delete, get, head, options, patch, post, put, iter_lines
+    :noindex:
+
 User class
 ============
 
