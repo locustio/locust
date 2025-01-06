@@ -298,6 +298,18 @@ class FastHttpSession:
         """Sends a GET request"""
         return self.request("GET", url, **kwargs)
 
+    def iter_lines(self, url, **kwargs):
+        """Sends a iter_lines request"""
+        response = self.get(url, **kwargs)
+        response.raise_for_status()
+        
+        buffer = ''
+        for chunk in response.iter_content(chunk_size=1024):
+            buffer += chunk.decode('utf-8')
+            while '\n' in buffer:
+                line, buffer = buffer.split('\n', 1)
+                yield line
+
     def head(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | FastResponse:
         """Sends a HEAD request"""
         return self.request("HEAD", url, **kwargs)
