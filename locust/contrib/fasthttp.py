@@ -302,11 +302,11 @@ class FastHttpSession:
         """Sends a iter_lines request"""
         response = self.request("GET", url, stream=True, **kwargs)
         response.raise_for_status()
-        buffer = ''
+        buffer = ""
         for chunk in response.iter_content(chunk_size=1024):
-            buffer += chunk.decode('utf-8')
-            while '\n' in buffer:
-                line, buffer = buffer.split('\n', 1)
+            buffer += chunk.decode("utf-8")
+            while "\n" in buffer:
+                line, buffer = buffer.split("\n", 1)
                 yield line
 
     def head(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | FastResponse:
