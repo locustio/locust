@@ -302,7 +302,6 @@ class FastHttpSession:
         """Sends a iter_lines request"""
         response = self.request("GET", url, stream=True, **kwargs)
         response.raise_for_status()  # Check for HTTP errors
-    
         buffer = ''
         for chunk in response.iter_content(chunk_size=1024):
             buffer += chunk.decode('utf-8')
