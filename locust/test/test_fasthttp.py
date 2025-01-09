@@ -107,6 +107,31 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertGreaterEqual(stats.avg_response_time, 0)
         self.assertLess(stats.avg_response_time, 250)
 
+    def test_iter_lines(self):
+        """
+        Test the iter_lines method for handling streaming responses.
+        Ensure it can process lines without verifying specific content.
+        """
+        s = self.get_client()
+
+        # Perform the test using an actual endpoint
+        with s.iter_lines(url="/streaming_endpoint") as response:
+            if response.status_code == 200:
+                try:
+                    # Simply ensure we can iterate over the lines
+                    for line in response:
+                        self.assertTrue(isinstance(line, str))  # Check if each part is a string
+                    response.success()  # Mark the response as successful
+                except Exception as e:
+                    response.failure(f"Error processing line: {e}")
+            else:
+                response.failure(f"HTTP error: {response.status_code}")
+
+        # Verify that the statistics reflect the request was made correctly
+        stats = self.runner.stats.get("/streaming_endpoint", "GET")
+        self.assertEqual(1, stats.num_requests)
+        self.assertEqual(0, stats.num_failures)
+
     def test_slow_redirect(self):
         s = self.get_client()
         url = "/redirect?url=/redirect&delay=0.5"
