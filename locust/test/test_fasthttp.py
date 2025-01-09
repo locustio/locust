@@ -1,4 +1,3 @@
-from unittest.mock import patch
 from locust import FastHttpUser
 from locust.argument_parser import parse_options
 from locust.contrib.fasthttp import FastHttpSession
@@ -110,28 +109,19 @@ class TestFastHttpSession(WebserverTestCase):
 
     def test_iter_lines(self):
         """
-        Test the iter_lines method for handling streaming responses.
-        Ensure it can process lines without verifying specific content.
+        Test the iter_lines method for streaming response line by line
         """
         s = self.get_client()
+        url = "/streaming_lines_endpoint"
 
-        # Mock the iter_lines method to simulate returning streaming data
-        with patch.object(FastHttpSession, 'iter_lines', return_value=iter(["line1\n", "line2\n", "line3\n"])):
-            # Call the iter_lines method
-            response = s.iter_lines(url="/streaming_endpoint")
+        # Collect lines from the iter_lines method
+        lines = list(s.iter_lines(url))
 
-            try:
-                # Ensure we can iterate over the lines returned by the generator
-                for line in response:
-                    self.assertTrue(isinstance(line, str))  # Check if each line is a string
-            except Exception as e:
-                # Handle any exceptions that occur during iteration
-                self.fail(f"Error processing line: {e}")
+        # Define the expected lines based on what the endpoint should return
+        expected_lines = ["line1", "line2", "line3"]  # Replace with actual expected lines
 
-            # Verify that the statistics correctly reflect the request execution
-            stats = self.runner.stats.get("/streaming_endpoint", "GET")
-            self.assertEqual(1, stats.num_requests)
-            self.assertEqual(0, stats.num_failures)
+        # Assert that the lines collected match the expected lines
+        self.assertEqual(lines, expected_lines)
 
     def test_slow_redirect(self):
         s = self.get_client()
