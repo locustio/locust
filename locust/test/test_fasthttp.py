@@ -114,19 +114,19 @@ class TestFastHttpSession(WebserverTestCase):
         """
         s = self.get_client()
 
-        # 使用一个实际的端点进行测试
+        # Use the actual endpoint to test streaming response
         response = s.iter_lines(url="/streaming_endpoint")
 
         try:
-            # 确保我们可以迭代生成器返回的行
+            # Ensure we can iterate over the lines returned by the generator
             for line in response:
-                self.assertTrue(isinstance(line, str))  # 检查每个部分是否为字符串
-            # 如果需要，可以在这里标记请求成功
+                self.assertTrue(isinstance(line, str))  # Check if each line is a string
+            # Optionally, mark the request as successful if needed
         except Exception as e:
-            # 如果需要，可以在这里处理失败
-            self.fail(f"处理行时出错: {e}")
+            # Handle any exceptions that occur during iteration
+            self.fail(f"Error processing line: {e}")
 
-        # 验证统计信息是否正确反映请求已正确执行
+        # Verify that the statistics correctly reflect the request execution
         stats = self.runner.stats.get("/streaming_endpoint", "GET")
         self.assertEqual(1, stats.num_requests)
         self.assertEqual(0, stats.num_failures)
