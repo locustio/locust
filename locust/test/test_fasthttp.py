@@ -114,20 +114,20 @@ class TestFastHttpSession(WebserverTestCase):
         """
         s = self.get_client()
 
-        # Use the actual endpoint to test streaming response
-        response = s.iter_lines(url="/streaming_endpoint")
+        with s.get("/streaming/30", stream=True, catch_response=True) as r:
+            if r.status_code == 200:
+                try:
+                    # Iterate over lines using the streaming response
+                    for line in r.iter_lines():
+                        self.assertTrue(isinstance(line, str))  # Check if each line is a string
+                    r.success()  # Mark the response as successful
+                except Exception as e:
+                    r.failure(f"Error processing line: {e}")
+            else:
+                r.failure(f"HTTP error: {r.status_code}")
 
-        try:
-            # Ensure we can iterate over the lines returned by the generator
-            for line in response:
-                self.assertTrue(isinstance(line, str))  # Check if each line is a string
-            # Optionally, mark the request as successful if needed
-        except Exception as e:
-            # Handle any exceptions that occur during iteration
-            self.fail(f"Error processing line: {e}")
-
-        # Verify that the statistics correctly reflect the request execution
-        stats = self.runner.stats.get("/streaming_endpoint", "GET")
+        # Verify that the statistics reflect the request was made correctly
+        stats = self.runner.stats.get("/streaming/30", "GET")
         self.assertEqual(1, stats.num_requests)
         self.assertEqual(0, stats.num_failures)
 
