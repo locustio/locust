@@ -7,6 +7,7 @@ import errno
 import gc
 import importlib.metadata
 import inspect
+import itertools
 import json
 import logging
 import os
@@ -35,7 +36,6 @@ from .stats import (
 )
 from .user.inspectuser import print_task_ratio, print_task_ratio_json
 from .util.load_locustfile import load_locustfile
-from .util.timespan import parse_timespan
 
 # import external plugins if  installed to allow for registering custom arguments etc
 try:
@@ -172,35 +172,13 @@ def main():
     if options.headful:
         options.headless = False
 
-    if options.slave or options.expect_slaves:
-        sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
-        sys.exit(1)
-
-    if options.web_auth:
-        sys.stderr.write(
-            "The --web-auth parameters has been replaced with --web-login. See https://docs.locust.io/en/stable/extending-locust.html#authentication for details\n"
-        )
-        sys.exit(1)
-
     if options.autoquit != -1 and not options.autostart:
         sys.stderr.write("--autoquit is only meaningful in combination with --autostart\n")
         sys.exit(1)
 
-    if options.hatch_rate:
-        sys.stderr.write("--hatch-rate parameter has been renamed --spawn-rate\n")
-        sys.exit(1)
-
-    if options.legacy_ui:
-        sys.stderr.write("--legacy-ui is no longer supported, remove the parameter to continue\n")
-        sys.exit(1)
-
     # setup logging
     if not options.skip_log_setup:
-        if options.loglevel.upper() in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
-            setup_logging(options.loglevel, options.logfile)
-        else:
-            sys.stderr.write("Invalid --loglevel. Valid values are: DEBUG/INFO/WARNING/ERROR/CRITICAL\n")
-            sys.exit(1)
+        setup_logging(options.loglevel, options.logfile)
 
     children = []
     logger = logging.getLogger(__name__)
@@ -312,13 +290,6 @@ def main():
     if sys.version_info < (3, 10):
         logger.warning("Python 3.9 support is deprecated and will be removed soon")
 
-    if options.stop_timeout:
-        try:
-            options.stop_timeout = parse_timespan(options.stop_timeout)
-        except ValueError:
-            logger.error("Valid --stop-timeout formats are: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
-            sys.exit(1)
-
     if options.list_commands:
         print("Available Users:")
         for name in user_classes:
@@ -382,39 +353,17 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     )
 
     if options.config_users:
-        for json_user_config in options.config_users:
-            try:
-                if json_user_config.endswith(".json"):
-                    with open(json_user_config) as file:
-                        user_config = json.load(file)
-                else:
-                    user_config = json.loads(json_user_config)
-
-                def ensure_user_class_name(config):
-                    if "user_class_name" not in config:
-                        logger.error("The user config must specify a user_class_name")
-                        sys.exit(-1)
-
-                if isinstance(user_config, list):
-                    for config in user_config:
-                        ensure_user_class_name(config)
-
-                        environment.update_user_class(config)
-                else:
-                    ensure_user_class_name(user_config)
-
-                    environment.update_user_class(user_config)
-            except json.decoder.JSONDecodeError as e:
-                logger.error(f"The --config-users argument must be in valid JSON string or file: {e}")
-                sys.exit(-1)
-            except KeyError as e:
-                logger.error(
-                    f"Error applying user config, probably you tried to specify config for a User not present in your locustfile: {e}"
-                )
-                sys.exit(-1)
-            except Exception as e:
-                logger.exception(e)
-                sys.exit(-1)
+        try:
+            for user_config in itertools.chain(*options.config_users):
+                environment.update_user_class(user_config)
+        except KeyError as e:
+            logger.error(
+                f"Error applying user config, probably you tried to specify config for a User not present in your locustfile: {e}"
+            )
+            sys.exit(-1)
+        except Exception as e:
+            logger.exception(e)
+            sys.exit(-1)
 
     if (
         shape_class
@@ -469,13 +418,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     if options.run_time:
         if options.worker:
             logger.info("--run-time specified for a worker node will be ignored.")
-        try:
-            options.run_time = parse_timespan(options.run_time)
-        except ValueError:
-            logger.error(
-                f"Invalid --run-time argument ({options.run_time}), accepted formats are for example 120, 120s, 2m, 3h, 3h30m10s."
-            )
-            sys.exit(1)
 
     if options.csv_prefix:
         base_csv_file = os.path.basename(options.csv_prefix)
