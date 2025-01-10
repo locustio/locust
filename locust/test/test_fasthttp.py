@@ -1,7 +1,6 @@
 from locust import FastHttpUser
 from locust.argument_parser import parse_options
 from locust.contrib.fasthttp import FastHttpSession
-from unittest.mock import MagicMock
 from locust.exception import CatchResponseError, InterruptTaskSet, LocustError, ResponseError
 from locust.user import TaskSet, task
 from locust.util.load_locustfile import is_user_class
@@ -9,6 +8,7 @@ from locust.util.load_locustfile import is_user_class
 import socket
 import time
 from tempfile import NamedTemporaryFile
+from unittest.mock import MagicMock
 
 import gevent
 from geventhttpclient.client import HTTPClientPool
