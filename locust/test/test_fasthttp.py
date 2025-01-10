@@ -114,7 +114,9 @@ class TestFastHttpSession(WebserverTestCase):
         mock_user = MagicMock()
 
         # Initialize FastHttpSession with the mock environment and user
-        session = FastHttpSession(environment=mock_environment, user=mock_user, base_url=f"http://127.0.0.1:{self.port}")
+        session = FastHttpSession(
+            environment=mock_environment, user=mock_user, base_url=f"http://127.0.0.1:{self.port}"
+        )
 
         # Make a request to the /streaming endpoint with a specific number of iterations
         url = "/streaming/10"
