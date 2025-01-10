@@ -109,22 +109,23 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertLess(stats.avg_response_time, 250)
 
     def test_iter_lines(self):
-        # Create a mock user or use an actual user class if available
+        # 使用 MagicMock 创建环境和用户
+        mock_environment = MagicMock()
         mock_user = MagicMock()
 
-        # Initialize FastHttpSession with the local server and mock user
-        session = FastHttpSession(self.environment, user=mock_user, base_url=f"http://127.0.0.1:{self.port}")
+        # 初始化 FastHttpSession，确保所有参数都被正确传递
+        session = FastHttpSession(mock_environment, user=mock_user, base_url=f"http://127.0.0.1:{self.port}")
 
-        # Make a request to the /streaming endpoint with a specific number of iterations
+        # 指定请求的 URL，使用 /streaming/10 来测试流式响应
         url = "/streaming/10"
 
-        # Use the iter_lines method to read the streamed response
+        # 使用 iter_lines 方法读取流式响应
         lines = list(session.iter_lines(url))
 
-        # Define the expected lines based on the number of iterations
+        # 根据 iterations 参数定义预期的响应行
         expected_lines = [f"<span>{i}</span>" for i in range(10)]
 
-        # Validate the response lines
+        # 断言响应行与预期一致
         self.assertEqual(lines, expected_lines)
 
     def test_slow_redirect(self):
