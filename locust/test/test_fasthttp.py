@@ -108,19 +108,19 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertLess(stats.avg_response_time, 250)
 
     def test_iter_lines(self):
-        """
-        Test the iter_lines method for streaming response line by line
-        """
-        s = self.get_client()
-        url = "/streaming_lines_endpoint"
+        # Initialize FastHttpSession with the local server
+        session = FastHttpSession(self.environment, base_url=f"http://127.0.0.1:{self.port}")
 
-        # Collect lines from the iter_lines method
-        lines = list(s.iter_lines(url))
+        # Make a request to the /streaming endpoint with a specific number of iterations
+        url = "/streaming/10"
 
-        # Define the expected lines based on what the endpoint should return
-        expected_lines = ["line1", "line2", "line3"]  # Replace with actual expected lines
+        # Use the iter_lines method to read the streamed response
+        lines = list(session.iter_lines(url))
 
-        # Assert that the lines collected match the expected lines
+        # Define the expected lines based on the number of iterations
+        expected_lines = [f"<span>{i}</span>" for i in range(10)]
+
+        # Validate the response lines
         self.assertEqual(lines, expected_lines)
 
     def test_slow_redirect(self):
