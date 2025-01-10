@@ -303,7 +303,7 @@ class FastHttpSession:
         response = self.request("GET", url, stream=True, **kwargs)
         response.raise_for_status()
         buffer = ""
-        for chunk in response.iter_content(chunk_size=1024):
+        for chunk in response.iter_content(chunk_size=1024, decode_content=True):
             buffer += chunk.decode("utf-8")
             while "\n" in buffer:
                 line, buffer = buffer.split("\n", 1)
