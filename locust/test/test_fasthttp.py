@@ -113,6 +113,27 @@ class TestFastHttpSession(WebserverTestCase):
 
         url = "/streaming/10"
 
+        response_mock = MagicMock()
+        response_mock.iter_content = MagicMock(
+            return_value=iter(
+                [
+                    b"<span>0</span>\n",
+                    b"<span>1</span>\n",
+                    b"<span>2</span>\n",
+                    b"<span>3</span>\n",
+                    b"<span>4</span>\n",
+                    b"<span>5</span>\n",
+                    b"<span>6</span>\n",
+                    b"<span>7</span>\n",
+                    b"<span>8</span>\n",
+                    b"<span>9</span>\n",
+                ]
+            )
+        )
+        response_mock.raise_for_status = MagicMock()
+
+        session.request = MagicMock(return_value=response_mock)
+
         lines = list(session.iter_lines(url))
 
         expected_lines = [f"<span>{i}</span>" for i in range(10)]
