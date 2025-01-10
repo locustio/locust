@@ -109,7 +109,6 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertLess(stats.avg_response_time, 250)
 
     def test_iter_lines(self):
-
         session = self.get_client()
 
         url = "/streaming/10"
