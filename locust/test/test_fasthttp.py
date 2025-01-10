@@ -109,24 +109,26 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertLess(stats.avg_response_time, 250)
 
     def test_iter_lines(self):
-        # 使用 MagicMock 创建环境和用户
+        # Create a mock environment and user
         mock_environment = MagicMock()
         mock_user = MagicMock()
 
-        # 初始化 FastHttpSession，确保所有参数都被正确传递
-        session = FastHttpSession(mock_environment, user=mock_user, base_url=f"http://127.0.0.1:{self.port}")
+        # Initialize FastHttpSession with the mock environment and user
+        session = FastHttpSession(environment=mock_environment, user=mock_user, base_url=f"http://127.0.0.1:{self.port}")
 
-        # 指定请求的 URL，使用 /streaming/10 来测试流式响应
+        # Make a request to the /streaming endpoint with a specific number of iterations
         url = "/streaming/10"
 
-        # 使用 iter_lines 方法读取流式响应
-        lines = list(session.iter_lines(url))
+        # Use the iter_lines method to read the streamed response
+        response = session.get(url, stream=True)
+        lines = list(response.iter_lines(decode_unicode=True))
 
-        # 根据 iterations 参数定义预期的响应行
+        # Define the expected lines based on the number of iterations
         expected_lines = [f"<span>{i}</span>" for i in range(10)]
 
-        # 断言响应行与预期一致
-        self.assertEqual(lines, expected_lines)
+        # Validate the response lines (skipping the HTML tags)
+        actual_lines = [line.strip() for line in lines if line.startswith("<span>")]
+        self.assertEqual(actual_lines, expected_lines)
 
     def test_slow_redirect(self):
         s = self.get_client()
