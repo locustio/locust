@@ -1,6 +1,7 @@
 from locust import FastHttpUser
 from locust.argument_parser import parse_options
 from locust.contrib.fasthttp import FastHttpSession
+from unittest.mock import MagicMock
 from locust.exception import CatchResponseError, InterruptTaskSet, LocustError, ResponseError
 from locust.user import TaskSet, task
 from locust.util.load_locustfile import is_user_class
@@ -108,8 +109,11 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertLess(stats.avg_response_time, 250)
 
     def test_iter_lines(self):
-        # Initialize FastHttpSession with the local server
-        session = FastHttpSession(self.environment, base_url=f"http://127.0.0.1:{self.port}")
+        # Create a mock user or use an actual user class if available
+        mock_user = MagicMock()
+
+        # Initialize FastHttpSession with the local server and mock user
+        session = FastHttpSession(self.environment, user=mock_user, base_url=f"http://127.0.0.1:{self.port}")
 
         # Make a request to the /streaming endpoint with a specific number of iterations
         url = "/streaming/10"
