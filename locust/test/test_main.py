@@ -157,6 +157,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         proc.send_signal(signal.SIGTERM)
         stdout, stderr = proc.communicate(timeout=3)
         self.assertIn("Starting Locust", stderr)
+        self.assertNotIn("Traceback", stderr)
         self.assertIn("config_file_value", stdout)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
