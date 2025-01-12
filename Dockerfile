@@ -11,7 +11,7 @@ RUN yarn webui:install --production --network-timeout 60000
 RUN yarn webui:build
 
 # Stage 2: Build Locust package
-FROM python:3.11-slim AS base
+FROM python:3.13-slim AS base
 
 FROM base AS builder
 RUN apt-get update && apt-get install -y git 
