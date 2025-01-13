@@ -2,7 +2,12 @@
 Changelog Highlights
 ####################
 
-For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
+For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
+
+2.32.6
+======
+* Update Dockerfile to use Python 3.12 https://github.com/locustio/locust/pull/3029
+* Remove deprecated --hatch-rate parameter https://github.com/locustio/locust/pull/3026
 
 2.32.5
 ======
