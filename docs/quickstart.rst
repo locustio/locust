@@ -32,17 +32,17 @@ Locust's web interface
 
 Open http://localhost:8089
 
-.. image:: images/webui-splash-screenshot.png
+.. image:: images/webui-splash-light.png
 
 | Provide the host name of your server and try it out!
 
 The following screenshots show what it might look like when running this test using 50 concurrent users, with a ramp up rate of 1 user/s
 
-.. image:: images/webui-running-statistics.png
+.. image:: images/webui-running-statistics-light.png
 
 | Under the *Charts* tab you'll find things like requests per second (RPS), response times and number of running users:
 
-.. image:: images/bottlenecked_server.png
+.. image:: images/bottlenecked-server-light.png
 
 .. note::
 

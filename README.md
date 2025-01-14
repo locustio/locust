@@ -51,7 +51,7 @@ Locust has a user friendly web interface that shows the progress of your test in
 <picture>
 <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/locustio/locust/refs/heads/master/docs/images/bottlenecked-server-light.png" alt="Locust UI charts" height="100" width="200"/>
 <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/locustio/locust/refs/heads/master/docs/images/bottlenecked-server-dark.png" alt="Locust UI charts" height="100" width="200"/>
-<img src="https://raw.githubusercontent.com/locustio/locust/refs/heads/master/docs/images/bottlenecked-server-light.png" alt="Locust UI charts" height="100" width="200"/> 
+<img src="https://raw.githubusercontent.com/locustio/locust/refs/heads/master/docs/images/bottlenecked-server-light.png" alt="Locust UI charts" height="100" width="200"/>
 </picture>
 <picture>
 <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/locustio/locust/refs/heads/master/docs/images/webui-running-statistics-light.png" alt="Locust UI stats" height="100" width="200"/>
