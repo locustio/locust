@@ -33,8 +33,9 @@ export default function LocustCloudTab() {
         <img src='/assets/graphs-light.png' width='100%' />
       )}
       <Typography sx={{ mb: 2 }}>
-        The testruns tab offers a detailed overview of all of your testruns and how they perform
-        over time.
+        The testruns tab offers a detailed overview of how your system has performed historically.
+        This is particularly useful for ensuring the performance of your system improves or remains
+        constant.
       </Typography>
       {isDarkMode ? (
         <img src='/assets/testruns-dark.png' width='100%' />
@@ -42,7 +43,7 @@ export default function LocustCloudTab() {
         <img src='/assets/testruns-light.png' width='100%' />
       )}
       <Typography>
-        Vist us at <Link href='https://www.locust.cloud/get-started?plan=basic'>Locust Cloud</Link>{' '}
+        Vist us at <Link href='https://www.locust.cloud/get-started?plan=basic'>locust.cloud</Link>{' '}
         for a free consultation today!
       </Typography>
     </Box>
