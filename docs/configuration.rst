@@ -57,7 +57,7 @@ You can specify an additional file using the ``--config`` flag.
 
 Here's a minimalistic example of the configuration file supported by Locust:
 
-Have a look later in this article for :ref:`All available configuration options`
+Have a look later in this article for `All available configuration options`_
 
 locust.conf
 --------------
