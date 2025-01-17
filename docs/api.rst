@@ -22,6 +22,20 @@ FastHttpUser class
     :members: wait_time, tasks, client, abstract, rest
     :noindex:
 
+PostgresUser class
+==================
+
+.. autoclass:: locust.contrib.postgres.PostgresUser
+    :members: wait_time, tasks, client, abstract
+    :noindex:
+
+MongoDBUser class
+=================
+
+.. autoclass:: locust.contrib.mongodb.MongoDBUser
+    :members: wait_time, tasks, client, abstract, rest
+    :noindex:
+
 TaskSet class
 =============
 
