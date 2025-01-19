@@ -9,7 +9,7 @@ import subprocess
 import sys
 import textwrap
 import unittest
-from subprocess import DEVNULL, PIPE, STDOUT
+from subprocess import PIPE, STDOUT
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 

@@ -3,7 +3,7 @@ This is an example of a locustfile that uses Locust's built in event hooks to
 track the sum of the content-length header in all successful HTTP responses
 """
 
-from locust import HttpUser, TaskSet, between, events, task, web
+from locust import HttpUser, TaskSet, between, events, task
 
 
 class MyTaskSet(TaskSet):

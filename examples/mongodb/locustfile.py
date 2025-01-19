@@ -1,4 +1,4 @@
-from locust import between, task
+from locust import task
 from locust.contrib.mongodb import MongoDBUser
 
 import os
