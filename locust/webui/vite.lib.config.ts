@@ -11,6 +11,7 @@ export default defineConfig((config: UserConfig) => ({
     dts({
       outDir: './lib/types',
       exclude: ['**/*.test.ts', '**/*.test.tsx', '**/test', '**/tests'],
+      rollupTypes: true,
     }),
     config.mode !== 'production' &&
       config.mode !== 'test' &&

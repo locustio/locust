@@ -14,6 +14,8 @@ export interface ILineChart<ChartType> {
   chartValueFormatter?: (value?: any) => string | number;
   splitAxis?: boolean;
   yAxisLabels?: string | [string, string];
+  grid?: any;
+  xAxis?: any;
   scatterplot?: boolean;
 }
 
