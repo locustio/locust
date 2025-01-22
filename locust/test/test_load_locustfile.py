@@ -6,7 +6,6 @@ from locust.util.load_locustfile import is_user_class
 
 import filecmp
 import os
-import pathlib
 import textwrap
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile

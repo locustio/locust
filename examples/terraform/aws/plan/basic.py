@@ -1,7 +1,5 @@
 from locust import HttpUser, between, task
 
-import time
-
 
 class Quickstart(HttpUser):
     wait_time = between(1, 5)

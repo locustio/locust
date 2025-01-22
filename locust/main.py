@@ -8,7 +8,6 @@ import gc
 import importlib.metadata
 import inspect
 import itertools
-import json
 import logging
 import os
 import signal
@@ -39,12 +38,12 @@ from .util.load_locustfile import load_locustfile
 
 # import external plugins if  installed to allow for registering custom arguments etc
 try:
-    import locust_plugins  # pyright: ignore[reportMissingImports]
+    import locust_plugins  # pyright: ignore[reportMissingImports] # noqa: F401
 except ModuleNotFoundError as e:
     if e.msg != "No module named 'locust_plugins'":
         raise
 try:
-    import locust_cloud  # pyright: ignore[reportMissingImports]
+    import locust_cloud  # pyright: ignore[reportMissingImports] # noqa: F401
 
     locust_cloud_version = f" (locust-cloud {importlib.metadata.version('locust-cloud')})"
 except ModuleNotFoundError as e:

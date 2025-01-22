@@ -1,9 +1,6 @@
-import glob
 import os
-import pathlib
 from html import escape
 from itertools import chain
-from json import dumps
 
 from jinja2 import Environment as JinjaEnvironment
 from jinja2 import FileSystemLoader

@@ -10,24 +10,19 @@ from locust.stats import StatsCSVFileWriter
 from locust.user import User, task
 from locust.web import WebUI
 
-import copy
 import csv
 import json
 import logging
 import os
-import re
-import textwrap
 import traceback
 from io import StringIO
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import NamedTemporaryFile
 
 import gevent
 import requests
 from flask_login import UserMixin
 from pyquery import PyQuery as pq
 
-from ..util.load_locustfile import load_locustfile
-from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
 from .util import create_tls_cert
 

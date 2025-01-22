@@ -20,7 +20,7 @@ Usage as a decorator:
 from locust import User, constant, events, task
 
 import random
-from contextlib import ContextDecorator, contextmanager
+from contextlib import contextmanager
 from time import sleep, time
 
 

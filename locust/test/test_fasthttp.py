@@ -1,5 +1,4 @@
 from locust import FastHttpUser
-from locust.argument_parser import parse_options
 from locust.contrib.fasthttp import FastHttpSession
 from locust.exception import CatchResponseError, InterruptTaskSet, LocustError, ResponseError
 from locust.user import TaskSet, task

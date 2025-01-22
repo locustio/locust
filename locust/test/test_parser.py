@@ -10,7 +10,6 @@ from locust.argument_parser import (
 import os
 import unittest
 from io import StringIO
-from random import randint
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from unittest import mock
 
