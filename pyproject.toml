@@ -5,7 +5,6 @@ build-backend = "hatchling.build"
 [project]
 name = "locust"
 description = "Developer-friendly load testing framework"
-version = "0.0.0"
 license = { text = "MIT" }
 readme = "README.md"
 authors = [{ name = "Jonatan Heyman" }, { name = "Lars Holmberg" }]
@@ -61,6 +60,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "hatch>=1.14.0",
+    "hatch-vcs>=0.4.0",
     "mypy>=1.13.0,<2.0.0",
     "pre-commit>=3.7.1,<4.0.0",
     "ruff==0.7.3",
@@ -104,6 +104,9 @@ locust = "locust.main:main"
 
 [tool.hatch.version]
 source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "locust/_version.py"
 
 [tool.hatch.build]
 packages = ["locust"]

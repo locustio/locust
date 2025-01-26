@@ -474,6 +474,19 @@ wheels = [
 ]
 
 [[package]]
+name = "hatch-vcs"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "hatchling" },
+    { name = "setuptools-scm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f5/c9/54bb4fa27b4e4a014ef3bb17710cdf692b3aa2cbc7953da885f1bf7e06ea/hatch_vcs-0.4.0.tar.gz", hash = "sha256:093810748fe01db0d451fabcf2c1ac2688caefd232d4ede967090b1c1b07d9f7", size = 10917 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/82/0f/6cbd9976160bc334add63bc2e7a58b1433a31b34b7cda6c5de6dd983d9a7/hatch_vcs-0.4.0-py3-none-any.whl", hash = "sha256:b8a2b6bee54cf6f9fc93762db73890017ae59c9081d1038a41f16235ceaf8b2c", size = 8412 },
+]
+
+[[package]]
 name = "hatchling"
 version = "1.27.0"
 source = { registry = "https://pypi.org/simple" }
@@ -667,7 +680,7 @@ dependencies = [
     { name = "flask-login" },
     { name = "gevent", marker = "python_full_version != '3.13.*'" },
     { name = "geventhttpclient" },
-    { name = "hatch" },
+    { name = "hatch-vcs" },
     { name = "msgpack" },
     { name = "psutil" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
@@ -679,6 +692,7 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
+    { name = "hatch" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "ruff" },
@@ -730,7 +744,8 @@ requires-dist = [
     { name = "gevent", marker = "python_full_version < '3.13'", specifier = ">=22.10.2" },
     { name = "gevent", marker = "python_full_version >= '3.14'", specifier = ">=24.10.1" },
     { name = "geventhttpclient", specifier = ">=2.3.1" },
-    { name = "hatch", specifier = ">=1.14.0" },
+    { name = "hatch", marker = "extra == 'dev'", specifier = ">=1.14.0" },
+    { name = "hatch-vcs", specifier = ">=0.4.0" },
     { name = "imagesize", marker = "extra == 'docs'", specifier = "==1.4.1" },
     { name = "mock", marker = "extra == 'test'", specifier = ">=5.1.0,<6.0.0" },
     { name = "msgpack", specifier = ">=1.0.0" },
@@ -1382,6 +1397,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/92/ec/089608b791d210aec4e7f97488e67ab0d33add3efccb83a056cbafe3a2a6/setuptools-75.8.0.tar.gz", hash = "sha256:c5afc8f407c626b8313a86e10311dd3f661c6cd9c09d4bf8c15c0e11f9f2b0e6", size = 1343222 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/69/8a/b9dc7678803429e4a3bc9ba462fa3dd9066824d3c607490235c6a796be5a/setuptools-75.8.0-py3-none-any.whl", hash = "sha256:e3982f444617239225d675215d51f6ba05f845d4eec313da4418fdbb56fb27e3", size = 1228782 },
+]
+
+[[package]]
+name = "setuptools-scm"
+version = "8.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "setuptools" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4f/a4/00a9ac1b555294710d4a68d2ce8dfdf39d72aa4d769a7395d05218d88a42/setuptools_scm-8.1.0.tar.gz", hash = "sha256:42dea1b65771cba93b7a515d65a65d8246e560768a66b9106a592c8e7f26c8a7", size = 76465 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a0/b9/1906bfeb30f2fc13bb39bf7ddb8749784c05faadbd18a21cf141ba37bff2/setuptools_scm-8.1.0-py3-none-any.whl", hash = "sha256:897a3226a6fd4a6eb2f068745e49733261a21f70b1bb28fce0339feb978d9af3", size = 43666 },
 ]
 
 [[package]]
