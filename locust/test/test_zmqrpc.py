@@ -1,4 +1,4 @@
-from locust.exception import RPCError, RPCReceiveError, RPCSendError
+from locust.exception import RPCError, RPCSendError
 from locust.rpc import Message, zmqrpc
 from locust.test.testcases import LocustTestCase
 

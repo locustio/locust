@@ -1,5 +1,4 @@
 from locust import TaskSet, User, between, constant, constant_throughput
-from locust.exception import MissingWaitTimeError
 
 import random
 import time

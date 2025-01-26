@@ -10,7 +10,6 @@ import json
 import os
 import platform
 import socket
-import ssl
 import sys
 import tempfile
 import textwrap

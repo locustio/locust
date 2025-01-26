@@ -4,14 +4,14 @@ UI extension hooks to track the sum of Varnish cache hit/miss headers
 and display them in the web UI.
 """
 
-from locust import HttpUser, TaskSet, between, events, task, web
+from locust import HttpUser, TaskSet, between, events, task
 
 import json
 import os
 from html import escape
 from time import time
 
-from flask import Blueprint, jsonify, make_response, render_template, request
+from flask import Blueprint, make_response, render_template, request
 
 
 class MyTaskSet(TaskSet):

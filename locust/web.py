@@ -10,7 +10,6 @@ from html import escape
 from io import StringIO
 from itertools import chain
 from json import dumps
-from time import time
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import gevent
