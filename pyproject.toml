@@ -60,26 +60,22 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    # Build
     "hatch>=1.14.0",
     "hatch-vcs>=0.4.0",
-    "mypy>=1.13.0,<2.0.0",
+    # Test
+    "cryptography>=43.0.1,<44.0.0",
+    "mock>=5.1.0,<6.0.0",
+    "pyquery>=2.0.0,<3.0.0",
+    "pytest>=8.3.3,<9.0.0",
+    "retry>=0.9.2,<1.0.0",
+    # Lint
     "pre-commit>=3.7.1,<4.0.0",
     "ruff==0.7.3",
-    "tox>=4.16.0,<5.0.0",
-    "twine>=5.1.1,<6.0.0",
-]
-test = [
-    "hatch>=1.14.0",
-    "hatch-vcs>=0.4.0",
-    "cryptography>=43.0.1,<44.0.0",
-    "pyquery>=2.0.0,<3.0.0",
-    "mock>=5.1.0,<6.0.0",
     "mypy>=1.13.0,<2.0.0",
-    "retry>=0.9.2,<1.0.0",
-    "ruff==0.7.3",
-    "tox>=4.16.0,<5.0.0",
     "types-requests>=2.32.0.20240622,<3.0.0",
-    "pytest>=8.3.3,<9.0.0",
+    # Release
+    "twine>=5.1.1,<6.0.0",
 ]
 docs = [
     "sphinx==7.3.7",
@@ -168,11 +164,48 @@ analyzeUnannotatedFunctions = false
 
 ####
 
+# Run all
+#   hatch run test:tests 
+# Run single env
+#   hatch run +py=3.10 test:all
+
 [tool.hatch.envs.default.scripts]
-tests = "pytest -vv --cov-report=term-missing --cov-config=pyproject.toml --cov=locust {args:locust/test/test_date.py}"
+# Run all unit tests and advanced debugging
+
+# Disable these tests for now, because they are breaking. When someone has time they should be converted into regular unit tests
+# bash -ec "PYTHONUNBUFFERED=1 timeout 20s python3 examples/rest.py >{temp_dir}/out.txt 2>/{temp_dir}/err.txt || true"
+# grep -qm 1 'my custom error message with response text, response was {"args"' {temp_dir}/out.txt
+# grep -qm 1 'ZeroDivisionError: division by zero at.*Response was {"ar' {temp_dir}/out.txt
+# bash -ec '! grep . {temp_dir}/err.txt' # should be empty 
+all = [
+    "pytest -vv {args:locust/test}",
+    "bash -ec 'PYTHONUNBUFFERED=1 python3 examples/debugging_advanced.py | grep done'",
+]
+
+# Run main test and bail on first error
+fail_fast = "pytest -vv -x {args:locust/test}"
 
 [tool.hatch.envs.test]
-dependencies = ["pytest", "pytest-cov"]
+# parallel = true
+dependencies = [
+    "cryptography>=43.0.1,<44.0.0",
+    "mock>=5.1.0,<6.0.0",
+    "pyquery>=2.0.0,<3.0.0",
+    "pytest>=8.3.3,<9.0.0",
+    "retry>=0.9.2,<1.0.0",
+]
 
 [[tool.hatch.envs.test.matrix]]
-python = ["39", "310", "311", "312", "313"]
+python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+[tool.hatch.envs.lint]
+detached = true
+dependencies = [
+    "ruff==0.7.3",
+    "mypy>=1.13.0,<2.0.0",
+    "types-requests>=2.32.0.20240622,<3.0.0",
+]
+
+[tool.hatch.envs.lint.scripts]
+types = ["mypy locust/"]
+format = ["ruff check .", "ruff format --check"]
