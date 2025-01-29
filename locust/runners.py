@@ -1002,7 +1002,7 @@ class MasterRunner(DistributedRunner):
                 elif msg.data != __version__ and msg.data != -1:
                     if msg.data[0:4] == __version__[0:4]:
                         logger.debug(
-                            f"A worker ({client_id}) running a different patch version ({msg.data}) connected, master version is {__version__}"
+                            f"A worker ({client_id}) running a different patch version ({repr(msg.data)}) connected, master version is {repr(__version__)}"
                         )
                     else:
                         logger.warning(
