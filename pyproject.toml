@@ -6,6 +6,7 @@ build-backend = "hatchling.build"
 name = "locust"
 description = "Developer-friendly load testing framework"
 license = { text = "MIT" }
+dynamic = ["version"]
 readme = "README.md"
 authors = [{ name = "Jonatan Heyman" }, { name = "Lars Holmberg" }]
 maintainers = [
@@ -68,6 +69,8 @@ dev = [
     "twine>=5.1.1,<6.0.0",
 ]
 test = [
+    "hatch>=1.14.0",
+    "hatch-vcs>=0.4.0",
     "cryptography>=43.0.1,<44.0.0",
     "pyquery>=2.0.0,<3.0.0",
     "mock>=5.1.0,<6.0.0",
@@ -161,3 +164,15 @@ python_version = "3.9"
 exclude = ["locust/test"]
 reportOptionalMemberAccess = "none"
 analyzeUnannotatedFunctions = false
+
+
+####
+
+[tool.hatch.envs.default.scripts]
+tests = "pytest -vv --cov-report=term-missing --cov-config=pyproject.toml --cov=locust {args:locust/test/test_date.py}"
+
+[tool.hatch.envs.test]
+dependencies = ["pytest", "pytest-cov"]
+
+[[tool.hatch.envs.test.matrix]]
+python = ["39", "310", "311", "312", "313"]
