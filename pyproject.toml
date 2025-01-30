@@ -15,10 +15,6 @@ maintainers = [
     { name = "Andrew Baldwin" },
 ]
 
-homepage = "https://locust.io/"
-repository = "https://github.com/locustio/locust"
-documentation = "https://docs.locust.io/"
-
 classifiers = [
     "Topic :: Software Development :: Testing :: Traffic Generation",
     "Development Status :: 5 - Production/Stable",
@@ -58,25 +54,30 @@ dependencies = [
     "setuptools>=70.0.0",
 ]
 
-[project.optional-dependencies]
-dev = [
-    # Build
-    "hatch>=1.14.0",
-    "hatch-vcs>=0.4.0",
-    # Test
+[project.urls]
+homepage = "https://locust.io/"
+repository = "https://github.com/locustio/locust"
+documentation = "https://docs.locust.io/"
+
+[tool.uv]
+default-groups = ["build", "test", "lint"]
+
+[dependency-groups]
+build = ["hatch>=1.14.0", "hatch-vcs>=0.4.0"]
+test = [
     "cryptography>=43.0.1,<44.0.0",
     "mock>=5.1.0,<6.0.0",
     "pyquery>=2.0.0,<3.0.0",
     "pytest>=8.3.3,<9.0.0",
     "retry>=0.9.2,<1.0.0",
-    # Lint
+]
+lint = [
     "pre-commit>=3.7.1,<4.0.0",
     "ruff==0.7.3",
     "mypy>=1.13.0,<2.0.0",
     "types-requests>=2.32.0.20240622,<3.0.0",
-    # Release
-    "twine>=5.1.1,<6.0.0",
 ]
+release = ["twine>=5.1.1,<6.0.0"]
 docs = [
     "sphinx==7.3.7",
     "sphinx-rtd-theme==2.0.0",
@@ -209,3 +210,29 @@ dependencies = [
 [tool.hatch.envs.lint.scripts]
 types = ["mypy locust/"]
 format = ["ruff check .", "ruff format --check"]
+
+[tool.hatch.envs.docs]
+detached = true
+dependencies = [
+    "sphinx==7.3.7",
+    "sphinx-rtd-theme==2.0.0",
+    "readthedocs-sphinx-search==0.3.2",
+    "Sphinx-Substitution-Extensions==2020.9.30.0",
+    "Pygments==2.16.1",
+    "alabaster==0.7.16",
+    "babel==2.13.0",
+    "docutils==0.18.1",
+    "imagesize==1.4.1",
+    "snowballstemmer==2.2.0",
+    "sphinx-prompt==1.5.0",
+    "sphinxcontrib-applehelp==1.0.4",
+    "sphinxcontrib-devhelp==1.0.2",
+    "sphinxcontrib-htmlhelp==2.0.1",
+    "sphinxcontrib-jsmath==1.0.1",
+    "sphinxcontrib-qthelp==1.0.3",
+    "sphinxcontrib-serializinghtml==1.1.10",
+    "sphinxcontrib-googleanalytics>=0.4",
+]
+
+[tool.hatch.envs.docs.scripts]
+build = ["sphinx-build -b html docs/ docs/_build/"]
