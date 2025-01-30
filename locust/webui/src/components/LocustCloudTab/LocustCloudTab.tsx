@@ -4,7 +4,7 @@ import Markdown from 'components/Markdown/Markdown';
 import { useSelector } from 'redux/hooks';
 
 const firstParagraph = `
-Ready to take your load tests to the next level? With [Locust Cloud](locust.cloud), we take care of everything!
+Ready to take your load tests to the next level? With [Locust Cloud](https://locust.cloud), we take care of everything!
 \n
 Whether your doing small load, or needing to generate millions of requests, we take care of the
 load generation. 
