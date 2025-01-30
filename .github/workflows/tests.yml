@@ -137,16 +137,16 @@ jobs:
           - { name: "Docs Build", python: "3.12", os: ubuntu-latest, env: "docs:build" }
 
           # OS Integration tests 
-          - { name: "Linux", python: "3.12", os: ubuntu-latest, env: test:fail_fast }
-          - { name: "Windows", python: '3.12', os: windows-latest, env: test:fail_fast }
-          - { name: "MacOS", python: '3.12', os: macos-latest, env: test:fail_fast }
+          - { name: "Linux", python: "3.12", os: ubuntu-latest, env: "test:fail_fast" }
+          - { name: "Windows", python: '3.12', os: windows-latest, env: "test:fail_fast" }
+          - { name: "MacOS", python: '3.12', os: macos-latest, env: "test:fail_fast" }
           
           # Unit tests on Python versions
-          - { name: "Python 3.13", python: "3.13", os: ubuntu-latest, env: test:all }
-          - { name: "Python 3.12", python: "3.12", os: ubuntu-latest, env: test:all }
-          - { name: "Python 3.11", python: "3.11", os: ubuntu-latest, env: test:all }
-          - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, env: test:all }
-          - { name: "Python 3.9", python: "3.9", os: ubuntu-latest, env: test:all }
+          - { name: "Python 3.13", python: "3.13", os: ubuntu-latest, env: "test:all" }
+          - { name: "Python 3.12", python: "3.12", os: ubuntu-latest, env: "test:all" }
+          - { name: "Python 3.11", python: "3.11", os: ubuntu-latest, env: "test:all" }
+          - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, env: "test:all" }
+          - { name: "Python 3.9", python: "3.9", os: ubuntu-latest, env: "test:all" }
 
     steps:
       - uses: actions/checkout@v4
