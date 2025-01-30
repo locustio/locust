@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.32.7
+======
+* Fix readme image ref links by @changchaishi in https://github.com/locustio/locust/pull/3031
+* Add tab showing `Locust Cloud <https://www.locust.cloud>`_ features https://github.com/locustio/locust/pull/3032
+* Minor UI enhancements https://github.com/locustio/locust/pull/3035, https://github.com/locustio/locust/pull/3036, https://github.com/locustio/locust/pull/3037
+* Code quality: Fix unused imports and switch on related ruff check https://github.com/locustio/locust/pull/3034
+
 2.32.6
 ======
 * Update Dockerfile to use Python 3.12 https://github.com/locustio/locust/pull/3029
