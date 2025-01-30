@@ -1,6 +1,35 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.32.7](https://github.com/locustio/locust/tree/2.32.7) (2025-01-30)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.32.6...2.32.7)
+
+**Merged pull requests:**
+
+- Web UI: Allow Showing Only an Error Message on the Login Page [\#3037](https://github.com/locustio/locust/pull/3037) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Allow Empty Tables when Filtering [\#3036](https://github.com/locustio/locust/pull/3036) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Allow xAxis and Grid to be Configured in Echarts [\#3035](https://github.com/locustio/locust/pull/3035) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Code quality: Fix unused imports and switch on related ruff check [\#3034](https://github.com/locustio/locust/pull/3034) ([insspb](https://github.com/insspb))
+- Add tab with locust cloud features [\#3032](https://github.com/locustio/locust/pull/3032) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- fix readme image ref links [\#3031](https://github.com/locustio/locust/pull/3031) ([changchaishi](https://github.com/changchaishi))
+
+## [2.32.6](https://github.com/locustio/locust/tree/2.32.6) (2025-01-13)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.32.5...2.32.6)
+
+**Closed issues:**
+
+- Suggestion to Add  "iter\_lines"  Support for  "FastHttpUser"  in Locust [\#3018](https://github.com/locustio/locust/issues/3018)
+
+**Merged pull requests:**
+
+- Update Dockerfile to use Python 3.12 as base [\#3029](https://github.com/locustio/locust/pull/3029) ([vejmoj1](https://github.com/vejmoj1))
+- Update tests to check for hostname instead of fqdn [\#3027](https://github.com/locustio/locust/pull/3027) ([ajt89](https://github.com/ajt89))
+- Move some argument parsing/validation from main.py to argument\_parser.py and remove deprecated parameter --hatch-rate [\#3026](https://github.com/locustio/locust/pull/3026) ([ftb-skry](https://github.com/ftb-skry))
+- pin poetry-core version to \<2.0.0 in pyproject.toml [\#3025](https://github.com/locustio/locust/pull/3025) ([mgor](https://github.com/mgor))
+- Optimize run time of some unit tests [\#3020](https://github.com/locustio/locust/pull/3020) ([cyberw](https://github.com/cyberw))
+
 ## [2.32.5](https://github.com/locustio/locust/tree/2.32.5) (2024-12-22)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.32.4...2.32.5)
@@ -139,7 +168,7 @@ The most important changes can also be found in [the documentation](https://docs
 
 ## [2.31.7](https://github.com/locustio/locust/tree/2.31.7) (2024-09-25)
 
-[Full Changelog](https://github.com/locustio/locust/compare/2.31.6...2.31.7)
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.4.dev9994...2.31.7)
 
 **Merged pull requests:**
 
@@ -149,6 +178,26 @@ The most important changes can also be found in [the documentation](https://docs
 - Fix Login Manager Error Message [\#2905](https://github.com/locustio/locust/pull/2905) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
 - Log locust version earlier [\#2904](https://github.com/locustio/locust/pull/2904) ([cyberw](https://github.com/cyberw))
 - Add Mongodb test example [\#2903](https://github.com/locustio/locust/pull/2903) ([guel-codes](https://github.com/guel-codes))
+
+## [2.31.4.dev9994](https://github.com/locustio/locust/tree/2.31.4.dev9994) (2024-09-16)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.4.dev9993...2.31.4.dev9994)
+
+## [2.31.4.dev9993](https://github.com/locustio/locust/tree/2.31.4.dev9993) (2024-09-16)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.4.dev9992...2.31.4.dev9993)
+
+## [2.31.4.dev9992](https://github.com/locustio/locust/tree/2.31.4.dev9992) (2024-09-16)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.4.dev9991...2.31.4.dev9992)
+
+## [2.31.4.dev9991](https://github.com/locustio/locust/tree/2.31.4.dev9991) (2024-09-16)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.4.dev999...2.31.4.dev9991)
+
+## [2.31.4.dev999](https://github.com/locustio/locust/tree/2.31.4.dev999) (2024-09-16)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.31.6...2.31.4.dev999)
 
 ## [2.31.6](https://github.com/locustio/locust/tree/2.31.6) (2024-09-15)
 
