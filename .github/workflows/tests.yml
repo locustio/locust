@@ -46,7 +46,7 @@ jobs:
 
       - run: |
           uv venv --python 3.11
-          . .venv/bin/activate
+          source $VENV
 
       - name: Install the project
         run: uv sync
@@ -169,7 +169,7 @@ jobs:
 
       - run: |
           uv venv --python ${{ matrix.python }}
-          . .venv/bin/activate
+          source $VENV
 
       # Install what we need to run hatch envs but not the project itself
       - name: Install CI dependencies
