@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.32.8
+======
+* Fix a single broken link in the UI
+
 2.32.7
 ======
 * Fix readme image ref links by @changchaishi in https://github.com/locustio/locust/pull/3031
