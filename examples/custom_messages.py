@@ -47,7 +47,7 @@ def on_test_start(environment, **_kwargs):
         if isinstance(environment.runner, LocalRunner):
             workers = [environment.runner]
         else:
-            workers = [environment.runner.clients]
+            workers = environment.runner.clients
 
         for i, worker in enumerate(workers):
             start_index = i * chunk_size
