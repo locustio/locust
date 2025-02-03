@@ -264,89 +264,89 @@ jobs:
   #       Publishing
   # -------------------------
 
-  # publish:
-  #   needs: [tests, lint_typecheck_test_webui, test_docker_image, build_package]
-  #   if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
-  #   runs-on: ubuntu-latest
-  #   steps:
+  publish:
+    needs: [tests, lint_typecheck_test_webui, test_docker_image, build_package]
+    if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
+    runs-on: ubuntu-latest
+    steps:
 
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-  #     # Download Python dist artifact
-  #     - name: Download Python dist 
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: python-dist
-  #         path: dist
+      # Download Python dist artifact
+      - name: Download Python dist 
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist
 
-  #     # Download Web UI lib artifact
-  #     - name: Download UI lib
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: webui-lib-dist
-  #         path: locust/webui/lib
+      # Download Web UI lib artifact
+      - name: Download UI lib
+        uses: actions/download-artifact@v4
+        with:
+          name: webui-lib-dist
+          path: locust/webui/lib
 
-  #     # Staged docker builds using exports/artifacts is currently difficult using multi-arch builds with buildx
-  #     # So let's just build it here
+      # Staged docker builds using exports/artifacts is currently difficult using multi-arch builds with buildx
+      # So let's just build it here
 
-  #     # Set docker image and tag values
-  #     - name: Docker meta
-  #       id: docker_meta
-  #       uses: docker/metadata-action@v5
-  #       with:
-  #         images: locustio/locust
-  #         tags: |
-  #           type=raw,value=latest,enable=${{ needs.build_package.outputs.is_tag_build }}
-  #           type=raw,value=${{ needs.build_package.outputs.tag }}
-  #           type=raw,value=${{ needs.build_package.outputs.branch }}
+      # Set docker image and tag values
+      - name: Docker meta
+        id: docker_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: locustio/locust
+          tags: |
+            type=raw,value=latest,enable=${{ needs.build_package.outputs.is_tag_build }}
+            type=raw,value=${{ needs.build_package.outputs.tag }}
+            type=raw,value=${{ needs.build_package.outputs.branch }}
 
-  #     # Set up Docker daemon dependencies for building and publishing
-  #     - uses: docker/login-action@v3
-  #       with:
-  #         username: locustbuild
-  #         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-  #     - name: Set up QEMU
-  #       uses: docker/setup-qemu-action@v3
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v3
+      # Set up Docker daemon dependencies for building and publishing
+      - uses: docker/login-action@v3
+        with:
+          username: locustbuild
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-  #     # Build and push Docker image
-  #     - name: Build and push
-  #       uses: docker/build-push-action@v6
-  #       with:
-  #         context: .
-  #         file: ./Dockerfile.ci
-  #         platforms: linux/amd64,linux/arm64
-  #         push: ${{ github.event_name != 'pull_request' }}
-  #         tags: ${{ steps.docker_meta.outputs.tags }}
+      # Build and push Docker image
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.ci
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.docker_meta.outputs.tags }}
 
-  #     # Publish Python package
-  #     - name: Publish prerelease version to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         user: __token__
-  #         password: ${{ secrets.PYPI_API_TOKEN }}
-  #         skip-existing: true
+      # Publish Python package
+      - name: Publish prerelease version to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip-existing: true
 
-  #     # Publish UI lib
-  #     # On commits to trunk
-  #     - uses: borales/actions-yarn@v5
-  #       name: Publish package on NPM
-  #       if: github.ref == 'refs/heads/master'
-  #       env:
-  #         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-  #       with:
-  #         cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ needs.build_package.outputs.tag_short }}-next-${{ github.run_id }}
-  #         dir: locust/webui
+      # Publish UI lib
+      # On commits to trunk
+      - uses: borales/actions-yarn@v5
+        name: Publish package on NPM
+        if: github.ref == 'refs/heads/master'
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+        with:
+          cmd: publish --no-git-tag-version --non-interactive --tag next --new-version ${{ needs.build_package.outputs.tag_short }}-next-${{ github.run_id }}
+          dir: locust/webui
       
-  #     # On tag builds
-  #     - uses: borales/actions-yarn@v5
-  #       name: Publish package on NPM
-  #       if: startsWith(github.event.ref, 'refs/tags')
-  #       env:
-  #         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-  #       with:
-  #         cmd: publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
-  #         dir: locust/webui
+      # On tag builds
+      - uses: borales/actions-yarn@v5
+        name: Publish package on NPM
+        if: startsWith(github.event.ref, 'refs/tags')
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+        with:
+          cmd: publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
+          dir: locust/webui
