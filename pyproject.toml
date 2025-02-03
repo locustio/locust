@@ -200,10 +200,10 @@ all = [
 ]
 
 # Run main test and bail on first error
-fail_fast = "pytest -vv -x {args:locust/test}"
+fail_fast = "pytest -vv -x {args:locust/test_main.py}"
 
 
-# Integration testing of build packages on CI
+# Integration testing of build packages on CI, using a pre-built package
 
 [tool.hatch.envs.integration_test_ci]
 template = "test"
@@ -213,7 +213,10 @@ skip-install = true
 python = ["3.12"]
 
 [tool.hatch.envs.integration_test_ci.scripts]
-fail_fast = ["uv pip install dist/*.whl", "pytest -vv -x {args:locust/test}"]
+fail_fast = [
+    "uv pip install dist/*.whl",
+    "pytest -vv -x {args:locust/test_main.py}",
+]
 
 
 # Hatch lint checking environments
