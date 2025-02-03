@@ -190,75 +190,75 @@ jobs:
       - name: Run hatch job
         run: uv run hatch run +py=${{ matrix.python }} ${{ matrix.env }}
       
-  # test_docker_image:
-  #   name: Test Docker Image
-  #   runs-on: ubuntu-latest
-  #   needs: build_package
+  test_docker_image:
+    name: Test Docker Image
+    runs-on: ubuntu-latest
+    needs: build_package
 
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
   
-  #     # Grab the built artifacts to ensure we're testing what we eventually publish
-  #     - name: Download Python dist
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: python-dist
-  #         path: dist
+      # Grab the built artifacts to ensure we're testing what we eventually publish
+      - name: Download Python dist
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist
 
-  #     # Set up Docker daemon dependencies for building and publishing
-  #     - name: Set up QEMU
-  #       uses: docker/setup-qemu-action@v3
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v3
+      # Set up Docker daemon dependencies for building and publishing
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-  #     # Build and load Docker image to the local daemon
-  #     - name: Build and push
-  #       uses: docker/build-push-action@v6
-  #       with:
-  #         context: .
-  #         file: ./Dockerfile.ci
-  #         platforms: linux/amd64
-  #         load: true
-  #         tags: locustio/locust:${{ github.sha }}-test
+      # Build and load Docker image to the local daemon
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.ci
+          platforms: linux/amd64
+          load: true
+          tags: locustio/locust:${{ github.sha }}-test
 
-  #     # Run a basic test on the image
-  #     - name: Test docker image
-  #       run: |
-  #         docker run --rm locustio/locust:${{ github.sha }}-test --version
+      # Run a basic test on the image
+      - name: Test docker image
+        run: |
+          docker run --rm locustio/locust:${{ github.sha }}-test --version
 
-  # lint_typecheck_test_webui:
-  #   name: Web UI Lint and Type Check
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Set Node.js 22.x
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: 22.x
-  #         cache: 'yarn'
-  #         cache-dependency-path: locust/webui/yarn.lock
-  #     - uses: borales/actions-yarn@v5
-  #       with:
-  #         cmd: install
-  #         dir: locust/webui
-  #     - uses: borales/actions-yarn@v5
-  #       with:
-  #         cmd: build
-  #         dir: locust/webui
-  #     - uses: borales/actions-yarn@v5
-  #       with:
-  #         cmd: test
-  #         dir: locust/webui
-  #     - uses: borales/actions-yarn@v5
-  #       with:
-  #         cmd: lint
-  #         dir: locust/webui
-  #     - uses: borales/actions-yarn@v5
-  #       with:
-  #         cmd: type-check
-  #         dir: locust/webui
+  lint_typecheck_test_webui:
+    name: Web UI Lint and Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'yarn'
+          cache-dependency-path: locust/webui/yarn.lock
+      - uses: borales/actions-yarn@v5
+        with:
+          cmd: install
+          dir: locust/webui
+      - uses: borales/actions-yarn@v5
+        with:
+          cmd: build
+          dir: locust/webui
+      - uses: borales/actions-yarn@v5
+        with:
+          cmd: test
+          dir: locust/webui
+      - uses: borales/actions-yarn@v5
+        with:
+          cmd: lint
+          dir: locust/webui
+      - uses: borales/actions-yarn@v5
+        with:
+          cmd: type-check
+          dir: locust/webui
 
   # -------------------------
   #       Publishing

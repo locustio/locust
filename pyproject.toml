@@ -213,10 +213,7 @@ skip-install = true
 python = ["3.12"]
 
 [tool.hatch.envs.integration_test_ci.scripts]
-fail_fast = [
-    "uv pip install ./dist/locust*.whl",
-    "pytest -vv -x {args:locust/test/test_main.py}",
-]
+fail_fast = ["pytest -vv -x {args:locust/test/test_main.py}"]
 
 
 # Hatch lint checking environments
