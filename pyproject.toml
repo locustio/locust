@@ -214,7 +214,7 @@ python = ["3.12"]
 
 [tool.hatch.envs.integration_test_ci.scripts]
 fail_fast = [
-    "uv pip install ./dist/locust*.whl",
+    "uv pip install $(ls -t ./dist/*.whl | head -n 1)",
     "pytest -vv -x {args:locust/test/test_main.py}",
 ]
 
