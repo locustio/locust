@@ -209,6 +209,9 @@ dependencies = [
     "types-requests>=2.32.0.20240622,<3.0.0",
 ]
 
+[[tool.hatch.envs.lint.matrix]]
+python = ["3.12"]
+
 [tool.hatch.envs.lint.scripts]
 types = ["mypy locust/"]
 format = ["ruff check .", "ruff format --check"]
@@ -237,6 +240,9 @@ dependencies = [
     "sphinxcontrib-serializinghtml==1.1.10",
     "sphinxcontrib-googleanalytics>=0.4",
 ]
+
+[[tool.hatch.envs.docs.matrix]]
+python = ["3.12"]
 
 [tool.hatch.envs.docs.scripts]
 build = ["sphinx-build -b html docs/ docs/_build/"]

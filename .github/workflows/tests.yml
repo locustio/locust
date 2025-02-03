@@ -39,8 +39,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          # Required for dependency groups
-          version: ">=0.4.27"
+          version: "0.5.26"
           # enable-cache: true
           # cache-dependency-glob: "uv.lock"
 
@@ -160,8 +159,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          # Required for dependency groups
-          version: ">=0.4.27"
+          version: "0.5.26"
           # enable-cache: true
           # cache-dependency-glob: "uv.lock"
 
