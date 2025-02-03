@@ -188,7 +188,6 @@ jobs:
 
       # Run tests!
       - name: Run hatch job
-        # Avoid dealing with cross platform shell issues during integration tests
         shell: bash
         run: uv run hatch run +py=${{ matrix.python }} ${{ matrix.env }}
       
