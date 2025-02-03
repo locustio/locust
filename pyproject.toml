@@ -163,14 +163,30 @@ reportOptionalMemberAccess = "none"
 analyzeUnannotatedFunctions = false
 
 
-####
+#### Hatch envs
+
+# Testing
 
 # Run all
 #   hatch run test:tests 
 # Run single env
 #   hatch run +py=3.10 test:all
 
-[tool.hatch.envs.default.scripts]
+[tool.hatch.envs.test]
+# parallel = true
+dependencies = [
+    "cryptography>=43.0.1,<44.0.0",
+    "mock>=5.1.0,<6.0.0",
+    "pyquery>=2.0.0,<3.0.0",
+    "pytest>=8.3.3,<9.0.0",
+    "retry>=0.9.2,<1.0.0",
+]
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+
+[tool.hatch.envs.test.scripts]
 # Run all unit tests and advanced debugging
 
 # Disable these tests for now, because they are breaking. When someone has time they should be converted into regular unit tests
@@ -186,18 +202,19 @@ all = [
 # Run main test and bail on first error
 fail_fast = "pytest -vv -x {args:locust/test}"
 
-[tool.hatch.envs.test]
-# parallel = true
-dependencies = [
-    "cryptography>=43.0.1,<44.0.0",
-    "mock>=5.1.0,<6.0.0",
-    "pyquery>=2.0.0,<3.0.0",
-    "pytest>=8.3.3,<9.0.0",
-    "retry>=0.9.2,<1.0.0",
-]
 
-[[tool.hatch.envs.test.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+# Integration testing of build packages on CI
+
+[tool.hatch.envs.integration_test_ci]
+template = "test"
+skip-install = true
+
+[[tool.hatch.envs.integration_test_ci.matrix]]
+python = ["3.12"]
+
+[tool.hatch.envs.integration_test_ci.scripts]
+fail_fast = ["uv pip install dist/*.whl", "pytest -vv -x {args:locust/test}"]
+
 
 # Hatch lint checking environments
 
@@ -219,7 +236,6 @@ format = ["ruff check .", "ruff format --check"]
 # Hatch docs building environment
 
 [tool.hatch.envs.docs]
-detached = true
 dependencies = [
     "sphinx==7.3.7",
     "sphinx-rtd-theme==2.0.0",

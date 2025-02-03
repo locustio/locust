@@ -136,9 +136,9 @@ jobs:
           - { name: "Docs Build", python: "3.12", os: ubuntu-latest, env: "docs:build" }
 
           # OS Integration tests 
-          - { name: "Linux", python: "3.12", os: ubuntu-latest, env: "test:fail_fast" }
-          - { name: "Windows", python: '3.12', os: windows-latest, env: "test:fail_fast" }
-          - { name: "MacOS", python: '3.12', os: macos-latest, env: "test:fail_fast" }
+          - { name: "Linux", python: "3.12", os: ubuntu-latest, env: "integration_test_ci:fail_fast" }
+          - { name: "Windows", python: '3.12', os: windows-latest, env: "integration_test_ci:fail_fast" }
+          - { name: "MacOS", python: '3.12', os: macos-latest, env: "integration_test_ci:fail_fast" }
           
           # Unit tests on Python versions
           - { name: "Python 3.13", python: "3.13", os: ubuntu-latest, env: "test:all" }
@@ -187,7 +187,7 @@ jobs:
         run: uv pip install ./dist/locust*.whl
 
       # Run tests!
-      - name: Run hatch tests
+      - name: Run hatch job
         run: uv run hatch run +py=${{ matrix.python }} ${{ matrix.env }}
       
   # test_docker_image:
