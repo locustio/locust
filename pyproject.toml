@@ -208,6 +208,7 @@ fail_fast = "pytest -vv -x {args:locust/test/test_main.py}"
 [tool.hatch.envs.integration_test_ci]
 template = "test"
 skip-install = true
+path = ".venv"
 
 [[tool.hatch.envs.integration_test_ci.matrix]]
 python = ["3.12"]

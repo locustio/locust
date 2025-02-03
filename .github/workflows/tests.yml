@@ -182,9 +182,9 @@ jobs:
           name: webui-dist
           path: locust/webui/dist
 
-      # Install the package built earlier
-      - name: Install the built package
-        run: uv pip install ./dist/locust*.whl
+      # # Install the package built earlier
+      # - name: Install the built package
+      #   run: uv pip install ./dist/locust*.whl
 
       # Run tests!
       - name: Run hatch job
