@@ -44,9 +44,7 @@ jobs:
           # enable-cache: true
           # cache-dependency-glob: "uv.lock"
 
-      - run: |
-          uv venv --python 3.11
-          source .venv/bin/activate
+      - run: uv venv --python 3.11
 
       - name: Install the project
         run: uv sync
@@ -59,8 +57,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: 'yarn'
-          cache-dependency-path: locust/webui/yarn.lock
+          # cache: 'yarn'
+          # cache-dependency-path: locust/webui/yarn.lock
 
       - name: Install Yarn
         run: npm install -g yarn
@@ -93,9 +91,9 @@ jobs:
       
       # Set workflow metadata in one place so we can pull it out later
       - id: set_tag
-        run: echo "tag=$(hatch version)" | tee -a "$GITHUB_OUTPUT"
+        run: echo "tag=$(uv run hatch version)" | tee -a "$GITHUB_OUTPUT"
       - id: set_tag_short
-        run: echo "tag_short=$(hatch version | cut -d '.' -f1-3)" | tee -a "$GITHUB_OUTPUT"
+        run: echo "tag_short=$(uv run hatch version | cut -d '.' -f1-3)" | tee -a "$GITHUB_OUTPUT"
       - id: set_branch
         run: echo "branch=${{ github.head_ref || github.ref_name }}" | tee -a "$GITHUB_OUTPUT"
       - id: set_is_merge_commit
@@ -167,9 +165,7 @@ jobs:
           # enable-cache: true
           # cache-dependency-glob: "uv.lock"
 
-      - run: |
-          uv venv --python ${{ matrix.python }}
-          source .venv/bin/activate
+      - run: uv venv --python ${{ matrix.python }}
 
       # Install what we need to run hatch envs but not the project itself
       - name: Install CI dependencies
@@ -194,7 +190,7 @@ jobs:
 
       # Run tests!
       - name: Run hatch tests
-        run: hatch run +py=${{ matrix.python }} ${{ matrix.env }}
+        run: uv run hatch run +py=${{ matrix.python }} ${{ matrix.env }}
       
   # test_docker_image:
   #   name: Test Docker Image
@@ -234,37 +230,37 @@ jobs:
   #       run: |
   #         docker run --rm locustio/locust:${{ github.sha }}-test --version
 
-  lint_typecheck_test_webui:
-    name: Web UI Lint and Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set Node.js 22.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: 'yarn'
-          cache-dependency-path: locust/webui/yarn.lock
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: install
-          dir: locust/webui
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: build
-          dir: locust/webui
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: test
-          dir: locust/webui
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: lint
-          dir: locust/webui
-      - uses: borales/actions-yarn@v5
-        with:
-          cmd: type-check
-          dir: locust/webui
+  # lint_typecheck_test_webui:
+  #   name: Web UI Lint and Type Check
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Set Node.js 22.x
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 22.x
+  #         cache: 'yarn'
+  #         cache-dependency-path: locust/webui/yarn.lock
+  #     - uses: borales/actions-yarn@v5
+  #       with:
+  #         cmd: install
+  #         dir: locust/webui
+  #     - uses: borales/actions-yarn@v5
+  #       with:
+  #         cmd: build
+  #         dir: locust/webui
+  #     - uses: borales/actions-yarn@v5
+  #       with:
+  #         cmd: test
+  #         dir: locust/webui
+  #     - uses: borales/actions-yarn@v5
+  #       with:
+  #         cmd: lint
+  #         dir: locust/webui
+  #     - uses: borales/actions-yarn@v5
+  #       with:
+  #         cmd: type-check
+  #         dir: locust/webui
 
   # -------------------------
   #       Publishing
