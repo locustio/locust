@@ -55,23 +55,7 @@ You can specify an additional file using the ``--config`` flag.
 
     $ locust --config custom_config.conf
 
-Here's a minimalistic example of the configuration file supported by Locust:
-
-Have a look later in this article for `All available configuration options`_
-
-locust.conf
---------------
-
-.. code-block:: ini
-
-    locustfile = locust_files/my_locust_file.py
-    headless = true
-    host = https://target-system
-    run-time = 1m
-    spawn-rate =
-    users = 1
-
-Here's a quick example of the configuration files supported by Locust:
+Here's an example:
 
 locust.conf
 --------------
@@ -87,6 +71,8 @@ locust.conf
     spawn-rate = 10
     run-time = 10m
     tags = [Critical, Normal]
+
+Have a look later in this page for `All available configuration options`_
 
 pyproject.toml
 --------------
