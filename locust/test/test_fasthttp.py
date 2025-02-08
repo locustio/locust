@@ -133,11 +133,21 @@ class TestFastHttpSession(WebserverTestCase):
 
         session.request = MagicMock(return_value=response_mock)
 
-        lines = list(session.iter_lines(url))
+        lines = list(session.iter_lines(url, method="POST"))
 
         expected_lines = [f"<span>{i}</span>" for i in range(10)]
 
         self.assertEqual(lines, expected_lines)
+
+        session.request.assert_called_once_with(
+            "POST",  # 检查方法是否为 POST
+            url,
+            stream=True  # 确保 stream=True 被传递
+        )
+
+        with self.assertLogs("http_client", level="INFO") as logs:
+            list(session.iter_lines(url))
+        self.assertIn(f"Request: GET {url}", logs.output[0])
 
     def test_slow_redirect(self):
         s = self.get_client()

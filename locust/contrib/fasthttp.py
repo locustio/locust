@@ -298,9 +298,9 @@ class FastHttpSession:
         """Sends a GET request"""
         return self.request("GET", url, **kwargs)
 
-    def iter_lines(self, url: str, **kwargs) -> Generator[str, None, None]:
+    def iter_lines(self, url: str, method: str = "GET", **kwargs) -> Generator[str, None, None]:
         """Sends a iter_lines request"""
-        response = self.request("GET", url, stream=True, **kwargs)
+        response = self.request(method, url, stream=True, **kwargs)
         response.raise_for_status()
         buffer = ""
         for chunk in response.iter_content(chunk_size=1024, decode_content=True):
