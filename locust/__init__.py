@@ -5,7 +5,7 @@ if os.getenv("LOCUST_PLAYWRIGHT", None):
     print("Uninstall trio package and remove the setting.")
     try:
         # preserve backwards compatibility for now
-        import trio
+        import trio  # noqa: F401
     except ModuleNotFoundError:
         # dont show a massive callstack if trio is not installed
         os._exit(1)
@@ -50,6 +50,9 @@ __all__ = (
     "events",
     "LoadTestShape",
     "run_single_user",
+    "HttpLocust",
+    "Locust",
+    "__version__",
 )
 
 # Used for raising a DeprecationWarning if old Locust/HttpLocust is used

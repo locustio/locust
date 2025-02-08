@@ -1,7 +1,5 @@
 from locust import HttpUser, LoadTestShape, constant, task
 
-import math
-
 
 class UserA(HttpUser):
     wait_time = constant(600)

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { act, render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
@@ -21,13 +22,12 @@ function MockHook({
   hasTotalRow?: boolean;
   defaultSortKey?: keyof (typeof mockStats)[0];
 }) {
-  const { onTableHeadClick, sortedRows, currentSortField } = useSortByField(
-    hasTotalRow ? mockStatsWithTotalRow : mockStats,
-    {
-      hasTotalRow,
-      defaultSortKey,
-    },
-  );
+  const [stats, setStats] = useState(hasTotalRow ? mockStatsWithTotalRow : mockStats);
+
+  const { onTableHeadClick, sortedRows, currentSortField } = useSortByField(stats, {
+    hasTotalRow,
+    defaultSortKey,
+  });
 
   return (
     <div>
@@ -44,6 +44,9 @@ function MockHook({
         onClick={onTableHeadClick}
       >
         Sort by numFailures
+      </button>
+      <button data-testid='emptyStats' onClick={() => setStats([])}>
+        Empty stats
       </button>
       <span data-testid='sortedStats'>{JSON.stringify(sortedRows)}</span>
       <span data-testid='currentSortField'>{currentSortField}</span>
@@ -126,5 +129,17 @@ describe('useSortByField', () => {
 
     expect(getByTestId('sortedStats').textContent).toBe(JSON.stringify(mockStats));
     expect(getByTestId('currentSortField').textContent).toBe('');
+  });
+
+  test('should allow the sorted rows to be set to empty', () => {
+    const { getByTestId } = render(<MockHook />);
+
+    expect(getByTestId('sortedStats').textContent).toBe(JSON.stringify(mockStats));
+
+    act(() => {
+      getByTestId('emptyStats').click();
+    });
+
+    expect(getByTestId('sortedStats').textContent).toBe(JSON.stringify([]));
   });
 });

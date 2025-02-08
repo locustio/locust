@@ -1,5 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
-import { init, dispose, ECharts, connect } from 'echarts';
+import {
+  init,
+  dispose,
+  ECharts,
+  connect,
+  XAXisComponentOption,
+  GridComponentOption,
+} from 'echarts';
 
 import { CHART_THEME } from 'components/LineChart/LineChart.constants';
 import {
@@ -21,6 +28,8 @@ interface IBaseChartType extends ILineChartMarkers, ILineChartTimeAxis {
 
 interface ILineChartProps<ChartType extends IBaseChartType> extends ILineChart<ChartType> {
   shouldReplaceMergeLines?: boolean;
+  xAxis?: XAXisComponentOption;
+  grid?: GridComponentOption;
 }
 
 export default function LineChart<ChartType extends IBaseChartType>({
@@ -31,6 +40,8 @@ export default function LineChart<ChartType extends IBaseChartType>({
   chartValueFormatter,
   splitAxis,
   yAxisLabels,
+  xAxis,
+  grid,
   scatterplot,
   shouldReplaceMergeLines = false,
 }: ILineChartProps<ChartType>) {
@@ -55,6 +66,8 @@ export default function LineChart<ChartType extends IBaseChartType>({
         chartValueFormatter,
         splitAxis,
         yAxisLabels,
+        xAxis,
+        grid,
         scatterplot,
       }),
     );

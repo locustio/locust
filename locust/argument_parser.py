@@ -6,10 +6,10 @@ from locust.rpc import Message, zmqrpc
 
 import ast
 import atexit
+import json
 import os
 import platform
 import socket
-import ssl
 import sys
 import tempfile
 import textwrap
@@ -28,6 +28,7 @@ import gevent
 import requests
 
 from .util.directory import get_abspaths_in
+from .util.timespan import parse_timespan
 from .util.url import is_url
 
 version = locust.__version__
@@ -369,6 +370,66 @@ def parse_locustfile_option(args=None) -> list[str]:
     return parsed_paths
 
 
+# A hack for setting up an action that raises ArgumentError with configurable error messages.
+# This is meant to be used to immediately block use of deprecated arguments with some helpful messaging.
+
+
+def raise_argument_type_error(err_msg):
+    class ErrorRaisingAction(configargparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            raise configargparse.ArgumentError(self, err_msg)
+
+    return ErrorRaisingAction
+
+
+# Definitions for some "types" to use with the arguments
+
+
+def timespan(time_str) -> int:
+    try:
+        return parse_timespan(time_str)
+    except ValueError as e:
+        raise configargparse.ArgumentTypeError(str(e))
+
+
+def positive_integer(string) -> int:
+    try:
+        value = int(string)
+    except ValueError:
+        raise configargparse.ArgumentTypeError(f"invalid int value: '{string}'")
+
+    if value < 1:
+        raise configargparse.ArgumentTypeError(
+            f"Invalid --expect-workers argument ({value}), must be a positive number"
+        )
+
+    return value
+
+
+def json_user_config(string):
+    try:
+        if string.endswith(".json"):
+            with open(string) as file:
+                user_config = json.load(file)
+        else:
+            user_config = json.loads(string)
+
+        if not isinstance(user_config, list):
+            user_config = [user_config]
+
+        for config in user_config:
+            if "user_class_name" not in config:
+                raise configargparse.ArgumentTypeError("The user config must specify a user_class_name")
+
+        return user_config
+
+    except json.decoder.JSONDecodeError as e:
+        raise configargparse.ArgumentTypeError(f"The --config-users argument must be a valid JSON string or file: {e}")
+
+    except FileNotFoundError as e:
+        raise configargparse.ArgumentTypeError(str(e))
+
+
 def setup_parser_arguments(parser):
     """
     Setup command-line options
@@ -402,19 +463,12 @@ def setup_parser_arguments(parser):
         env_var="LOCUST_SPAWN_RATE",
     )
     parser.add_argument(
-        "--hatch-rate",
-        env_var="LOCUST_HATCH_RATE",
-        metavar="<float>",
-        type=float,
-        default=0,
-        help=configargparse.SUPPRESS,
-    )
-    parser.add_argument(
         "-t",
         "--run-time",
         metavar="<time string>",
         help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --headless or --autostart. Defaults to run forever.",
         env_var="LOCUST_RUN_TIME",
+        type=timespan,
     )
     parser.add_argument(
         "-l",
@@ -425,7 +479,7 @@ def setup_parser_arguments(parser):
     )
     parser.add_argument(
         "--config-users",
-        type=str,
+        type=json_user_config,
         nargs="*",
         help="User configuration as a JSON string or file. A list of arguments or an Array of JSON configuration may be provided",
         env_var="LOCUST_CONFIG_USERS",
@@ -489,6 +543,9 @@ def setup_parser_arguments(parser):
         default=None,
         help=configargparse.SUPPRESS,
         env_var="LOCUST_WEB_AUTH",
+        action=raise_argument_type_error(
+            "The --web-auth parameters has been replaced with --web-login. See https://docs.locust.io/en/stable/extending-locust.html#authentication for details"
+        ),
     )
     web_ui_group.add_argument(
         "--web-login",
@@ -528,7 +585,8 @@ def setup_parser_arguments(parser):
     web_ui_group.add_argument(
         "--legacy-ui",
         default=False,
-        action="store_true",
+        action=raise_argument_type_error("--legacy-ui is no longer supported, remove the parameter to continue"),
+        nargs=0,
         help=configargparse.SUPPRESS,
         env_var="LOCUST_LEGACY_UI",
     )
@@ -561,7 +619,7 @@ def setup_parser_arguments(parser):
     )
     master_group.add_argument(
         "--expect-workers",
-        type=int,
+        type=positive_integer,
         metavar="<int>",
         default=1,
         help="Delay starting the test until this number of workers have connected (only used in combination with --headless/--autostart).",
@@ -584,7 +642,8 @@ def setup_parser_arguments(parser):
     )
     master_group.add_argument(
         "--expect-slaves",
-        action="store_true",
+        action=raise_argument_type_error("The --expect-slaves parameter has been renamed --expect-workers"),
+        nargs=0,
         help=configargparse.SUPPRESS,
     )
 
@@ -608,7 +667,8 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
     )
     worker_group.add_argument(
         "--slave",
-        action="store_true",
+        action=raise_argument_type_error("The --slave parameter has been renamed --worker"),
+        nargs=0,
         help=configargparse.SUPPRESS,
     )
     worker_group.add_argument(
@@ -720,6 +780,8 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         help="Choose between DEBUG/INFO/WARNING/ERROR/CRITICAL. Default is INFO.",
         metavar="<level>",
         env_var="LOCUST_LOGLEVEL",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        type=str.upper,
     )
     log_group.add_argument(
         "--logfile",
@@ -764,6 +826,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         default="0",
         help="Number of seconds to wait for a simulated user to complete any executing task before exiting. Default is to terminate immediately. When running distributed, this only needs to be specified on the master.",
         env_var="LOCUST_STOP_TIMEOUT",
+        type=timespan,
     )
     other_group.add_argument(
         "--equal-weights",

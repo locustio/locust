@@ -10,7 +10,6 @@ from locust.argument_parser import (
 import os
 import unittest
 from io import StringIO
-from random import randint
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from unittest import mock
 
@@ -117,9 +116,9 @@ class TestArgumentParser(LocustTestCase):
         self.assertEqual("locustfile.py", options.locustfile)
         self.assertEqual(100, options.num_users)
         self.assertEqual(10, options.spawn_rate)
-        self.assertEqual("5m", options.run_time)
+        self.assertEqual(300, options.run_time)
         self.assertTrue(options.reset_stats)
-        self.assertEqual("5", options.stop_timeout)
+        self.assertEqual(5, options.stop_timeout)
         self.assertEqual(["MyUserClass"], options.user_classes)
         # check default arg
         self.assertEqual(8089, options.web_port)
@@ -137,9 +136,9 @@ class TestArgumentParser(LocustTestCase):
         self.assertEqual("locustfile.py", options.locustfile)
         self.assertEqual(100, options.num_users)
         self.assertEqual(10, options.spawn_rate)
-        self.assertEqual("5m", options.run_time)
+        self.assertEqual(300, options.run_time)
         self.assertTrue(options.reset_stats)
-        self.assertEqual("5", options.stop_timeout)
+        self.assertEqual(5, options.stop_timeout)
         self.assertEqual(["MyUserClass"], options.user_classes)
         # check default arg
         self.assertEqual(8089, options.web_port)

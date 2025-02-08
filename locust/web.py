@@ -10,7 +10,6 @@ from html import escape
 from io import StringIO
 from itertools import chain
 from json import dumps
-from time import time
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import gevent
@@ -285,9 +284,9 @@ class WebUI:
                     if isinstance(parsed_options_value, bool):
                         parsed_options_dict[key] = value == "true"
                     elif parsed_options_value is None:
-                        parsed_options_dict[key] = parsed_options_value
+                        parsed_options_dict[key] = value
                     else:
-                        parsed_options_dict[key] = type(parsed_options_dict[key])(value)
+                        parsed_options_dict[key] = type(parsed_options_value)(value)
 
             if environment.shape_class and environment.runner is not None:
                 environment.runner.start_shape()

@@ -3,7 +3,7 @@ from __future__ import annotations
 from locust.env import Environment
 from locust.exception import CatchResponseError, LocustError, ResponseError
 from locust.user import User
-from locust.util.deprecation import DeprecatedFastHttpLocustClass as FastHttpLocust
+from locust.util.deprecation import DeprecatedFastHttpLocustClass as FastHttpLocust  # noqa: F401
 
 import json
 import json as unshadowed_json  # some methods take a named parameter called json

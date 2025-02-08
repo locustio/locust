@@ -9,7 +9,7 @@ import subprocess
 import sys
 import textwrap
 import unittest
-from subprocess import DEVNULL, PIPE, STDOUT
+from subprocess import PIPE, STDOUT
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
@@ -157,6 +157,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         proc.send_signal(signal.SIGTERM)
         stdout, stderr = proc.communicate(timeout=3)
         self.assertIn("Starting Locust", stderr)
+        self.assertNotIn("Traceback", stderr)
         self.assertIn("config_file_value", stdout)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
@@ -411,8 +412,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 text=True,
             )
             stdout, stderr = proc.communicate()
-            self.assertIn("ERROR/locust.main: Valid --stop-timeout formats are", stderr)
-            self.assertEqual(1, proc.returncode)
+            self.assertIn(
+                "locust: error: argument -s/--stop-timeout: Invalid time span format. Valid formats: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.",
+                stderr,
+            )
+            self.assertEqual(2, proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_headless_spawn_options_wo_run_time(self):
@@ -1053,7 +1057,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     mocked.file_path,
                     "--headless",
                     "--run-time",
-                    "0.5",
+                    "1",
                     "-u",
                     "3",
                 ],

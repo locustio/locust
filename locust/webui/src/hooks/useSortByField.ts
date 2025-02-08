@@ -77,6 +77,9 @@ export default function useSortByField<Row>(
   useEffect(() => {
     if (rows.length) {
       sortStats(currentSortField.current || defaultSortKey);
+    } else if (sortStats.length) {
+      // allows tables to be empty in the case of filtering
+      setSortedRows(rows);
     }
   }, [rows]);
 

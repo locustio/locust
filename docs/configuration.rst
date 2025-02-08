@@ -55,23 +55,7 @@ You can specify an additional file using the ``--config`` flag.
 
     $ locust --config custom_config.conf
 
-Here's a minimalistic example of the configuration file supported by Locust:
-
-Have a look later in this article for :ref:`All available configuration options`
-
-locust.conf
---------------
-
-.. code-block:: ini
-
-    locustfile = locust_files/my_locust_file.py
-    headless = true
-    host = https://target-system
-    run-time = 1m
-    spawn-rate = 
-    users = 1    
-
-Here's a quick example of the configuration files supported by Locust:
+Here's an example:
 
 locust.conf
 --------------
@@ -87,6 +71,8 @@ locust.conf
     spawn-rate = 10
     run-time = 10m
     tags = [Critical, Normal]
+
+Have a look later in this page for `All available configuration options`_
 
 pyproject.toml
 --------------
@@ -109,9 +95,9 @@ When using a TOML file, configuration options should be defined within the ``[to
 .. note::
 
     Configuration values are read (and overridden) in the following order:
-    
+
     .. code-block:: console
-        
+
        ~/.locust.conf -> ./locust.conf -> ./pyproject.toml -> (file specified using --conf) -> env vars -> cmd args
 
 
@@ -245,7 +231,7 @@ To configure multiple users you pass multiple arguments to ``--config-users``, o
 When using this way to configure your users, you can set any attribute.
 
 .. note::
-    
+
     ``--config-users`` is a somewhat experimental feature and the json format may change even between minor Locust revisions.
 
 Custom arguments
@@ -269,26 +255,28 @@ It can be done directly in Locust file or extracted to separate file for common 
 
 The list of statistics parameters that can be modified is:
 
-+-------------------------------------------+--------------------------------------------------------------------------------------+
-| Parameter name                            | Purpose                                                                              |
-+-------------------------------------------+--------------------------------------------------------------------------------------+
-| STATS_NAME_WIDTH                          | Width of column for request name in console output                                   |
-+-------------------------------------------+--------------------------------------------------------------------------------------+
-| STATS_TYPE_WIDTH                          | Width of column for request type in console output                                   |
-+-------------------------------------------+--------------------------------------------------------------------------------------+
-| CSV_STATS_INTERVAL_SEC                    | Interval for how frequently the CSV file is written if this option is configured     |
-+-------------------------------------------+--------------------------------------------------------------------------------------+
-| CONSOLE_STATS_INTERVAL_SEC                | Interval for how frequently results are written to console                           |
-+-------------------------------------------+--------------------------------------------------------------------------------------+
-| CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW   | Window size/resolution - in seconds - when calculating the current response          |
-|                                           | time percentile                                                                      |
-+-------------------------------------------+--------------------------------------------------------------------------------------+
-| PERCENTILES_TO_REPORT                     | List of response time percentiles to be calculated & reported                        |
-+-------------------------------------------+--------------------------------------------------------------------------------------+
-| PERCENTILES_TO_CHART                      | List of response time percentiles in the screen of chart for UI                      |
-+-------------------------------------------+--------------------------------------------------------------------------------------+
-| PERCENTILES_TO_STATISTICS                 | List of response time percentiles in the screen of statistics for UI                 |
-+-------------------------------------------+--------------------------------------------------------------------------------------+
++-----------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| Parameter name                          | Purpose                                                                          | Default value                                                        |
++-----------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| STATS_NAME_WIDTH                        | Width of column for request name in console output                               | terminal size or 80                                                  |
++-----------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| STATS_TYPE_WIDTH                        | Width of column for request type in console output                               | 8                                                                    |
++-----------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| CSV_STATS_INTERVAL_SEC                  | Interval for how frequently the CSV file is written if this option is configured | 1                                                                    |
++-----------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| CONSOLE_STATS_INTERVAL_SEC              | Interval for how frequently results are written to console / chart UI            | 2                                                                    |
++-----------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| HISTORY_STATS_INTERVAL_SEC              | Interval for how frequently results are written to history                       | 5                                                                    |
++-----------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW | Window size/resolution - in seconds - when calculating the current response      | 10                                                                   |
+|                                         | time percentile                                                                  |                                                                      |
++-----------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| PERCENTILES_TO_REPORT                   | List of response time percentiles to be calculated & reported                    | [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0] |
++-----------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| PERCENTILES_TO_STATISTICS               | List of response time percentiles in the screen of statistics for UI             | [0.95, 0.99]                                                         |
++-----------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| PERCENTILES_TO_CHART                    | List of response time percentiles in the screen of chart for UI                  | [0.5, 0.95]                                                          |
++-----------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------------------------+
 
 Customization of additional static variables
 ============================================

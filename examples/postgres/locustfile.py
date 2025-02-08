@@ -1,4 +1,4 @@
-from locust import TaskSet, between, task
+from locust import task
 from locust.contrib.postgres import PostgresUser
 
 import os

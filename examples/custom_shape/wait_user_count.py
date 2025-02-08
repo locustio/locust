@@ -1,6 +1,5 @@
 from locust import HttpUser, LoadTestShape, TaskSet, constant, task
 
-import math
 import random
 import time
 from collections import namedtuple

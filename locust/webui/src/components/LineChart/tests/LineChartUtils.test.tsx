@@ -178,6 +178,32 @@ describe('createOptions', () => {
     expect(options.series).toEqual(mockScatterplotSeriesData);
     expect(options.color).toEqual(['#fff']);
   });
+
+  test('should allow xAxis config to be overriden', () => {
+    const mockXAxisConfig = {
+      type: 'category' as any,
+      minInterval: 1,
+    };
+    const options = createOptions<MockChartType>({
+      ...createOptionsDefaultProps,
+      xAxis: mockXAxisConfig,
+    });
+
+    expect(options.xAxis).toEqual(mockXAxisConfig);
+  });
+
+  test('should allow grid config to be overriden', () => {
+    const mockGridConfig = {
+      left: '6%',
+      right: '6%',
+    };
+    const options = createOptions<MockChartType>({
+      ...createOptionsDefaultProps,
+      grid: mockGridConfig,
+    });
+
+    expect(options.grid).toEqual(mockGridConfig);
+  });
 });
 
 describe('createMarkLine', () => {

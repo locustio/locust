@@ -1,4 +1,4 @@
-from locust import User, constant, task
+from locust import User, task
 from locust.exception import RescheduleTask
 from locust.user.sequential_taskset import SequentialTaskSet
 

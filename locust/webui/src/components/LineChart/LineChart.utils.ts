@@ -78,6 +78,8 @@ export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
   chartValueFormatter,
   splitAxis,
   yAxisLabels,
+  xAxis,
+  grid,
   scatterplot,
 }: ILineChart<ChartType>) => ({
   title: { text: title },
@@ -106,15 +108,17 @@ export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
     },
     borderWidth: 0,
   },
-  xAxis: {
-    type: 'time',
-    min: (charts.time || [new Date().toISOString()])[0],
-    startValue: (charts.time || [])[0],
-    axisLabel: {
-      formatter: formatTimeAxis,
-    },
-  },
-  grid: { left: 60, right: 40 },
+  xAxis: xAxis
+    ? xAxis
+    : {
+        type: 'time',
+        min: (charts.time || [new Date().toISOString()])[0],
+        startValue: (charts.time || [])[0],
+        axisLabel: {
+          formatter: formatTimeAxis,
+        },
+      },
+  grid: grid ? grid : { left: 60, right: 40 },
   yAxis: createYAxis({ splitAxis, yAxisLabels }),
   series: getSeriesData<ChartType>({ charts, lines, scatterplot }),
   color: colors,
