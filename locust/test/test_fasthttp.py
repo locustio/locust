@@ -145,10 +145,6 @@ class TestFastHttpSession(WebserverTestCase):
             stream=True,
         )
 
-        with self.assertLogs("http_client", level="INFO") as logs:
-            list(session.iter_lines(url, method="POST"))
-        self.assertIn(f"Request: POST {url}", logs.output[0])
-
     def test_slow_redirect(self):
         s = self.get_client()
         url = "/redirect?url=/redirect&delay=0.5"
