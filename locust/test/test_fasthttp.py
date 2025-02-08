@@ -140,14 +140,14 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(lines, expected_lines)
 
         session.request.assert_called_once_with(
-            "POST",  # 检查方法是否为 POST
+            "POST",
             url,
-            stream=True,  # 确保 stream=True 被传递
+            stream=True,
         )
 
         with self.assertLogs("http_client", level="INFO") as logs:
-            list(session.iter_lines(url))
-        self.assertIn(f"Request: GET {url}", logs.output[0])
+            list(session.iter_lines(url, method="POST"))
+        self.assertIn(f"Request: POST {url}", logs.output[0])
 
     def test_slow_redirect(self):
         s = self.get_client()
