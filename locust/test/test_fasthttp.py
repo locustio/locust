@@ -142,7 +142,7 @@ class TestFastHttpSession(WebserverTestCase):
         session.request.assert_called_once_with(
             "POST",  # 检查方法是否为 POST
             url,
-            stream=True  # 确保 stream=True 被传递
+            stream=True,  # 确保 stream=True 被传递
         )
 
         with self.assertLogs("http_client", level="INFO") as logs:
