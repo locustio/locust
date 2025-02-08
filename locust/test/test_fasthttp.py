@@ -7,6 +7,7 @@ from locust.util.load_locustfile import is_user_class
 import socket
 import time
 from tempfile import NamedTemporaryFile
+from unittest.mock import MagicMock
 
 import gevent
 from geventhttpclient.client import HTTPClientPool
@@ -105,6 +106,44 @@ class TestFastHttpSession(WebserverTestCase):
         # verify that response time does NOT include whole download time, when using stream=True
         self.assertGreaterEqual(stats.avg_response_time, 0)
         self.assertLess(stats.avg_response_time, 250)
+
+    def test_iter_lines(self):
+        session = self.get_client()
+
+        url = "/streaming/10"
+
+        response_mock = MagicMock()
+        response_mock.iter_content = MagicMock(
+            return_value=iter(
+                [
+                    b"<span>0</span>\n",
+                    b"<span>1</span>\n",
+                    b"<span>2</span>\n",
+                    b"<span>3</span>\n",
+                    b"<span>4</span>\n",
+                    b"<span>5</span>\n",
+                    b"<span>6</span>\n",
+                    b"<span>7</span>\n",
+                    b"<span>8</span>\n",
+                    b"<span>9</span>\n",
+                ]
+            )
+        )
+        response_mock.raise_for_status = MagicMock()
+
+        session.request = MagicMock(return_value=response_mock)
+
+        lines = list(session.iter_lines(url, method="POST"))
+
+        expected_lines = [f"<span>{i}</span>" for i in range(10)]
+
+        self.assertEqual(lines, expected_lines)
+
+        session.request.assert_called_once_with(
+            "POST",
+            url,
+            stream=True,
+        )
 
     def test_slow_redirect(self):
         s = self.get_client()
