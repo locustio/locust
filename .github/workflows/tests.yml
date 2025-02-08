@@ -32,7 +32,6 @@ jobs:
           fetch-depth: 0
           fetch-tags: true 
 
-      # Set up Python and Poetry and cache build dependencies
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -40,10 +39,10 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           version: "0.5.26"
-          # enable-cache: true
-          # cache-dependency-glob: "uv.lock"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - run: uv venv --python 3.11
+      - run: uv venv
 
       - name: Install the project
         run: uv sync
@@ -56,8 +55,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          # cache: 'yarn'
-          # cache-dependency-path: locust/webui/yarn.lock
+          cache: 'yarn'
+          cache-dependency-path: locust/webui/yarn.lock
 
       - name: Install Yarn
         run: npm install -g yarn
@@ -152,7 +151,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Set up Python and Poetry and cache build dependencies
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
@@ -160,8 +158,8 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           version: "0.5.26"
-          # enable-cache: true
-          # cache-dependency-glob: "uv.lock"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - run: uv venv --python ${{ matrix.python }}
 

@@ -19,7 +19,6 @@ dist/**
 .vagrant
 build/
 .coverage
-.tox/
 docs/env-options.rst
 .editorconfig
 __pycache__

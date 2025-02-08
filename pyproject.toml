@@ -163,9 +163,9 @@ reportOptionalMemberAccess = "none"
 analyzeUnannotatedFunctions = false
 
 
-#### Hatch envs
+# Hatch envs
 
-# Testing
+## Testing
 
 # Run all
 #   hatch run test:tests 
@@ -173,7 +173,6 @@ analyzeUnannotatedFunctions = false
 #   hatch run +py=3.10 test:all
 
 [tool.hatch.envs.test]
-# parallel = true
 dependencies = [
     "cryptography>=43.0.1,<44.0.0",
     "mock>=5.1.0,<6.0.0",
@@ -186,8 +185,8 @@ dependencies = [
 python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
 
+## Run all unit tests and advanced debugging
 [tool.hatch.envs.test.scripts]
-# Run all unit tests and advanced debugging
 
 # Disable these tests for now, because they are breaking. When someone has time they should be converted into regular unit tests
 # bash -ec "PYTHONUNBUFFERED=1 timeout 20s python3 examples/rest.py >{temp_dir}/out.txt 2>/{temp_dir}/err.txt || true"
@@ -203,8 +202,7 @@ all = [
 fail_fast = "pytest -vv -x {args:locust/test/test_main.py}"
 
 
-# Integration testing of build packages on CI, using a pre-built package
-
+## Integration testing of build packages on CI, using a pre-built package
 [tool.hatch.envs.integration_test_ci]
 template = "test"
 skip-install = true
@@ -217,8 +215,7 @@ python = ["3.12"]
 fail_fast = ["pytest -vv -x {args:locust/test/test_main.py}"]
 
 
-# Hatch lint checking environments
-
+## Linting
 [tool.hatch.envs.lint]
 detached = true
 dependencies = [
@@ -231,11 +228,12 @@ dependencies = [
 python = ["3.12"]
 
 [tool.hatch.envs.lint.scripts]
+all = [""]
 types = ["mypy locust/"]
 format = ["ruff check .", "ruff format --check"]
 
-# Hatch docs building environment
 
+## Hatch docs building environment
 [tool.hatch.envs.docs]
 dependencies = [
     "sphinx==7.3.7",
