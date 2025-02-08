@@ -15,12 +15,24 @@ HttpUser class
 .. autoclass:: locust.HttpUser
     :members: wait_time, tasks, client, abstract
 
+HttpSession class
+=================
+
+.. autoclass:: locust.clients.HttpSession
+    :members: __init__, request, get, post, delete, put, head, options, patch
+
 FastHttpUser class
 ==================
 
 .. autoclass:: locust.contrib.fasthttp.FastHttpUser
     :members: wait_time, tasks, client, abstract, rest
     :noindex:
+
+FastHttpSession class
+=====================
+
+.. autoclass:: locust.contrib.fasthttp.FastHttpSession
+    :members: __init__, request, get, post, delete, put, head, options, patch, iter_lines
 
 PostgresUser class
 ==================
@@ -33,7 +45,7 @@ MongoDBUser class
 =================
 
 .. autoclass:: locust.contrib.mongodb.MongoDBUser
-    :members: wait_time, tasks, client, abstract, rest
+    :members: wait_time, tasks, client, abstract
     :noindex:
 
 TaskSet class
@@ -66,12 +78,6 @@ Built in wait_time functions
 
 .. automodule:: locust.wait_time
     :members: between, constant, constant_pacing, constant_throughput
-
-HttpSession class
-=================
-
-.. autoclass:: locust.clients.HttpSession
-    :members: __init__, request, get, post, delete, put, head, options, patch
 
 Response class
 ==============
