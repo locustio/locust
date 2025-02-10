@@ -14,7 +14,7 @@ RUN yarn webui:build
 FROM python:3.12-slim AS base
 
 FROM base AS builder
-RUN apt-get update && apt-get install -y git 
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git
 # there are no wheels for some packages (geventhttpclient?) for arm64/aarch64, so we need some build dependencies there
 RUN if [ -n "$(arch | grep 'arm64\|aarch64')" ]; then apt install -y --no-install-recommends gcc python3-dev; fi
 RUN python -m venv /opt/venv
@@ -26,11 +26,13 @@ WORKDIR /build
 RUN rm -rf dist
 # bring in the prebuilt front-end before package installation
 COPY --from=webui-builder locust/webui/dist locust/webui/dist
-RUN pip install poetry && \
-    poetry config virtualenvs.create false && \
-    poetry self add "poetry-dynamic-versioning[plugin]" && \
-    poetry self add "poethepoet[poetry_plugin]" && \
-    poetry build -f wheel && \
+
+# Build the Python project
+ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
+ADD https://astral.sh/uv/0.5.26/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+ENV PATH="/root/.local/bin/:$PATH"
+RUN uv build && \
     pip install dist/*.whl
 
 # Stage 3: Runtime image

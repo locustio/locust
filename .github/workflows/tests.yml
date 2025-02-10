@@ -32,34 +32,24 @@ jobs:
           fetch-depth: 0
           fetch-tags: true 
 
-      # Set up Python and Poetry and cache build dependencies
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
-          cache: 'pip'
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.8.5
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          virtualenvs-path: .venv
-          installer-parallel: true
-          plugins: |
-            poetry-dynamic-versioning[plugin]
-            poethepoet[poetry_plugin]
-    
-      # Install and cache full build dependencies
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-      - name: Install dependencies
-        # if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --no-plugins
+          python-version: "3.11"
 
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.26"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - run: uv venv
+
+      - name: Install the project
+        run: uv sync
+  
+      # any local changes would make hatch-vcs set a "local version" (+dev0...), so we ignore any uv.lock updates:
+      # - run: git update-index --assume-unchanged uv.lock
+  
       # Install node and yarn in order to build the front end during packaging  
       - name: Set Node.js 22.x
         uses: actions/setup-node@v4
@@ -67,12 +57,15 @@ jobs:
           node-version: 22.x
           cache: 'yarn'
           cache-dependency-path: locust/webui/yarn.lock
+
       - name: Install Yarn
         run: npm install -g yarn
 
       # Build and upload the project artifacts only once
-      - name: Build Python dist and web UI
-        run: poetry build --no-interaction
+
+      - name: Build Python project and front end
+        run: uv build
+
       - name: Upload Python dist as Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -87,6 +80,7 @@ jobs:
   
       - name: Build UI library
         run: yarn webui:build:lib
+
       - name: Upload web UI library as Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -95,9 +89,9 @@ jobs:
       
       # Set workflow metadata in one place so we can pull it out later
       - id: set_tag
-        run: echo "tag=$(poetry version -s)" | tee -a "$GITHUB_OUTPUT"
+        run: echo "tag=$(uv run hatch version)" | tee -a "$GITHUB_OUTPUT"
       - id: set_tag_short
-        run: echo "tag_short=$(poetry version -s | cut -d '.' -f1-3)" | tee -a "$GITHUB_OUTPUT"
+        run: echo "tag_short=$(uv run hatch version | cut -d '.' -f1-3)" | tee -a "$GITHUB_OUTPUT"
       - id: set_branch
         run: echo "branch=${{ github.head_ref || github.ref_name }}" | tee -a "$GITHUB_OUTPUT"
       - id: set_is_merge_commit
@@ -124,7 +118,7 @@ jobs:
   #       Testing
   #-------------------------
 
-  tox_tests:
+  tests:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     needs: build_package
@@ -134,57 +128,44 @@ jobs:
       matrix:
         include:
           # Static analysis and utilities
-          - { name: "Ruff", python: "3.12.5", os: ubuntu-latest, tox: "ruff" }
-          - { name: "Mypy", python: "3.12.5", os: ubuntu-latest, tox: "mypy" }
+          - { name: "Ruff", python: "3.12", os: ubuntu-latest, env: "lint:format" }
+          - { name: "Mypy", python: "3.12", os: ubuntu-latest, env: "lint:types" }
 
           # Verification of builds and other aspects          
-          - { name: "Docs Build", python: "3.12.5", os: ubuntu-latest, tox: "docs" }
+          - { name: "Docs Build", python: "3.12", os: ubuntu-latest, env: "docs:build" }
 
           # OS Integration tests 
-          - { name: "Linux", python: "3.12.5", os: ubuntu-latest, tox: fail_fast_test_main_external_package }
-          - { name: "Windows", python: '3.12.5', os: windows-latest, tox: fail_fast_test_main_external_package }
-          - { name: "MacOS", python: '3.12.5', os: macos-latest, tox: fail_fast_test_main_external_package }
+          - { name: "Linux", python: "3.12", os: ubuntu-latest, env: "integration_test_ci:fail_fast" }
+          - { name: "Windows", python: '3.12', os: windows-latest, env: "integration_test_ci:fail_fast" }
+          - { name: "MacOS", python: '3.12', os: macos-latest, env: "integration_test_ci:fail_fast" }
           
           # Unit tests on Python versions
-          - { name: "Python 3.13", python: "3.13.0", os: ubuntu-latest, tox: py313 }
-          - { name: "Python 3.12", python: "3.12.5", os: ubuntu-latest, tox: py312 }
-          - { name: "Python 3.11", python: "3.11.9", os: ubuntu-latest, tox: py311 }
-          - { name: "Python 3.10", python: "3.10.14", os: ubuntu-latest, tox: py310 }
-          - { name: "Python 3.9", python: "3.9.20", os: ubuntu-latest, tox: py39 }
+          - { name: "Python 3.13", python: "3.13", os: ubuntu-latest, env: "test:all" }
+          - { name: "Python 3.12", python: "3.12", os: ubuntu-latest, env: "test:all" }
+          - { name: "Python 3.11", python: "3.11", os: ubuntu-latest, env: "test:all" }
+          - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, env: "test:all" }
+          - { name: "Python 3.9", python: "3.9", os: ubuntu-latest, env: "test:all" }
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Set up Python and Poetry 
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-          cache: 'pip'
-          cache-dependency-path: poetry.lock
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.8.5
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          virtualenvs-path: .venv
-          installer-parallel: true
-          plugins: |
-            poetry-dynamic-versioning[plugin]
-            poethepoet[poetry_plugin]
 
-      # Install and cache test-only dependencies
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
+      - uses: astral-sh/setup-uv@v5
         with:
-          path: .venv
-          key: venv-tox-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-      - name: Install dependencies
-        # if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --with test,docs --no-plugins
+          version: "0.5.26"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - run: uv venv --python ${{ matrix.python }}
+
+      # Install what we need to run hatch envs but not the project itself
+      - name: Install CI dependencies
+        run: uv sync --all-groups --no-install-package locust
 
       # Grab the built artifacts to ensure we're testing what we eventually publish
       - name: Download Python dist
@@ -200,10 +181,8 @@ jobs:
           path: locust/webui/dist
 
       # Run tests!
-      - name: Run tox tests
-        run: |
-          source $VENV
-          tox -e ${{ matrix.tox }} --installpkg dist/*.whl
+      - name: Run hatch job
+        run: uv run hatch run +py=${{ matrix.python }} ${{ matrix.env }}
       
   test_docker_image:
     name: Test Docker Image
@@ -280,7 +259,7 @@ jobs:
   # -------------------------
 
   publish:
-    needs: [tox_tests, lint_typecheck_test_webui, test_docker_image, build_package]
+    needs: [tests, lint_typecheck_test_webui, test_docker_image, build_package]
     if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
     runs-on: ubuntu-latest
     steps:

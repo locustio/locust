@@ -16,16 +16,16 @@ Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then
     # clone the repo:
     $ git clone git://github.com/<YourName>/locust.git
 
-    # install the poetry build system, version 1.8.5, see https://python-poetry.org/docs/#installation
+    # install the `uv` build system, https://docs.astral.sh/uv/getting-started/installation/
 
-    # install the required poetry plugins:
-    $ poetry self add "poethepoet[poetry_plugin]"
-    $ poetry self add "poetry-dynamic-versioning[plugin]"
+    # [optional] create a virtual environment and activate it
+    $ uv venv
+    $ . .venv/bin.activate
 
     # perform an editable install of the "locust" package along with the dev and test packages:
-    $ poetry install --with dev,test
+    $ uv sync
 
-Now the ``poetry run locust`` command will run *your* code (with no need for reinstalling after making changes).
+Now the ``uv --directory locust run locust`` command will run *your* code (with no need for reinstalling after making changes). If you have installed the project to a virtual environment, you can simply call `locust`.
 
 To contribute your changes, push to a branch in your repo and then `open a PR on github <https://github.com/locustio/locust/compare>`_. 
 
@@ -38,20 +38,48 @@ If you're in a hurry or don't have access to a development environment, you can 
 Testing your changes
 ====================
 
-We use `tox <https://tox.readthedocs.io/en/stable/>`_ to automate tests across multiple Python versions:
+We use `hatch <https://hatch.pypa.io/1.13/>`_ to automate tests across multiple Python versions.
+
+All tests:
 
 .. code-block:: console
 
-    $ tox
+    $ hatch run test:tests 
     ...
-    py39: commands[1]> python3 -m unittest discover
+    py39: commands[1]> pytest -vv -x locust/test
     ...
 
-To only run a specific suite or specific test you can call `pytest <https://docs.pytest.org/>`_ directly:
+Integration tests designed to fail early:
 
 .. code-block:: console
 
-    $ pytest locust/test/test_main.py::DistributedIntegrationTests::test_distributed_tags
+    $ hatch run test:fail_fast 
+    ...
+    py39: commands[1]> pytest -vv -x locust/test/test_main.py
+    ...
+
+You can also run these tests against a specific Python version
+
+.. code-block:: console
+
+    $ hatch run +py=3.10 test:all
+    ...
+    py39: commands[1]> pytest -vv -x locust/test
+    ...
+
+To only run a specific suite or specific test you can call `pytest <https://docs.pytest.org/>`_ directly.
+
+All tests:
+
+.. code-block:: console
+
+    $ pytest -vv locust/test
+
+Individual test:
+
+.. code-block:: console
+
+    $ pytest -vv locust/test/test_main.py::DistributedIntegrationTests::test_distributed_tags
 
 Debugging
 =========
@@ -68,12 +96,11 @@ Locust uses `ruff <https://github.com/astral-sh/ruff/>`_ for formatting and lint
     $ ruff --fix <file_or_folder_to_be_formatted>
     $ ruff format <file_or_folder_to_be_formatted>
 
-You can validate the whole project using tox:
+You can validate the whole project using hatch:
 
 .. code-block:: console
 
-    $ tox -e ruff
-    ruff: install_deps> python -I -m pip install ruff==0.1.13
+    $ hatch run lint:format
     ruff: commands[0]> ruff check .
     ruff: commands[1]> ruff format --check
     104 files already formatted
@@ -89,7 +116,7 @@ The documentation source is in the `docs/ <https://github.com/locustio/locust/tr
 
     .. code-block:: console
 
-        $ poetry install --with docs
+        $ uv sync --all-groups
 
 #. Build the documentation locally:
 
@@ -97,7 +124,7 @@ The documentation source is in the `docs/ <https://github.com/locustio/locust/tr
 
         $ make build_docs
     
-View your generated documentation by opening ``docs/_build/index.html``.
+View your generated documentation by opening ``docs/_build/index.html`` or running `make serve_docs`
 
 
 Making changes to Locust's Web UI
