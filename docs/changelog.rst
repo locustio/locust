@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.32.9
+======
+* Fix issue where empty WebUI property is not parsed correctly https://github.com/locustio/locust/pull/3012
+* Add iter_lines method to FastHttpSession https://github.com/locustio/locust/pull/3024
+
 2.32.8
 ======
 * Fix a single broken link in the UI
