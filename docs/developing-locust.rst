@@ -44,27 +44,18 @@ All tests:
 
 .. code-block:: console
 
-    $ hatch run test:tests 
+    $ hatch test
     ...
-    py39: commands[1]> pytest -vv -x locust/test
-    ...
-
-Integration tests designed to fail early:
-
-.. code-block:: console
-
-    $ hatch run test:fail_fast 
-    ...
-    py39: commands[1]> pytest -vv -x locust/test/test_main.py
+    py39: commands[1]> pytest locust/test
     ...
 
 You can also run these tests against a specific Python version
 
 .. code-block:: console
 
-    $ hatch run +py=3.10 test:all
+    $ hatch test -py=3.10
     ...
-    py39: commands[1]> pytest -vv -x locust/test
+    py39: commands[1]> pytest locust/test
     ...
 
 To only run a specific suite or specific test you can call `pytest <https://docs.pytest.org/>`_ directly.
@@ -73,13 +64,13 @@ All tests:
 
 .. code-block:: console
 
-    $ pytest -vv locust/test
+    $ pytest locust/test
 
 Individual test:
 
 .. code-block:: console
 
-    $ pytest -vv locust/test/test_main.py::DistributedIntegrationTests::test_distributed_tags
+    $ pytest locust/test/test_main.py::DistributedIntegrationTests::test_distributed_tags
 
 Debugging
 =========

@@ -163,16 +163,18 @@ reportOptionalMemberAccess = "none"
 analyzeUnannotatedFunctions = false
 
 
-# Hatch envs
+# Hatch environments
 
-## Testing
+# List environments using `hatch env show`
+# https://hatch.pypa.io/1.13/tutorials/environment/basic-usage/
 
-# Run all
-#   hatch run test:tests 
-# Run single env
-#   hatch run +py=3.10 test:all
+## Local Testing
 
-[tool.hatch.envs.test]
+# Default hatch environment, used during local development
+# List tests using `hatch test -s`
+# https://hatch.pypa.io/1.13/tutorials/testing/overview/
+[tool.hatch.envs.hatch-test]
+default-args = ["locust/test"]
 dependencies = [
     "cryptography>=43.0.1,<44.0.0",
     "mock>=5.1.0,<6.0.0",
@@ -181,26 +183,41 @@ dependencies = [
     "retry>=0.9.2,<1.0.0",
 ]
 
+[tool.hatch.envs.hatch-test.scripts]
+run = [
+    "pytest{env:HATCH_TEST_ARGS:} {args}",
+    "bash -ec 'PYTHONUNBUFFERED=1 python3 examples/debugging_advanced.py | grep done'",
+]
+
+## CI testing
+
+# Run all combinations: `hatch run test:all`
+# Run single env: `hatch run +py=3.10 test:all`
+
+[tool.hatch.envs.test]
+template = "hatch-test"
+
 [[tool.hatch.envs.test.matrix]]
 python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
 
 ## Run all unit tests and advanced debugging
 [tool.hatch.envs.test.scripts]
-
 # Disable these tests for now, because they are breaking. When someone has time they should be converted into regular unit tests
 # bash -ec "PYTHONUNBUFFERED=1 timeout 20s python3 examples/rest.py >{temp_dir}/out.txt 2>/{temp_dir}/err.txt || true"
 # grep -qm 1 'my custom error message with response text, response was {"args"' {temp_dir}/out.txt
 # grep -qm 1 'ZeroDivisionError: division by zero at.*Response was {"ar' {temp_dir}/out.txt
 # bash -ec '! grep . {temp_dir}/err.txt' # should be empty 
 all = [
-    "pytest -vv {args:locust/test}",
+    "pytest {args:locust/test}",
     "bash -ec 'PYTHONUNBUFFERED=1 python3 examples/debugging_advanced.py | grep done'",
 ]
 
 # Run main test and bail on first error
-fail_fast = "pytest -vv -x {args:locust/test/test_main.py}"
+fail_fast = "pytest -x {args:locust/test/test_main.py}"
 
+
+## CI integration testing
 
 ## Integration testing of build packages on CI, using a pre-built package
 [tool.hatch.envs.integration_test_ci]
@@ -210,9 +227,6 @@ path = ".venv"
 
 [[tool.hatch.envs.integration_test_ci.matrix]]
 python = ["3.12"]
-
-[tool.hatch.envs.integration_test_ci.scripts]
-fail_fast = ["pytest -vv -x {args:locust/test/test_main.py}"]
 
 
 ## Linting
