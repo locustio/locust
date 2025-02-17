@@ -1,21 +1,17 @@
 test:
-	tox
+	pytest -vv locust/test
 
 .PHONY: build
-build: setup_dependencies
-	rm -rf dist/* && poetry build && ./rename-wheel.sh
+build: check-uv check-yarn
+	uv build
 
-install: setup_dependencies
-	poetry install --with dev
-
-setup_dependencies: check-poetry check-yarn
-	poetry config virtualenvs.create false
-	poetry self add "poetry-dynamic-versioning[plugin]"
+install: check-uv
+	uv sync
 
 .SILENT:
-.PHONY: check-poetry
-check-poetry:
-	command -v poetry >/dev/null 2>&1 || { echo >&2 "Locust requires the poetry binary to be available in this shell to build the Python package.\nSee: https://docs.locust.io/en/stable/developing-locust.html#install-locust-for-development"; exit 1; }
+.PHONY: check-uv
+check-uv:
+	command -v uv >/dev/null 2>&1 || { echo >&2 "Locust requires the uv binary to be available in this shell to build the Python package.\nSee: https://docs.locust.io/en/stable/developing-locust.html#install-locust-for-development"; exit 1; }
 
 .SILENT:
 .PHONY: check-yarn
@@ -29,7 +25,7 @@ release: build
 	twine upload dist/*
 
 setup_docs_dependencies:
-	SKIP_PRE_BUILD=true poetry install --with docs
+	uv sync --all-groups
 
 build_docs: setup_docs_dependencies
 	sphinx-build -b html docs/ docs/_build/

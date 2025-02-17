@@ -27,7 +27,7 @@ Debugging Locust is quite easy with Vscode:
 
 - Place breakpoints
 - Select a python file or a scenario (ex: ```examples/basic.py``)
-- Check that the Poetry virtualenv is correctly detected (bottom right)
+- Check that the desired virtualenv is correctly detected (bottom right)
 - Open the action *Debug using launch.json*. You will have the choice between debugging the python file, the scenario with WebUI or in headless mode
 - It could be rerun with the F5 shortkey
 

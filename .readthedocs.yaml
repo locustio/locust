@@ -8,11 +8,9 @@ build:
   jobs:
     post_checkout:
       - git fetch --unshallow || true
-    post_create_environment:
-      - python -m pip install poetry==1.8.5
-      - python -m poetry self add "poetry-dynamic-versioning[plugin]"
     post_install:
-      - SKIP_PRE_BUILD=true VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with docs
+      - python -m pip install uv
+      - SKIP_PRE_BUILD=true UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --group docs
 
 sphinx:
   configuration: docs/conf.py
