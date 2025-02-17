@@ -1,6 +1,24 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.32.9](https://github.com/locustio/locust/tree/2.32.9) (2025-02-10)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.32.8...2.32.9)
+
+**Fixed bugs:**
+
+- Cannot Update Custom options in the Web UI when Default Value is None [\#3011](https://github.com/locustio/locust/issues/3011)
+
+**Merged pull requests:**
+
+- Update docs for stats.py file [\#3038](https://github.com/locustio/locust/pull/3038) ([gabriel-check24](https://github.com/gabriel-check24))
+- Add iter\_lines Method to FastHttpSession Class [\#3024](https://github.com/locustio/locust/pull/3024) ([MasterKey-Pro](https://github.com/MasterKey-Pro))
+- Fix issue where empty WebUI property is not parsed correctly [\#3012](https://github.com/locustio/locust/pull/3012) ([timhovius](https://github.com/timhovius))
+
+## [2.32.8](https://github.com/locustio/locust/tree/2.32.8) (2025-01-30)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.32.7...2.32.8)
+
 ## [2.32.7](https://github.com/locustio/locust/tree/2.32.7) (2025-01-30)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.32.6...2.32.7)
