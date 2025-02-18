@@ -1,6 +1,19 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.32.10](https://github.com/locustio/locust/tree/2.32.10) (2025-02-18)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.32.9...2.32.10)
+
+**Closed issues:**
+
+- Switch from Poetry to uv [\#3033](https://github.com/locustio/locust/issues/3033)
+
+**Merged pull requests:**
+
+- Add uv lock file to builds [\#3047](https://github.com/locustio/locust/pull/3047) ([mquinnfd](https://github.com/mquinnfd))
+- Use uv/hatch instead of Poetry [\#3039](https://github.com/locustio/locust/pull/3039) ([mquinnfd](https://github.com/mquinnfd))
+
 ## [2.32.9](https://github.com/locustio/locust/tree/2.32.9) (2025-02-10)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.32.8...2.32.9)
