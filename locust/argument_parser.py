@@ -208,6 +208,9 @@ Usage: locust [options] [UserClass ...]
 
     locust --headless -u 100 -t 20m --processes 4 MyHttpUser AnotherUser
 
+    locust --headless -u 100 -r 10 -t 50 --print-stats --html "test_report_{u}_{r}_{t}.html" -H https://www.example.com
+    (The above run would generate an html file with the name "test_report_100_10_50.html")
+
 See documentation for more details, including how to set options using a file or environment variables: https://docs.locust.io/en/stable/configuration.html""",
     )
     parser.add_argument(
@@ -754,7 +757,7 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         "--html",
         metavar="<filename>",
         dest="html_file",
-        help="Store HTML report to file path specified",
+        help="Store HTML report to file path specified. Able to parse certain tags - {u}, {r}, {t} and convert them to number of users, spawn rate and run time respectively.",
         env_var="LOCUST_HTML",
     )
     stats_group.add_argument(
