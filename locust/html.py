@@ -15,6 +15,25 @@ PERCENTILES_FOR_HTML_REPORT = [0.50, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
 DEFAULT_BUILD_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui", "dist")
 
 
+def process_html_filename(options) -> None:
+    num_users = options.num_users
+    spawn_rate = options.spawn_rate
+    run_time = options.run_time
+
+    option_mapping = {
+        "{u}": num_users,
+        "{r}": spawn_rate,
+        "{t}": run_time,
+    }
+
+    html_filename = options.html_file
+
+    for option_term, option_value in option_mapping.items():
+        html_filename = html_filename.replace(option_term, str(int(option_value)))
+
+    options.html_file = html_filename
+
+
 def render_template_from(file, build_path=DEFAULT_BUILD_PATH, **kwargs):
     env = JinjaEnvironment(loader=FileSystemLoader(build_path))
     template = env.get_template(file)
