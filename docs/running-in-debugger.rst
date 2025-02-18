@@ -91,7 +91,7 @@ Example output (for FastHttpUser):
     REQUEST: http://example.com/
     GET / HTTP/1.1
     user-agent: python/gevent-http-client-1.5.3
-    accept-encoding: gzip, deflate
+    accept-encoding: gzip, deflate, br, zstd
     host: example.com
 
     RESPONSE: HTTP/1.1 200
