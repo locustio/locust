@@ -229,7 +229,7 @@ class FastHttpSession:
         elif self.auth_header:
             headers["Authorization"] = self.auth_header
         if "Accept-Encoding" not in headers and "accept-encoding" not in headers:
-            headers["Accept-Encoding"] = "gzip, deflate"
+            headers["Accept-Encoding"] = "gzip, deflate, br, zstd"
 
         if not data and json is not None:
             data = unshadowed_json.dumps(json)
