@@ -253,6 +253,8 @@ class WebUI:
 
             parsed_options_dict = vars(environment.parsed_options) if environment.parsed_options else {}
             run_time = None
+            user_count = None
+            spawn_rate = None
             for key, value in request.form.items():
                 if key == "user_count":  # if we just renamed this field to "users" we wouldn't need this
                     user_count = int(value)
@@ -303,6 +305,10 @@ class WebUI:
                 self._swarm_greenlet = None
 
             if environment.runner is not None:
+                if user_count is None or spawn_rate is None:
+                    err_msg = "Missing user_count or spawn_rate from /swarm request"
+                    logger.error(err_msg)
+                    return jsonify({"success": False, "message": err_msg, "host": environment.host})
                 self._swarm_greenlet = gevent.spawn(environment.runner.start, user_count, spawn_rate)
                 self._swarm_greenlet.link_exception(greenlet_exception_handler)
                 response_data = {
