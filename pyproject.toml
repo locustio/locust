@@ -110,12 +110,12 @@ source = "vcs"
 version-file = "locust/_version.py"
 
 [tool.hatch.build.targets.sdist]
-include = ["locust", "uv.lock"]
+include = ["locust"]
 exclude = ["locust/webui/*", "locust/test", "locust/build"]
 artifacts = ["locust/webui/dist"]
 
 [tool.hatch.build.targets.wheel]
-include = ["locust", "uv.lock"]
+include = ["locust"]
 artifacts = ["locust/webui/dist"]
 
 [tool.hatch.version.raw-options]
