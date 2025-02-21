@@ -595,6 +595,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                     if runner.state != "spawning"
                     else logging.warning("Spawning users, can't stop right now"),
                     "\r": lambda: webbrowser.open_new_tab(url),
+                    "\n": lambda: webbrowser.open_new_tab(url),
                 },
             )
         )

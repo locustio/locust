@@ -942,14 +942,14 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
 
         from pytest import MonkeyPatch
-        import os
+        import sys
         import webbrowser
 
         monkeypatch = MonkeyPatch()
 
-        def open_new_tab():
-            print("browser opened")
-            os.exit(42)
+        def open_new_tab(url):
+            print("browser opened with url", url)
+            sys.exit(0)
 
         monkeypatch.setattr(webbrowser, "open_new_tab", open_new_tab)
         print("patched")
@@ -975,16 +975,15 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 stdout=PIPE,
                 text=True,
             )
-            gevent.sleep(2)
-            stdin.write("\r")
+            gevent.sleep(1)
+            stdin.write(b"\n")
             try:
-                output, _ = proc.communicate(timeout=3)
+                output, _ = proc.communicate(timeout=1)
             except Exception:
                 proc.kill()
-                output, _ = proc.communicate(timeout=1)
+                output, _ = proc.communicate()
 
-            self.assertIn("browser opened", output.decode("UTF-8"))
-            self.assertEqual(42, proc.returncode)
+            self.assertIn("browser opened", output)
 
     def test_spawning_with_fixed(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
