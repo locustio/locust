@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.32.11
+=======
+* Enable HTML Report Filename Parsing https://github.com/locustio/locust/pull/3049
+* Various minor fixes and dependency updates
+
 2.32.10
 =======
 * Use uv/hatch instead of Poetry https://github.com/locustio/locust/pull/3039
