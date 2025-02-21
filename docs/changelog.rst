@@ -4,8 +4,9 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
-2.32.11
-=======
+2.33.0
+======
+* Press enter to automatically open web UI in browser https://github.com/locustio/locust/pull/3057
 * Enable HTML Report Filename Parsing https://github.com/locustio/locust/pull/3049
 * Various minor fixes and dependency updates
 
