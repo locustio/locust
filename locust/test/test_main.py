@@ -934,6 +934,58 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Shutting down (exit code 0)", output)
             self.assertEqual(0, proc.returncode)
 
+    @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, and thus we cannot import pty")
+    def test_autospawn_browser(self):
+        import pty
+
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+
+        from pytest import MonkeyPatch
+        import os
+        import webbrowser
+
+        monkeypatch = MonkeyPatch()
+
+        def open_new_tab():
+            print("browser opened")
+            os.exit(42)
+
+        monkeypatch.setattr(webbrowser, "open_new_tab", open_new_tab)
+        print("patched")
+        from locust import User, TaskSet, task, between
+        class UserSubclass(User):
+            @task
+            def t(self):
+                print("Test task is running")
+
+        """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            stdin_m, stdin_s = pty.openpty()
+            stdin = os.fdopen(stdin_m, "wb", 0)
+
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                ],
+                stdin=stdin_s,
+                stdout=PIPE,
+                text=True,
+            )
+            gevent.sleep(2)
+            stdin.write("\r")
+            try:
+                output, _ = proc.communicate(timeout=3)
+            except Exception:
+                proc.kill()
+                output, _ = proc.communicate(timeout=1)
+
+            self.assertIn("browser opened", output.decode("UTF-8"))
+            self.assertEqual(42, proc.returncode)
+
     def test_spawning_with_fixed(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
