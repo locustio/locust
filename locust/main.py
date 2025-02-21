@@ -20,7 +20,7 @@ import gevent
 from . import log, stats
 from .argument_parser import parse_locustfile_option, parse_options
 from .env import Environment
-from .html import get_html_report
+from .html import get_html_report, process_html_filename
 from .input_events import input_listener
 from .log import greenlet_exception_logger, setup_logging
 from .stats import (
@@ -651,6 +651,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     def save_html_report():
         html_report = get_html_report(environment, show_download_link=False)
+        process_html_filename(options)
         logger.info("writing html report to file: %s", options.html_file)
         with open(options.html_file, "w", encoding="utf-8") as file:
             file.write(html_report)
