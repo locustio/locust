@@ -4,7 +4,7 @@
 Increase performance with a faster HTTP client
 ==============================================================
 
-Locust's default HTTP client uses `python-requests <http://www.python-requests.org/>`_. 
+Locust's default HTTP client uses `python-requests <https://requests.readthedocs.io/>`_.
 It provides a nice API that many python developers are familiar with, and is very well-maintained. But if you're planning to run tests with very high throughput and have limited hardware for running Locust, it is sometimes not efficient enough.
 
 Because of this, Locust also comes with :py:class:`FastHttpUser <locust.contrib.fasthttp.FastHttpUser>` which
