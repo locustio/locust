@@ -57,7 +57,7 @@ Print HTTP communication
 
 Sometimes it can be hard to understand why an HTTP request fails in Locust when it works from a regular browser/other application. Here's how to examine the communication in detail:
 
-For ``HttpUser`` (`python-requests <https://python-requests.org>`_):
+For ``HttpUser`` (`python-requests <https://requests.readthedocs.io/>`_):
 
 .. code-block:: python
 

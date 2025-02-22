@@ -68,7 +68,7 @@ class HttpSession(requests.Session):
     to be able to log in and out of websites). Each request is logged so that locust can display
     statistics.
 
-    This is a slightly extended version of `python-request <http://python-requests.org>`_'s
+    This is a slightly extended version of `python-request <https://requests.readthedocs.io/>`_'s
     :py:class:`requests.Session` class and mostly this class works exactly the same. However
     the methods for making requests (get, post, delete, put, head, options, patch, request)
     can now take a *url* argument that's only the path part of the URL, in which case the host
