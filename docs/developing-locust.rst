@@ -20,7 +20,7 @@ Fork Locust on `GitHub <https://github.com/locustio/locust/>`_ and then
 
     # [optional] create a virtual environment and activate it
     $ uv venv
-    $ . .venv/bin.activate
+    $ . .venv/bin/activate
 
     # perform an editable install of the "locust" package along with the dev and test packages:
     $ uv sync
