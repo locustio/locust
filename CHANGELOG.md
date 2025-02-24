@@ -1,6 +1,34 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.33.0](https://github.com/locustio/locust/tree/2.33.0) (2025-02-24)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.33.0...2.33.0)
+
+**Fixed bugs:**
+
+- uv.lock ends up in root of site-packages [\#3053](https://github.com/locustio/locust/issues/3053)
+
+## [2.33.0](https://github.com/locustio/locust/tree/2.33.0) (2025-02-22)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.32.10...2.33.0)
+
+**Fixed bugs:**
+
+- UnboundLocalError: local variable 'user\_count' referenced before assignment [\#3051](https://github.com/locustio/locust/issues/3051)
+
+**Merged pull requests:**
+
+- docs: update python-requests documentation links [\#3059](https://github.com/locustio/locust/pull/3059) ([n0h0](https://github.com/n0h0))
+- dos: correct venv activation path in docs [\#3058](https://github.com/locustio/locust/pull/3058) ([n0h0](https://github.com/n0h0))
+- Use enter to automatically open web UI in default browser [\#3057](https://github.com/locustio/locust/pull/3057) ([cyberw](https://github.com/cyberw))
+- Update vite to 6.0.11 [\#3056](https://github.com/locustio/locust/pull/3056) ([cyberw](https://github.com/cyberw))
+- Remove uv lock file from build artifacts [\#3055](https://github.com/locustio/locust/pull/3055) ([mquinnfd](https://github.com/mquinnfd))
+- Improve error message on missing user\_count or spawn\_rate in swarm payload [\#3052](https://github.com/locustio/locust/pull/3052) ([cyberw](https://github.com/cyberw))
+- Enable HTML Report Filename Parsing [\#3049](https://github.com/locustio/locust/pull/3049) ([ktchani](https://github.com/ktchani))
+- FastHttpUser: Accept brotli and zstd compression encoding [\#3048](https://github.com/locustio/locust/pull/3048) ([kamilbednarz](https://github.com/kamilbednarz))
+- Bump vitest from 2.1.6 to 2.1.9 in /locust/webui [\#3044](https://github.com/locustio/locust/pull/3044) ([dependabot[bot]](https://github.com/apps/dependabot))
+
 ## [2.32.10](https://github.com/locustio/locust/tree/2.32.10) (2025-02-18)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.32.9...2.32.10)
