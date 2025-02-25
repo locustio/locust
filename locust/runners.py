@@ -108,8 +108,8 @@ class Runner:
         self._users_dispatcher: UsersDispatcher | None = None
 
         # set up event listeners for recording requests
-        def on_request(request_type, name, response_time, response_length, exception=None, **_kwargs):
-            self.stats.log_request(request_type, name, response_time, response_length)
+        def on_request(request_type, name, response_time, response_length, exception=None, **kwargs):
+            self.stats.log_request(request_type, name, response_time, response_length, **kwargs)
             if exception:
                 self.stats.log_error(request_type, name, exception)
 

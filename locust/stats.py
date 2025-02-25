@@ -15,6 +15,7 @@ from html import escape
 from itertools import chain
 from types import FrameType
 from typing import TYPE_CHECKING, Any, Callable, NoReturn, Protocol, TypedDict, TypeVar, cast
+from collections import Counter
 
 import gevent
 
@@ -217,9 +218,9 @@ class RequestStats:
     def start_time(self):
         return self.total.start_time
 
-    def log_request(self, method: str, name: str, response_time: int, content_length: int) -> None:
-        self.total.log(response_time, content_length)
-        self.entries[(name, method)].log(response_time, content_length)
+    def log_request(self, method: str, name: str, response_time: int, content_length: int, **kwargs) -> None:
+        self.total.log(response_time, content_length, **kwargs)
+        self.entries[(name, method)].log(response_time, content_length, **kwargs)
 
     def log_error(self, method: str, name: str, error: Exception | str | None) -> None:
         self.total.log_error(error)
@@ -322,6 +323,7 @@ class StatsEntry:
         """ Time of the first request for this entry """
         self.last_request_timestamp: float | None = None
         """ Time of the last request for this entry """
+        self.numeric_indicators: dict[str, int] = defaultdict(int)
         self.reset()
 
     def reset(self):
@@ -337,11 +339,12 @@ class StatsEntry:
         self.num_reqs_per_sec = defaultdict(int)
         self.num_fail_per_sec = defaultdict(int)
         self.total_content_length = 0
+        self.numeric_indicators = defaultdict(int)
         if self.use_response_times_cache:
             self.response_times_cache = OrderedDict()
             self._cache_response_times(int(time.time()))
 
-    def log(self, response_time: int, content_length: int) -> None:
+    def log(self, response_time: int, content_length: int, **kwargs) -> None:
         # get the time
         current_time = time.time()
         t = int(current_time)
@@ -356,6 +359,13 @@ class StatsEntry:
 
         # increase total content-length
         self.total_content_length += content_length
+        self.numeric_indicators.update(
+            {
+                key: self.numeric_indicators[key] + value
+                for key, value in kwargs.items()
+                if isinstance(value, int) and key.startswith("extra_")
+            }
+        )
 
     def _log_time_of_request(self, current_time: float) -> None:
         t = int(current_time)
@@ -519,6 +529,7 @@ class StatsEntry:
             last_time = int(self.last_request_timestamp) if self.last_request_timestamp else None
             if last_time and last_time > (old_last_request_timestamp and int(old_last_request_timestamp) or 0):
                 self._cache_response_times(last_time)
+        self.numeric_indicators = dict(Counter(self.numeric_indicators) + Counter(self.numeric_indicators))
 
     def serialize(self) -> StatsEntryDict:
         return cast(StatsEntryDict, {key: getattr(self, key, None) for key in StatsEntryDict.__annotations__.keys()})
@@ -685,6 +696,7 @@ class StatsEntry:
             "total_fail_per_sec": self.total_fail_per_sec,
             **response_time_percentiles,
             "avg_content_length": self.avg_content_length,
+            **self.numeric_indicators,
         }
 
 
