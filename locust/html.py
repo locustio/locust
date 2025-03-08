@@ -16,22 +16,14 @@ DEFAULT_BUILD_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "w
 
 
 def process_html_filename(options) -> None:
-    num_users = options.num_users
-    spawn_rate = options.spawn_rate
-    run_time = options.run_time
-
     option_mapping = {
-        "{u}": num_users,
-        "{r}": spawn_rate,
-        "{t}": run_time,
+        "{u}": options.num_users,
+        "{r}": options.spawn_rate,
+        "{t}": options.run_time,
     }
-
-    html_filename = options.html_file
-
     for option_term, option_value in option_mapping.items():
-        html_filename = html_filename.replace(option_term, str(int(option_value)))
-
-    options.html_file = html_filename
+        if option_value is not None:
+            options.html_file = options.html_file.replace(option_term, str(int(option_value)))
 
 
 def render_template_from(file, build_path=DEFAULT_BUILD_PATH, **kwargs):
