@@ -40,3 +40,15 @@ class TestProcessHtmlFilename(unittest.TestCase):
 
         expected_filename = "static_report.html"
         self.assertEqual(mock_options.html_file, expected_filename)
+
+    def test_process_html_filename_None_arguments(self):
+        mock_options = MagicMock()
+        mock_options.num_users = 5
+        # mock_options.spawn_rate = None
+        mock_options.run_time = None
+        mock_options.html_file = "report_u{u}_r{r}_t{t}.html"
+
+        process_html_filename(mock_options)
+
+        expected_filename = "report_u5_r1_t{t}.html"
+        self.assertEqual(mock_options.html_file, expected_filename)
