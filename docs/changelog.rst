@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.33.1
+======
+* Fix html report file naming crash https://github.com/locustio/locust/pull/3072
+
 2.33.0
 ======
 * Press enter to automatically open web UI in browser https://github.com/locustio/locust/pull/3057
