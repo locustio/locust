@@ -44,6 +44,8 @@ ENV PYTHONUNBUFFERED=1
 RUN useradd --create-home locust
 # ensure correct permissions
 RUN chown -R locust /opt/venv
+# perform initial bytecode compilation (brings down total startup time from ~0.9s to ~0.6s)
+RUN locust --version
 USER locust
 WORKDIR /home/locust
 EXPOSE 8089 5557
