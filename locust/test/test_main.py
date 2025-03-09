@@ -616,7 +616,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             try:
                 response = requests.get(f"http://localhost:{port}/")
             except Exception:
-                pass
+                response = None
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
             self.assertIn("Starting Locust", stderr)
@@ -655,7 +655,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             try:
                 response = requests.get(f"http://localhost:{port}/")
             except Exception:
-                pass
+                response = None
             _, stderr = proc.communicate(timeout=4)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Run time limit set to 3 seconds", stderr)
@@ -813,6 +813,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     response = requests.get(f"http://localhost:{port}/")
                 except ConnectionError:
                     success = False
+                    response = None
                 try:
                     _, stderr = proc.communicate(timeout=5)
                 except subprocess.TimeoutExpired:
