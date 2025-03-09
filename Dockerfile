@@ -29,7 +29,7 @@ COPY --from=webui-builder locust/webui/dist locust/webui/dist
 
 # Build the Python project
 ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
-ADD https://astral.sh/uv/0.5.26/install.sh /uv-installer.sh
+ADD https://astral.sh/uv/0.6.5/install.sh /uv-installer.sh
 RUN sh /uv-installer.sh && rm /uv-installer.sh
 ENV PATH="/root/.local/bin/:$PATH"
 RUN uv build && \
@@ -44,6 +44,8 @@ ENV PYTHONUNBUFFERED=1
 RUN useradd --create-home locust
 # ensure correct permissions
 RUN chown -R locust /opt/venv
+# perform initial bytecode compilation (brings down total startup time from ~0.9s to ~0.6s)
+RUN locust --version
 USER locust
 WORKDIR /home/locust
 EXPOSE 8089 5557
