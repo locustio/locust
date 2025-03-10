@@ -22,7 +22,7 @@
     "build:report": "vite build --config vite.report.config.ts",
     "watch:ui": "vite build --watch",
     "watch:report": "vite build --config vite.lib.config.ts --watch",
-    "build": "yarn clean && yarn build:ui & yarn build:report",
+    "build": "yarn clean && npm-run-all --parallel build:ui build:report",
     "clean": "rimraf dist",
     "lint": "eslint './src/**/*.{ts,tsx}'",
     "format": "prettier --write '**/**/*.{ts,tsx}'",
@@ -56,7 +56,7 @@
     "react-markdown": "^9.0.0",
     "react-redux": "^9.1.2",
     "rimraf": "^6.0.1",
-    "vite": "^6.0.11",
+    "vite": "^6.2.1",
     "vite-plugin-checker": "^0.8.0",
     "vite-plugin-dts": "^4.3.0",
     "vite-plugin-singlefile": "^2.0.3",
@@ -80,7 +80,7 @@
     "msw": "^2.6.6",
     "prettier": "^3.0.3",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.9",
+    "vitest": "^3.0.8",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "engines": {
