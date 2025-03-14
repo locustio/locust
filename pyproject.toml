@@ -160,7 +160,7 @@ python_version = "3.9"
 [tool.pyright]
 exclude = ["locust/test"]
 reportOptionalMemberAccess = "none"
-analyzeUnannotatedFunctions = false
+# analyzeUnannotatedFunctions = false
 
 
 # Hatch environments

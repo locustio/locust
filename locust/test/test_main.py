@@ -286,7 +286,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
         ) as file_path:
             proc = subprocess.Popen(["locust", "-f", file_path, "--autostart"], stdout=PIPE, stderr=PIPE, text=True)
-            gevent.sleep(1)
             stdout, stderr = proc.communicate()
             self.assertIn("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95", stderr)
             self.assertEqual(1, proc.returncode)
@@ -617,7 +616,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             try:
                 response = requests.get(f"http://localhost:{port}/")
             except Exception:
-                pass
+                response = None
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
             self.assertIn("Starting Locust", stderr)
@@ -656,7 +655,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             try:
                 response = requests.get(f"http://localhost:{port}/")
             except Exception:
-                pass
+                response = None
             _, stderr = proc.communicate(timeout=4)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Run time limit set to 3 seconds", stderr)
@@ -814,6 +813,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     response = requests.get(f"http://localhost:{port}/")
                 except ConnectionError:
                     success = False
+                    response = None
                 try:
                     _, stderr = proc.communicate(timeout=5)
                 except subprocess.TimeoutExpired:
@@ -916,7 +916,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             # This should not do anything since we are already at zero users
             stdin.write(b"S")
-            gevent.sleep(1)
 
             output = proc.communicate()[0]
             stdin.close()
@@ -1287,7 +1286,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
                 proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True)
-                gevent.sleep(1)
                 stdout, stderr = proc.communicate()
 
                 self.assertIn("Duplicate user class names: TestUser1 is defined", stderr)
@@ -1305,7 +1303,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc = subprocess.Popen(
                     ["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"], stdout=PIPE, stderr=PIPE, text=True
                 )
-                gevent.sleep(1)
                 stdout, stderr = proc.communicate()
 
                 self.assertIn("running my_task", stdout)
@@ -1339,7 +1336,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_D) as file2:
                 proc = subprocess.Popen(["locust", "-f", f"{file1},{file2}"], stdout=PIPE, stderr=PIPE, text=True)
-                gevent.sleep(1)
                 stdout, stderr = proc.communicate()
 
                 self.assertIn("Duplicate shape classes: TestShape", stderr)
@@ -1428,7 +1424,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_error_when_locustfiles_directory_is_empty(self):
         with TemporaryDirectory() as temp_dir:
             proc = subprocess.Popen(["locust", "-f", temp_dir], stdout=PIPE, stderr=PIPE, text=True)
-            gevent.sleep(1)
             stdout, stderr = proc.communicate()
 
             self.assertIn(f"Could not find any locustfiles in directory '{temp_dir}'", stderr)
