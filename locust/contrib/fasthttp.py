@@ -471,7 +471,7 @@ class FastHttpUser(User):
         separator = "&" if "?" in url else "?"
         if name is None:
             name = url + separator + "_=..."
-        with self.rest(method, f"{url}{separator}_={int(time.time()*1000)}", name=name, **kwargs) as resp:
+        with self.rest(method, f"{url}{separator}_={int(time.time() * 1000)}", name=name, **kwargs) as resp:
             yield resp
 
 
