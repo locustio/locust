@@ -132,8 +132,9 @@ extend-exclude = [
     "examples/issue_*.py",
     "src/readthedocs-sphinx-search/",
 ]
-lint.ignore = ["E402", "E501", "E713", "E731", "E741"]
+lint.ignore = ["E402", "E501", "E713", "E731", "E741", "UP031"]
 lint.select = ["E", "F", "W", "UP", "FA102", "I001"]
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?)|resp)$"
 
 [tool.ruff.lint.per-file-ignores]
 "examples/*" = ["F841"]
