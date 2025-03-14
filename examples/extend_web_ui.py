@@ -138,7 +138,7 @@ def locust_init(environment, **kwargs):
 
             if stats:
                 for url, inner_stats in stats.items():
-                    rows.append(f"\"{url}\",{inner_stats['content-length']:.2f}")
+                    rows.append(f'"{url}",{inner_stats["content-length"]:.2f}')
             return "\n".join(rows)
 
         # register our new routes and extended UI with the Locust web UI
