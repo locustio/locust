@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.33.2
+======
+* Optimize docker startup time https://github.com/locustio/locust/pull/3073
+* Various dependency updates
+
 2.33.1
 ======
 * Fix html report file naming crash https://github.com/locustio/locust/pull/3072
