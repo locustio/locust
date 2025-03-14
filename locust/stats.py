@@ -827,7 +827,7 @@ def get_stats_summary(stats: RequestStats, current=True) -> list[str]:
         ("%-" + str(STATS_TYPE_WIDTH) + "s %-" + str(name_column_width) + "s %7s %12s |%7s %7s %7s%7s | %7s %11s")
         % ("Type", "Name", "# reqs", "# fails", "Avg", "Min", "Max", "Med", "req/s", "failures/s")
     )
-    separator = f'{"-" * STATS_TYPE_WIDTH}|{"-" * (name_column_width)}|{"-" * 7}|{"-" * 13}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 7}|{"-" * 8}|{"-" * 11}'
+    separator = f"{'-' * STATS_TYPE_WIDTH}|{'-' * (name_column_width)}|{'-' * 7}|{'-' * 13}|{'-' * 7}|{'-' * 7}|{'-' * 7}|{'-' * 7}|{'-' * 8}|{'-' * 11}"
     summary.append(separator)
     for key in sorted(stats.entries.keys()):
         r = stats.entries[key]
@@ -850,14 +850,11 @@ def get_percentile_stats_summary(stats: RequestStats) -> list[str]:
     summary = ["Response time percentiles (approximated)"]
     headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
     summary.append(
-        (
-            f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s "
-            f"{' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}"
-        )
+        (f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s {' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}")
         % headers
     )
     separator = (
-        f'{"-" * STATS_TYPE_WIDTH}|{"-" * STATS_NAME_WIDTH}|{"-" * 8}|{("-" * 6 + "|") * len(PERCENTILES_TO_REPORT)}'
+        f"{'-' * STATS_TYPE_WIDTH}|{'-' * STATS_NAME_WIDTH}|{'-' * 8}|{('-' * 6 + '|') * len(PERCENTILES_TO_REPORT)}"
     )[:-1]
     summary.append(separator)
     for key in sorted(stats.entries.keys()):
@@ -880,7 +877,7 @@ def print_error_report(stats: RequestStats) -> None:
 def get_error_report_summary(stats) -> list[str]:
     summary = ["Error report"]
     summary.append("%-18s %-100s" % ("# occurrences", "Error"))
-    separator = f'{"-" * 18}|{"-" * ((80 + STATS_NAME_WIDTH) - 19)}'
+    separator = f"{'-' * 18}|{'-' * ((80 + STATS_NAME_WIDTH) - 19)}"
     summary.append(separator)
     for error in stats.errors.values():
         summary.append("%-18i %-100s" % (error.occurrences, error.to_name()))
