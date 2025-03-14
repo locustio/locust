@@ -74,7 +74,7 @@ test = [
 ]
 lint = [
     "pre-commit>=3.7.1,<4.0.0",
-    "ruff==0.7.3",
+    "ruff==0.10.0",
     "mypy>=1.13.0,<2.0.0",
     "types-requests>=2.32.0.20240622,<3.0.0",
 ]
@@ -233,7 +233,7 @@ python = ["3.12"]
 [tool.hatch.envs.lint]
 detached = true
 dependencies = [
-    "ruff==0.7.3",
+    "ruff==0.10.0",
     "mypy>=1.13.0,<2.0.0",
     "types-requests>=2.32.0.20240622,<3.0.0",
 ]
