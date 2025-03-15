@@ -1,13 +1,38 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
-## [2.33.0](https://github.com/locustio/locust/tree/2.33.0) (2025-02-24)
+## [2.33.2](https://github.com/locustio/locust/tree/2.33.2) (2025-03-14)
 
-[Full Changelog](https://github.com/locustio/locust/compare/2.33.0...2.33.0)
+[Full Changelog](https://github.com/locustio/locust/compare/2.33.1...2.33.2)
 
 **Fixed bugs:**
 
+- There was a heartbeat disconnect during the pressure test [\#3065](https://github.com/locustio/locust/issues/3065)
+
+**Closed issues:**
+
+- Error Logging in FastHttpUser [\#2937](https://github.com/locustio/locust/issues/2937)
+
+**Merged pull requests:**
+
+- Bump @babel/runtime from 7.22.15 to 7.26.10 in /locust/webui [\#3080](https://github.com/locustio/locust/pull/3080) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Update ruff to 0.10.0 [\#3079](https://github.com/locustio/locust/pull/3079) ([cyberw](https://github.com/cyberw))
+- Optimize unit tests [\#3078](https://github.com/locustio/locust/pull/3078) ([cyberw](https://github.com/cyberw))
+- Webui: Bump Vite Version for Dependabot [\#3074](https://github.com/locustio/locust/pull/3074) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Update uv to 0.6.5 and optimize docker start time [\#3073](https://github.com/locustio/locust/pull/3073) ([cyberw](https://github.com/cyberw))
+
+## [2.33.1](https://github.com/locustio/locust/tree/2.33.1) (2025-03-08)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.33.0...2.33.1)
+
+**Fixed bugs:**
+
+- --iterations with locust==2.33.0 and locust-plugins==4.5.3 [\#3071](https://github.com/locustio/locust/issues/3071)
 - uv.lock ends up in root of site-packages [\#3053](https://github.com/locustio/locust/issues/3053)
+
+**Merged pull requests:**
+
+- Fix html file naming crash, simplify code [\#3072](https://github.com/locustio/locust/pull/3072) ([cyberw](https://github.com/cyberw))
 
 ## [2.33.0](https://github.com/locustio/locust/tree/2.33.0) (2025-02-22)
 
