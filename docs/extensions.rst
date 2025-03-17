@@ -21,7 +21,7 @@ Support for load testing other protocols, reporting etc
 Report OTEL traces for requests
 -----------------------------------------
 
-- `opentelemetry-demo repo <https://github.com/open-telemetry/opentelemetry-demo/tree/main/src/loadgenerator>`__
+- `opentelemetry-demo repo <https://github.com/open-telemetry/opentelemetry-demo/tree/main/src/load-generator>`__
 
 Automate distributed runs over SSH
 ----------------------------------
