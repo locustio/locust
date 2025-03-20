@@ -15,7 +15,7 @@ if "LOCUST_OPENAI_API_KEY" in os.environ:
     os.environ["OPENAI_API_KEY"] = os.environ["LOCUST_OPENAI_API_KEY"]
 
 if not "OPENAI_API_KEY" in os.environ:
-    raise Exception("You need to set OPENAI_API_KEY or LOCUST_OPENAI_API_KEY env var")
+    raise Exception("You need to set OPENAI_API_KEY or LOCUST_OPENAI_API_KEY env var to use OpenAIUser")
 
 
 class OpenAIClient(OpenAI):
