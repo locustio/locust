@@ -628,7 +628,8 @@ class WebUI:
                     session["auth_info"] = None
                     return login_required(view_func)(*args, **kwargs)
                 except Exception as e:
-                    return f"Locust auth exception: {e} See https://docs.locust.io/en/stable/extending-locust.html#adding-authentication-to-the-web-ui for configuring authentication."
+                    logger.exception("Locust auth exception")
+                    return f"Locust auth exception: {e}<br/><br/>See https://docs.locust.io/en/stable/extending-locust.html#adding-authentication-to-the-web-ui for configuring authentication, or disable login by removing --web-login argument."
             else:
                 return view_func(*args, **kwargs)
 
