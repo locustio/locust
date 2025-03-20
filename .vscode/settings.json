@@ -32,7 +32,7 @@
         "locust/test/mock_*.py": true,
         "**/err.txt": true,
         "**/out.txt": true,
-        "**/.env": true
+        "**/.venv": true
     },
     "restructuredtext.confPath": "${workspaceFolder}/docs",
     "[python]": {
