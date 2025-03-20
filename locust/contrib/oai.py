@@ -10,6 +10,13 @@ from contextlib import contextmanager
 import httpx
 from openai import OpenAI  # dont forget to install openai
 
+# convenience for when running in Locust Cloud, where only LOCUST_* env vars are forwarded
+if "LOCUST_OPENAI_API_KEY" in os.environ:
+    os.environ["OPENAI_API_KEY"] = os.environ["LOCUST_OPENAI_API_KEY"]
+
+if not "OPENAI_API_KEY" in os.environ:
+    raise Exception("You need to set OPENAI_API_KEY or LOCUST_OPENAI_API_KEY env var")
+
 
 class OpenAIClient(OpenAI):
     def __init__(self, request_event, user, *args, **kwargs):
@@ -41,13 +48,10 @@ class OpenAIClient(OpenAI):
                 url=response.url,
             )
 
-        # dont forget to set OPENAI_API_KEY in your environment
         super().__init__(
             *args,
             **kwargs,
             http_client=httpx.Client(event_hooks={"request": [request_start], "response": [request_end]}),
-            # convenience for when running in Locust Cloud, where only LOCUST_* env vars are forwarded:
-            api_key=os.getenv("LOCUST_OPENAI_API_KEY", None),
         )
 
     @contextmanager
