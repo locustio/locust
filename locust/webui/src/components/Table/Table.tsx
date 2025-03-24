@@ -62,12 +62,7 @@ export default function Table<Row extends Record<string, any> = Record<string, s
   });
 
   return (
-    <TableContainer
-      component={Paper}
-      sx={{
-        overflowX: 'visible',
-      }}
-    >
+    <TableContainer component={Paper}>
       <MuiTable>
         <TableHead
           sx={{
