@@ -20,7 +20,7 @@ function ViewColumnSelector({
   const [anchorEl, setAnchorEl] = useState(null as HTMLButtonElement | null);
 
   return (
-    <Stack direction='row' justifyContent='end' my={2} spacing={1}>
+    <Stack sx={{ alignSelf: { xs: 'end', lg: 'start' }, my: 2 }}>
       <Button onClick={event => setAnchorEl(event.currentTarget)} variant='outlined'>
         <ViewColumnIcon />
       </Button>

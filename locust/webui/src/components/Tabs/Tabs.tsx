@@ -60,7 +60,12 @@ function Tabs({ currentTabIndexFromQuery, notification, setNotification, setUrl,
   return (
     <Container maxWidth='xl'>
       <Box sx={{ mb: 2 }}>
-        <MuiTabs onChange={onTabChange} value={currentTabIndex}>
+        <MuiTabs
+          onChange={onTabChange}
+          scrollButtons='auto'
+          value={currentTabIndex}
+          variant='scrollable'
+        >
           {tabs.map(({ key: tabKey, title }, index) => (
             <MuiTab
               key={`tab-${index}`}
