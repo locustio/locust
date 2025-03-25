@@ -45,13 +45,9 @@ const availableSwarmCharts: Omit<ILineChart<ICharts>, 'charts'>[] = [
 ];
 
 export function SwarmCharts({ charts }: { charts: ICharts }) {
-  return (
-    <div>
-      {availableSwarmCharts.map((lineChartProps, index) => (
-        <LineChart<ICharts> key={`swarm-chart-${index}`} {...lineChartProps} charts={charts} />
-      ))}
-    </div>
-  );
+  return availableSwarmCharts.map((lineChartProps, index) => (
+    <LineChart<ICharts> key={`swarm-chart-${index}`} {...lineChartProps} charts={charts} />
+  ));
 }
 
 const storeConnector = ({ ui: { charts } }: IRootState) => ({ charts });

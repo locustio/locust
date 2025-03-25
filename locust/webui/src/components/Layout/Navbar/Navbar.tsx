@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import MenuIcon from '@mui/icons-material/Menu';
-import { AppBar, Box, Container, Drawer, IconButton, Link, Toolbar } from '@mui/material';
+import { AppBar, Box, Container, Drawer, IconButton, Link, Toolbar, useTheme } from '@mui/material';
 
 import Logo from 'assets/Logo';
 import DarkLightToggle from 'components/Layout/Navbar/DarkLightToggle';
@@ -8,7 +8,22 @@ import SwarmMonitor from 'components/Layout/Navbar/SwarmMonitor';
 import StateButtons from 'components/StateButtons/StateButtons';
 
 export default function Navbar() {
+  const theme = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= theme.breakpoints.values.md) {
+        setDrawerOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const toggleDrawer = (open: boolean) => () => {
     setDrawerOpen(open);

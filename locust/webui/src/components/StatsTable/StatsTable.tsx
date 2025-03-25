@@ -1,3 +1,4 @@
+import { Box } from '@mui/material';
 import { connect } from 'react-redux';
 
 import Table from 'components/Table/Table';
@@ -40,7 +41,13 @@ export function StatsTable({ stats, tableStructure = baseTableStructure }: IStat
     useSelectViewColumns(tableStructure);
 
   return (
-    <>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', lg: 'row-reverse', alignItems: 'flex-start' },
+        columnGap: 1,
+      }}
+    >
       <ViewColumnSelector
         addColumn={addColumn}
         removeColumn={removeColumn}
@@ -48,7 +55,7 @@ export function StatsTable({ stats, tableStructure = baseTableStructure }: IStat
         structure={tableStructure}
       />
       <Table<ISwarmStat> hasTotalRow rows={stats} structure={filteredStructure} />
-    </>
+    </Box>
   );
 }
 

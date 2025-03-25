@@ -24,13 +24,14 @@ function SwarmMonitor({
       sx={{ display: 'flex', columnGap: 2, rowGap: 1, flexDirection: { xs: 'column', md: 'row' } }}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-        <Typography variant='button'>Host</Typography>
+        <Typography sx={{ fontWeight: 'bold' }}>Host</Typography>
         <Tooltip title={host}>
           <Typography
             noWrap
             sx={{
               overflow: 'hidden',
               textOverflow: 'ellipsis',
+
               maxWidth: { xs: '180px', lg: '400px' },
             }}
           >
@@ -40,14 +41,14 @@ function SwarmMonitor({
       </Box>
       <Divider flexItem orientation='vertical' />
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-        <Typography variant='button'>Status</Typography>
+        <Typography sx={{ fontWeight: 'bold' }}>Status</Typography>
         <Typography variant='button'>{state}</Typography>
       </Box>
       {(state === SWARM_STATE.RUNNING || state === SWARM_STATE.SPAWNING) && (
         <>
           <Divider flexItem orientation='vertical' />
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { md: 'center' } }}>
-            <Typography variant='button'>Users</Typography>
+            <Typography sx={{ fontWeight: 'bold' }}>Users</Typography>
             <Typography noWrap variant='button'>
               {userCount}
             </Typography>
@@ -58,7 +59,7 @@ function SwarmMonitor({
         <>
           <Divider flexItem orientation='vertical' />
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { md: 'center' } }}>
-            <Typography variant='button'>Workers</Typography>
+            <Typography sx={{ fontWeight: 'bold' }}>Workers</Typography>
             <Typography noWrap variant='button'>
               {workerCount}
             </Typography>
@@ -67,14 +68,14 @@ function SwarmMonitor({
       )}
       <Divider flexItem orientation='vertical' />
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { md: 'center' } }}>
-        <Typography variant='button'>RPS</Typography>
+        <Typography sx={{ fontWeight: 'bold' }}>RPS</Typography>
         <Typography noWrap variant='button'>
           {totalRps}
         </Typography>
       </Box>
       <Divider flexItem orientation='vertical' />
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { md: 'center' } }}>
-        <Typography variant='button'>Failures</Typography>
+        <Typography sx={{ fontWeight: 'bold' }}>Failures</Typography>
         <Typography noWrap variant='button'>{`${failRatio}%`}</Typography>
       </Box>
     </Box>
