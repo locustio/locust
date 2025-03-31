@@ -114,6 +114,8 @@ export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
         type: 'time',
         min: (charts.time || [new Date().toISOString()])[0],
         startValue: (charts.time || [])[0],
+        splitNumber: window.innerWidth < 900 ? 2 : 7,
+        minInterval: 1,
         axisLabel: {
           formatter: formatTimeAxis,
         },
@@ -142,6 +144,9 @@ export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
         },
       },
     },
+  },
+  legend: {
+    top: 25,
   },
 });
 

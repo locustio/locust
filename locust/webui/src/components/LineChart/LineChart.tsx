@@ -73,7 +73,10 @@ export default function LineChart<ChartType extends IBaseChartType>({
     );
     initChart.on('datazoom', onChartZoom(initChart));
 
-    const handleChartResize = () => initChart.resize();
+    const handleChartResize = () => {
+      initChart.resize();
+      initChart.setOption({ xAxis: { splitNumber: window.innerWidth < 900 ? 2 : 7 } });
+    };
     window.addEventListener('resize', handleChartResize);
 
     initChart.group = 'swarmCharts';
