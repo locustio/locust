@@ -49,6 +49,8 @@ if TYPE_CHECKING:
         auth: tuple[str | bytes, str | bytes] | None
         allow_redirects: bool
         context: dict
+        params: dict | None
+        files: dict | None
 
     class PutKwargs(PostKwargs, total=False):
         json: Any
