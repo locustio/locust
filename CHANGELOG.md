@@ -1,6 +1,19 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.34.0](https://github.com/locustio/locust/tree/2.34.0) (2025-04-06)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.33.2...2.34.0)
+
+**Merged pull requests:**
+
+- Fix missing optional argument definitions in PostKwargs [\#3088](https://github.com/locustio/locust/pull/3088) ([kairi003](https://github.com/kairi003))
+- Bump vite from 6.2.1 to 6.2.4 in /locust/webui [\#3087](https://github.com/locustio/locust/pull/3087) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Web UI: Offset Graph Legend so There's no Overlap on Mobile / Narrow Screens [\#3086](https://github.com/locustio/locust/pull/3086) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- FastHttpUser: Dont crash if parameters are passed to failure\(\) when someone forgot catch\_response=True [\#3085](https://github.com/locustio/locust/pull/3085) ([cyberw](https://github.com/cyberw))
+- Make the Locust UI Responsive [\#3083](https://github.com/locustio/locust/pull/3083) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add OpenAI User and example [\#3081](https://github.com/locustio/locust/pull/3081) ([cyberw](https://github.com/cyberw))
+
 ## [2.33.2](https://github.com/locustio/locust/tree/2.33.2) (2025-03-14)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.33.1...2.33.2)
