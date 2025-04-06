@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.34.0
+======
+* Add experimental OpenAIUser and example https://github.com/locustio/locust/pull/3081
+* Make the Locust UI Responsive and work for smaller screens https://github.com/locustio/locust/pull/3083, https://github.com/locustio/locust/pull/3086
+* Tiny fixes & version bumps
+
 2.33.2
 ======
 * Optimize docker startup time https://github.com/locustio/locust/pull/3073
