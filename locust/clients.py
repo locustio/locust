@@ -373,12 +373,10 @@ class ResponseContextManager(LocustResponse):
                 while (
                     isinstance(
                         e,
-                        (
-                            requests.exceptions.ConnectionError,
-                            requests.packages.urllib3.exceptions.ProtocolError,
-                            requests.packages.urllib3.exceptions.MaxRetryError,
-                            requests.packages.urllib3.exceptions.NewConnectionError,
-                        ),
+                        requests.exceptions.ConnectionError
+                        | requests.packages.urllib3.exceptions.ProtocolError
+                        | requests.packages.urllib3.exceptions.MaxRetryError
+                        | requests.packages.urllib3.exceptions.NewConnectionError,
                     )
                     and e.__context__  # Not sure if the above exceptions can ever be the lowest level, but it is good to be sure
                 ):

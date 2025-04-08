@@ -6,10 +6,10 @@ import logging
 import random
 import traceback
 from collections import deque
+from collections.abc import Callable
 from time import time
 from typing import (
     TYPE_CHECKING,
-    Callable,
     Protocol,
     TypeVar,
     final,

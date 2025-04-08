@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from operator import methodcaller
-from typing import Callable, TypeVar
+from typing import TypeVar
 
 from configargparse import Namespace
 
