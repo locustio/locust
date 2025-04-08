@@ -16,7 +16,8 @@ from locust.util import deprecation
 import logging
 import time
 import traceback
-from typing import Callable, final
+from collections.abc import Callable
+from typing import final
 
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group

@@ -8,7 +8,7 @@ description = "Developer-friendly load testing framework"
 license = { text = "MIT" }
 dynamic = ["version"]
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{ name = "Jonatan Heyman" }, { name = "Lars Holmberg" }]
 maintainers = [
     { name = "Lars Holmberg" },
@@ -23,7 +23,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -125,7 +124,7 @@ local_scheme = "no-local-version"
 [tool.hatch.build.targets.BuildFrontend.hooks.custom]
 
 [tool.ruff]
-target-version = "py39"
+target-version = "py310"
 line-length = 120
 extend-exclude = [
     "build",
@@ -156,7 +155,7 @@ locust = ["locust"]
 [tool.mypy]
 # missing type stubs
 ignore_missing_imports = true
-python_version = "3.9"
+python_version = "3.10"
 
 [tool.pyright]
 exclude = ["locust/test"]
@@ -199,7 +198,7 @@ run = [
 template = "hatch-test"
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+python = ["3.10", "3.11", "3.12", "3.13"]
 
 
 ## Run all unit tests and advanced debugging

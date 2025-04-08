@@ -144,7 +144,6 @@ jobs:
           - { name: "Python 3.12", python: "3.12", os: ubuntu-latest, env: "test:all" }
           - { name: "Python 3.11", python: "3.11", os: ubuntu-latest, env: "test:all" }
           - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, env: "test:all" }
-          - { name: "Python 3.9", python: "3.9", os: ubuntu-latest, env: "test:all" }
 
     steps:
       - uses: actions/checkout@v4

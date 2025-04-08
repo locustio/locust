@@ -9,12 +9,12 @@ import signal
 import time
 from abc import abstractmethod
 from collections import OrderedDict, defaultdict, namedtuple
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from copy import copy
 from html import escape
 from itertools import chain
 from types import FrameType
-from typing import TYPE_CHECKING, Any, Callable, NoReturn, Protocol, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, NoReturn, Protocol, TypedDict, TypeVar, cast
 
 import gevent
 

@@ -287,9 +287,6 @@ def main():
 
     greenlet_exception_handler = greenlet_exception_logger(logger)
 
-    if sys.version_info < (3, 10):
-        logger.warning("Python 3.9 support is deprecated and will be removed soon")
-
     if options.list_commands:
         print("Available Users:")
         for name in user_classes:

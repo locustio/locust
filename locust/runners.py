@@ -14,10 +14,10 @@ import time
 import traceback
 from abc import abstractmethod
 from collections import defaultdict
-from collections.abc import Iterator, MutableMapping, ValuesView
+from collections.abc import Callable, Iterator, MutableMapping, ValuesView
 from operator import itemgetter, methodcaller
 from types import TracebackType
-from typing import TYPE_CHECKING, Any, Callable, NoReturn, TypedDict, cast
+from typing import TYPE_CHECKING, Any, NoReturn, TypedDict, cast
 from uuid import uuid4
 
 import gevent
