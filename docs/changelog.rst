@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.34.1
+======
+* Drop support for Python 3.9 https://github.com/locustio/locust/pull/3090
+
 2.34.0
 ======
 * Add experimental OpenAIUser and example https://github.com/locustio/locust/pull/3081
