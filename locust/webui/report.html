@@ -17,6 +17,9 @@
     <script>
       window.templateArgs = {{ template_args|tojson }}
       window.theme = "{{theme}}"
+      if (window.templateArgs.profile) {
+        document.title = `Locust - ${window.templateArgs.profile}`
+      }
     </script>
     
     <script type="module" src="./src/HtmlReport.tsx"></script>

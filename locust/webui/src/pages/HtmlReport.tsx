@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Box, Typography, Container, Link } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
@@ -51,6 +52,12 @@ export default function HtmlReport({
   responseTimeStatistics,
   tasks,
 }: IReport) {
+  useEffect(() => {
+    document.title = window.templateArgs.profile
+      ? `Locust - ${window.templateArgs.profile}`
+      : 'Locust';
+  }, []);
+
   return (
     <Provider store={reportStore}>
       <ThemeProvider theme={muiTheme}>
@@ -73,6 +80,12 @@ export default function HtmlReport({
             )}
           </Box>
           <Box sx={{ my: 2 }}>
+            {window.templateArgs.profile && (
+              <Box sx={{ display: 'flex', columnGap: 0.5 }}>
+                <Typography fontWeight={600}>Profile:</Typography>
+                <Typography>{window.templateArgs.profile}</Typography>
+              </Box>
+            )}
             <Box sx={{ display: 'flex', columnGap: 0.5 }}>
               <Typography fontWeight={600}>During:</Typography>
               <Typography>

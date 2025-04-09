@@ -225,3 +225,26 @@ class TestLoadLocustfile(LocustTestCase):
                 f"{os.getcwd()}/examples/basic.py",
             )
         )
+
+    def test_profile_flag(self):
+        options = parse_options()
+        self.assertEqual(None, options.profile)
+        options = parse_options(args=["--profile", "test-profile"])
+        self.assertEqual("test-profile", options.profile)
+        with temporary_file("profile=test-profile-from-file", suffix=".conf") as conf_file_path:
+            options = parse_options(
+                args=[
+                    "--config",
+                    conf_file_path,
+                ]
+            )
+            self.assertEqual("test-profile-from-file", options.profile)
+            options = parse_options(
+                args=[
+                    "--config",
+                    conf_file_path,
+                    "--profile",
+                    "test-profile-from-arg",
+                ]
+            )
+            self.assertEqual("test-profile-from-arg", options.profile)

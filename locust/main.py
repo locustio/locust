@@ -89,6 +89,7 @@ def create_environment(
         available_user_classes=available_user_classes,
         available_shape_classes=available_shape_classes,
         available_user_tasks=available_user_tasks,
+        profile=options.profile,
     )
 
 

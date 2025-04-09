@@ -1,11 +1,19 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, beforeEach } from 'vitest';
 
 import HtmlReport from 'pages/HtmlReport';
 import { swarmReportMock } from 'test/mocks/swarmState.mock';
 import { renderWithProvider } from 'test/testUtils';
+import { IReportTemplateArgs } from 'types/swarm.types';
 import { formatLocaleString } from 'utils/date';
 
+
 describe('HtmlReport', () => {
+  beforeEach(() => {
+    // Reset window.templateArgs before each test
+    window.templateArgs = {} as IReportTemplateArgs;
+    document.title = '';
+  });
+
   test('renders a report', () => {
     const { getByRole, getByText } = renderWithProvider(<HtmlReport {...swarmReportMock} />);
 
@@ -17,6 +25,21 @@ describe('HtmlReport', () => {
     expect(getByRole('link', { name: 'Download the Report' }));
     expect(getByText(swarmReportMock.locustfile)).toBeTruthy();
     expect(getByText(swarmReportMock.host)).toBeTruthy();
+  });
+
+  test('profile is not rendered when it is not present', () => {
+    const { queryByText } = renderWithProvider(<HtmlReport {...swarmReportMock} />);
+
+    expect(queryByText('Profile:')).toBeNull();
+  });
+
+  test('profile is rendered when it is present', () => {
+    window.templateArgs.profile = 'test-profile';
+    const { getByText } = renderWithProvider(<HtmlReport {...swarmReportMock} />);
+
+    expect(getByText('Profile:')).toBeTruthy();
+    expect(getByText('test-profile')).toBeTruthy();
+    expect(document.title).toBe('Locust - test-profile');
   });
 
   test('formats the start and end time as expected', () => {

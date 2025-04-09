@@ -39,6 +39,7 @@ class Environment:
         available_shape_classes: dict[str, LoadTestShape] | None = None,
         available_user_tasks: dict[str, list[TaskSet | Callable]] | None = None,
         dispatcher_class: type[UsersDispatcher] = UsersDispatcher,
+        profile: str | None = None,
     ):
         self.runner: Runner | None = None
         """Reference to the :class:`Runner <locust.runners.Runner>` instance"""
@@ -76,6 +77,8 @@ class Environment:
         """Base URL of the target system"""
         self.reset_stats = reset_stats
         """Determines if stats should be reset once all simulated users have been spawned"""
+        self.profile = profile
+        """Profile name for the test run"""
         if stop_timeout is not None:
             self.stop_timeout = stop_timeout
         elif parsed_options:
