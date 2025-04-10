@@ -9,7 +9,7 @@ export default function StopButton() {
   }, []);
 
   const onStopButtonClick = () => {
-    fetch('stop');
+    fetch((window.baseUrl ? `${window.baseUrl}/` : '') + 'stop');
     setIsLoading(true);
   };
 

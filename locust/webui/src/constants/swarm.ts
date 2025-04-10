@@ -20,7 +20,7 @@ export const swarmTemplateArgs = window.templateArgs
 export const htmlReportProps: IReport | false = !!(swarmTemplateArgs as IReportTemplateArgs)
   .isReport && {
   ...(swarmTemplateArgs as IReportTemplateArgs),
-  charts: swarmTemplateArgs.history?.reduce(
+  charts: (swarmTemplateArgs.history || []).reduce(
     (charts, { currentResponseTimePercentiles, ...history }) =>
       updateArraysAtProps(charts, { ...currentResponseTimePercentiles, ...history }),
     {} as ICharts,

@@ -10,8 +10,18 @@ import {
 import { createFormData } from 'utils/object';
 import { camelCaseKeys, snakeCaseKeys } from 'utils/string';
 
+const baseQuery = (args: any, api: any, extraOptions: any) =>
+  fetchBaseQuery(
+    window.baseUrl
+      ? {
+          baseUrl: window.baseUrl,
+          credentials: 'include',
+        }
+      : undefined,
+  )(args, api, extraOptions);
+
 export const api = createApi({
-  baseQuery: fetchBaseQuery(),
+  baseQuery: baseQuery,
   endpoints: builder => ({
     getStats: builder.query<IStatsResponse, void>({
       query: () => 'stats/requests',
