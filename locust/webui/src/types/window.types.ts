@@ -7,4 +7,5 @@ export interface IWindow {
   templateArgs: IReportTemplateArgs | ISwarmState;
   authArgs: IAuthArgs;
   theme?: PaletteMode;
+  baseUrl?: string;
 }

@@ -203,7 +203,9 @@ function SwarmForm({
               </Accordion>
             </>
           )}
-          {!isEmpty(extraOptions) && <CustomParameters extraOptions={extraOptions} />}
+          {!!extraOptions && !isEmpty(extraOptions) && (
+            <CustomParameters extraOptions={extraOptions} />
+          )}
           {alert && !errorMessage && (
             <Alert severity={alert.level || 'info'}>{alert.message}</Alert>
           )}

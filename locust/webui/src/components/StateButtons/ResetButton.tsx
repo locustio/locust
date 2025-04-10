@@ -2,7 +2,7 @@ import { Button } from '@mui/material';
 
 export default function ResetButton() {
   const onResetStatsClick = () => {
-    fetch('stats/reset');
+    fetch((window.baseUrl ? `${window.baseUrl}/` : '') + 'stats/reset');
   };
 
   return (
