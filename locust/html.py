@@ -105,7 +105,7 @@ def get_html_report(
             "locustfile": escape(str(environment.locustfile)),
             "tasks": task_data,
             "percentiles_to_chart": stats_module.PERCENTILES_TO_CHART,
-            "profile": escape(str(environment.profile)),
+            "profile": escape(str(environment.profile)) if environment.profile else None,
         },
         theme=theme,
     )
