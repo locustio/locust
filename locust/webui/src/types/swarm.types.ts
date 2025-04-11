@@ -64,6 +64,7 @@ export interface ISwarmState {
   users: { [key: string]: ISwarmUser };
   version: string;
   workerCount: number;
+  profile?: string;
 }
 
 export interface IReport {
@@ -86,6 +87,7 @@ export interface IReportTemplateArgs extends Omit<IReport, 'charts'> {
   isReport?: boolean;
   percentilesToChart: number[];
   percentilesToStatistics: number[];
+  profile?: string;
 }
 
 export interface ISwarmFormInput

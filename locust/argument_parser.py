@@ -838,6 +838,11 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         dest="equal_weights",
         help="Use equally distributed task weights, overriding the weights specified in the locustfile.",
     )
+    other_group.add_argument(
+        "--profile",
+        type=str,
+        help="Set a profile to group the testruns together",
+    )
 
     user_classes_group = parser.add_argument_group("User classes")
     user_classes_group.add_argument(
