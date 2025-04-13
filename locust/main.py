@@ -105,7 +105,7 @@ def main():
     available_user_tasks = {}
     shape_class = None
     for _locustfile in locustfiles:
-        docstring, _user_classes, shape_classes = load_locustfile(_locustfile)
+        file_user_classes, shape_classes = load_locustfile(_locustfile)
 
         # Setting Available Shape Classes
         if shape_classes:
@@ -119,7 +119,7 @@ def main():
                 available_shape_classes[shape_class_name] = shape_class
 
         # Setting Available User Classes
-        for key, value in _user_classes.items():
+        for key, value in file_user_classes.items():
             if key in available_user_classes.keys():
                 previous_path = inspect.getfile(user_classes[key])
                 new_path = inspect.getfile(value)

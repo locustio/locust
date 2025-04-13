@@ -39,7 +39,7 @@ class TestLoadLocustfile(LocustTestCase):
 
     def test_load_locust_file_from_absolute_path(self):
         with mock_locustfile() as mocked:
-            docstring, user_classes, shape_classes = main.load_locustfile(mocked.file_path)
+            user_classes, shape_classes = main.load_locustfile(mocked.file_path)
             self.assertIn("UserSubclass", user_classes)
             self.assertNotIn("NotUserSubclass", user_classes)
             self.assertNotIn("LoadTestShape", user_classes)
@@ -47,7 +47,7 @@ class TestLoadLocustfile(LocustTestCase):
 
     def test_load_locust_file_from_relative_path(self):
         with mock_locustfile() as mocked:
-            docstring, user_classes, shape_classes = main.load_locustfile(
+            user_classes, shape_classes = main.load_locustfile(
                 os.path.join(os.path.relpath(mocked.directory, os.getcwd()), mocked.filename)
             )
 
@@ -56,19 +56,18 @@ class TestLoadLocustfile(LocustTestCase):
             new_filename = mocked.file_path.replace(mocked.filename, "locust.py")
             os.rename(mocked.file_path, new_filename)
             try:
-                docstring, user_classes, shape_classes = main.load_locustfile(new_filename)
+                user_classes, shape_classes = main.load_locustfile(new_filename)
             finally:
                 # move it back, so it can be deleted
                 os.rename(new_filename, mocked.file_path)
 
     def test_load_locust_file_with_a_dot_in_filename(self):
         with mock_locustfile(filename_prefix="mocked.locust.file") as mocked:
-            docstring, user_classes, shape_classes = main.load_locustfile(mocked.file_path)
+            user_classes, shape_classes = main.load_locustfile(mocked.file_path)
 
     def test_return_docstring_and_user_classes(self):
         with mock_locustfile() as mocked:
-            docstring, user_classes, shape_classes = main.load_locustfile(mocked.file_path)
-            self.assertEqual("This is a mock locust file for unit testing", docstring)
+            user_classes, shape_classes = main.load_locustfile(mocked.file_path)
             self.assertIn("UserSubclass", user_classes)
             self.assertNotIn("NotUserSubclass", user_classes)
             self.assertNotIn("LoadTestShape", user_classes)
@@ -82,8 +81,7 @@ class TestLoadLocustfile(LocustTestCase):
         """
         )
         with mock_locustfile(content=content) as mocked:
-            docstring, user_classes, shape_classes = main.load_locustfile(mocked.file_path)
-            self.assertEqual("This is a mock locust file for unit testing", docstring)
+            user_classes, shape_classes = main.load_locustfile(mocked.file_path)
             self.assertIn("UserSubclass", user_classes)
             self.assertNotIn("NotUserSubclass", user_classes)
             self.assertEqual(shape_classes[0].__class__.__name__, "LoadTestShape")
@@ -101,8 +99,7 @@ class TestLoadLocustfile(LocustTestCase):
         """
         )
         with mock_locustfile(content=content) as mocked:
-            docstring, user_classes, shape_classes = main.load_locustfile(mocked.file_path)
-            self.assertEqual("This is a mock locust file for unit testing", docstring)
+            user_classes, shape_classes = main.load_locustfile(mocked.file_path)
             self.assertIn("UserSubclass", user_classes)
             self.assertNotIn("NotUserSubclass", user_classes)
             self.assertEqual(shape_classes[0].__class__.__name__, "LoadTestShape1")
@@ -124,7 +121,7 @@ class TestLoadLocustfile(LocustTestCase):
         )
 
         with mock_locustfile(content=content) as mocked:
-            _, user_classes, shape_classes = main.load_locustfile(mocked.file_path)
+            user_classes, shape_classes = main.load_locustfile(mocked.file_path)
             self.assertNotIn("UserBaseLoadTestShape", user_classes)
             self.assertNotIn("UserLoadTestShape", user_classes)
             self.assertEqual(shape_classes[0].__class__.__name__, "UserLoadTestShape")
@@ -139,7 +136,7 @@ class TestLoadLocustfile(LocustTestCase):
         )
 
         with mock_locustfile(content=content) as mocked:
-            _, user_classes, shape_classes = main.load_locustfile(mocked.file_path)
+            user_classes, shape_classes = main.load_locustfile(mocked.file_path)
             self.assertNotIn("UserLoadTestShape", user_classes)
             self.assertEqual(shape_classes[0].__class__.__name__, "UserLoadTestShape")
 
