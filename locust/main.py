@@ -99,8 +99,7 @@ def main():
     locustfiles = parse_locustfile_option()
 
     # Importing Locustfile(s) - setting available UserClasses and ShapeClasses to choose from in UI
-    user_classes: dict[str, locust.User] = {}
-    available_user_classes = {}
+    available_user_classes: dict[str, locust.User] = {}
     available_shape_classes = {}
     available_user_tasks = {}
     shape_class = None
@@ -121,7 +120,7 @@ def main():
         # Setting Available User Classes
         for key, value in file_user_classes.items():
             if key in available_user_classes.keys():
-                previous_path = inspect.getfile(user_classes[key])
+                previous_path = inspect.getfile(available_user_classes[key])
                 new_path = inspect.getfile(value)
                 if previous_path == new_path:
                     # The same User class was defined in two locustfiles but one probably imported the other, so we just ignore it
@@ -132,7 +131,6 @@ def main():
                     )
                     sys.exit(1)
 
-            user_classes[key] = value
             available_user_classes[key] = value
             available_user_tasks[key] = value.tasks or {}
 
@@ -285,25 +283,25 @@ def main():
 
     if options.list_commands:
         print("Available Users:")
-        for name in user_classes:
+        for name in available_user_classes:
             print("    " + name)
         sys.exit(0)
 
-    if not user_classes:
+    if not available_user_classes:
         logger.error("No User class found!")
         sys.exit(1)
 
     # make sure specified User exists
     if options.user_classes:
-        if missing := set(options.user_classes) - set(user_classes.keys()):
+        if missing := set(options.user_classes) - set(available_user_classes.keys()):
             logger.error(f"Unknown User(s): {', '.join(missing)}\n")
             sys.exit(1)
         else:
-            names = set(options.user_classes) & set(user_classes.keys())
-            user_classes = [user_classes[n] for n in names]
+            names = set(options.user_classes) & set(available_user_classes.keys())
+            user_classes = [available_user_classes[n] for n in names]
     else:
         # list() call is needed to consume the dict_view object in Python 3
-        user_classes = list(user_classes.values())
+        user_classes = list(available_user_classes.values())
 
     if not shape_class and options.num_users:
         fixed_count_total = sum([user_class.fixed_count for user_class in user_classes])
