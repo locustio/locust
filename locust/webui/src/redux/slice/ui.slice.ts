@@ -36,7 +36,7 @@ const initialState = {
   stats: [] as ISwarmStat[],
   errors: [] as ISwarmError[],
   exceptions: [] as ISwarmException[],
-  charts: swarmTemplateArgs.history?.reduce(updateArraysAtProps, {}) as ICharts,
+  charts: (swarmTemplateArgs.history || []).reduce(updateArraysAtProps, {}) as ICharts,
   ratios: {} as ISwarmRatios,
   userCount: 0,
 };
