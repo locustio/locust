@@ -40,6 +40,7 @@ try:
     locust_cloud_version = f" (locust-cloud {importlib.metadata.version('locust-cloud')})"
 except ModuleNotFoundError as e:
     locust_cloud_version = ""
+    locust_cloud = None
     if e.msg != "No module named 'locust_cloud'":
         raise
 
@@ -159,6 +160,9 @@ def main():
 
     # parse all command line options
     options = parse_options()
+
+    if getattr(options, "cloud", None):
+        sys.exit(locust_cloud.main())
 
     if options.headful:
         options.headless = False
