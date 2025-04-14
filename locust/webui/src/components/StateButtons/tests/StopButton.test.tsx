@@ -25,7 +25,7 @@ describe('StopButton', () => {
     expect(getByText('Loading')).toBeTruthy();
 
     expect(resetStats).toHaveBeenCalled();
-    expect(resetStats).toBeCalledWith('stop');
+    expect(resetStats).toBeCalledWith('stop', undefined);
     rerender(<StopButton />);
     expect(queryByText('Loading')).toBeFalsy();
   });

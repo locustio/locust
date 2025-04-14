@@ -23,6 +23,6 @@ describe('ResetButton', () => {
     });
 
     expect(resetStats).toHaveBeenCalled();
-    expect(resetStats).toBeCalledWith('stats/reset');
+    expect(resetStats).toBeCalledWith('stats/reset', undefined);
   });
 });
