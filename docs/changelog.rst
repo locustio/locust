@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.35.0
+======
+* Add profile argument and display in html report https://github.com/locustio/locust/pull/3093
+* Various UI fixes and dependency updates
+
 2.34.1
 ======
 * Drop support for Python 3.9 https://github.com/locustio/locust/pull/3090
