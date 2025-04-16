@@ -179,8 +179,7 @@ jobs:
           name: webui-dist
           path: locust/webui/dist
 
-      # Run tests!
-      - name: Run hatch job
+      - name: Run tests
         run: uv run hatch run +py=${{ matrix.python }} ${{ matrix.env }}
       
   test_docker_image:
@@ -221,34 +220,37 @@ jobs:
         run: |
           docker run --rm locustio/locust:${{ github.sha }}-test --version
 
-  lint_typecheck_test_webui:
-    name: Web UI Lint and Type Check
+  test_webui:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set Node.js 22.x
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22.x
           cache: 'yarn'
           cache-dependency-path: locust/webui/yarn.lock
-      - uses: borales/actions-yarn@v5
+      - name: yarn install
+        uses: borales/actions-yarn@v5
         with:
           cmd: install
           dir: locust/webui
-      - uses: borales/actions-yarn@v5
+      - name: yarn build
+        uses: borales/actions-yarn@v5
         with:
           cmd: build
           dir: locust/webui
-      - uses: borales/actions-yarn@v5
+      - name: yarn test
+        uses: borales/actions-yarn@v5
         with:
           cmd: test
           dir: locust/webui
-      - uses: borales/actions-yarn@v5
+      - name: yarn lint
+        uses: borales/actions-yarn@v5
         with:
           cmd: lint
           dir: locust/webui
-      - uses: borales/actions-yarn@v5
+      - name: yarn type-check
+        uses: borales/actions-yarn@v5
         with:
           cmd: type-check
           dir: locust/webui
@@ -304,7 +306,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and (optionally) push
+      - name: Build and (optionally) push docker image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -313,7 +315,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.docker_meta.outputs.tags }}
 
-      - name: Publish prerelease version to PyPI
+      - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
