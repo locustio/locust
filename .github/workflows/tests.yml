@@ -260,7 +260,7 @@ jobs:
   # -------------------------
 
   publish:
-    needs: [tests, lint_typecheck_test_webui, test_docker_image, build_package]
+    needs: [tests, test_webui, test_docker_image, build_package]
     if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
     runs-on: ubuntu-latest
     steps:
