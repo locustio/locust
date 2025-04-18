@@ -6,25 +6,28 @@ import json
 import logging
 import os
 import signal
+import sys
 import time
 from abc import abstractmethod
 from collections import OrderedDict, defaultdict, namedtuple
-from collections.abc import Callable, Iterable
 from copy import copy
 from html import escape
 from itertools import chain
-from types import FrameType
-from typing import TYPE_CHECKING, Any, NoReturn, Protocol, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Protocol, TypedDict, TypeVar, cast
 
 import gevent
 
-from .event import Events
 from .exception import CatchResponseError
 from .util.date import format_utc_timestamp
 from .util.rounding import proper_round
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+    from types import FrameType
+    from typing import Any, NoReturn
+
     from .env import Environment
+    from .event import Events
     from .runners import Runner
 
 console_logger = logging.getLogger("locust.stats_logger")
@@ -1183,3 +1186,39 @@ class StatsCSVFileWriter(StatsCSV):
 
     def stats_history_file_name(self) -> str:
         return self.base_filepath + "_stats_history.csv"
+
+
+def _is_valid_percentile(parameter) -> bool:
+    """Validate single percentile value from .stats constants."""
+    try:
+        if 0 < float(parameter) < 1:
+            return True
+        return False
+    except ValueError:
+        return False
+
+
+def validate_stats_configuration() -> None:
+    """
+    This function validates .stats file's constants, that may be patched in user
+    environments.
+
+    No return in normal conditional. Stops locust execution on error.
+    """
+    if len(PERCENTILES_TO_CHART) > 6:
+        sys.stderr.write("stats.PERCENTILES_TO_CHART parameter should be a maximum of 6 parameters \n")
+        sys.exit(1)
+
+    for percentile in PERCENTILES_TO_CHART:
+        if not _is_valid_percentile(percentile):
+            sys.stderr.write(
+                "stats.PERCENTILES_TO_CHART parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"
+            )
+            sys.exit(1)
+
+    for percentile in PERCENTILES_TO_STATISTICS:
+        if not _is_valid_percentile(percentile):
+            sys.stderr.write(
+                "stats.PERCENTILES_TO_STATISTICS parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"
+            )
+            sys.exit(1)
