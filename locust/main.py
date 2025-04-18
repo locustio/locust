@@ -104,7 +104,7 @@ def merge_locustfiles_content(locustfiles: list[str]) -> tuple[dict, dict, dict,
     available_user_tasks = {}
     shape_class = None
     for _locustfile in locustfiles:
-        file_user_classes, shape_classes = load_locustfile(_locustfile)
+        user_classes, shape_classes = load_locustfile(_locustfile)
 
         # Setting Available Shape Classes
         if shape_classes:
@@ -118,21 +118,21 @@ def merge_locustfiles_content(locustfiles: list[str]) -> tuple[dict, dict, dict,
                 available_shape_classes[shape_class_name] = shape_class
 
         # Setting Available User Classes
-        for key, value in file_user_classes.items():
-            if key in available_user_classes.keys():
-                previous_path = inspect.getfile(available_user_classes[key])
-                new_path = inspect.getfile(value)
+        for class_name, class_definition in user_classes.items():
+            if class_name in available_user_classes.keys():
+                previous_path = inspect.getfile(available_user_classes[class_name])
+                new_path = inspect.getfile(class_definition)
                 if previous_path == new_path:
                     # The same User class was defined in two locustfiles but one probably imported the other, so we just ignore it
                     continue
                 else:
                     sys.stderr.write(
-                        f"Duplicate user class names: {key} is defined in both {previous_path} and {new_path}\n"
+                        f"Duplicate user class names: {class_name} is defined in both {previous_path} and {new_path}\n"
                     )
                     sys.exit(1)
 
-            available_user_classes[key] = value
-            available_user_tasks[key] = value.tasks or {}
+            available_user_classes[class_name] = class_definition
+            available_user_tasks[class_name] = class_definition.tasks or {}
 
     return available_user_classes, available_shape_classes, available_user_tasks, shape_class
 
