@@ -10,21 +10,21 @@ from ..shape import LoadTestShape
 from ..user import User
 
 
-def is_user_class(item):
+def is_user_class(item) -> bool:
     """
     Check if a variable is a runnable (non-abstract) User class
     """
     return bool(inspect.isclass(item) and issubclass(item, User) and item.abstract is False)
 
 
-def is_shape_class(item):
+def is_shape_class(item) -> bool:
     """
     Check if a class is a LoadTestShape
     """
     return bool(inspect.isclass(item) and issubclass(item, LoadTestShape) and not getattr(item, "abstract", True))
 
 
-def load_locustfile(path) -> tuple[dict[str, User], list[LoadTestShape]]:
+def load_locustfile(path) -> tuple[dict[str, type[User]], list[LoadTestShape]]:
     """
     Import given locustfile path and return (docstring, callables).
 

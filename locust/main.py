@@ -100,7 +100,7 @@ def create_environment(
 def merge_locustfiles_content(
     locustfiles: list[str],
 ) -> tuple[
-    dict[str, locust.User],
+    dict[str, type[locust.User]],
     dict[str, locust.LoadTestShape],
     dict[str, list[locust.TaskSet | Callable]],
     locust.LoadTestShape | None,
@@ -110,7 +110,7 @@ def merge_locustfiles_content(
 
     Can stop locust execution on errors.
     """
-    available_user_classes: dict[str, locust.User] = {}
+    available_user_classes: dict[str, type[locust.User]] = {}
     available_shape_classes: dict[str, locust.LoadTestShape] = {}
     # TODO: list[locust.TaskSet | Callable] should be replaced with correct type,
     #  supported by User class task attribute. This require additional rewrite,
