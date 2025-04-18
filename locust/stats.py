@@ -9,22 +9,24 @@ import signal
 import time
 from abc import abstractmethod
 from collections import OrderedDict, defaultdict, namedtuple
-from collections.abc import Callable, Iterable
 from copy import copy
 from html import escape
 from itertools import chain
-from types import FrameType
-from typing import TYPE_CHECKING, Any, NoReturn, Protocol, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Protocol, TypedDict, TypeVar, cast
 
 import gevent
 
-from .event import Events
 from .exception import CatchResponseError
 from .util.date import format_utc_timestamp
 from .util.rounding import proper_round
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+    from types import FrameType
+    from typing import Any, NoReturn
+
     from .env import Environment
+    from .event import Events
     from .runners import Runner
 
 console_logger = logging.getLogger("locust.stats_logger")
