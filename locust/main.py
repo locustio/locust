@@ -97,11 +97,6 @@ def main():
     # find specified locustfile(s) and make sure it exists, using a very simplified
     # command line parser that is only used to parse the -f option.
     locustfiles = parse_locustfile_option()
-    locustfiles_length = len(locustfiles)
-
-    # Grabbing the Locustfile if only one was provided. Otherwise, allowing users to select the locustfile in the UI
-    # If --headless or --autostart and multiple locustfiles, all provided UserClasses will be ran
-    locustfile = locustfiles[0] if locustfiles_length == 1 else None
 
     # Importing Locustfile(s) - setting available UserClasses and ShapeClasses to choose from in UI
     user_classes: dict[str, locust.User] = {}
@@ -335,9 +330,10 @@ It's not high enough for load testing, and the OS didn't allow locust to increas
 See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."""
             )
 
-    # create locust Environment
-    locustfile_path = None if not locustfile else os.path.basename(locustfile)
+    # At least one locust file exists, or system will exit earlier
+    locustfile_path = os.path.basename(locustfiles[0])
 
+    # create locust Environment
     environment = create_environment(
         user_classes,
         options,
