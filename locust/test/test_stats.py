@@ -23,12 +23,17 @@ import os
 import re
 import time
 import unittest
+from io import StringIO
 from unittest import mock
 
 import gevent
 
 _TEST_CSV_STATS_INTERVAL_SEC = 0.2
 _TEST_CSV_STATS_INTERVAL_WAIT_SEC = _TEST_CSV_STATS_INTERVAL_SEC + 0.1
+
+_TEST_PERCENTILES_TO_CHART_MANY = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
+_TEST_PERCENTILES_TOO_HIGH = [1.5, 2.95]
+_TEST_PERCENTILES_WRONG_TYPE = ["a", "b"]
 
 
 def _write_csv_files(environment, stats_base_name, full_history=False):
@@ -38,6 +43,66 @@ def _write_csv_files(environment, stats_base_name, full_history=False):
     gevent.sleep(_TEST_CSV_STATS_INTERVAL_WAIT_SEC)
     gevent.kill(greenlet)
     stats_writer.close_files()
+
+
+class TestStatsValidation(unittest.TestCase):
+    def test_stats_validation_normal_no_return_exit(self):
+        assert locust.stats.validate_stats_configuration() is None
+
+    @mock.patch("locust.stats.PERCENTILES_TO_CHART", new=_TEST_PERCENTILES_TO_CHART_MANY)
+    def test_stats_validation_fail_on_too_many_percentiles_to_chart(self):
+        out = StringIO()
+        with mock.patch("sys.stderr", new=out):
+            with self.assertRaises(SystemExit) as error:
+                locust.stats.validate_stats_configuration()
+        out.seek(0)
+        stderr = out.read()
+        self.assertEqual(error.exception.code, 1)
+        self.assertIn("should be a maximum of 6 parameters", stderr)
+
+    @mock.patch("locust.stats.PERCENTILES_TO_CHART", new=_TEST_PERCENTILES_TOO_HIGH)
+    def test_stats_validation_fail_on_too_high_chart_value(self):
+        out = StringIO()
+        with mock.patch("sys.stderr", new=out):
+            with self.assertRaises(SystemExit) as error:
+                locust.stats.validate_stats_configuration()
+        out.seek(0)
+        stderr = out.read()
+        self.assertEqual(error.exception.code, 1)
+        self.assertIn("value between. 0 < percentile < 1 Eg 0.95", stderr)
+
+    @mock.patch("locust.stats.PERCENTILES_TO_STATISTICS", new=_TEST_PERCENTILES_TOO_HIGH)
+    def test_stats_validation_fail_on_too_high_statistic_value(self):
+        out = StringIO()
+        with mock.patch("sys.stderr", new=out):
+            with self.assertRaises(SystemExit) as error:
+                locust.stats.validate_stats_configuration()
+        out.seek(0)
+        stderr = out.read()
+        self.assertEqual(error.exception.code, 1)
+        self.assertIn("value between. 0 < percentile < 1 Eg 0.95", stderr)
+
+    @mock.patch("locust.stats.PERCENTILES_TO_CHART", new=_TEST_PERCENTILES_WRONG_TYPE)
+    def test_stats_validation_fail_on_wrong_type_chart_value(self):
+        out = StringIO()
+        with mock.patch("sys.stderr", new=out):
+            with self.assertRaises(SystemExit) as error:
+                locust.stats.validate_stats_configuration()
+        out.seek(0)
+        stderr = out.read()
+        self.assertEqual(error.exception.code, 1)
+        self.assertIn("need to be float", stderr)
+
+    @mock.patch("locust.stats.PERCENTILES_TO_STATISTICS", new=_TEST_PERCENTILES_WRONG_TYPE)
+    def test_stats_validation_fail_on_wrong_type_statistic_value(self):
+        out = StringIO()
+        with mock.patch("sys.stderr", new=out):
+            with self.assertRaises(SystemExit) as error:
+                locust.stats.validate_stats_configuration()
+        out.seek(0)
+        stderr = out.read()
+        self.assertEqual(error.exception.code, 1)
+        self.assertIn("need to be float", stderr)
 
 
 class TestRequestStats(unittest.TestCase):
