@@ -93,12 +93,12 @@ def create_environment(
     )
 
 
-def main():
-    # find specified locustfile(s) and make sure it exists, using a very simplified
-    # command line parser that is only used to parse the -f option.
-    locustfiles = parse_locustfile_option()
+def merge_locustfiles_content(locustfiles: list[str]) -> tuple[dict, dict, dict, locust.LoadTestShape | None]:
+    """
+    Validate content of each locustfile in locustfiles and merge data to single objects output.
 
-    # Importing Locustfile(s) - setting available UserClasses and ShapeClasses to choose from in UI
+    Can stop locust execution on errors.
+    """
     available_user_classes: dict[str, locust.User] = {}
     available_shape_classes = {}
     available_user_tasks = {}
@@ -133,6 +133,22 @@ def main():
 
             available_user_classes[key] = value
             available_user_tasks[key] = value.tasks or {}
+
+    return available_user_classes, available_shape_classes, available_user_tasks, shape_class
+
+
+def main():
+    # find specified locustfile(s) and make sure it exists, using a very simplified
+    # command line parser that is only used to parse the -f option.
+    locustfiles = parse_locustfile_option()
+
+    # Importing Locustfile(s) - setting available UserClasses and ShapeClasses to choose from in UI
+    (
+        available_user_classes,
+        available_shape_classes,
+        available_user_tasks,
+        shape_class,
+    ) = merge_locustfiles_content(locustfiles)
 
     if len(stats.PERCENTILES_TO_CHART) > 6:
         logging.error("stats.PERCENTILES_TO_CHART parameter should be a maximum of 6 parameters \n")
