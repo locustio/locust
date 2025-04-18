@@ -15,6 +15,7 @@ import sys
 import time
 import traceback
 import webbrowser
+from typing import TYPE_CHECKING
 
 import gevent
 
@@ -51,6 +52,9 @@ except ModuleNotFoundError as e:
     locust_cloud_version = ""
     if e.msg != "No module named 'locust_cloud'":
         raise
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 version = locust.__version__
 
@@ -93,15 +97,26 @@ def create_environment(
     )
 
 
-def merge_locustfiles_content(locustfiles: list[str]) -> tuple[dict, dict, dict, locust.LoadTestShape | None]:
+def merge_locustfiles_content(
+    locustfiles: list[str],
+) -> tuple[
+    dict[str, locust.User],
+    dict[str, locust.LoadTestShape],
+    dict[str, list[locust.TaskSet | Callable]],
+    locust.LoadTestShape | None,
+]:
     """
     Validate content of each locustfile in locustfiles and merge data to single objects output.
 
     Can stop locust execution on errors.
     """
     available_user_classes: dict[str, locust.User] = {}
-    available_shape_classes = {}
-    available_user_tasks = {}
+    available_shape_classes: dict[str, locust.LoadTestShape] = {}
+    # TODO: list[locust.TaskSet | Callable] should be replaced with correct type,
+    #  supported by User class task attribute. This require additional rewrite,
+    #  out of main refactoring.
+    #  Check docs for real supported task attribute signature for User\TaskSet class.
+    available_user_tasks: dict[str, list[locust.TaskSet | Callable]] = {}
 
     for _locustfile in locustfiles:
         user_classes, shape_classes = load_locustfile(_locustfile)
@@ -130,7 +145,7 @@ def merge_locustfiles_content(locustfiles: list[str]) -> tuple[dict, dict, dict,
                     sys.exit(1)
 
             available_user_classes[class_name] = class_definition
-            available_user_tasks[class_name] = class_definition.tasks or {}
+            available_user_tasks[class_name] = class_definition.tasks
 
     shape_class = list(available_shape_classes.values())[0] if available_shape_classes else None
 
@@ -336,7 +351,8 @@ def main():
             if soft_limit < minimum_open_file_limit:
                 # Increasing the limit to 10000 within a running process should work on at least MacOS.
                 # It does not work on all OS:es, but we should be no worse off for trying.
-                resource.setrlimit(resource.RLIMIT_NOFILE, [minimum_open_file_limit, hard_limit])
+                limits = minimum_open_file_limit, hard_limit
+                resource.setrlimit(resource.RLIMIT_NOFILE, limits)
         except BaseException:
             logger.warning(
                 f"""System open file limit '{soft_limit} is below minimum setting '{minimum_open_file_limit}'.
