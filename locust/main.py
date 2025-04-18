@@ -131,31 +131,7 @@ def main():
             available_user_classes[key] = value
             available_user_tasks[key] = value.tasks or {}
 
-    if len(stats.PERCENTILES_TO_CHART) > 6:
-        logging.error("stats.PERCENTILES_TO_CHART parameter should be a maximum of 6 parameters \n")
-        sys.exit(1)
-
-    def is_valid_percentile(parameter):
-        try:
-            if 0 < float(parameter) < 1:
-                return True
-            return False
-        except ValueError:
-            return False
-
-    for percentile in stats.PERCENTILES_TO_CHART:
-        if not is_valid_percentile(percentile):
-            logging.error(
-                "stats.PERCENTILES_TO_CHART parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"
-            )
-            sys.exit(1)
-
-    for percentile in stats.PERCENTILES_TO_STATISTICS:
-        if not is_valid_percentile(percentile):
-            logging.error(
-                "stats.PERCENTILES_TO_STATISTICS parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"
-            )
-            sys.exit(1)
+    stats.validate_stats_configuration()
 
     # parse all command line options
     options = parse_options()
