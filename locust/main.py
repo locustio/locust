@@ -102,20 +102,18 @@ def merge_locustfiles_content(locustfiles: list[str]) -> tuple[dict, dict, dict,
     available_user_classes: dict[str, locust.User] = {}
     available_shape_classes = {}
     available_user_tasks = {}
-    shape_class = None
+
     for _locustfile in locustfiles:
         user_classes, shape_classes = load_locustfile(_locustfile)
 
         # Setting Available Shape Classes
-        if shape_classes:
-            shape_class = shape_classes[0]
-            for shape_class in shape_classes:
-                shape_class_name = type(shape_class).__name__
-                if shape_class_name in available_shape_classes.keys():
-                    sys.stderr.write(f"Duplicate shape classes: {shape_class_name}\n")
-                    sys.exit(1)
+        for _shape_class in shape_classes:
+            shape_class_name = type(_shape_class).__name__
+            if shape_class_name in available_shape_classes.keys():
+                sys.stderr.write(f"Duplicate shape classes: {shape_class_name}\n")
+                sys.exit(1)
 
-                available_shape_classes[shape_class_name] = shape_class
+            available_shape_classes[shape_class_name] = _shape_class
 
         # Setting Available User Classes
         for class_name, class_definition in user_classes.items():
@@ -133,6 +131,8 @@ def merge_locustfiles_content(locustfiles: list[str]) -> tuple[dict, dict, dict,
 
             available_user_classes[class_name] = class_definition
             available_user_tasks[class_name] = class_definition.tasks or {}
+
+    shape_class = list(available_shape_classes.values())[0] if available_shape_classes else None
 
     return available_user_classes, available_shape_classes, available_user_tasks, shape_class
 
