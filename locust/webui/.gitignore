@@ -1,4 +1,12 @@
-/node_modules
+# yarn
+node_modules
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
 
 tsconfig.tsbuildinfo
 .rollup.cache
