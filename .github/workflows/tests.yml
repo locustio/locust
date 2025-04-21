@@ -58,11 +58,7 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: locust/webui/yarn.lock
 
-      - name: Install Yarn
-        run: npm install -g yarn
-
       # Build and upload the project artifacts only once
-
       - name: Build Python project and front end
         run: uv build
 
