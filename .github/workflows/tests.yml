@@ -318,6 +318,12 @@ jobs:
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
 
+      - name: yarn install
+        uses: borales/actions-yarn@v5
+        with:
+          cmd: install
+          dir: locust/webui
+
       # Publish UI lib
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
