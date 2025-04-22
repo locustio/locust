@@ -15,6 +15,7 @@ import sys
 import time
 import traceback
 import webbrowser
+from typing import TYPE_CHECKING
 
 import gevent
 
@@ -41,6 +42,9 @@ except ModuleNotFoundError as e:
     locust_cloud_version = ""
     if e.msg != "No module named 'locust_cloud'":
         raise
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 version = locust.__version__
 
@@ -83,53 +87,73 @@ def create_environment(
     )
 
 
-def main():
-    # find specified locustfile(s) and make sure it exists, using a very simplified
-    # command line parser that is only used to parse the -f option.
-    locustfiles = parse_locustfile_option()
-    locustfiles_length = len(locustfiles)
+def merge_locustfiles_content(
+    locustfiles: list[str],
+) -> tuple[
+    dict[str, type[locust.User]],
+    dict[str, locust.LoadTestShape],
+    dict[str, list[locust.TaskSet | Callable]],
+    locust.LoadTestShape | None,
+]:
+    """
+    Validate content of each locustfile in locustfiles and merge data to single objects output.
 
-    # Grabbing the Locustfile if only one was provided. Otherwise, allowing users to select the locustfile in the UI
-    # If --headless or --autostart and multiple locustfiles, all provided UserClasses will be ran
-    locustfile = locustfiles[0] if locustfiles_length == 1 else None
+    Can stop locust execution on errors.
+    """
+    available_user_classes: dict[str, type[locust.User]] = {}
+    available_shape_classes: dict[str, locust.LoadTestShape] = {}
+    # TODO: list[locust.TaskSet | Callable] should be replaced with correct type,
+    #  supported by User class task attribute. This require additional rewrite,
+    #  out of main refactoring.
+    #  Check docs for real supported task attribute signature for User\TaskSet class.
+    available_user_tasks: dict[str, list[locust.TaskSet | Callable]] = {}
 
-    # Importing Locustfile(s) - setting available UserClasses and ShapeClasses to choose from in UI
-    user_classes: dict[str, locust.User] = {}
-    available_user_classes = {}
-    available_shape_classes = {}
-    available_user_tasks = {}
-    shape_class = None
     for _locustfile in locustfiles:
-        docstring, _user_classes, shape_classes = load_locustfile(_locustfile)
+        user_classes, shape_classes = load_locustfile(_locustfile)
 
         # Setting Available Shape Classes
-        if shape_classes:
-            shape_class = shape_classes[0]
-            for shape_class in shape_classes:
-                shape_class_name = type(shape_class).__name__
-                if shape_class_name in available_shape_classes.keys():
-                    sys.stderr.write(f"Duplicate shape classes: {shape_class_name}\n")
-                    sys.exit(1)
+        for _shape_class in shape_classes:
+            shape_class_name = type(_shape_class).__name__
+            if shape_class_name in available_shape_classes.keys():
+                sys.stderr.write(f"Duplicate shape classes: {shape_class_name}\n")
+                sys.exit(1)
 
-                available_shape_classes[shape_class_name] = shape_class
+            available_shape_classes[shape_class_name] = _shape_class
 
         # Setting Available User Classes
-        for key, value in _user_classes.items():
-            if key in available_user_classes.keys():
-                previous_path = inspect.getfile(user_classes[key])
-                new_path = inspect.getfile(value)
+        for class_name, class_definition in user_classes.items():
+            if class_name in available_user_classes.keys():
+                previous_path = inspect.getfile(available_user_classes[class_name])
+                new_path = inspect.getfile(class_definition)
                 if previous_path == new_path:
                     # The same User class was defined in two locustfiles but one probably imported the other, so we just ignore it
                     continue
                 else:
                     sys.stderr.write(
-                        f"Duplicate user class names: {key} is defined in both {previous_path} and {new_path}\n"
+                        f"Duplicate user class names: {class_name} is defined in both {previous_path} and {new_path}\n"
                     )
                     sys.exit(1)
 
-            user_classes[key] = value
-            available_user_classes[key] = value
-            available_user_tasks[key] = value.tasks or {}
+            available_user_classes[class_name] = class_definition
+            available_user_tasks[class_name] = class_definition.tasks
+
+    shape_class = list(available_shape_classes.values())[0] if available_shape_classes else None
+
+    return available_user_classes, available_shape_classes, available_user_tasks, shape_class
+
+
+def main():
+    # find specified locustfile(s) and make sure it exists, using a very simplified
+    # command line parser that is only used to parse the -f option.
+    locustfiles = parse_locustfile_option()
+
+    # Importing Locustfile(s) - setting available UserClasses and ShapeClasses to choose from in UI
+    (
+        available_user_classes,
+        available_shape_classes,
+        available_user_tasks,
+        shape_class,
+    ) = merge_locustfiles_content(locustfiles)
 
     stats.validate_stats_configuration()
 
@@ -256,25 +280,25 @@ def main():
 
     if options.list_commands:
         print("Available Users:")
-        for name in user_classes:
+        for name in available_user_classes:
             print("    " + name)
         sys.exit(0)
 
-    if not user_classes:
+    if not available_user_classes:
         logger.error("No User class found!")
         sys.exit(1)
 
     # make sure specified User exists
     if options.user_classes:
-        if missing := set(options.user_classes) - set(user_classes.keys()):
+        if missing := set(options.user_classes) - set(available_user_classes.keys()):
             logger.error(f"Unknown User(s): {', '.join(missing)}\n")
             sys.exit(1)
         else:
-            names = set(options.user_classes) & set(user_classes.keys())
-            user_classes = [user_classes[n] for n in names]
+            names = set(options.user_classes) & set(available_user_classes.keys())
+            user_classes = [available_user_classes[n] for n in names]
     else:
         # list() call is needed to consume the dict_view object in Python 3
-        user_classes = list(user_classes.values())
+        user_classes = list(available_user_classes.values())
 
     if not shape_class and options.num_users:
         fixed_count_total = sum([user_class.fixed_count for user_class in user_classes])
@@ -293,7 +317,8 @@ def main():
             if soft_limit < minimum_open_file_limit:
                 # Increasing the limit to 10000 within a running process should work on at least MacOS.
                 # It does not work on all OS:es, but we should be no worse off for trying.
-                resource.setrlimit(resource.RLIMIT_NOFILE, [minimum_open_file_limit, hard_limit])
+                limits = minimum_open_file_limit, hard_limit
+                resource.setrlimit(resource.RLIMIT_NOFILE, limits)
         except BaseException:
             logger.warning(
                 f"""System open file limit '{soft_limit} is below minimum setting '{minimum_open_file_limit}'.
@@ -301,9 +326,10 @@ It's not high enough for load testing, and the OS didn't allow locust to increas
 See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."""
             )
 
-    # create locust Environment
-    locustfile_path = None if not locustfile else os.path.basename(locustfile)
+    # At least one locust file exists, or system will exit earlier
+    locustfile_path = os.path.basename(locustfiles[0])
 
+    # create locust Environment
     environment = create_environment(
         user_classes,
         options,
