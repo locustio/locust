@@ -15,6 +15,7 @@ import {
 import { AlertColor } from '@mui/material/Alert';
 import { connect } from 'react-redux';
 
+import CustomInput from 'components/Form/CustomInput';
 import Form from 'components/Form/Form';
 import NumericField from 'components/Form/NumericField';
 import Select from 'components/Form/Select';
@@ -24,6 +25,7 @@ import { SWARM_STATE } from 'constants/swarm';
 import { useStartSwarmMutation } from 'redux/api/swarm';
 import { swarmActions } from 'redux/slice/swarm.slice';
 import { IRootState } from 'redux/store';
+import { ICustomInput } from 'types/form.types';
 import { ISwarmFormInput, ISwarmState } from 'types/swarm.types';
 import { isEmpty } from 'utils/object';
 
@@ -40,6 +42,7 @@ export interface ISwarmFormProps {
   isEditSwarm?: boolean;
   onFormChange?: (formData: React.ChangeEvent<HTMLFormElement>) => void;
   onFormSubmit?: (inputData: ISwarmFormInput) => void;
+  advancedOptions?: ICustomInput[];
 }
 
 interface ISwarmForm
@@ -80,6 +83,7 @@ function SwarmForm({
   isEditSwarm = false,
   onFormChange,
   onFormSubmit,
+  advancedOptions,
 }: ISwarmForm) {
   const [startSwarm] = useStartSwarmMutation();
   const [errorMessage, setErrorMessage] = useState('');
@@ -199,6 +203,13 @@ function SwarmForm({
                     sx={{ width: '100%' }}
                     title={hideCommonOptions ? 'Disabled for tests using LoadTestShape class' : ''}
                   />
+                  {advancedOptions && (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 4, mt: 4 }}>
+                      {advancedOptions.map((inputProps, index) => (
+                        <CustomInput {...inputProps} key={`advanced-parameter-${index}`} />
+                      ))}
+                    </Box>
+                  )}
                 </AccordionDetails>
               </Accordion>
             </>
