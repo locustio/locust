@@ -5,9 +5,8 @@ from itertools import chain
 from jinja2 import Environment as JinjaEnvironment
 from jinja2 import FileSystemLoader
 
-from . import stats as stats_module
+from . import stats
 from .runners import STATE_STOPPED, STATE_STOPPING, MasterRunner
-from .stats import sort_stats, update_stats_history
 from .user.inspectuser import get_ratio
 from .util.date import format_duration, format_utc_timestamp
 
@@ -37,14 +36,14 @@ def get_html_report(
     show_download_link=True,
     theme="",
 ):
-    stats = environment.runner.stats
+    request_stats = environment.runner.stats
 
-    start_time = format_utc_timestamp(stats.start_time)
+    start_time = format_utc_timestamp(request_stats.start_time)
 
-    if end_ts := stats.last_request_timestamp:
+    if end_ts := request_stats.last_request_timestamp:
         end_time = format_utc_timestamp(end_ts)
     else:
-        end_ts = stats.start_time
+        end_ts = request_stats.start_time
         end_time = start_time
 
     host = None
@@ -55,15 +54,15 @@ def get_html_report(
         if len(all_hosts) == 1:
             host = list(all_hosts)[0]
 
-    requests_statistics = list(chain(sort_stats(stats.entries), [stats.total]))
-    failures_statistics = sort_stats(stats.errors)
+    requests_statistics = list(chain(stats.sort_stats(request_stats.entries), [request_stats.total]))
+    failures_statistics = stats.sort_stats(request_stats.errors)
     exceptions_statistics = [
         {**exc, "nodes": ", ".join(exc["nodes"])} for exc in environment.runner.exceptions.values()
     ]
 
-    if stats.history and stats.history[-1]["time"] < end_time:
-        update_stats_history(environment.runner, end_time)
-    history = stats.history
+    if request_stats.history and request_stats.history[-1]["time"] < end_time:
+        stats.update_stats_history(environment.runner, end_time)
+    history = request_stats.history
 
     is_distributed = isinstance(environment.runner, MasterRunner)
     user_spawned = (
@@ -98,13 +97,13 @@ def get_html_report(
             ],
             "start_time": start_time,
             "end_time": end_time,
-            "duration": format_duration(stats.start_time, end_ts),
+            "duration": format_duration(request_stats.start_time, end_ts),
             "host": escape(str(host)),
             "history": history,
             "show_download_link": show_download_link,
             "locustfile": escape(str(environment.locustfile)),
             "tasks": task_data,
-            "percentiles_to_chart": stats_module.PERCENTILES_TO_CHART,
+            "percentiles_to_chart": stats.PERCENTILES_TO_CHART,
             "profile": escape(str(environment.profile)) if environment.profile else None,
         },
         theme=theme,

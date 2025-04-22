@@ -24,16 +24,6 @@ from .env import Environment
 from .html import get_html_report, process_html_filename
 from .input_events import input_listener
 from .log import greenlet_exception_logger, setup_logging
-from .stats import (
-    StatsCSV,
-    StatsCSVFileWriter,
-    print_error_report,
-    print_percentile_stats,
-    print_stats,
-    print_stats_json,
-    stats_history,
-    stats_printer,
-)
 from .user.inspectuser import print_task_ratio, print_task_ratio_json
 from .util.load_locustfile import load_locustfile
 
@@ -141,31 +131,7 @@ def main():
             available_user_classes[key] = value
             available_user_tasks[key] = value.tasks or {}
 
-    if len(stats.PERCENTILES_TO_CHART) > 6:
-        logging.error("stats.PERCENTILES_TO_CHART parameter should be a maximum of 6 parameters \n")
-        sys.exit(1)
-
-    def is_valid_percentile(parameter):
-        try:
-            if 0 < float(parameter) < 1:
-                return True
-            return False
-        except ValueError:
-            return False
-
-    for percentile in stats.PERCENTILES_TO_CHART:
-        if not is_valid_percentile(percentile):
-            logging.error(
-                "stats.PERCENTILES_TO_CHART parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"
-            )
-            sys.exit(1)
-
-    for percentile in stats.PERCENTILES_TO_STATISTICS:
-        if not is_valid_percentile(percentile):
-            logging.error(
-                "stats.PERCENTILES_TO_STATISTICS parameter need to be float and value between. 0 < percentile < 1 Eg 0.95\n"
-            )
-            sys.exit(1)
+    stats.validate_stats_configuration()
 
     # parse all command line options
     options = parse_options()
@@ -422,11 +388,11 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         base_csv_dir = options.csv_prefix[: -len(base_csv_file)]
         if not os.path.exists(base_csv_dir) and len(base_csv_dir) != 0:
             os.makedirs(base_csv_dir)
-        stats_csv_writer = StatsCSVFileWriter(
+        stats_csv_writer = stats.StatsCSVFileWriter(
             environment, stats.PERCENTILES_TO_REPORT, options.csv_prefix, options.stats_history_enabled
         )
     else:
-        stats_csv_writer = StatsCSV(environment, stats.PERCENTILES_TO_REPORT)
+        stats_csv_writer = stats.StatsCSV(environment, stats.PERCENTILES_TO_REPORT)
 
     # start Web UI
     if not options.headless and not options.worker:
@@ -512,10 +478,10 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     stats_printer_greenlet = None
     if not options.only_summary and (options.print_stats or (options.headless and not options.worker)):
         # spawn stats printing greenlet
-        stats_printer_greenlet = gevent.spawn(stats_printer(runner.stats))
+        stats_printer_greenlet = gevent.spawn(stats.stats_printer(runner.stats))
         stats_printer_greenlet.link_exception(greenlet_exception_handler)
 
-    gevent.spawn(stats_history, runner)
+    gevent.spawn(stats.stats_history, runner)
 
     def start_automatic_run():
         if options.master:
@@ -633,11 +599,11 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         if runner is not None:
             runner.quit()
         if options.json:
-            print_stats_json(runner.stats)
+            stats.print_stats_json(runner.stats)
         elif not isinstance(runner, locust.runners.WorkerRunner):
-            print_stats(runner.stats, current=False)
-            print_percentile_stats(runner.stats)
-            print_error_report(runner.stats)
+            stats.print_stats(runner.stats, current=False)
+            stats.print_percentile_stats(runner.stats)
+            stats.print_error_report(runner.stats)
         environment.events.quit.fire(exit_code=code)
         sys.exit(code)
 

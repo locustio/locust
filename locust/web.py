@@ -32,12 +32,10 @@ from flask_login import LoginManager, login_required
 from gevent import pywsgi
 
 from . import __version__ as version
-from . import argument_parser
-from . import stats as stats_module
+from . import argument_parser, stats
 from .html import DEFAULT_BUILD_PATH, get_html_report, render_template_from
 from .log import get_logs, greenlet_exception_logger
 from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
-from .stats import StatsCSV, StatsCSVFileWriter, StatsErrorDict, sort_stats
 from .user.inspectuser import get_ratio
 from .util.cache import memoize
 from .util.date import format_safe_timestamp
@@ -126,7 +124,7 @@ class WebUI:
         web_login: bool = False,
         tls_cert: str | None = None,
         tls_key: str | None = None,
-        stats_csv_writer: StatsCSV | None = None,
+        stats_csv_writer: stats.StatsCSV | None = None,
         delayed_start=False,
         userclass_picker_is_active=False,
         build_path: str | None = None,
@@ -145,7 +143,7 @@ class WebUI:
                        allows for adding Flask routes or Blueprints before accepting requests, avoiding errors.
         """
         environment.web_ui = self
-        self.stats_csv_writer = stats_csv_writer or StatsCSV(environment, stats_module.PERCENTILES_TO_REPORT)
+        self.stats_csv_writer = stats_csv_writer or stats.StatsCSV(environment, stats.PERCENTILES_TO_REPORT)
         self.environment = environment
         self.host = host
         self.port = port
@@ -404,7 +402,11 @@ class WebUI:
         @self.auth_required_if_enabled
         def request_stats_full_history_csv() -> Response:
             options = self.environment.parsed_options
-            if options and options.stats_history_enabled and isinstance(self.stats_csv_writer, StatsCSVFileWriter):
+            if (
+                options
+                and options.stats_history_enabled
+                and isinstance(self.stats_csv_writer, stats.StatsCSVFileWriter)
+            ):
                 return send_file(
                     os.path.abspath(self.stats_csv_writer.stats_history_file_name()),
                     mimetype="text/csv",
@@ -430,12 +432,12 @@ class WebUI:
         @self.auth_required_if_enabled
         @memoize(timeout=DEFAULT_CACHE_TIME, dynamic_timeout=True)
         def request_stats() -> Response:
-            stats: list[dict[str, Any]] = []
-            errors: list[StatsErrorDict] = []
+            _stats: list[dict[str, Any]] = []
+            errors: list[stats.StatsErrorDict] = []
 
             if environment.runner is None:
                 report = {
-                    "stats": stats,
+                    "stats": _stats,
                     "errors": errors,
                     "total_rps": 0.0,
                     "total_fail_per_sec": 0.0,
@@ -451,21 +453,21 @@ class WebUI:
 
                 return jsonify(report)
 
-            for s in chain(sort_stats(environment.runner.stats.entries), [environment.runner.stats.total]):
-                stats.append(s.to_dict())
+            for s in chain(stats.sort_stats(environment.runner.stats.entries), [environment.runner.stats.total]):
+                _stats.append(s.to_dict())
 
             errors = [e.serialize() for e in environment.runner.errors.values()]
 
             # Truncate the total number of stats and errors displayed since a large number of rows will cause the app
             # to render extremely slowly. Aggregate stats should be preserved.
-            truncated_stats = stats[:500]
-            if len(stats) > 500:
-                truncated_stats += [stats[-1]]
+            truncated_stats = _stats[:500]
+            if len(_stats) > 500:
+                truncated_stats += [_stats[-1]]
 
             report = {"stats": truncated_stats, "errors": errors[:500]}
-            total_stats = stats[-1]
+            total_stats = _stats[-1]
 
-            if stats:
+            if _stats:
                 report["total_rps"] = total_stats["current_rps"]
                 report["total_fail_per_sec"] = total_stats["current_fail_per_sec"]
                 report["fail_ratio"] = environment.runner.stats.total.fail_ratio
@@ -473,7 +475,7 @@ class WebUI:
                     f"response_time_percentile_{percentile}": environment.runner.stats.total.get_current_response_time_percentile(
                         percentile
                     )
-                    for percentile in stats_module.PERCENTILES_TO_CHART
+                    for percentile in stats.PERCENTILES_TO_CHART
                 }
 
             if isinstance(environment.runner, MasterRunner):
@@ -658,7 +660,7 @@ class WebUI:
         else:
             worker_count = 0
 
-        stats = self.environment.runner.stats
+        request_stats = self.environment.runner.stats
         extra_options = argument_parser.ui_extra_args_dict()
 
         available_user_classes = None
@@ -690,7 +692,7 @@ class WebUI:
             "user_count": self.environment.runner.user_count,
             "version": version,
             "host": host if host else "",
-            "history": stats.history if stats.num_requests > 0 else [],
+            "history": request_stats.history if request_stats.num_requests > 0 else [],
             "override_host_warning": override_host_warning,
             "num_users": options and options.num_users,
             "spawn_rate": options and options.spawn_rate,
@@ -710,8 +712,8 @@ class WebUI:
             "available_shape_classes": available_shape_classes,
             "available_user_tasks": available_user_tasks,
             "users": users,
-            "percentiles_to_chart": stats_module.PERCENTILES_TO_CHART,
-            "percentiles_to_statistics": stats_module.PERCENTILES_TO_STATISTICS,
+            "percentiles_to_chart": stats.PERCENTILES_TO_CHART,
+            "percentiles_to_statistics": stats.PERCENTILES_TO_STATISTICS,
         }
 
         self.template_args = {**self.template_args, **new_template_args}
