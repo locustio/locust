@@ -36,7 +36,7 @@ classifiers = [
 
 dependencies = [
     "gevent>=22.10.2; python_version <= '3.12'",
-    "gevent>=24.10.1; python_version > '3.13'",
+    "gevent>=24.10.1,<25.0.0; python_version > '3.13'",
     "flask>=2.0.0",
     "Werkzeug>=2.0.0",
     "requests>=2.26.0; python_version <= '3.11'",
