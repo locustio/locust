@@ -234,6 +234,22 @@ When using this way to configure your users, you can set any attribute.
 
     ``--config-users`` is a somewhat experimental feature and the json format may change even between minor Locust revisions.
 
+Configuring Profiles
+====================
+
+Profiles are an advanced feature that allow for grouping and filtering testruns. A profile may be set using the ``--profile`` argument
+or by inputting a value in the advanced options from the web ui.
+
+It may be useful to see a list of existing profiles as options in the form. If you have such a list, you may set it in your locustfile:
+
+.. code-block:: python
+from locust import events
+
+@events.init.add_listener
+def on_locust_init(environment, **kwargs):
+    environment.web_ui.template_args["all_profiles"] = ["one", "two", "three"]
+
+
 Custom arguments
 ================
 

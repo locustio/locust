@@ -39,6 +39,7 @@ describe('SwarmForm', () => {
         expect(submittedData).toEqual({
           host: swarmStateMock.host,
           runTime: '',
+          profile: '',
           spawnRate: '1',
           userCount: '1',
         });
@@ -84,6 +85,7 @@ describe('SwarmForm', () => {
         expect(submittedData).toEqual({
           host: 'https://localhost:5000',
           runTime: '2h',
+          profile: '',
           spawnRate: '20',
           userCount: '15',
           shapeClass: 'Shape1',
@@ -131,6 +133,7 @@ describe('SwarmForm', () => {
         expect(submittedData).toEqual({
           host: '',
           runTime: '',
+          profile: '',
           spawnRate: '1',
           userCount: '1',
           shapeClass: 'Shape1',
@@ -178,6 +181,7 @@ describe('SwarmForm', () => {
         expect(submittedData).toEqual({
           host: swarmStateMock.host,
           runTime: '',
+          profile: '',
           spawnRate: '1',
           userCount: '1',
           textField: 'Text value',
@@ -235,12 +239,55 @@ describe('SwarmForm', () => {
         expect(submittedData).toEqual({
           host: swarmStateMock.host,
           runTime: '',
+          profile: '',
           spawnRate: '1',
           userCount: '1',
           textField: 'Changed text value',
           choicesField: 'Option2',
         });
       }
+    });
+  });
+
+  test('should submit a profile when one is set', async () => {
+    const { getByText, getByLabelText } = renderWithProvider(<SwarmForm />);
+
+    const testProfile = 'test-profile';
+
+    act(() => {
+      fireEvent.change(getByLabelText('Profile'), {
+        target: { value: testProfile },
+      });
+      fireEvent.click(getByText('Start'));
+    });
+
+    await waitFor(async () => {
+      const submittedData = startSwarm.mock.calls[0][0];
+
+      if (submittedData) {
+        expect(submittedData).toEqual({
+          host: swarmStateMock.host,
+          runTime: '',
+          spawnRate: '1',
+          userCount: '1',
+          profile: testProfile,
+        });
+      }
+    });
+  });
+
+  test('should render a list of profiles when one is provided', async () => {
+    const allProfiles = ['one', 'two', 'three'];
+    const { getByLabelText, getByText } = renderWithProvider(
+      <SwarmForm allProfiles={allProfiles} />,
+    );
+
+    await act(async () => {
+      await fireEvent.mouseDown(getByLabelText('Profile'));
+    });
+
+    allProfiles.forEach(profile => {
+      expect(getByText(profile)).toBeTruthy();
     });
   });
 });

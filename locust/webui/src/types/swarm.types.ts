@@ -65,6 +65,7 @@ export interface ISwarmState {
   version: string;
   workerCount: number;
   profile?: string;
+  allProfiles?: string[];
 }
 
 export interface IReport {
@@ -91,7 +92,7 @@ export interface IReportTemplateArgs extends Omit<IReport, 'charts'> {
 }
 
 export interface ISwarmFormInput
-  extends Partial<Pick<ISwarmState, 'host' | 'spawnRate' | 'userCount'>> {
+  extends Partial<Pick<ISwarmState, 'host' | 'profile' | 'spawnRate' | 'userCount'>> {
   runTime?: string;
   userClasses?: string[];
   shapeClass?: string;

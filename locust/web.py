@@ -277,6 +277,9 @@ class WebUI:
                         err_msg = "Valid run_time formats are : 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc."
                         logger.error(err_msg)
                         return jsonify({"success": False, "message": err_msg, "host": environment.host})
+                elif key == "profile":
+                    environment.profile = str(request.form["profile"]) or None
+                    parsed_options_dict[key] = environment.profile
                 elif key in parsed_options_dict:
                     # update the value in environment.parsed_options, but dont change the type.
                     parsed_options_value = parsed_options_dict[key]
@@ -714,6 +717,7 @@ class WebUI:
             "users": users,
             "percentiles_to_chart": stats.PERCENTILES_TO_CHART,
             "percentiles_to_statistics": stats.PERCENTILES_TO_STATISTICS,
+            "profile": self.environment.profile,
         }
 
         self.template_args = {**self.template_args, **new_template_args}

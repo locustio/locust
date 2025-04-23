@@ -5,6 +5,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Alert,
+  Autocomplete,
   Box,
   Button,
   Container,
@@ -33,7 +34,11 @@ interface IDispatchProps {
   setSwarm: (swarmPayload: Partial<ISwarmState>) => void;
 }
 
-export interface ISwarmFormProps {
+interface IAdvancedOptions extends ICustomInput {
+  component?: React.ElementType;
+}
+
+export interface ISwarmFormProps extends Pick<ISwarmState, 'allProfiles'> {
   alert?: {
     level?: AlertColor;
     message: string;
@@ -42,13 +47,14 @@ export interface ISwarmFormProps {
   isEditSwarm?: boolean;
   onFormChange?: (formData: React.ChangeEvent<HTMLFormElement>) => void;
   onFormSubmit?: (inputData: ISwarmFormInput) => void;
-  advancedOptions?: ICustomInput[];
+  advancedOptions?: IAdvancedOptions[];
 }
 
 interface ISwarmForm
   extends IDispatchProps,
     Pick<
       ISwarmState,
+      | 'allProfiles'
       | 'availableShapeClasses'
       | 'availableUserClasses'
       | 'extraOptions'
@@ -56,6 +62,7 @@ interface ISwarmForm
       | 'shapeUseCommonOptions'
       | 'host'
       | 'overrideHostWarning'
+      | 'profile'
       | 'runTime'
       | 'showUserclassPicker'
       | 'spawnRate'
@@ -65,6 +72,7 @@ interface ISwarmForm
     ISwarmFormProps {}
 
 function SwarmForm({
+  allProfiles,
   availableShapeClasses,
   availableUserClasses,
   host,
@@ -74,6 +82,7 @@ function SwarmForm({
   numUsers,
   userCount,
   overrideHostWarning,
+  profile,
   runTime,
   setSwarm,
   showUserclassPicker,
@@ -102,6 +111,7 @@ function SwarmForm({
         runTime: inputData.runTime,
         spawnRate: inputData.spawnRate,
         userCount: inputData.userCount,
+        profile: inputData.profile,
       });
     } else {
       setErrorMessage(data ? data.message : 'An unknown error occured.');
@@ -195,21 +205,40 @@ function SwarmForm({
                   <Typography>Advanced options</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <TextField
-                    defaultValue={runTime}
-                    disabled={!!hideCommonOptions}
-                    label='Run time (e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)'
-                    name='runTime'
-                    sx={{ width: '100%' }}
-                    title={hideCommonOptions ? 'Disabled for tests using LoadTestShape class' : ''}
-                  />
-                  {advancedOptions && (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 4, mt: 4 }}>
-                      {advancedOptions.map((inputProps, index) => (
-                        <CustomInput {...inputProps} key={`advanced-parameter-${index}`} />
-                      ))}
-                    </Box>
-                  )}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 4 }}>
+                    <TextField
+                      defaultValue={runTime}
+                      disabled={!!hideCommonOptions}
+                      label='Run time (e.g. 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.)'
+                      name='runTime'
+                      sx={{ width: '100%' }}
+                      title={
+                        hideCommonOptions ? 'Disabled for tests using LoadTestShape class' : ''
+                      }
+                    />
+                    <Autocomplete
+                      defaultValue={profile}
+                      disablePortal
+                      freeSolo
+                      options={allProfiles && Array.isArray(allProfiles) ? allProfiles : []}
+                      renderInput={params => (
+                        <TextField
+                          {...params}
+                          defaultValue={profile}
+                          label='Profile'
+                          name='profile'
+                        />
+                      )}
+                    />
+                    {advancedOptions &&
+                      advancedOptions.map(({ component: Component, ...inputProps }, index) =>
+                        Component ? (
+                          <Component {...inputProps} />
+                        ) : (
+                          <CustomInput {...inputProps} key={`advanced-parameter-${index}`} />
+                        ),
+                      )}
+                  </Box>
                 </AccordionDetails>
               </Accordion>
             </>
@@ -230,22 +259,28 @@ function SwarmForm({
   );
 }
 
-const storeConnector = ({
-  swarm: {
-    availableShapeClasses,
-    availableUserClasses,
-    extraOptions,
-    hideCommonOptions,
-    shapeUseCommonOptions,
-    host,
-    numUsers,
-    userCount,
-    overrideHostWarning,
-    runTime,
-    spawnRate,
-    showUserclassPicker,
-  },
-}: IRootState) => ({
+const storeConnector = (
+  {
+    swarm: {
+      allProfiles,
+      availableShapeClasses,
+      availableUserClasses,
+      extraOptions,
+      hideCommonOptions,
+      shapeUseCommonOptions,
+      host,
+      numUsers,
+      userCount,
+      overrideHostWarning,
+      profile,
+      runTime,
+      spawnRate,
+      showUserclassPicker,
+    },
+  }: IRootState,
+  ownProps?: ISwarmFormProps,
+) => ({
+  allProfiles: allProfiles || ownProps?.allProfiles,
   availableShapeClasses,
   availableUserClasses,
   extraOptions,
@@ -253,6 +288,7 @@ const storeConnector = ({
   shapeUseCommonOptions,
   host,
   overrideHostWarning,
+  profile,
   showUserclassPicker,
   numUsers,
   userCount,
