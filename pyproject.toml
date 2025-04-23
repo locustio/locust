@@ -80,14 +80,14 @@ lint = [
 ]
 release = ["twine>=5.1.1,<6.0.0"]
 docs = [
-    "sphinx==7.3.7",
-    "sphinx-rtd-theme==2.0.0",
+    "sphinx==7.4.7",
+    "sphinx-rtd-theme==3.0.2",
     "readthedocs-sphinx-search==0.3.2",
     "Sphinx-Substitution-Extensions==2020.9.30.0",
-    "Pygments==2.16.1",
+    "Pygments==2.19.1",
     "alabaster==0.7.16",
     "babel==2.13.0",
-    "docutils==0.18.1",
+    "docutils==0.21.2",
     "imagesize==1.4.1",
     "snowballstemmer==2.2.0",
     "sphinx-prompt==1.5.0",
@@ -251,14 +251,14 @@ format = ["ruff check .", "ruff format --check"]
 ## Hatch docs building environment
 [tool.hatch.envs.docs]
 dependencies = [
-    "sphinx==7.3.7",
-    "sphinx-rtd-theme==2.0.0",
+    "sphinx==7.4.7",
+    "sphinx-rtd-theme==3.0.2",
     "readthedocs-sphinx-search==0.3.2",
     "Sphinx-Substitution-Extensions==2020.9.30.0",
-    "Pygments==2.16.1",
+    "Pygments==2.19.1",
     "alabaster==0.7.16",
     "babel==2.13.0",
-    "docutils==0.18.1",
+    "docutils==0.21.2",
     "imagesize==1.4.1",
     "snowballstemmer==2.2.0",
     "sphinx-prompt==1.5.0",

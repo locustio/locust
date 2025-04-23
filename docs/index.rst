@@ -3,10 +3,8 @@ Locust Documentation
 =====================
 
 
-Getting started
----------------
-
 .. toctree ::
+    :caption: Getting started
     :maxdepth: 2
 
     what-is-locust
@@ -14,19 +12,15 @@ Getting started
     quickstart
 
 
-Writing Locust tests
---------------------
-
 .. toctree ::
+    :caption: Writing Locust tests
     :maxdepth: 2
 
     writing-a-locustfile
 
 
-Running your Locust tests
--------------------------
-
 .. toctree ::
+    :caption: Running your Locust tests
     :maxdepth: 1
 
     configuration
@@ -37,10 +31,8 @@ Running your Locust tests
     running-without-web-ui
 
 
-Other functionalities
----------------------
-
 .. toctree ::
+    :caption: Other functionalities
     :maxdepth: 2
 
     custom-load-shape
@@ -53,10 +45,8 @@ Other functionalities
     extensions
 
 
-Further reading / knowledgebase
--------------------------------
-
 .. toctree ::
+    :caption: Further reading / knowledgebase
     :maxdepth: 1
 
     developing-locust
@@ -64,19 +54,17 @@ Further reading / knowledgebase
     faq
 
 
-API
----
 .. toctree ::
+    :caption: API
     :maxdepth: 2
 
     api
 
 
 
-Changelog
----------
 
 .. toctree ::
+    :caption: Changelog
     :maxdepth: 2
 
     changelog
