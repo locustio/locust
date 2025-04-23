@@ -5264,7 +5264,7 @@ __metadata:
     react-redux: "npm:^9.1.2"
     rimraf: "npm:^6.0.1"
     typescript: "npm:^5.7.2"
-    vite: "npm:^6.2.6"
+    vite: "npm:^6.3.2"
     vite-plugin-checker: "npm:^0.8.0"
     vite-plugin-dts: "npm:^4.3.0"
     vite-plugin-singlefile: "npm:^2.0.3"
@@ -8459,7 +8459,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^6.2.6":
+"vite@npm:^6.3.2":
   version: 6.3.2
   resolution: "vite@npm:6.3.2"
   dependencies:
