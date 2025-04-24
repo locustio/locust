@@ -324,6 +324,22 @@ jobs:
           cmd: install
           dir: locust/webui
 
+      # Set pre-release version
+      - name: yarn version
+        uses: borales/actions-yarn@v5
+        if: github.ref == 'refs/heads/master'
+        with:
+          cmd: version ${{ needs.build_package.outputs.tag_short }}-next-${{ github.run_id }}
+          dir: locust/webui
+      
+      # Set tag build version
+      - name: yarn version
+        uses: borales/actions-yarn@v5
+        if: github.ref == 'refs/heads/master'
+        with:
+          cmd: version ${{ github.ref_name }}
+          dir: locust/webui
+
       # Publish UI lib
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
@@ -331,7 +347,7 @@ jobs:
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         with:
-          cmd: npm publish --no-git-tag-version --non-interactive --tag next --new-version ${{ needs.build_package.outputs.tag_short }}-next-${{ github.run_id }}
+          cmd: npm publish --tag next 
           dir: locust/webui
       
       # On tag builds
@@ -341,5 +357,5 @@ jobs:
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         with:
-          cmd: npm publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
+          cmd: npm publish
           dir: locust/webui
