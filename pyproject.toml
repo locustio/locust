@@ -98,7 +98,7 @@ docs = [
     "sphinxcontrib-qthelp==1.0.3",
     "sphinxcontrib-serializinghtml==1.1.10",
     "sphinxcontrib-googleanalytics>=0.4",
-    "locust-cloud>=1.18.0",
+    "locust-cloud==1.19.6.dev14",
 ]
 
 [project.scripts]
@@ -251,26 +251,7 @@ format = ["ruff check .", "ruff format --check"]
 
 ## Hatch docs building environment
 [tool.hatch.envs.docs]
-dependencies = [
-    "sphinx==7.4.7",
-    "sphinx-rtd-theme==3.0.2",
-    "readthedocs-sphinx-search==0.3.2",
-    "Sphinx-Substitution-Extensions==2020.9.30.0",
-    "Pygments==2.19.1",
-    "alabaster==0.7.16",
-    "babel==2.13.0",
-    "docutils==0.21.2",
-    "imagesize==1.4.1",
-    "snowballstemmer==2.2.0",
-    "sphinx-prompt==1.5.0",
-    "sphinxcontrib-applehelp==1.0.4",
-    "sphinxcontrib-devhelp==1.0.2",
-    "sphinxcontrib-htmlhelp==2.0.1",
-    "sphinxcontrib-jsmath==1.0.1",
-    "sphinxcontrib-qthelp==1.0.3",
-    "sphinxcontrib-serializinghtml==1.1.10",
-    "sphinxcontrib-googleanalytics>=0.4",
-]
+features = ["docs"]
 
 [[tool.hatch.envs.docs.matrix]]
 python = ["3.12"]
