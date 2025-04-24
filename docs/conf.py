@@ -7,10 +7,13 @@
 # All configuration values have a default value; values that are commented out
 # serve to show the default value.
 
-from locust.argument_parser import get_empty_argument_parser, setup_parser_arguments
+from locust.argument_parser import get_parser
 
 import os
+import shutil
 import subprocess
+
+import locust_cloud
 
 # Add fixes for RTD deprecation
 # https://about.readthedocs.com/blog/2024/07/addons-by-default/
@@ -36,14 +39,24 @@ def save_locust_help_output():
 
 save_locust_help_output()
 
+
+def get_locust_cloud_docs():
+    locust_cloud_docs = os.path.join(locust_cloud.__path__[0], "docs/")
+    print("Copying `locust-cloud` docs/")
+    shutil.copytree(
+        locust_cloud_docs, os.path.join(os.path.abspath(os.path.dirname(__file__)), "locust-cloud/"), dirs_exist_ok=True
+    )
+
+
+get_locust_cloud_docs()
+
 # Generate RST table with help/descriptions for all available environment variables
 
 
 def save_locust_env_variables():
     env_options_output_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "config-options.rst")
     print(f"Generating RST table for Locust environment variables and storing in {env_options_output_file}")
-    parser = get_empty_argument_parser()
-    setup_parser_arguments(parser)
+    parser = get_parser()
     table_data = []
     for action in parser._actions:
         if action.env_var and action.help != "==SUPPRESS==":
@@ -108,7 +121,7 @@ autodoc_typehints = "none"  # I would have liked to use 'description' but unfort
 # templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = ".rst"
+source_suffix = {".rst": "restructuredtext"}
 
 # The master toctree document.
 master_doc = "index"

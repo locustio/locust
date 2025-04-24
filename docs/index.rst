@@ -3,6 +3,7 @@ Locust Documentation
 =====================
 
 
+
 Getting started
 ---------------
 
@@ -37,6 +38,18 @@ Running your Locust tests
     running-without-web-ui
 
 
+Locust Cloud
+------------
+
+.. toctree ::
+    :maxdepth: 3
+
+    locust-cloud/locust-cloud
+
+If you have questions or get stuck, feel free to reach out to us at `support@locust.cloud <mailto:support@locust.cloud>`_.
+
+
+
 Other functionalities
 ---------------------
 
@@ -66,11 +79,11 @@ Further reading / knowledgebase
 
 API
 ---
+
 .. toctree ::
     :maxdepth: 2
 
     api
-
 
 
 Changelog
