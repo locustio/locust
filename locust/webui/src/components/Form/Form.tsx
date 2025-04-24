@@ -43,10 +43,13 @@ export default function Form<IInputData extends BaseInputData>({
       const inputData: IInputData = [
         ...form.querySelectorAll<HTMLInputElement | HTMLSelectElement>(FORM_INPUT_ELEMENTS),
       ].reduce(
-        (inputData, inputElement) => ({
-          ...inputData,
-          [inputElement.name]: getInputValue(inputElement),
-        }),
+        (inputData, inputElement) =>
+          inputElement.name
+            ? {
+                ...inputData,
+                [inputElement.name]: getInputValue(inputElement),
+              }
+            : inputData,
         {} as IInputData,
       );
 
