@@ -260,7 +260,6 @@ jobs:
     if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
     runs-on: ubuntu-latest
     steps:
-
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -324,22 +323,40 @@ jobs:
           cmd: install
           dir: locust/webui
 
+      # Set pre-release version
+      - name: yarn version
+        uses: borales/actions-yarn@v5
+        if: github.ref == 'refs/heads/master'
+        with:
+          cmd: version ${{ needs.build_package.outputs.tag_short }}-next-${{ github.run_id }}
+          dir: locust/webui
+      
+      # Set tag build version
+      - name: yarn version
+        uses: borales/actions-yarn@v5
+        if: github.ref == 'refs/heads/master'
+        with:
+          cmd: version ${{ github.ref_name }}
+          dir: locust/webui
+
+      - name: yarn config
+        uses: borales/actions-yarn@v5
+        with:
+          cmd: config set npmAuthToken ${{ secrets.NPM_AUTH_TOKEN }}
+          dir: locust/webui
+
       # Publish UI lib
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
         if: github.ref == 'refs/heads/master'
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         with:
-          cmd: npm publish --no-git-tag-version --non-interactive --tag next --new-version ${{ needs.build_package.outputs.tag_short }}-next-${{ github.run_id }}
+          cmd: npm publish --tag next 
           dir: locust/webui
       
       # On tag builds
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
         if: startsWith(github.event.ref, 'refs/tags')
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         with:
-          cmd: npm publish --no-git-tag-version --non-interactive --new-version ${{ github.ref_name }}
+          cmd: npm publish
           dir: locust/webui
