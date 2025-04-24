@@ -124,22 +124,22 @@ jobs:
       matrix:
         include:
           # Static analysis and utilities
-          - { name: "Ruff", python: "3.12", os: ubuntu-latest, env: "lint:format" }
-          - { name: "Mypy", python: "3.12", os: ubuntu-latest, env: "lint:types" }
+          - { name: "Ruff", python: "3.12", os: ubuntu-latest, group: "lint", env: "lint:format" }
+          - { name: "Mypy", python: "3.12", os: ubuntu-latest, group: "lint", env: "lint:types" }
 
           # Verification of builds and other aspects          
-          - { name: "Docs Build", python: "3.12", os: ubuntu-latest, env: "docs:build" }
+          - { name: "Docs Build", python: "3.12", os: ubuntu-latest, group: "docs", env: "docs:build" }
 
           # OS Integration tests 
-          - { name: "Linux", python: "3.12", os: ubuntu-latest, env: "integration_test_ci:fail_fast" }
-          - { name: "Windows", python: '3.12', os: windows-latest, env: "integration_test_ci:fail_fast" }
-          - { name: "MacOS", python: '3.12', os: macos-latest, env: "integration_test_ci:fail_fast" }
+          - { name: "Linux", python: "3.12", os: ubuntu-latest, group: "test", env: "integration_test_ci:fail_fast" }
+          - { name: "Windows", python: '3.12', os: windows-latest, group: "test", env: "integration_test_ci:fail_fast" }
+          - { name: "MacOS", python: '3.12', os: macos-latest, group: "test", env: "integration_test_ci:fail_fast" }
           
           # Unit tests on Python versions
-          - { name: "Python 3.13", python: "3.13", os: ubuntu-latest, env: "test:all" }
-          - { name: "Python 3.12", python: "3.12", os: ubuntu-latest, env: "test:all" }
-          - { name: "Python 3.11", python: "3.11", os: ubuntu-latest, env: "test:all" }
-          - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, env: "test:all" }
+          - { name: "Python 3.13", python: "3.13", os: ubuntu-latest, group: "test", env: "test:all" }
+          - { name: "Python 3.12", python: "3.12", os: ubuntu-latest, group: "test", env: "test:all" }
+          - { name: "Python 3.11", python: "3.11", os: ubuntu-latest, group: "test", env: "test:all" }
+          - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, group: "test", env: "test:all" }
 
     steps:
       - uses: actions/checkout@v4
@@ -160,7 +160,7 @@ jobs:
 
       # Install what we need to run hatch envs but not the project itself
       - name: Install CI dependencies
-        run: uv sync --all-groups --no-install-package locust
+        run: uv sync --group ${{ matrix.group }} --no-install-package locust
 
       # Grab the built artifacts to ensure we're testing what we eventually publish
       - name: Download Python dist
@@ -176,7 +176,7 @@ jobs:
           path: locust/webui/dist
 
       - name: Run tests
-        run: uv run hatch run +py=${{ matrix.python }} ${{ matrix.env }}
+        run: uv run --group ${{ matrix.group }} hatch run +py=${{ matrix.python }} ${{ matrix.env }}
       
   test_docker_image:
     name: Test Docker Image

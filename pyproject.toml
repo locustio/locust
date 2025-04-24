@@ -234,11 +234,6 @@ python = ["3.12"]
 ## Linting
 [tool.hatch.envs.lint]
 detached = true
-dependencies = [
-    "ruff==0.10.0",
-    "mypy>=1.13.0,<2.0.0",
-    "types-requests>=2.32.0.20240622,<3.0.0",
-]
 
 [[tool.hatch.envs.lint.matrix]]
 python = ["3.12"]
@@ -251,7 +246,6 @@ format = ["ruff check .", "ruff format --check"]
 
 ## Hatch docs building environment
 [tool.hatch.envs.docs]
-features = ["docs"]
 
 [[tool.hatch.envs.docs.matrix]]
 python = ["3.12"]
