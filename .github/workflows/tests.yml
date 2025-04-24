@@ -334,7 +334,7 @@ jobs:
       # Set tag build version
       - name: yarn version
         uses: borales/actions-yarn@v5
-        if: github.ref == 'refs/heads/master'
+        if: startsWith(github.event.ref, 'refs/tags')
         with:
           cmd: version ${{ github.ref_name }}
           dir: locust/webui
