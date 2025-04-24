@@ -61,6 +61,15 @@ Locust Documentation
     api
 
 
+.. toctree ::
+   :caption: Locust Cloud
+   :maxdepth: 2
+   :glob:
+
+   locust-cloud/*
+
+If you have questions or get stuck, feel free to reach out to us at `support@locust.cloud <mailto:support@locust.cloud>`_.
+
 
 
 .. toctree ::
