@@ -35,8 +35,6 @@ classifiers = [
 ]
 
 dependencies = [
-    "gevent>=22.10.2,<25.0.0; python_version <= '3.12'",
-    "gevent>=24.10.1,<25.0.0; python_version > '3.13'",
     "flask>=2.0.0",
     "Werkzeug>=2.0.0",
     "requests>=2.26.0; python_version <= '3.11'",
@@ -52,7 +50,8 @@ dependencies = [
     "Flask-Cors>=3.0.10",
     "pywin32; sys_platform == 'win32'",
     "setuptools>=70.0.0",
-    "locust-cloud>=1.20.0",
+    "locust-cloud>=1.20.1",
+    "gevent>=24.10.1,<25.0.0",
 ]
 
 [project.urls]

@@ -848,7 +848,7 @@ dependencies = [
     { name = "flask" },
     { name = "flask-cors" },
     { name = "flask-login" },
-    { name = "gevent", marker = "python_full_version != '3.13.*'" },
+    { name = "gevent" },
     { name = "geventhttpclient" },
     { name = "locust-cloud" },
     { name = "msgpack" },
@@ -910,10 +910,9 @@ requires-dist = [
     { name = "flask", specifier = ">=2.0.0" },
     { name = "flask-cors", specifier = ">=3.0.10" },
     { name = "flask-login", specifier = ">=0.6.3" },
-    { name = "gevent", marker = "python_full_version < '3.13'", specifier = ">=22.10.2,<25.0.0" },
-    { name = "gevent", marker = "python_full_version >= '3.14'", specifier = ">=24.10.1,<25.0.0" },
+    { name = "gevent", specifier = ">=24.10.1,<25.0.0" },
     { name = "geventhttpclient", specifier = ">=2.3.1" },
-    { name = "locust-cloud", specifier = ">=1.20.0" },
+    { name = "locust-cloud", specifier = ">=1.20.1" },
     { name = "msgpack", specifier = ">=1.0.0" },
     { name = "psutil", specifier = ">=5.9.1" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
@@ -968,7 +967,7 @@ test = [
 
 [[package]]
 name = "locust-cloud"
-version = "1.20.0"
+version = "1.20.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "locust" },
@@ -977,7 +976,7 @@ dependencies = [
     { name = "python-socketio", extra = ["client"] },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/df/37e8deeebc7ce2dbf5abce3418b307defb2e82d0fc8c66abb4d1bec47a89/locust_cloud-1.20.0-py3-none-any.whl", hash = "sha256:f71e71fedb3fee796e91821bfeda732b8c783122133d65084b56807a1c8155ed", size = 406265 },
+    { url = "https://files.pythonhosted.org/packages/b7/c8/f284f276872f6b63f398116bc1add76d13d2354d5d6d28bfda2b56f23b85/locust_cloud-1.20.1-py3-none-any.whl", hash = "sha256:f81beb87362b7e04b62a7fcf1ea916f346354f030de5d550987eb4fd8abbe2db", size = 406266 },
 ]
 
 [[package]]
