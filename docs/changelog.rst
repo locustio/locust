@@ -4,6 +4,13 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.36.0
+======
+* Add locust-cloud as a dependency, so you can now run it using ``locust --cloud`` https://github.com/locustio/locust/pull/3097
+* Various minor UI fixes & changes to build process https://github.com/locustio/locust/pull/3104, https://github.com/locustio/locust/pull/3107, https://github.com/locustio/locust/pull/3116
+* Refactorings in main() https://github.com/locustio/locust/pull/3101, https://github.com/locustio/locust/pull/3102
+* Narrow gevent version requirements to avoid incompatible new version for now https://github.com/locustio/locust/pull/3112
+
 2.35.0
 ======
 * Add profile argument and display in html report https://github.com/locustio/locust/pull/3093

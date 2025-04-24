@@ -16,6 +16,8 @@ class MyUser(OpenAIUser):
             instructions="You are a coding assistant that speaks like it were a Monty Python skit.",
             input="How do I check if a Python object is an instance of a class?",
         )
+        # print(response.output_text)
+
         with self.client.rename_request("mini"):  # here's how to rename requests
             self.client.responses.create(
                 model="gpt-4o-mini",
