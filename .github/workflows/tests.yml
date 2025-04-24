@@ -359,3 +359,30 @@ jobs:
         with:
           cmd: npm publish
           dir: locust/webui
+
+  test_publish:
+    needs: [build_package]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download UI lib
+        uses: actions/download-artifact@v4
+        with:
+          name: webui-lib-dist
+          path: locust/webui/lib
+          
+      # Set pre-release version
+      - name: yarn version
+        uses: borales/actions-yarn@v5
+        with:
+          cmd: version 2.35.1-next-14571143884
+          dir: locust/webui
+      
+
+      # Publish UI lib
+      - uses: borales/actions-yarn@v5
+        name: Publish package on NPM
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+        with:
+          cmd: npm publish --tag next 
+          dir: locust/webui
