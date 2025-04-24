@@ -3,8 +3,11 @@ Locust Documentation
 =====================
 
 
+
+Getting started
+---------------
+
 .. toctree ::
-    :caption: Getting started
     :maxdepth: 2
 
     what-is-locust
@@ -12,15 +15,19 @@ Locust Documentation
     quickstart
 
 
+Writing Locust tests
+--------------------
+
 .. toctree ::
-    :caption: Writing Locust tests
     :maxdepth: 2
 
     writing-a-locustfile
 
 
+Running your Locust tests
+-------------------------
+
 .. toctree ::
-    :caption: Running your Locust tests
     :maxdepth: 1
 
     configuration
@@ -31,8 +38,22 @@ Locust Documentation
     running-without-web-ui
 
 
+Locust Cloud
+------------
+
 .. toctree ::
-    :caption: Other functionalities
+    :maxdepth: 3
+
+    locust-cloud/locust-cloud
+
+If you have questions or get stuck, feel free to reach out to us at `support@locust.cloud <mailto:support@locust.cloud>`_.
+
+
+
+Other functionalities
+---------------------
+
+.. toctree ::
     :maxdepth: 2
 
     custom-load-shape
@@ -45,8 +66,10 @@ Locust Documentation
     extensions
 
 
+Further reading / knowledgebase
+-------------------------------
+
 .. toctree ::
-    :caption: Further reading / knowledgebase
     :maxdepth: 1
 
     developing-locust
@@ -54,26 +77,19 @@ Locust Documentation
     faq
 
 
+API
+---
+
 .. toctree ::
-    :caption: API
     :maxdepth: 2
 
     api
 
 
-.. toctree ::
-   :caption: Locust Cloud
-   :maxdepth: 2
-   :glob:
-
-   locust-cloud/*
-
-If you have questions or get stuck, feel free to reach out to us at `support@locust.cloud <mailto:support@locust.cloud>`_.
-
-
+Changelog
+---------
 
 .. toctree ::
-    :caption: Changelog
     :maxdepth: 2
 
     changelog
