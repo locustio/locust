@@ -4,6 +4,14 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.36.2
+======
+* Remove circular dependency between locust and locust-cloud
+
+2.36.1
+======
+* No real updates, just a new build
+
 2.36.0
 ======
 * Add locust-cloud as a dependency, so you can now run it using ``locust --cloud`` https://github.com/locustio/locust/pull/3097
