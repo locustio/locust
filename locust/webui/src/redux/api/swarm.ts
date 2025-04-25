@@ -55,6 +55,19 @@ export const api = createApi({
         body: snakeCaseKeys(body),
       }),
     }),
+
+    resetStats: builder.mutation<void, void>({
+      query: () => ({
+        url: 'stats/reset',
+        method: 'GET',
+      }),
+    }),
+    stopSwarm: builder.mutation<void, void>({
+      query: () => ({
+        url: 'stop',
+        method: 'GET',
+      }),
+    }),
   }),
 });
 
@@ -65,4 +78,6 @@ export const {
   useGetLogsQuery,
   useStartSwarmMutation,
   useUpdateUserSettingsMutation,
+  useStopSwarmMutation,
+  useResetStatsMutation
 } = api;
