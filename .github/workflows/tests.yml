@@ -48,7 +48,7 @@ jobs:
         run: uv sync
   
       # any local changes would make hatch-vcs set a "local version" (+dev0...), so we ignore any uv.lock updates:
-      # - run: git update-index --assume-unchanged uv.lock
+      - run: git update-index --assume-unchanged uv.lock
   
       # Install node and yarn in order to build the front end during packaging  
       - name: Set Node.js 22.x
