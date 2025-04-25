@@ -18,6 +18,8 @@ from typing import Any, NamedTuple
 from urllib.parse import urlparse
 from uuid import uuid4
 
+from locust_cloud.args import add_locust_cloud_argparse
+
 if sys.version_info >= (3, 11):
     import tomllib
 else:
@@ -859,6 +861,7 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParse
     parser = get_empty_argument_parser(add_help=True, default_config_files=default_config_files)
     # add all the other supported arguments
     setup_parser_arguments(parser)
+    add_locust_cloud_argparse(parser)
     # fire event to provide a hook for locustscripts and plugins to add command line arguments
     locust.events.init_command_line_parser.fire(parser=parser)
     return parser
