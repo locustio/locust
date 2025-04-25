@@ -6,11 +6,11 @@ For full details of changes, please see https://github.com/locustio/locust/relea
 
 2.36.2
 ======
-* Remove circular dependency between locust and locust-cloud
+* Remove circular dependency between locust and locust-cloud https://github.com/locustio/locust/pull/3119
 
 2.36.1
 ======
-* No real updates, just a new build
+* Ensure correct version of gevent on Python 3.12
 
 2.36.0
 ======
