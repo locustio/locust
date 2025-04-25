@@ -38,8 +38,8 @@ Running your Locust tests
     running-without-web-ui
 
 
-Locust Cloud
-------------
+Running with Locust Cloud
+-------------------------
 
 .. toctree ::
     :maxdepth: 3
