@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@mui/material';
 
+import { useStopSwarmMutation } from 'redux/api/swarm';
+
 export default function StopButton() {
   const [isLoading, setIsLoading] = useState(false);
+  const [stopSwarm] = useStopSwarmMutation()
+  
 
   useEffect(() => {
     setIsLoading(false);
   }, []);
 
   const onStopButtonClick = () => {
-    fetch(
-      (window.baseUrl ? `${window.baseUrl}/` : '') + 'stop',
-      window.baseUrl ? { credentials: 'include' } : undefined,
-    );
+    stopSwarm()
     setIsLoading(true);
   };
 

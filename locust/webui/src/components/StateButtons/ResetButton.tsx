@@ -1,11 +1,12 @@
 import { Button } from '@mui/material';
 
+import { useResetStatsMutation } from 'redux/api/swarm';
+
 export default function ResetButton() {
+  const [resetStats] = useResetStatsMutation()
+
   const onResetStatsClick = () => {
-    fetch(
-      (window.baseUrl ? `${window.baseUrl}/` : '') + 'stats/reset',
-      window.baseUrl ? { credentials: 'include' } : undefined,
-    );
+    resetStats()
   };
 
   return (
