@@ -243,11 +243,12 @@ or by inputting a value in the advanced options from the web ui.
 It may be useful to see a list of existing profiles as options in the form. If you have such a list, you may set it in your locustfile:
 
 .. code-block:: python
-from locust import events
 
-@events.init.add_listener
-def on_locust_init(environment, **kwargs):
-    environment.web_ui.template_args["all_profiles"] = ["one", "two", "three"]
+    from locust import events
+
+    @events.init.add_listener
+    def on_locust_init(environment, **kwargs):
+        environment.web_ui.template_args["all_profiles"] = ["one", "two", "three"]
 
 
 Custom arguments
