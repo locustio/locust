@@ -47,7 +47,7 @@ except ModuleNotFoundError as e:
 try:
     import locust_exporter  # pyright: ignore[reportMissingImports] # noqa: F401
 
-    locust_cloud_version = f" (locust_exporter {importlib.metadata.version('locust-exporter')})"
+    locust_exporter_version = f" (locust_exporter {importlib.metadata.version('locust-exporter')})"
 except ModuleNotFoundError as e:
     locust_exporter_version = ""
     locust_exporter = None
@@ -188,7 +188,7 @@ def main():
     children = []
     logger = logging.getLogger(__name__)
 
-    logger.info(f"Starting Locust {version}{locust_cloud_version}")
+    logger.info(f"Starting Locust {version}{locust_exporter_version}")
 
     if options.processes:
         if os.name == "nt":
