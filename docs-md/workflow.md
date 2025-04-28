@@ -73,12 +73,14 @@ sequenceDiagram
 ### 2. Test Configuration
 
 In web UI mode:
+
 1. **Start Web UI**: The web UI is started on the specified port.
 2. **User Configuration**: The user configures the test parameters through the web interface (using the modern React-based UI).
 3. **Start Test**: The user clicks the "Start" button to begin the test.
 4. **User Class Selection**: If `--class-picker` was specified, users can select which User classes to include and adjust their weights.
 
 In headless mode:
+
 1. **Parse Command Line**: Test parameters are taken from command-line arguments.
 2. **Start Test**: The test starts automatically with the specified parameters.
 

@@ -19,12 +19,14 @@ flowchart LR
 ```
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/locustio/locust.git
    cd locust
    ```
 
 2. **Setup the environment using uv**:
+
    ```bash
    # Install uv if you don't already have it
    pip install uv
@@ -45,7 +47,8 @@ flowchart LR
    # uv sync --group build --group test
    ```
 
-   Alternatively, you can use Hatch directly (also used in the project):
+   Alternatively, you can use Hatch directly (also used in the project):ł
+
    ```bash
    # Install hatch if you don't have it
    pip install hatch
@@ -54,7 +57,8 @@ flowchart LR
    hatch run test:all
    ```
 
-4. **Install Web UI dependencies** (if working on UI changes):
+3. **Install Web UI dependencies** (if working on UI changes):
+
    ```bash
    cd locust/webui
    yarn install
@@ -81,6 +85,7 @@ flowchart TD
    - Create a new issue if needed, clearly describing the bug or feature
 
 2. **Create a branch**:
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -93,6 +98,7 @@ flowchart TD
    - Add/update tests as appropriate
 
 4. **Run tests**:
+
    ```bash
    pytest
    ```
@@ -199,18 +205,21 @@ flowchart TD
 When working on the Web UI:
 
 1. **Run the development server**:
+
    ```bash
    cd locust/webui
    yarn dev
    ```
 
 2. **Watch for changes while running Locust**:
+
    ```bash
    cd locust/webui
    yarn watch
    ```
-   
+
 3. **Build for production**:
+
    ```bash
    cd locust/webui
    yarn build
@@ -221,17 +230,20 @@ For more details on Web UI development, see the [Developer Guide](developer_guid
 ## Building and Running
 
 1. **Running Locust from source**:
+
    ```bash
    python -m locust -f examples/basic.py
    ```
 
 2. **Building the Web UI**:
+
    ```bash
    cd locust/webui
    yarn build
    ```
 
 3. **Creating a distribution package**:
+
    ```bash
    pip install build
    python -m build

@@ -507,7 +507,8 @@ flowchart TD
 ### Implementation Steps
 
 1. **Create a package structure**:
-   ```
+
+   ```text
    my_locust_plugin/
    ├── __init__.py
    ├── users.py
@@ -520,6 +521,7 @@ flowchart TD
    ```
 
 2. **Make your plugin discoverable**:
+
    ```python
    # __init__.py
    from locust import events
@@ -543,11 +545,13 @@ flowchart TD
    ```
 
 3. **Install your plugin**:
+
    ```bash
    pip install -e .
    ```
 
 4. **Use your plugin in a locustfile**:
+
    ```python
    from locust import HttpUser, task
    from my_locust_plugin import MyCustomUser, setup_reporting
