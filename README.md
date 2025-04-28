@@ -2,6 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/locust.svg)](https://pypi.org/project/locust/)<!--![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Flocustio%2Flocust%2Fmaster%2Fpyproject.toml)-->
 [![Downloads](https://pepy.tech/badge/locust/week)](https://pepy.tech/project/locust)
+[![Build Status](https://github.com/locustio/locust/workflows/Tests/badge.svg)](https://github.com/locustio/locust/actions?query=workflow%3ATests)
 [![GitHub contributors](https://img.shields.io/github/contributors/locustio/locust.svg)](https://github.com/locustio/locust/graphs/contributors)
 [![Support Ukraine Badge](https://bit.ly/support-ukraine-now)](https://github.com/support-ukraine/support-ukraine)
 
@@ -12,6 +13,21 @@ Locust tests can be run from command line or using its web-based UI. Throughput,
 You can import regular Python libraries into your tests, and with Locust's pluggable architecture it is infinitely expandable. Unlike when using most other tools, your test design will never be limited by a GUI or domain-specific language.
 
 To get started right away, head over to the [documentation](http://docs.locust.io/en/stable/installation.html).
+
+## Documentation
+
+Locust provides two types of documentation:
+
+1. **User Documentation** - Available at [docs.locust.io](https://docs.locust.io) and in the `docs/` directory. This is built with Sphinx and is aimed at users of Locust.
+
+2. **Developer Documentation** - Available in the `docs-md/` directory and written in Markdown format. This documentation is designed for developers who want to understand the architecture, contribute to the project, or build custom extensions. It includes:
+   - Project structure and code organization
+   - Core components and their interactions
+   - Workflow and data flow diagrams
+   - Extension points and customization guides
+   - Type hints usage and modern Web UI details
+
+To view the developer documentation, browse the [docs-md/index.md](docs-md/index.md) file in this repository.
 
 ## Features
 
@@ -84,6 +100,7 @@ Locust's code base is intentionally kept small and doesn't solve everything out 
 ## Links
 
 * Documentation: [docs.locust.io](https://docs.locust.io)
+* Developer Documentation: [docs-md/](docs-md/index.md) (Markdown documentation for developers)
 * Support/Questions: [StackOverflow](https://stackoverflow.com/questions/tagged/locust)
 * Github Discussions: [Github Discussions](https://github.com/orgs/locustio/discussions)
 * Chat/discussion: [Slack](https://locustio.slack.com) [(signup)](https://communityinviter.com/apps/locustio/locust)
