@@ -1,14 +1,14 @@
-# Modern Web UI
+# Web UI
 
-Locust features a modern web UI built with React, Material UI, and TypeScript. This document explains the features and functionality of the modern UI, which became the default interface in Locust 2.22.0.
+Locust features a web UI built with React, Material UI, and TypeScript. This document explains the features and functionality of the UI.
 
 ## Overview
 
-The modern Web UI provides a more responsive, feature-rich interface for controlling and monitoring Locust tests. It includes real-time charts, detailed statistics, and a more intuitive user experience.
+The Web UI provides a responsive, feature-rich interface for controlling and monitoring Locust tests. It includes real-time charts, detailed statistics, and an intuitive user experience.
 
 ```mermaid
 flowchart TD
-    UI[Modern Web UI] --> |Controls| Runner[Test Runner]
+    UI[Web UI] --> |Controls| Runner[Test Runner]
     UI --> |Displays| Stats[Statistics]
     Runner --> |Updates| Stats
     Runner --> |Produces| Logs
@@ -84,7 +84,7 @@ Charts include zoom functionality and tooltips for detailed data exploration.
 
 The Web UI can be protected with authentication using the `--web-login` flag. You can customize the login experience by:
 
-- Using HTTP Basic Authentication
+- Using Flask Login
 - Implementing custom form-based authentication
 - Integrating with external authentication providers
 
@@ -100,11 +100,11 @@ In distributed mode (master/worker), the Web UI runs on the master node and disp
 
 ### Headless Mode
 
-When running in headless mode, the Web UI is not available, but HTML reports can be generated that use the same visual styling as the modern UI.
+When running in headless mode, the Web UI is not available, but HTML reports can be generated that use the same visual styling as the UI.
 
 ## Browser Compatibility
 
-The modern UI is compatible with all major modern browsers:
+The Web UI is compatible with all major modern browsers:
 
 - Chrome/Edge (Chromium-based)
 - Firefox
@@ -114,18 +114,11 @@ It also provides responsive layouts for different screen sizes, from desktop mon
 
 ## FAQ
 
-**Q: Can I still use the legacy UI?**
-
-A: Yes, you can use the `--legacy-ui` flag to switch back to the old UI. However, the legacy UI is deprecated and will be removed in a future version.
-
 **Q: How do I customize the appearance of the UI?**
 
 A: The UI uses Material UI with theme support. While direct customization is not exposed as a configuration option, you can create UI extensions for custom components.
 
-**Q: Can I export data from the modern UI?**
+**Q: Can I export data from the UI?**
 
 A: Yes, you can download CSV reports of statistics and failures, as well as complete HTML reports that include charts and tables.
 
-## Conclusion
-
-The modern Web UI provides a significant improvement in usability, features, and performance compared to the legacy UI. It's designed to make running and analyzing load tests easier and more efficient.

@@ -219,8 +219,8 @@ class MyCustomUser(User):
 The FastHttpUser class provides significantly better performance than the standard HttpUser. You can extend it for custom HTTP-based testing:
 
 ```python
-from locust import FastHttpUser, task, between
-from locust.contrib.fasthttp import FastHttpSession
+from locust.contrib.fasthttp import FastHttpUser
+from locust import task, between
 
 class MyCustomFastHttpUser(FastHttpUser):
     wait_time = between(1, 3)

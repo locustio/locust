@@ -6,23 +6,35 @@ This guide provides information for developers who want to contribute to the Loc
 
 ```mermaid
 flowchart LR
-    Clone[Clone Repository] --> Setup[Setup Environment]
+    Fork[Fork Repository] --> Clone[Clone Repository]
+    Clone --> Setup[Setup Environment]
     Setup --> Install[Install Dependencies]
     Install --> Dev[Start Development]
     
     subgraph "Environment Setup Steps"
-        Clone --> GitRepo[Github Repository]
+        Fork --> GitHubRepo[Your GitHub Fork]
+        Clone --> LocalRepo[Local Repository]
         Setup --> VirtualEnv[Python Virtual Environment]
         Install --> DevDeps[Development Dependencies]
         Install --> WebUI[Web UI Dependencies]
     end
 ```
 
-1. **Clone the repository**:
+1. **Fork the repository**:
+   - Go to [https://github.com/locustio/locust](https://github.com/locustio/locust)
+   - Click the "Fork" button to create your own copy of the repository
+
+2. **Clone your fork**:
 
    ```bash
-   git clone https://github.com/locustio/locust.git
+   git clone https://github.com/YOUR_USERNAME/locust.git
    cd locust
+   ```
+
+3. **Set up the upstream remote**:
+
+   ```bash
+   git remote add upstream https://github.com/locustio/locust.git
    ```
 
 2. **Setup the environment using uv**:
@@ -120,16 +132,16 @@ flowchart TD
 Locust follows these coding standards:
 
 1. **Code Formatting**:
-   - Python code is formatted with Black
+   - Python code is formatted with Ruff
    - JavaScript/TypeScript code is formatted with Prettier
 
    ```bash
    # Format Python code
-   black locust
+   ruff format locust
    
    # Format web UI code
    cd locust/webui
-    yarn format
+   yarn format
    ```
 
 2. **Type Checking**:
@@ -142,11 +154,11 @@ Locust follows these coding standards:
 
    ```bash
    # Lint Python code
-   ruff locust
+   ruff check locust
    
    # Lint web UI code
    cd locust/webui
-    yarn lint
+   yarn lint
    ```
 
 4. **Documentation**:

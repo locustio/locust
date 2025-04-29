@@ -27,7 +27,7 @@ Locust provides two types of documentation:
    - Extension points and customization guides
    - Type hints usage and modern Web UI details
 
-To view the developer documentation, browse the [docs-md/index.md](docs-md/index.md) file in this repository.
+To view the developer documentation, browse the [docs-md/README.md](docs-md/README.md) file in this repository.
 
 ## Features
 
@@ -100,7 +100,7 @@ Locust's code base is intentionally kept small and doesn't solve everything out 
 ## Links
 
 * Documentation: [docs.locust.io](https://docs.locust.io)
-* Developer Documentation: [docs-md/](docs-md/index.md) (Markdown documentation for developers)
+* Developer Documentation: [docs-md/](docs-md/README.md) (Markdown documentation for developers)
 * Support/Questions: [StackOverflow](https://stackoverflow.com/questions/tagged/locust)
 * Github Discussions: [Github Discussions](https://github.com/orgs/locustio/discussions)
 * Chat/discussion: [Slack](https://locustio.slack.com) [(signup)](https://communityinviter.com/apps/locustio/locust)

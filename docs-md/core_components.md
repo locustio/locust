@@ -65,7 +65,7 @@ User classes define the behavior of virtual users:
 
 - **User**: Base class for all user types
 - **HttpUser**: For HTTP-based testing with Python Requests library
-- **FastHttpUser**: A faster HTTP alternative that uses geventhttpclient under the hood. Provides 5-6x better performance compared to HttpUser but with slightly different API in some edge cases.
+- **FastHttpUser**: A faster HTTP alternative (from `locust.contrib.fasthttp`) that uses geventhttpclient under the hood. Provides 5-6x better performance compared to HttpUser but with slightly different API in some edge cases.
 
 ```python
 class WebsiteUser(HttpUser):

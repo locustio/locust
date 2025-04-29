@@ -14,19 +14,28 @@ class BasicUser(HttpUser):
     
     @task
     def index_page(self):
+        # Simple GET request to the home page
         self.client.get("/")
     
     @task(3)  # This task is 3x more likely to be executed
     def view_item(self):
+        # Using a fixed name helps group requests in the statistics
         item_id = 5
         self.client.get(f"/item?id={item_id}", name="/item")
     
     @task
     def submit_form(self):
+        # POST request with JSON payload
         self.client.post("/submit", json={
             "username": "test_user",
             "password": "secret"
         })
+        
+        # You can also use the data parameter for form data:
+        # self.client.post("/submit", data={
+        #     "username": "test_user",
+        #     "password": "secret"
+        # })
 ```
 
 ## User Authentication
@@ -368,8 +377,11 @@ from locust import HttpUser, task, between, events
 
 class WebSocketClient:
     def __init__(self, host):
+        # The websocket-client library needs to be installed separately
+        # pip install websocket-client
         import websocket
         self.host = host
+        # Use wss:// for secure WebSocket connections
         self.ws = websocket.create_connection(f"ws://{self.host}/ws")
     
     def send(self, message):
@@ -391,6 +403,7 @@ class WebSocketUser(HttpUser):
         self.background_task = None
         
     def on_start(self):
+        # Create WebSocket connection when user starts
         self.ws_client = WebSocketClient(self.host)
         
         # Start a background greenlet to listen for messages
@@ -401,7 +414,8 @@ class WebSocketUser(HttpUser):
             try:
                 message = self.ws_client.receive()
                 # Log the received message as a success
-                events.request_success.fire(
+                # Use Locust's event system to record metrics
+                self.environment.events.request_success.fire(
                     request_type="websocket",
                     name="receive",
                     response_time=0,
@@ -409,7 +423,7 @@ class WebSocketUser(HttpUser):
                 )
             except Exception as e:
                 # Log any errors
-                events.request_failure.fire(
+                self.environment.events.request_failure.fire(
                     request_type="websocket",
                     name="receive",
                     response_time=0,
@@ -418,6 +432,7 @@ class WebSocketUser(HttpUser):
                 break
     
     def on_stop(self):
+        # Clean up resources when user stops
         if self.background_task:
             self.background_task.kill()
         if self.ws_client:
@@ -436,7 +451,7 @@ class ChatUser(WebSocketUser):
                 self.ws_client.send(message)
                 
                 # Log the sent message as a success
-                events.request_success.fire(
+                self.environment.events.request_success.fire(
                     request_type="websocket",
                     name="send",
                     response_time=(time.time() - start_time) * 1000,
@@ -444,7 +459,7 @@ class ChatUser(WebSocketUser):
                 )
             except Exception as e:
                 # Log any errors
-                events.request_failure.fire(
+                self.environment.events.request_failure.fire(
                     request_type="websocket",
                     name="send",
                     response_time=(time.time() - start_time) * 1000,

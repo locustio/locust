@@ -1,6 +1,6 @@
-# Locust Documentation
+# Locust Developer Documentation
 
-This comprehensive documentation provides an in-depth understanding of the Locust load testing framework, its architecture, and guides for development and usage.
+This directory contains developer-focused documentation for the Locust load testing framework. These documents are designed to help developers understand the architecture, extend functionality, and contribute to the project.
 
 ## Project Overview
 
@@ -15,6 +15,15 @@ Locust is an open-source load testing tool written in Python. It allows you to d
 - **Extensible**: Supports testing of various protocols beyond HTTP
 - **Highly scalable**: Can simulate thousands of users on a single machine
 
+## Purpose
+
+While the official user documentation (in `docs/`) covers how to use Locust, this developer documentation focuses on:
+
+1. **Architecture and internals**: How Locust works under the hood
+2. **Extension points**: How to extend Locust with custom functionality
+3. **Development workflows**: How to contribute to the project
+4. **Advanced usage patterns**: Advanced techniques for using Locust
+
 ### Key Concepts
 
 #### User Classes
@@ -26,19 +35,6 @@ from locust import HttpUser, task, between
 
 class MyUser(HttpUser):
     wait_time = between(1, 3)  # Time between tasks
-    
-    @task
-    def my_task(self):
-        self.client.get("/some-path")
-```
-
-For better performance (typically 5-6x faster), you can use `FastHttpUser`:
-
-```python
-from locust import FastHttpUser, task, between
-
-class MyFastUser(FastHttpUser):
-    wait_time = between(1, 3)
     
     @task
     def my_task(self):
@@ -104,7 +100,7 @@ graph TD
 8. **[Contributing Guide](contributing_guide.md)** - How to contribute to Locust
 9. **[Usage Patterns](usage_patterns.md)** - Common patterns and examples
 10. **[Type Hints](type_hints.md)** - Using type hints with Locust for improved development experience
-11. **[Modern Web UI](modern_web_ui.md)** - Features and functionality of the modern React-based UI
+11. **[Web UI](modern_web_ui.md)** - Features and functionality of the React-based UI
 
 ## Quick Start
 
@@ -117,7 +113,7 @@ To get started with Locust development, you should:
 5. Explore examples in the [Usage Patterns](usage_patterns.md) document
 6. Set up your development environment using the [Developer Guide](developer_guide.md)
 
-## Project Structure
+## Project Structure Highlights
 
 The main directories in the Locust project are:
 
@@ -134,126 +130,23 @@ locust/
 └── locust/test/         # Test suite
 ```
 
-## Key Files and Their Roles
-
-| File | Description |
-|------|-------------|
-| `locust/__init__.py` | Main imports and API |
-| `locust/main.py` | Entry point and CLI handling |
-| `locust/runners.py` | Test execution (local, master, worker) |
-| `locust/user/users.py` | User class implementations |
-| `locust/user/task.py` | Task system implementation |
-| `locust/stats.py` | Statistics collection and reporting |
-| `locust/web.py` | Web UI backend |
-| `locust/event.py` | Event system |
-
-## Component Relationships
-
-```mermaid
-classDiagram
-    class Environment {
-        +events
-        +runner
-        +stats
-        +web_ui
-    }
-    
-    class Runner {
-        +stats
-        +user_classes
-        +start()
-        +stop()
-    }
-    
-    class User {
-        +wait_time
-        +tasks
-        +on_start()
-        +on_stop()
-    }
-    
-    class TaskSet {
-        +tasks
-        +user
-    }
-    
-    class Stats {
-        +entries
-        +errors
-        +log_request()
-    }
-    
-    class Events {
-        +request
-        +test_start
-        +test_stop
-    }
-    
-    Environment --> Runner
-    Environment --> Stats
-    Environment --> Events
-    Runner --> User
-    User --> TaskSet
-    User ..> Stats: reports to
-    Environment --> WebUI
-```
-
-## Test Execution Flow
-
-```mermaid
-sequenceDiagram
-    participant User as User Code
-    participant CLI as Command Line Interface
-    participant Env as Environment
-    participant Runner as Runner
-    participant WebUI as Web UI
-    
-    User->>CLI: Run with locustfile
-    CLI->>Env: Create Environment
-    CLI->>Env: Load user classes
-    
-    alt Headless Mode
-        CLI->>Runner: Start test
-    else Web UI Mode
-        CLI->>WebUI: Start Web UI
-        WebUI->>Runner: Start test
-    end
-```
-
-## Extending Locust
-
-Locust is designed to be extended in several ways:
-
-1. **Custom User Classes** - For testing non-HTTP systems
-2. **Custom Load Shapes** - For specialized load patterns
-3. **Event Hooks** - For custom reporting and behavior
-4. **Web UI Extensions** - For additional metrics and visualizations
-
-See the [Custom Extensions](custom_extensions.md) document for detailed examples.
-
-## Contributing to Locust
-
-Locust welcomes contributions from the community. To contribute:
-
-1. Find or create an issue in the GitHub repository
-2. Fork the repository and create a branch
-3. Implement your feature or fix with tests
-4. Submit a pull request
-
-See the [Contributing Guide](contributing_guide.md) for detailed instructions.
-
-## Deployment Options
-
-Deploy Locust in various environments:
-
-- Local development machine
-- Docker and Docker Compose
-- Kubernetes
-- Cloud providers (AWS, Azure, GCP)
-- CI/CD pipelines
-
-For configuration and examples, see [Deployment Guide](deployment_guide.md).
+For a more detailed breakdown, see the [Project Structure](project_structure.md) document.
 
 ## For AI Tools
 
 If you're using an AI tool to help with Locust development, the [Project Structure](project_structure.md) document provides guidance on which files to prioritize when loading into the context window. It includes a file importance prioritization section that ensures the AI has the most relevant information to assist with your specific task.
+
+## Relationship to Official Documentation
+
+These Markdown documents complement the official reStructuredText documentation in the `docs/` directory:
+
+- **Official documentation**: User-focused, explains how to use Locust
+- **Developer documentation**: Developer-focused, explains how Locust works internally
+
+For user documentation, please refer to the official documentation at [docs.locust.io](https://docs.locust.io/).
+
+## Maintenance Notes
+
+These documents should be kept up-to-date with changes to the codebase. If you make significant changes to Locust's architecture or APIs, please update the corresponding documentation.
+
+When updating examples, make sure they are consistent with the current Locust API and behavior.

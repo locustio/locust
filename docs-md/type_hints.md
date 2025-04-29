@@ -35,11 +35,14 @@ class MyUser(HttpUser):
             self.process_response(response)
     
     def process_response(self, response: ResponseContextManager) -> None:
-        if response.json()["status"] == "success":
+        # Using type checking to prevent potential errors
+        response_json = response.json()
+        if "status" in response_json and response_json["status"] == "success":
             response.success()
-            self.data.append(response.json()["data"])
+            if "data" in response_json:
+                self.data.append(response_json["data"])
         else:
-            response.failure("Status was not success")
+            response.failure("Status was not success or was missing")
 ```
 
 ### Key Types in Locust

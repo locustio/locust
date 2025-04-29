@@ -18,19 +18,13 @@ flowchart TD
     Docker --> SingleContainer[Single Container]
     Docker --> Compose[Docker Compose]
     
-    Cloud --> AWS[AWS]
-    Cloud --> Azure[Azure]
-    Cloud --> GCP[GCP]
-    
-    CI --> Jenkins[Jenkins]
-    CI --> GitHubActions[GitHub Actions]
-    CI --> GitLabCI[GitLab CI]
+    Cloud --> K8s[Kubernetes]
+    Cloud --> CloudGeneric[Other Cloud Services]
     
     subgraph "Use Cases"
         SingleProcess --> |Development| Dev[Development Testing]
         Multiprocess --> |Medium Scale| MediumTest[Medium-Scale Testing]
         Distributed --> |High Scale| LoadTest[Load Testing]
-        K8s --> |Enterprise| EnterpriseLoad[Enterprise Load Testing]
         CI --> |Regression| RegTest[Regression Testing]
     end
 ```
@@ -129,387 +123,102 @@ docker-compose up --scale worker=10
 
 ## Kubernetes Deployment
 
-```mermaid
-flowchart TD
-    K8s[Kubernetes Deployment] --> Master[Master Deployment]
-    K8s --> Worker[Worker Deployment]
-    
-    Master --> MasterPod[Master Pod]
-    Master --> MasterService[Service]
-    Master --> MasterConfigMap[ConfigMap]
-    
-    Worker --> WorkerPods[Worker Pods]
-    Worker --> WorkerConfigMap[ConfigMap]
-    
-    MasterService --> |Enables Worker Discovery| WorkerPods
-    
-    subgraph "Master"
-        MasterPod --> |runs| MasterContainer[Locust Master]
-        MasterConfigMap --> |mounts| Locustfile1[Locustfile]
-    end
-    
-    subgraph "Workers"
-        WorkerPods --> |run| WorkerContainers[Locust Workers]
-        WorkerConfigMap --> |mount| Locustfile2[Locustfile]
-    end
-```
+Kubernetes is a popular platform for running Locust in distributed mode. The basic architecture consists of:
 
-### Kubernetes YAML Files
+- A master deployment (single pod) that runs the Locust master
+- A worker deployment (multiple pods) that runs Locust workers
+- A service that exposes the Locust web UI
+- A ConfigMap for storing the locustfile
 
-**Master Deployment**:
+For specific implementation details and examples, consider checking the [examples/kubernetes](https://github.com/locustio/locust/tree/master/examples/kubernetes) directory in the Locust repository or community-maintained deployments like [locust-swarm](https://github.com/SvenskaSpel/locust-swarm/).
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: locust-master
-  labels:
-    app: locust-master
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: locust-master
-  template:
-    metadata:
-      labels:
-        app: locust-master
-    spec:
-      containers:
-      - name: locust-master
-        image: locustio/locust
-        ports:
-        - containerPort: 8089
-          name: web-ui
-        - containerPort: 5557
-          name: master-port
-        command: ["locust"]
-        args:
-          - "--master"
-          - "-f"
-          - "/locust/locustfile.py"
-          - "--host=http://target-system"
-        volumeMounts:
-          - name: locust-scripts
-            mountPath: /locust
-      volumes:
-        - name: locust-scripts
-          configMap:
-            name: locust-scripts
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: locust-master
-spec:
-  ports:
-  - port: 8089
-    targetPort: web-ui
-    name: web-ui
-  - port: 5557
-    targetPort: master-port
-    name: master-port
-  selector:
-    app: locust-master
-  type: LoadBalancer
-```
-
-**Worker Deployment**:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: locust-worker
-  labels:
-    app: locust-worker
-spec:
-  replicas: 5
-  selector:
-    matchLabels:
-      app: locust-worker
-  template:
-    metadata:
-      labels:
-        app: locust-worker
-    spec:
-      containers:
-      - name: locust-worker
-        image: locustio/locust
-        command: ["locust"]
-        args:
-          - "--worker"
-          - "--master-host=locust-master"
-          - "-f"
-          - "/locust/locustfile.py"
-          - "--host=http://target-system"
-        volumeMounts:
-          - name: locust-scripts
-            mountPath: /locust
-      volumes:
-        - name: locust-scripts
-          configMap:
-            name: locust-scripts
-```
-
-**ConfigMap for Locust Files**:
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: locust-scripts
-data:
-  locustfile.py: |
-    from locust import HttpUser, task, between
-    
-    class QuickstartUser(HttpUser):
-        wait_time = between(1, 5)
-        
-        @task
-        def index_page(self):
-            self.client.get("/")
-```
-
-### Deploy to Kubernetes
-
-```bash
-# Apply the configurations
-kubectl apply -f locust-master.yaml
-kubectl apply -f locust-worker.yaml
-kubectl apply -f locust-scripts-configmap.yaml
-
-# Scale workers as needed
-kubectl scale deployment locust-worker --replicas=10
-
-# Access the web UI
-kubectl port-forward service/locust-master 8089:8089
-```
-
-## Cloud Provider Deployments
+## Cloud Deployments
 
 ```mermaid
 flowchart TD
-    Cloud[Cloud Deployments] --> AWS
-    Cloud --> Azure
-    Cloud --> GCP
+    Cloud[Cloud Deployments] --> K8s[Kubernetes]
+    Cloud --> CloudVMs[Virtual Machines]
+    Cloud --> CloudContainers[Container Services]
     
-    AWS --> AWS_EC2[EC2 Instances]
-    AWS --> AWS_ECS[Elastic Container Service]
-    AWS --> AWS_EKS[EKS Kubernetes]
+    K8s --> K8s_Master[Master Deployment]
+    K8s --> K8s_Workers[Worker Deployment]
     
-    AWS_EC2 --> |Master| EC2_Master[Single Instance]
-    AWS_EC2 --> |Workers| EC2_Workers[Auto Scaling Group]
+    CloudVMs --> VM_Master[Master VM]
+    CloudVMs --> VM_Workers[Worker VMs]
     
-    AWS_ECS --> |Master| ECS_Master[Service]
-    AWS_ECS --> |Workers| ECS_Workers[Tasks]
-    
-    Azure --> Azure_ACI[Container Instances]
-    Azure --> Azure_AKS[AKS Kubernetes]
-    Azure --> Azure_AppSvc[App Service]
-    
-    Azure_ACI --> |Shared Storage| AzureFiles[Azure Files]
-    
-    GCP --> GCP_CE[Compute Engine]
-    GCP --> GCP_GKE[GKE Kubernetes]
-    GCP --> GCP_CloudRun[Cloud Run]
-    
-    GCP_CE --> |Workers| GCP_InstanceGroups[Instance Groups]
+    CloudContainers --> Container_Master[Master Container]
+    CloudContainers --> Container_Workers[Worker Containers]
 ```
 
-### AWS Deployment
+### General Cloud Deployment Strategy
 
-Options for deploying Locust on AWS:
+When deploying Locust to cloud environments, consider the following general strategies:
 
-1. **EC2 Instances**:
-   - Launch an EC2 instance for the master
-   - Use an Auto Scaling Group for worker nodes
-   - Configure a Security Group to allow communication
+1. **Virtual Machines/Compute Instances**:
+   - Deploy a single VM for the master node
+   - Deploy multiple VMs for worker nodes
+   - Configure network security to allow communication between nodes
+   - Use automation tools like Terraform or Ansible for provisioning
 
-2. **ECS (Elastic Container Service)**:
-   - Create a Task Definition for Locust
-   - Run master as a Service
-   - Run workers using ECS Tasks
+2. **Container Services**:
+   - Use container orchestration services to manage Locust containers
+   - Deploy the master as a service with exposed ports
+   - Deploy workers as scalable containers
+   - Use shared storage or configuration for locustfiles
 
-3. **EKS (Elastic Kubernetes Service)**:
-   - Use the Kubernetes configuration above
-   - Deploy to an EKS cluster
+3. **Kubernetes**:
+   - Use the Kubernetes configuration provided in the previous section
+   - Can be deployed on any cloud provider's Kubernetes service
 
-### Azure Deployment
+### Community Tools for Cloud Deployment
 
-Options for deploying Locust on Azure:
+Several community-maintained tools can help with cloud deployments:
 
-1. **Azure Container Instances**:
-   - Deploy a Container Group for master and workers
-   - Use Azure Files to share locustfiles
+1. **[locust-swarm](https://github.com/SvenskaSpel/locust-swarm/)**: 
+   - Helps deploy Locust to AWS environments
+   - Provides automatic scaling of worker nodes
 
-2. **AKS (Azure Kubernetes Service)**:
-   - Use the Kubernetes configuration above
-   - Deploy to an AKS cluster
+2. **Terraform modules**:
+   - Check the examples directory for sample Terraform configurations
+   - These can be adapted for different cloud providers
 
-3. **Azure App Service**:
-   - Deploy Locust as a Web App
-   - Configure for master/worker mode
+### Running Long Tests
 
-### GCP Deployment
+For long-running load tests in cloud environments:
 
-Options for deploying Locust on GCP:
-
-1. **Compute Engine**:
-   - Create VMs for master and workers
-   - Use Instance Groups for worker scaling
-
-2. **GKE (Google Kubernetes Engine)**:
-   - Use the Kubernetes configuration above
-   - Deploy to a GKE cluster
-
-3. **Cloud Run**:
-   - Deploy Locust as a containerized service
-   - Use Cloud Functions for additional processing
+1. Configure proper error handling and recovery mechanisms
+2. Use persistent storage for test results
+3. Set up monitoring for both Locust and the target system
+4. Implement automated shutdown to control costs
 
 ## CI/CD Integration
 
-### GitHub Actions
+Locust can be integrated into CI/CD pipelines to run load tests as part of your development workflow. Common use cases include:
 
-Create a `.github/workflows/load-test.yml` file:
+- Performance regression testing
+- Load testing after significant changes
+- Scheduled performance assessments
+- Capacity planning tests
 
-```yaml
-name: Load Test
+### CI/CD Best Practices
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * 1'  # Weekly on Mondays
+1. **Test Isolation**:
+   - Use staging environments for load tests
+   - Consider using test data/mocks to avoid affecting production data
 
-jobs:
-  load-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-          
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install locust
-          
-      - name: Run Locust load test
-        run: |
-          locust -f locustfile.py --headless -u 100 -r 10 -t 5m --host=https://staging-api.example.com --csv=results
-          
-      - name: Upload results
-        uses: actions/upload-artifact@v2
-        with:
-          name: load-test-results
-          path: results*.csv
-```
+2. **Performance Thresholds**:
+   - Define success criteria for your load tests
+   - Fail the CI pipeline if performance thresholds are exceeded
 
-### Jenkins Pipeline
+3. **Test Result Management**:
+   - Archive test results as artifacts
+   - Generate reports for historical comparison
+   - Add trend analysis over time
 
-Create a `Jenkinsfile`:
-
-```groovy
-pipeline {
-    agent any
-    
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
-        stage('Setup') {
-            steps {
-                sh 'pip install locust'
-            }
-        }
-        
-        stage('Run Load Test') {
-            steps {
-                sh 'locust -f locustfile.py --headless -u 100 -r 10 -t 5m --host=https://staging-api.example.com --csv=results'
-            }
-        }
-        
-        stage('Archive Results') {
-            steps {
-                archiveArtifacts artifacts: 'results*.csv', fingerprint: true
-            }
-        }
-        
-        stage('Parse Results') {
-            steps {
-                script {
-                    // Parse CSV and determine if test passed thresholds
-                    def success = sh(
-                        script: 'python parse_results.py --threshold 500',
-                        returnStatus: true
-                    ) == 0
-                    
-                    if (!success) {
-                        currentBuild.result = 'UNSTABLE'
-                    }
-                }
-            }
-        }
-    }
-    
-    post {
-        always {
-            // Generate and publish HTML report
-            sh 'python generate_report.py'
-            publishHTML([
-                allowMissing: false,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: '.',
-                reportFiles: 'locust_report.html',
-                reportName: 'Locust Load Test Report'
-            ])
-        }
-    }
-}
-```
-
-### GitLab CI
-
-Create a `.gitlab-ci.yml` file:
-
-```yaml
-stages:
-  - test
-  - report
-
-load_test:
-  stage: test
-  image: python:3.9
-  before_script:
-    - pip install locust
-  script:
-    - locust -f locustfile.py --headless -u 100 -r 10 -t 5m --host=https://staging-api.example.com --csv=results
-  artifacts:
-    paths:
-      - results*.csv
-    expire_in: 1 week
-
-generate_report:
-  stage: report
-  image: python:3.9
-  before_script:
-    - pip install pandas matplotlib
-  script:
-    - python generate_report.py
-  artifacts:
-    paths:
-      - locust_report.html
-    expire_in: 1 month
-  dependencies:
-    - load_test
-```
+4. **Test Scheduling**:
+   - Run load tests at regular intervals
+   - Trigger tests after significant changes
+   - Consider running smaller tests more frequently and larger tests less often
 
 ## Performance Considerations
 

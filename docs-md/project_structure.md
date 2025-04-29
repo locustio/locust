@@ -2,6 +2,70 @@
 
 This document provides a comprehensive overview of the Locust project's directory structure, key components, and their relationships. It's designed to help both developers and AI tools understand how to navigate and modify the codebase efficiently.
 
+## Key Files and Their Roles
+
+| File | Description |
+|------|-------------|
+| `locust/__init__.py` | Main imports and API |
+| `locust/main.py` | Entry point and CLI handling |
+| `locust/runners.py` | Test execution (local, master, worker) |
+| `locust/user/users.py` | User class implementations |
+| `locust/user/task.py` | Task system implementation |
+| `locust/stats.py` | Statistics collection and reporting |
+| `locust/web.py` | Web UI backend |
+| `locust/event.py` | Event system |
+
+## Component Relationships
+
+```mermaid
+classDiagram
+    class Environment {
+        +events
+        +runner
+        +stats
+        +web_ui
+    }
+    
+    class Runner {
+        +stats
+        +user_classes
+        +start()
+        +stop()
+    }
+    
+    class User {
+        +wait_time
+        +tasks
+        +on_start()
+        +on_stop()
+    }
+    
+    class TaskSet {
+        +tasks
+        +user
+    }
+    
+    class Stats {
+        +entries
+        +errors
+        +log_request()
+    }
+    
+    class Events {
+        +request
+        +test_start
+        +test_stop
+    }
+    
+    Environment --> Runner
+    Environment --> Stats
+    Environment --> Events
+    Runner --> User
+    User --> TaskSet
+    User ..> Stats: reports to
+    Environment --> WebUI
+```
+
 ## Top-Level Directory Structure
 
 ```mermaid
