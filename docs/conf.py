@@ -118,7 +118,7 @@ extensions = [
 autodoc_typehints = "none"  # I would have liked to use 'description' but unfortunately it too is very verbose
 
 # Add any paths that contain templates here, relative to this directory.
-# templates_path = ["_templates"]
+templates_path = ["_templates"]
 
 # The suffix of source filenames.
 source_suffix = {".rst": "restructuredtext"}
@@ -128,7 +128,7 @@ master_doc = "index"
 
 # General substitutions.
 project = "Locust"
-# copyright = ''
+copyright = "2009-2025, Carl Byström, Jonatan Heyman, Lars Holmberg"
 
 # Intersphinx config
 intersphinx_mapping = {
@@ -180,8 +180,6 @@ googleanalytics_id = "G-MCG99XYF9M"
 googleanalytics_enabled = True
 
 # HTML theme
-# html_theme = "haiku"
-
 # html_theme = "default"
 # html_theme_options = {
 #    "rightsidebar": "true",
