@@ -2067,6 +2067,92 @@ class SecondUser(HttpUser):
             self.assertEqual(dict, type(result["num_reqs_per_sec"]))
             self.assertEqual(dict, type(result["num_fail_per_sec"]))
 
+    def test_json_file_missing_arg(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import HttpUser, task, constant
+
+            class QuickstartUser(HttpUser):
+                wait_time = constant(1)
+
+                @task
+                def hello_world(self):
+                    self.client.get("/")
+
+            """
+        )
+        output_filepath = "locust_output.json"
+        if os.path.exists(output_filepath):
+            os.remove(output_filepath)
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "http://google.com",
+                    "--headless",
+                    "-u",
+                    "1",
+                    "-t",
+                    "2s",
+                    "--json-file",
+                ],
+                stderr=PIPE,
+                stdout=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+
+            self.assertIn("error: argument --json-file: expected one argument", stderr)
+            self.assertFalse(os.path.exists(output_filepath))
+
+    def test_json_file(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import HttpUser, task, constant
+
+            class QuickstartUser(HttpUser):
+                wait_time = constant(1)
+
+                @task
+                def hello_world(self):
+                    self.client.get("/")
+
+            """
+        )
+        output_base = "locust_output"
+        output_filepath = f"{output_base}.json"
+        if os.path.exists(output_filepath):
+            os.remove(output_filepath)
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "http://google.com",
+                    "--headless",
+                    "-u",
+                    "1",
+                    "-t",
+                    "2s",
+                    "--json-file",
+                    output_base,
+                ],
+                stderr=PIPE,
+                stdout=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+            self.assertNotIn("error: argument --json-file: expected one argument", stderr)
+            self.assertTrue(os.path.exists(output_filepath))
+
+        if os.path.exists(output_filepath):
+            os.remove(output_filepath)
+
     @unittest.skipIf(True, reason="This test is too slow for the value it provides")
     def test_worker_indexes(self):
         content = """
