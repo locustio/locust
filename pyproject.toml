@@ -50,7 +50,7 @@ dependencies = [
     "Flask-Cors>=3.0.10",
     "pywin32; sys_platform == 'win32'",
     "setuptools>=70.0.0",
-    "locust-cloud>=1.20.5",
+    "locust-cloud>=1.21.1",
     "gevent>=24.10.1,<25.0.0",
 ]
 
