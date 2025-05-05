@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.36.3
+======
+* Bump minimum locust-cloud version + some minor fixes
+
 2.36.2
 ======
 * Remove circular dependency between locust and locust-cloud https://github.com/locustio/locust/pull/3119
