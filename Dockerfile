@@ -29,7 +29,7 @@ COPY --from=webui-builder locust/webui/dist locust/webui/dist
 
 # Build the Python project
 ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
-ADD https://astral.sh/uv/0.6.5/install.sh /uv-installer.sh
+ADD https://astral.sh/uv/0.7.2/install.sh /uv-installer.sh
 RUN sh /uv-installer.sh && rm /uv-installer.sh
 ENV PATH="/root/.local/bin/:$PATH"
 RUN uv build && \
