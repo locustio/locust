@@ -4,6 +4,16 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.37.1
+======
+* Fix --json-file https://github.com/locustio/locust/pull/3131
+
+2.37.0
+======
+* Update uv to 0.7.2
+* Add --json-file by https://github.com/locustio/locust/pull/3124
+* Minor fixes
+
 2.36.3
 ======
 * Bump minimum locust-cloud version + some minor fixes
