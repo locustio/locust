@@ -911,7 +911,7 @@ requires-dist = [
     { name = "flask-login", specifier = ">=0.6.3" },
     { name = "gevent", specifier = ">=24.10.1,<25.0.0" },
     { name = "geventhttpclient", specifier = ">=2.3.1" },
-    { name = "locust-cloud", specifier = ">=1.21.2" },
+    { name = "locust-cloud", specifier = ">=1.21.1" },
     { name = "msgpack", specifier = ">=1.0.0" },
     { name = "psutil", specifier = ">=5.9.1" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
@@ -966,7 +966,7 @@ test = [
 
 [[package]]
 name = "locust-cloud"
-version = "1.21.2"
+version = "1.21.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "configargparse" },
@@ -975,9 +975,9 @@ dependencies = [
     { name = "python-socketio", extra = ["client"] },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/22/6b/886a625ec10c429091473abfe96ccddff84e7de97dfc2abce450e2fc3ff7/locust_cloud-1.21.2.tar.gz", hash = "sha256:f780dccc41910cc406da7e67adc411eab6e02dc198eb0c0e037347632d75791a", size = 449934, upload-time = "2025-05-05T11:40:31.991Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/22/b7/7612b19f900d547f278aef8834a4dccb40c3524d12e268c4449267eea4da/locust_cloud-1.21.1.tar.gz", hash = "sha256:942101a069ddc82ec22b9085c30bd6b94816b952e957448be7253ac89c3d5ebe", size = 449929, upload-time = "2025-05-05T08:22:13.03Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4c/15/1cbca513369cd82ed14c4a40269dbefb0363316c2fdf224178cfc86961b9/locust_cloud-1.21.2-py3-none-any.whl", hash = "sha256:cd846bdf302f17318aa04748755550259c2a9b348308f8200cd58f5b401da752", size = 407171, upload-time = "2025-05-05T11:40:30.222Z" },
+    { url = "https://files.pythonhosted.org/packages/94/7c/f3de29724326866758be47b1aae6e6ef68da3247d743e510c3083620ea96/locust_cloud-1.21.1-py3-none-any.whl", hash = "sha256:1b42cfa5be3ef615da397209b5630db17d8f022bfc893d77727136882c0c8bf6", size = 407168, upload-time = "2025-05-05T08:22:11.246Z" },
 ]
 
 [[package]]

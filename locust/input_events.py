@@ -99,9 +99,8 @@ def input_listener(key_to_func_map: dict[str, Callable]):
     def input_listener_func():
         try:
             poller = get_poller()
-        except InitError:
-            # This is a bit chatty, even for debug. Uncomment it if you're having problems with keyboard events
-            # logging.debug(e)
+        except InitError as e:
+            logging.debug(e)
             return
 
         try:

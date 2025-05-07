@@ -11,12 +11,6 @@ import { camelCaseKeys, queryStringToObject, toTitleCase } from 'utils/string';
 
 const startSwarm = vi.fn();
 
-const getStartSwarmMockCall = () => {
-  const mockCalls = startSwarm.mock.calls[0];
-
-  return mockCalls && mockCalls[0];
-};
-
 const server = setupServer(
   http.post(`${TEST_BASE_API}/swarm`, async ({ request }) =>
     startSwarm(camelCaseKeys(queryStringToObject(await request.text()))),
@@ -39,7 +33,7 @@ describe('SwarmForm', () => {
     });
 
     await waitFor(async () => {
-      const submittedData = getStartSwarmMockCall();
+      const submittedData = startSwarm.mock.calls[0][0];
 
       if (submittedData) {
         expect(submittedData).toEqual({
@@ -85,7 +79,7 @@ describe('SwarmForm', () => {
     });
 
     await waitFor(async () => {
-      const submittedData = getStartSwarmMockCall();
+      const submittedData = startSwarm.mock.calls[0][0];
 
       if (submittedData) {
         expect(submittedData).toEqual({
@@ -133,7 +127,7 @@ describe('SwarmForm', () => {
     });
 
     await waitFor(async () => {
-      const submittedData = getStartSwarmMockCall();
+      const submittedData = startSwarm.mock.calls[0][0];
 
       if (submittedData) {
         expect(submittedData).toEqual({
@@ -181,7 +175,7 @@ describe('SwarmForm', () => {
     });
 
     await waitFor(() => {
-      const submittedData = getStartSwarmMockCall();
+      const submittedData = startSwarm.mock.calls[0][0];
 
       if (submittedData) {
         expect(submittedData).toEqual({
@@ -239,7 +233,7 @@ describe('SwarmForm', () => {
     });
 
     await waitFor(async () => {
-      const submittedData = getStartSwarmMockCall();
+      const submittedData = startSwarm.mock.calls[0][0];
 
       if (submittedData) {
         expect(submittedData).toEqual({
@@ -268,7 +262,7 @@ describe('SwarmForm', () => {
     });
 
     await waitFor(async () => {
-      const submittedData = getStartSwarmMockCall();
+      const submittedData = startSwarm.mock.calls[0][0];
 
       if (submittedData) {
         expect(submittedData).toEqual({

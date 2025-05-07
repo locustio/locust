@@ -820,11 +820,6 @@ def print_stats_json(stats: RequestStats) -> None:
     print(json.dumps(stats.serialize_stats(), indent=4))
 
 
-def save_stats_json(stats: RequestStats, filename: str) -> None:
-    with open(f"{filename}.json", "w") as file:
-        json.dump(stats.serialize_stats(), file, indent=4)
-
-
 def get_stats_summary(stats: RequestStats, current=True) -> list[str]:
     """
     stats summary will be returned as list of string
