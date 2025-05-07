@@ -2108,6 +2108,9 @@ class SecondUser(HttpUser):
             stdout, stderr = proc.communicate()
             self.assertNotIn("error: argument --json-file: expected one argument", stderr)
             self.assertTrue(os.path.exists(output_filepath))
+            with open(output_filepath, encoding="utf-8") as file:
+                [stats] = json.load(file)
+                self.assertEqual(stats["name"], "/")
 
         if os.path.exists(output_filepath):
             os.remove(output_filepath)
