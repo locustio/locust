@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.37.2
+======
+* Improve the performance of the `/stats/requests` endpoint when there are >500 unique request names https://github.com/locustio/locust/pull/3136
+* Webui: Block starting test in distributed mode until workers have connected https://github.com/locustio/locust/pull/3138
+
 2.37.1
 ======
 * Fix --json-file https://github.com/locustio/locust/pull/3131
