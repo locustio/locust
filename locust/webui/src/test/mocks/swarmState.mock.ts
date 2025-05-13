@@ -16,6 +16,8 @@ export const swarmStateMock = {
   locustfile: 'main.py',
   numUsers: null,
   overrideHostWarning: false,
+  missingHostWarning: false,
+  isHostRequired: false,
   percentile1: 0.95,
   percentile2: 0.99,
   percentilesToStatistics: percentilesToStatistics,
