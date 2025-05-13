@@ -1,6 +1,21 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.37.2](https://github.com/locustio/locust/tree/2.37.2) (2025-05-13)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.1...2.37.2)
+
+**Fixed bugs:**
+
+- p95 response time increases with the number of unique URLs [\#3134](https://github.com/locustio/locust/issues/3134)
+- FastResponse.failure\(\) takes 1 positional argument but 2 were given [\#3084](https://github.com/locustio/locust/issues/3084)
+
+**Merged pull requests:**
+
+- Webui: Block Submitting SwarmForm in Distributed Mode with no Workers [\#3138](https://github.com/locustio/locust/pull/3138) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Fixes \#3134 - Improve the performance of the `/stats/requests` endpoint [\#3136](https://github.com/locustio/locust/pull/3136) ([orf](https://github.com/orf))
+- Bump vite from 6.3.2 to 6.3.4 in /locust/webui [\#3132](https://github.com/locustio/locust/pull/3132) ([dependabot[bot]](https://github.com/apps/dependabot))
+
 ## [2.37.1](https://github.com/locustio/locust/tree/2.37.1) (2025-05-07)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.37.0...2.37.1)
@@ -12,6 +27,10 @@ The most important changes can also be found in [the documentation](https://docs
 **Closed issues:**
 
 - Forced Dependency Updates \(e.g., python-socketio\) May Cause Version Mismatch with Java Services [\#3129](https://github.com/locustio/locust/issues/3129)
+
+**Merged pull requests:**
+
+- Fix --json-file \(actually save data to file\) [\#3131](https://github.com/locustio/locust/pull/3131) ([zed](https://github.com/zed))
 
 ## [2.37.0](https://github.com/locustio/locust/tree/2.37.0) (2025-05-05)
 
