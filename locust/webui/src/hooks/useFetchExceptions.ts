@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { SWARM_STATE, useInterval } from 'lib';
 
+import { SWARM_STATE } from 'constants/swarm';
+import useInterval from 'hooks/useInterval';
 import { useGetExceptionsQuery } from 'redux/api/swarm';
 import { useAction, useSelector } from 'redux/hooks';
 import { uiActions } from 'redux/slice/ui.slice';

@@ -6,6 +6,7 @@ import {
   ISwarmExceptionsResponse,
   ISwarmRatios,
   ILogsResponse,
+  IWorkerCountResponse,
 } from 'types/ui.types';
 import { createFormData } from 'utils/object';
 import { camelCaseKeys, snakeCaseKeys } from 'utils/string';
@@ -38,6 +39,10 @@ export const api = createApi({
     getLogs: builder.query<ILogsResponse, void>({
       query: () => 'logs',
       transformResponse: camelCaseKeys<ILogsResponse>,
+    }),
+    getWorkerCount: builder.query<IWorkerCountResponse, void>({
+      query: () => 'worker-count',
+      transformResponse: camelCaseKeys<IWorkerCountResponse>,
     }),
 
     startSwarm: builder.mutation<IStartSwarmResponse, ISwarmFormInput>({
@@ -76,8 +81,9 @@ export const {
   useGetTasksQuery,
   useGetExceptionsQuery,
   useGetLogsQuery,
+  useGetWorkerCountQuery,
   useStartSwarmMutation,
   useUpdateUserSettingsMutation,
   useStopSwarmMutation,
-  useResetStatsMutation
+  useResetStatsMutation,
 } = api;

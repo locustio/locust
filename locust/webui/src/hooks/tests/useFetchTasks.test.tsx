@@ -1,9 +1,9 @@
 import { waitFor } from '@testing-library/react';
-import { SWARM_STATE } from 'lib';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { beforeAll, afterEach, afterAll, describe, expect, test } from 'vitest';
 
+import { SWARM_STATE } from 'constants/swarm';
 import useFetchTasks from 'hooks/useFetchTasks';
 import { TEST_BASE_API } from 'test/constants';
 import { ratiosResponseMock, tasksResponseTransformed } from 'test/mocks/statsRequest.mock';

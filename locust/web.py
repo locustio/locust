@@ -494,6 +494,7 @@ class WebUI:
                     )
 
                 report["workers"] = workers
+                report["worker_count"] = environment.runner.worker_count
 
             report["state"] = environment.runner.state
             report["user_count"] = environment.runner.user_count
@@ -563,6 +564,7 @@ class WebUI:
             )
 
         @app_blueprint.route("/user", methods=["POST"])
+        @self.auth_required_if_enabled
         def update_user():
             assert request.method == "POST"
 
@@ -570,6 +572,15 @@ class WebUI:
             self.environment.update_user_class(user_settings)
 
             return {}, 201
+
+        @app_blueprint.route("/worker-count")
+        @self.auth_required_if_enabled
+        def get_worker_count():
+            return {
+                "worker_count": self.environment.runner.worker_count
+                if isinstance(self.environment.runner, MasterRunner)
+                else 0
+            }
 
         app.register_blueprint(app_blueprint)
 
