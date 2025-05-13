@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Accordion,
@@ -24,6 +24,7 @@ import CustomParameters from 'components/SwarmForm/SwarmCustomParameters';
 import SwarmUserClassPicker from 'components/SwarmForm/SwarmUserClassPicker';
 import { SWARM_STATE } from 'constants/swarm';
 import { useStartSwarmMutation } from 'redux/api/swarm';
+import { useSelector } from 'redux/hooks';
 import { swarmActions } from 'redux/slice/swarm.slice';
 import { IRootState } from 'redux/store';
 import { ICustomInput } from 'types/form.types';
@@ -71,6 +72,30 @@ interface ISwarmForm
     >,
     ISwarmFormProps {}
 
+interface ICanSubmitForm extends ISwarmState {
+  isDisabled?: boolean;
+}
+
+const canSubmitSwarmForm = ({
+  isDisabled,
+  isDistributed,
+  workerCount,
+}: ICanSubmitForm): { isFormDisabled?: boolean; reason?: string } => {
+  if (isDisabled) {
+    return { isFormDisabled: true };
+  }
+
+  if (isDistributed && !workerCount) {
+    return {
+      isFormDisabled: true,
+      reason:
+        "You can't start a distributed test before at least one worker processes has connected",
+    };
+  }
+
+  return {};
+};
+
 function SwarmForm({
   allProfiles,
   availableShapeClasses,
@@ -97,6 +122,12 @@ function SwarmForm({
   const [startSwarm] = useStartSwarmMutation();
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedUserClasses, setSelectedUserClasses] = useState(availableUserClasses);
+  const swarm = useSelector(({ swarm }) => swarm);
+
+  const { reason: formDisabledReason, isFormDisabled } = useMemo(
+    () => canSubmitSwarmForm({ isDisabled, ...swarm }),
+    [isDisabled, swarm],
+  );
 
   const onStartSwarm = async (inputData: ISwarmFormInput) => {
     const { data } = await startSwarm({
@@ -249,8 +280,10 @@ function SwarmForm({
           {alert && !errorMessage && (
             <Alert severity={alert.level || 'info'}>{alert.message}</Alert>
           )}
-          {errorMessage && <Alert severity={'error'}>{errorMessage}</Alert>}
-          <Button disabled={isDisabled} size='large' type='submit' variant='contained'>
+          {(errorMessage || formDisabledReason) && (
+            <Alert severity={'error'}>{errorMessage || formDisabledReason}</Alert>
+          )}
+          <Button disabled={isFormDisabled} size='large' type='submit' variant='contained'>
             {isEditSwarm ? 'Update' : 'Start'}
           </Button>
         </Box>
