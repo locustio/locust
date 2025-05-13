@@ -21,6 +21,7 @@ export { default as useLogViewer } from 'components/LogViewer/useLogViewer';
 export { default as useFetchExceptions } from 'hooks/useFetchExceptions';
 export { default as useFetchTasks } from 'hooks/useFetchTasks';
 export { default as useFetchStats } from 'hooks/useFetchStats';
+export { default as useFetchWorkerCount } from 'hooks/useFetchWorkerCount';
 export { default as Navbar } from 'components/Layout/Navbar/Navbar';
 export { default as DarkLightToggle } from 'components/Layout/Navbar/DarkLightToggle';
 export { default as SwarmMonitor } from 'components/Layout/Navbar/SwarmMonitor';

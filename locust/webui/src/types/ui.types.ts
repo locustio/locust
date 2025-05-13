@@ -92,6 +92,7 @@ export interface IStatsResponse {
   stats: ISwarmStat[];
   errors: ISwarmError[];
   workers: ISwarmWorker[];
+  workerCount: number;
   totalRps: number;
   totalFailPerSec: number;
   totalAvgResponseTime: number;
@@ -107,4 +108,8 @@ export interface ILogsResponse {
   workers: {
     [key: string]: string[];
   };
+}
+
+export interface IWorkerCountResponse {
+  workerCount: number;
 }
