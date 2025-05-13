@@ -15,7 +15,6 @@ maintainers = [
     { name = "Jonatan Heyman" },
     { name = "Andrew Baldwin" },
 ]
-
 classifiers = [
     "Topic :: Software Development :: Testing :: Traffic Generation",
     "Development Status :: 5 - Production/Stable",
@@ -33,7 +32,6 @@ classifiers = [
     "Topic :: Software Development :: Testing :: Traffic Generation",
     "Topic :: System :: Distributed Computing",
 ]
-
 dependencies = [
     "flask>=2.0.0",
     "Werkzeug>=2.0.0",
@@ -50,7 +48,7 @@ dependencies = [
     "Flask-Cors>=3.0.10",
     "pywin32; sys_platform == 'win32'",
     "setuptools>=70.0.0",
-    "locust-cloud>=1.21.2",
+    "locust-cloud>=1.21.5",
     "gevent>=24.10.1,<25.0.0",
 ]
 
