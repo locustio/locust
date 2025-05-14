@@ -1,6 +1,14 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.37.3](https://github.com/locustio/locust/tree/2.37.3) (2025-05-14)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.2...2.37.3)
+
+**Merged pull requests:**
+
+- Webui: Warn on Missing Host [\#3140](https://github.com/locustio/locust/pull/3140) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.37.2](https://github.com/locustio/locust/tree/2.37.2) (2025-05-13)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.37.1...2.37.2)
