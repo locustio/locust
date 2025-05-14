@@ -63,6 +63,8 @@ interface ISwarmForm
       | 'shapeUseCommonOptions'
       | 'host'
       | 'overrideHostWarning'
+      | 'missingHostWarning'
+      | 'isHostRequired'
       | 'profile'
       | 'runTime'
       | 'showUserclassPicker'
@@ -107,6 +109,7 @@ function SwarmForm({
   numUsers,
   userCount,
   overrideHostWarning,
+  missingHostWarning,
   profile,
   runTime,
   setSwarm,
@@ -115,6 +118,7 @@ function SwarmForm({
   alert,
   isDisabled = false,
   isEditSwarm = false,
+  isHostRequired,
   onFormChange,
   onFormSubmit,
   advancedOptions,
@@ -230,6 +234,7 @@ function SwarmForm({
                     : ''
                 }`}
                 name='host'
+                required={isHostRequired}
               />
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -283,6 +288,12 @@ function SwarmForm({
           {(errorMessage || formDisabledReason) && (
             <Alert severity={'error'}>{errorMessage || formDisabledReason}</Alert>
           )}
+          {!isHostRequired && missingHostWarning && (
+            <Alert severity='warning'>
+              No host could not be detected on one or more user classes. Please ensure one is
+              provided before running your test.
+            </Alert>
+          )}
           <Button disabled={isFormDisabled} size='large' type='submit' variant='contained'>
             {isEditSwarm ? 'Update' : 'Start'}
           </Button>
@@ -305,6 +316,8 @@ const storeConnector = (
       numUsers,
       userCount,
       overrideHostWarning,
+      missingHostWarning,
+      isHostRequired,
       profile,
       runTime,
       spawnRate,
@@ -321,6 +334,8 @@ const storeConnector = (
   shapeUseCommonOptions,
   host,
   overrideHostWarning,
+  missingHostWarning,
+  isHostRequired,
   profile,
   showUserclassPicker,
   numUsers,

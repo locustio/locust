@@ -33,10 +33,12 @@ from gevent import pywsgi
 
 from . import __version__ as version
 from . import argument_parser, stats
+from .contrib import fasthttp
 from .html import DEFAULT_BUILD_PATH, get_html_report, render_template_from
 from .log import get_logs, greenlet_exception_logger
 from .runners import STATE_MISSING, STATE_RUNNING, MasterRunner
 from .user.inspectuser import get_ratio
+from .user.users import HttpUser
 from .util.cache import memoize
 from .util.date import format_safe_timestamp
 from .util.timespan import parse_timespan
@@ -49,6 +51,7 @@ logger = logging.getLogger(__name__)
 greenlet_exception_handler = greenlet_exception_logger(logger)
 
 DEFAULT_CACHE_TIME = 2.0
+HOST_IS_REQUIRED = False
 
 
 class InputField(TypedDict, total=False):
@@ -652,6 +655,7 @@ class WebUI:
 
     def update_template_args(self):
         override_host_warning = False
+        missing_host_warning = False
         if self.environment.host:
             host = self.environment.host
         elif self.environment.runner.user_classes:
@@ -663,8 +667,15 @@ class WebUI:
                 # inform that specifying host will override the host for all User classes
                 override_host_warning = True
                 host = None
+                all_http_user_hosts = [
+                    user_class.host
+                    for user_class in self.environment.runner.user_classes
+                    if issubclass(user_class, HttpUser) or issubclass(user_class, fasthttp.FastHttpUser)
+                ]
+                missing_host_warning = not all(all_http_user_hosts)
         else:
             host = None
+            missing_host_warning = True
 
         options = self.environment.parsed_options
 
@@ -707,6 +718,7 @@ class WebUI:
             "host": host if host else "",
             "history": request_stats.history if request_stats.num_requests > 0 else [],
             "override_host_warning": override_host_warning,
+            "missing_host_warning": missing_host_warning,
             "num_users": options and options.num_users,
             "spawn_rate": options and options.spawn_rate,
             "worker_count": worker_count,
@@ -727,6 +739,7 @@ class WebUI:
             "users": users,
             "percentiles_to_chart": stats.PERCENTILES_TO_CHART,
             "percentiles_to_statistics": stats.PERCENTILES_TO_STATISTICS,
+            "is_host_required": HOST_IS_REQUIRED,
             "profile": self.environment.profile,
         }
 

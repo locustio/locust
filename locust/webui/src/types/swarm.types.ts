@@ -52,6 +52,8 @@ export interface ISwarmState {
   locustfile: string;
   numUsers: number | null;
   overrideHostWarning: boolean;
+  missingHostWarning: boolean;
+  isHostRequired: boolean;
   percentilesToChart: number[];
   percentilesToStatistics: number[];
   runTime?: string | number;
