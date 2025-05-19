@@ -551,6 +551,12 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/92/ce/6cc6e30b66c147128d7662cf4909fe038b81792d2617a748dfe4ee0ae98a/geventhttpclient-2.3.3-pp310-pypy310_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:447fc2d49a41449684154c12c03ab80176a413e9810d974363a061b71bdbf5a0", size = 58540, upload-time = "2024-11-24T11:42:19.324Z" },
     { url = "https://files.pythonhosted.org/packages/7e/f4/5214ea44055c82d92adaaaddb19d2791addd3ce60af863aec03384e7c88a/geventhttpclient-2.3.3-pp310-pypy310_pp73-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4598c2aa14c866a10a07a2944e2c212f53d0c337ce211336ad68ae8243646216", size = 54445, upload-time = "2024-11-24T11:42:20.749Z" },
     { url = "https://files.pythonhosted.org/packages/06/1d/f65b4ac42cce6cef707ace606bbdc1142aa0f3863ad16fa615004b9461d7/geventhttpclient-2.3.3-pp310-pypy310_pp73-win_amd64.whl", hash = "sha256:69d2bd7ab7f94a6c73325f4b88fd07b0d5f4865672ed7a519f2d896949353761", size = 48838, upload-time = "2024-11-24T11:42:21.903Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/35/fd3d2f22aac238c314e4db0317634288f4c9f01b3aa0c6f36e2584b7ad2c/geventhttpclient-2.3.3-pp311-pypy311_pp73-macosx_10_15_x86_64.whl", hash = "sha256:45a3f7e3531dd2650f5bb840ed11ce77d0eeb45d0f4c9cd6985eb805e17490e6", size = 51477, upload-time = "2025-05-15T15:09:33.849Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/4c/f64bb9cda9474c8e70a59a7aebe928e7044aaa660b81492bc783b53ea6e7/geventhttpclient-2.3.3-pp311-pypy311_pp73-macosx_11_0_arm64.whl", hash = "sha256:73b427e0ea8c2750ee05980196893287bfc9f2a155a282c0f248b472ea7ae3e7", size = 50731, upload-time = "2025-05-15T15:09:35.787Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/88/0a3e18cb7d73fe4110e6b75aa43361722a309276dc7cb6461594ea4f490b/geventhttpclient-2.3.3-pp311-pypy311_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c2959ef84271e4fa646c3dbaad9e6f2912bf54dcdfefa5999c2ef7c927d92127", size = 55171, upload-time = "2025-05-15T15:09:37.173Z" },
+    { url = "https://files.pythonhosted.org/packages/2b/26/057600ba3ef9e2ca5fe9527dec4d29695cf986185b862b2947f3cc8d97b7/geventhttpclient-2.3.3-pp311-pypy311_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:0a800fcb8e53a8f4a7c02b4b403d2325a16cad63a877e57bd603aa50bf0e475b", size = 59515, upload-time = "2025-05-15T15:09:38.604Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/e5/8e2fe8f3e976f11859e325b2151a7eea49677e8898229215fa8c788fe539/geventhttpclient-2.3.3-pp311-pypy311_pp73-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:528321e9aab686435ba09cc6ff90f12e577ace79762f74831ec2265eeab624a8", size = 55416, upload-time = "2025-05-15T15:09:39.553Z" },
+    { url = "https://files.pythonhosted.org/packages/2f/68/ddfe93ab3142b16f84c31996ed01b76a32fe7e2df37104b456c1d68e3de9/geventhttpclient-2.3.3-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:034be44ff3318359e3c678cb5c4ed13efd69aeb558f2981a32bd3e3fb5355700", size = 49659, upload-time = "2025-05-15T15:09:40.993Z" },
 ]
 
 [[package]]
@@ -914,7 +920,7 @@ requires-dist = [
     { name = "flask-login", specifier = ">=0.6.3" },
     { name = "gevent", specifier = ">=24.10.1,<25.0.0" },
     { name = "geventhttpclient", specifier = ">=2.3.1" },
-    { name = "locust-cloud", specifier = ">=1.21.5" },
+    { name = "locust-cloud", specifier = ">=1.21.7" },
     { name = "msgpack", specifier = ">=1.0.0" },
     { name = "psutil", specifier = ">=5.9.1" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
@@ -969,7 +975,7 @@ test = [
 
 [[package]]
 name = "locust-cloud"
-version = "1.21.5"
+version = "1.21.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "configargparse" },
@@ -978,9 +984,9 @@ dependencies = [
     { name = "python-socketio", extra = ["client"] },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/30/65/e3dfd66ede886b5f84f7767e97539aab65946a29d4dfba41039df9933989/locust_cloud-1.21.5.tar.gz", hash = "sha256:f5347c0ab7c22c151fbb9a93001c107ed3f2662584af0af9f159563df1866464", size = 450093, upload-time = "2025-05-13T10:36:32.767Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/11/d1/29e785fbe2ac6b1eda03b39709e5c898d82bd10495d181c95c0f038cb0ae/locust_cloud-1.21.7.tar.gz", hash = "sha256:a919e93e514ae48a3dd4791945188b9df6369122afc3d7d21447aafb8daa3f87", size = 450230, upload-time = "2025-05-15T14:09:51.283Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7a/41/b03da33414a21dcfb0dca5fc290afa642682a67d6af7f59b12bd2deb8b27/locust_cloud-1.21.5-py3-none-any.whl", hash = "sha256:9761738610c700aa64e87ef73dd81bd4b869e2ab5c2a7ae51a43be709b645776", size = 407350, upload-time = "2025-05-13T10:36:30.606Z" },
+    { url = "https://files.pythonhosted.org/packages/33/8d/98853ef23e96bb9372226492b40d28a1df650a064122c84e586ab267fa12/locust_cloud-1.21.7-py3-none-any.whl", hash = "sha256:93e93212a0726b8b7481ddbf82c64f5b1c7c2eb8f3c12de95834fe6ef445eb5e", size = 407883, upload-time = "2025-05-15T14:09:49.861Z" },
 ]
 
 [[package]]
