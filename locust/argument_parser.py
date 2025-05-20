@@ -330,19 +330,21 @@ def raise_argument_type_error(err_msg):
 # Definitions for some "types" to use with the arguments
 
 
+def timespan(time_str) -> int:
+    try:
+        return parse_timespan(time_str)
+    except ValueError as e:
+        raise configargparse.ArgumentTypeError(str(e))
+
+
+# A locustfile "type" to be used in argparse that returns a list of local files.
+# It supports urls, directories and files
 def locustfile(files):
     if files == "-":
         return files
 
     locustfile_list = [f.strip() for f in files.split(",")]
     return parse_locustfile_paths(locustfile_list)
-
-
-def timespan(time_str) -> int:
-    try:
-        return parse_timespan(time_str)
-    except ValueError as e:
-        raise configargparse.ArgumentTypeError(str(e))
 
 
 def positive_integer(string) -> int:
