@@ -10,7 +10,7 @@ import textwrap
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .testcases import LocustTestCase
-from .util import temporary_file
+from .util import get_locustfiles_from_args, temporary_file
 
 
 class TestLoadLocustfile(LocustTestCase):
@@ -209,16 +209,16 @@ class TestLoadLocustfile(LocustTestCase):
             self.assertEqual("my_locust_file.py", options.locustfile)
 
     def test_locustfile_from_url(self):
-        options = parse_options(
+        locustfiles = get_locustfiles_from_args(
             args=[
                 "-f",
                 "https://raw.githubusercontent.com/locustio/locust/master/examples/basic.py",
             ]
         )
-        self.assertEqual(len(options.locustfile), 1)
+        self.assertEqual(len(locustfiles), 1)
         self.assertTrue(
             filecmp.cmp(
-                options.locustfile[0],
+                locustfiles[0],
                 f"{os.getcwd()}/examples/basic.py",
             )
         )

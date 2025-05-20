@@ -4,6 +4,7 @@ import locust
 from locust import runners
 from locust.rpc import Message, zmqrpc
 
+import argparse
 import ast
 import atexit
 import json
@@ -227,7 +228,6 @@ See documentation for more details, including how to set options using a file or
         default="locustfile.py",
         help="The Python file or module that contains your test, e.g. 'my_test.py'. Accepts multiple comma-separated .py files, a package name/directory or a url to a remote locustfile. Defaults to 'locustfile'.",
         env_var="LOCUST_LOCUSTFILE",
-        type=locustfile,
     )
 
     parser.add_argument(
@@ -284,6 +284,69 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
     return msg.data.get("locustfiles", [])
 
 
+def parse_locustfile_option(args=None) -> tuple[argparse.Namespace, list[str]]:
+    """
+    Construct a command line parser that is only used to parse the -f argument so that we can
+    import the test scripts in case any of them adds additional command line arguments to the
+    parser
+
+    Returns:
+        parsed_paths (List): List of locustfile paths
+    """
+    parser = get_empty_argument_parser(add_help=False)
+    parser.add_argument(
+        "-h",
+        "--help",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
+        "--version",
+        "-V",
+        action="store_true",
+        default=False,
+    )
+    # the following arguments are only used for downloading the locustfile from master
+    parser.add_argument(
+        "--worker",
+        action="store_true",
+        env_var="LOCUST_MODE_WORKER",
+    )
+    parser.add_argument(
+        "--master",  # this is just here to prevent argparse from giving the dreaded "ambiguous option: --master could match --master-host, --master-port"
+        action="store_true",
+        env_var="LOCUST_MODE_MASTER",
+    )
+    parser.add_argument(
+        "--master-host",
+        default="127.0.0.1",
+        env_var="LOCUST_MASTER_NODE_HOST",
+    )
+    parser.add_argument(
+        "--master-port",
+        type=int,
+        default=5557,
+        env_var="LOCUST_MASTER_NODE_PORT",
+    )
+
+    options, unknown = parser.parse_known_args(args=args)
+
+    if options.help or options.version:
+        # if --help or --version is specified we'll call parse_options which will print the help/version message
+        parse_options(args=args)
+
+    return (options, unknown)
+
+
+def get_locustfiles_locally(options):
+    if options.locustfile == "-":
+        locustfile_list = retrieve_locustfiles_from_master(options)
+    else:
+        locustfile_list = [f.strip() for f in options.locustfile.split(",")]
+
+    return parse_locustfile_paths(locustfile_list)
+
+
 def parse_locustfiles_from_master(locustfile_sources) -> list[str]:
     locustfiles = []
 
@@ -310,9 +373,7 @@ def retrieve_locustfiles_from_master(options) -> list[str]:
         sys.exit(1)
     # having this in argument_parser module is a bit weird, but it needs to be done early
     locustfile_sources = download_locustfile_from_master(options.master_host, options.master_port)
-    locustfile_list = parse_locustfiles_from_master(locustfile_sources)
-
-    return parse_locustfile_paths(locustfile_list)
+    return parse_locustfiles_from_master(locustfile_sources)
 
 
 # A hack for setting up an action that raises ArgumentError with configurable error messages.
@@ -335,16 +396,6 @@ def timespan(time_str) -> int:
         return parse_timespan(time_str)
     except ValueError as e:
         raise configargparse.ArgumentTypeError(str(e))
-
-
-# A locustfile "type" to be used in argparse that returns a list of local files.
-# It supports urls, directories and files
-def locustfile(files):
-    if files == "-":
-        return files
-
-    locustfile_list = [f.strip() for f in files.split(",")]
-    return parse_locustfile_paths(locustfile_list)
 
 
 def positive_integer(string) -> int:
