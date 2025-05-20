@@ -158,7 +158,8 @@ def merge_locustfiles_content(
 
 
 def main():
-    # parse all command line options
+    # find specified locustfile(s) and make sure it exists, using a very simplified
+    # command line parser that is only used to parse the -f option.
     options, unknown = parse_locustfile_option()
 
     if any([flag for flag in ["--login", "--logout", "--delete"] if flag in unknown]):
@@ -174,6 +175,7 @@ def main():
         shape_class,
     ) = merge_locustfiles_content(locustfiles)
 
+    # parse all command line options
     options = parse_options()
 
     if getattr(options, "cloud", None):
