@@ -227,6 +227,7 @@ See documentation for more details, including how to set options using a file or
         default="locustfile.py",
         help="The Python file or module that contains your test, e.g. 'my_test.py'. Accepts multiple comma-separated .py files, a package name/directory or a url to a remote locustfile. Defaults to 'locustfile'.",
         env_var="LOCUST_LOCUSTFILE",
+        type=locustfile,
     )
 
     parser.add_argument(
@@ -301,83 +302,17 @@ def parse_locustfiles_from_master(locustfile_sources) -> list[str]:
     return locustfiles
 
 
-def parse_locustfile_option(args=None) -> list[str]:
-    """
-    Construct a command line parser that is only used to parse the -f argument so that we can
-    import the test scripts in case any of them adds additional command line arguments to the
-    parser
-
-    Returns:
-        parsed_paths (List): List of locustfile paths
-    """
-    parser = get_empty_argument_parser(add_help=False)
-    parser.add_argument(
-        "-h",
-        "--help",
-        action="store_true",
-        default=False,
-    )
-    parser.add_argument(
-        "--version",
-        "-V",
-        action="store_true",
-        default=False,
-    )
-    # the following arguments are only used for downloading the locustfile from master
-    parser.add_argument(
-        "--worker",
-        action="store_true",
-        env_var="LOCUST_MODE_WORKER",
-    )
-    parser.add_argument(
-        "--master",  # this is just here to prevent argparse from giving the dreaded "ambiguous option: --master could match --master-host, --master-port"
-        action="store_true",
-        env_var="LOCUST_MODE_MASTER",
-    )
-    parser.add_argument(
-        "--master-host",
-        default="127.0.0.1",
-        env_var="LOCUST_MASTER_NODE_HOST",
-    )
-    parser.add_argument(
-        "--master-port",
-        type=int,
-        default=5557,
-        env_var="LOCUST_MASTER_NODE_PORT",
-    )
-
-    options, _ = parser.parse_known_args(args=args)
-
-    if options.help or options.version:
-        # if --help or --version is specified we'll call parse_options which will print the help/version message
-        parse_options(args=args)
-
-    if options.locustfile == "-":
-        if not options.worker:
-            sys.stderr.write(
-                "locustfile was set to '-' (meaning to download from master) but --worker was not specified.\n"
-            )
-            sys.exit(1)
-        # having this in argument_parser module is a bit weird, but it needs to be done early
-        locustfile_sources = download_locustfile_from_master(options.master_host, options.master_port)
-        locustfile_list = parse_locustfiles_from_master(locustfile_sources)
-    else:
-        locustfile_list = [f.strip() for f in options.locustfile.split(",")]
-
-    parsed_paths = parse_locustfile_paths(locustfile_list)
-
-    if not parsed_paths:
-        note_about_file_endings = ""
-        user_friendly_locustfile_name = options.locustfile
-
-        if not options.locustfile.endswith(".py"):
-            note_about_file_endings = "Ensure your locustfile ends with '.py' or is a directory with parsed_paths. "
+def retrieve_locustfiles_from_master(options) -> list[str]:
+    if not options.worker:
         sys.stderr.write(
-            f"Could not find '{user_friendly_locustfile_name}'. {note_about_file_endings}See --help for available options.\n"
+            "locustfile was set to '-' (meaning to download from master) but --worker was not specified.\n"
         )
         sys.exit(1)
+    # having this in argument_parser module is a bit weird, but it needs to be done early
+    locustfile_sources = download_locustfile_from_master(options.master_host, options.master_port)
+    locustfile_list = parse_locustfiles_from_master(locustfile_sources)
 
-    return parsed_paths
+    return parse_locustfile_paths(locustfile_list)
 
 
 # A hack for setting up an action that raises ArgumentError with configurable error messages.
@@ -393,6 +328,14 @@ def raise_argument_type_error(err_msg):
 
 
 # Definitions for some "types" to use with the arguments
+
+
+def locustfile(files):
+    if files == "-":
+        return files
+
+    locustfile_list = [f.strip() for f in files.split(",")]
+    return parse_locustfile_paths(locustfile_list)
 
 
 def timespan(time_str) -> int:

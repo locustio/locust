@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 import gevent
 
 from . import log, stats
-from .argument_parser import parse_locustfile_option, parse_options
+from .argument_parser import parse_options, retrieve_locustfiles_from_master
 from .env import Environment
 from .html import get_html_report, process_html_filename
 from .input_events import input_listener
@@ -154,9 +154,16 @@ def merge_locustfiles_content(
 
 
 def main():
-    # find specified locustfile(s) and make sure it exists, using a very simplified
-    # command line parser that is only used to parse the -f option.
-    locustfiles = parse_locustfile_option()
+    # parse all command line options
+    options = parse_options()
+
+    if getattr(options, "cloud", None):
+        sys.exit(locust_cloud.main())
+
+    if options.locustfile == "-":
+        locustfiles = retrieve_locustfiles_from_master(options)
+    else:
+        locustfiles = options.locustfile
 
     # Importing Locustfile(s) - setting available UserClasses and ShapeClasses to choose from in UI
     (
@@ -167,12 +174,6 @@ def main():
     ) = merge_locustfiles_content(locustfiles)
 
     stats.validate_stats_configuration()
-
-    # parse all command line options
-    options = parse_options()
-
-    if getattr(options, "cloud", None):
-        sys.exit(locust_cloud.main())
 
     if options.headful:
         options.headless = False
