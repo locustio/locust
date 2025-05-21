@@ -4,6 +4,7 @@ import locust
 from locust import runners
 from locust.rpc import Message, zmqrpc
 
+import argparse
 import ast
 import atexit
 import json
@@ -283,25 +284,7 @@ def download_locustfile_from_master(master_host: str, master_port: int) -> str:
     return msg.data.get("locustfiles", [])
 
 
-def parse_locustfiles_from_master(locustfile_sources) -> list[str]:
-    locustfiles = []
-
-    for source in locustfile_sources:
-        if "contents" in source:
-            filename = source["filename"]
-            file_contents = source["contents"]
-
-            with open(os.path.join(tempfile.gettempdir(), filename), "w", encoding="utf-8") as locustfile:
-                locustfile.write(file_contents)
-
-            locustfiles.append(locustfile.name)
-        else:
-            locustfiles.append(source)
-
-    return locustfiles
-
-
-def parse_locustfile_option(args=None) -> list[str]:
+def parse_locustfile_option(args=None) -> tuple[argparse.Namespace, list[str]]:
     """
     Construct a command line parser that is only used to parse the -f argument so that we can
     import the test scripts in case any of them adds additional command line arguments to the
@@ -346,38 +329,51 @@ def parse_locustfile_option(args=None) -> list[str]:
         env_var="LOCUST_MASTER_NODE_PORT",
     )
 
-    options, _ = parser.parse_known_args(args=args)
+    options, unknown = parser.parse_known_args(args=args)
 
     if options.help or options.version:
         # if --help or --version is specified we'll call parse_options which will print the help/version message
         parse_options(args=args)
 
+    return (options, unknown)
+
+
+def get_locustfiles_locally(options):
     if options.locustfile == "-":
-        if not options.worker:
-            sys.stderr.write(
-                "locustfile was set to '-' (meaning to download from master) but --worker was not specified.\n"
-            )
-            sys.exit(1)
-        # having this in argument_parser module is a bit weird, but it needs to be done early
-        locustfile_sources = download_locustfile_from_master(options.master_host, options.master_port)
-        locustfile_list = parse_locustfiles_from_master(locustfile_sources)
+        locustfile_list = retrieve_locustfiles_from_master(options)
     else:
         locustfile_list = [f.strip() for f in options.locustfile.split(",")]
 
-    parsed_paths = parse_locustfile_paths(locustfile_list)
+    return parse_locustfile_paths(locustfile_list)
 
-    if not parsed_paths:
-        note_about_file_endings = ""
-        user_friendly_locustfile_name = options.locustfile
 
-        if not options.locustfile.endswith(".py"):
-            note_about_file_endings = "Ensure your locustfile ends with '.py' or is a directory with parsed_paths. "
+def parse_locustfiles_from_master(locustfile_sources) -> list[str]:
+    locustfiles = []
+
+    for source in locustfile_sources:
+        if "contents" in source:
+            filename = source["filename"]
+            file_contents = source["contents"]
+
+            with open(os.path.join(tempfile.gettempdir(), filename), "w", encoding="utf-8") as locustfile:
+                locustfile.write(file_contents)
+
+            locustfiles.append(locustfile.name)
+        else:
+            locustfiles.append(source)
+
+    return locustfiles
+
+
+def retrieve_locustfiles_from_master(options) -> list[str]:
+    if not options.worker:
         sys.stderr.write(
-            f"Could not find '{user_friendly_locustfile_name}'. {note_about_file_endings}See --help for available options.\n"
+            "locustfile was set to '-' (meaning to download from master) but --worker was not specified.\n"
         )
         sys.exit(1)
-
-    return parsed_paths
+    # having this in argument_parser module is a bit weird, but it needs to be done early
+    locustfile_sources = download_locustfile_from_master(options.master_host, options.master_port)
+    return parse_locustfiles_from_master(locustfile_sources)
 
 
 # A hack for setting up an action that raises ArgumentError with configurable error messages.
