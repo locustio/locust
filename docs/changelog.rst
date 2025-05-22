@@ -4,6 +4,14 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.37.5
+======
+* Locust Cloud: Stop requiring a locustfile when doing --login or --delete https://github.com/locustio/locust/pull/3141
+
+2.37.4
+======
+* Bump minimum version of locust-cloud
+
 2.37.3
 ======
 * Webui: Warn on Missing Host https://github.com/locustio/locust/pull/3140
