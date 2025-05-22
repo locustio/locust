@@ -1,6 +1,22 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.37.5](https://github.com/locustio/locust/tree/2.37.5) (2025-05-22)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.4...2.37.5)
+
+**Fixed bugs:**
+
+- Web UI Does Not Switch to Details Page Immediately on Test Start in Current Version [\#3128](https://github.com/locustio/locust/issues/3128)
+
+**Merged pull requests:**
+
+- Do not require locustfile on specific locust-cloud arguments [\#3141](https://github.com/locustio/locust/pull/3141) ([amadeuppereira](https://github.com/amadeuppereira))
+
+## [2.37.4](https://github.com/locustio/locust/tree/2.37.4) (2025-05-19)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.3...2.37.4)
+
 ## [2.37.3](https://github.com/locustio/locust/tree/2.37.3) (2025-05-14)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.37.2...2.37.3)
