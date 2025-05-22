@@ -920,7 +920,7 @@ requires-dist = [
     { name = "flask-login", specifier = ">=0.6.3" },
     { name = "gevent", specifier = ">=24.10.1,<25.0.0" },
     { name = "geventhttpclient", specifier = ">=2.3.1" },
-    { name = "locust-cloud", specifier = ">=1.21.7" },
+    { name = "locust-cloud", specifier = ">=1.21.8" },
     { name = "msgpack", specifier = ">=1.0.0" },
     { name = "psutil", specifier = ">=5.9.1" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
@@ -975,7 +975,7 @@ test = [
 
 [[package]]
 name = "locust-cloud"
-version = "1.21.7"
+version = "1.21.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "configargparse" },
@@ -984,9 +984,9 @@ dependencies = [
     { name = "python-socketio", extra = ["client"] },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/11/d1/29e785fbe2ac6b1eda03b39709e5c898d82bd10495d181c95c0f038cb0ae/locust_cloud-1.21.7.tar.gz", hash = "sha256:a919e93e514ae48a3dd4791945188b9df6369122afc3d7d21447aafb8daa3f87", size = 450230, upload-time = "2025-05-15T14:09:51.283Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/09/d4/64a169b4831d26ab9dceacb192ea30c749501d87b4958e628cf1f7ef45c4/locust_cloud-1.21.8.tar.gz", hash = "sha256:e8bde0da013c8731a45cc834cdf9fec2fc21738a5f2807d93c2c5eeb3008a80e", size = 450414, upload-time = "2025-05-22T08:30:27.458Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/33/8d/98853ef23e96bb9372226492b40d28a1df650a064122c84e586ab267fa12/locust_cloud-1.21.7-py3-none-any.whl", hash = "sha256:93e93212a0726b8b7481ddbf82c64f5b1c7c2eb8f3c12de95834fe6ef445eb5e", size = 407883, upload-time = "2025-05-15T14:09:49.861Z" },
+    { url = "https://files.pythonhosted.org/packages/06/76/aa8b2f73bdf7de5ee344e5d0c4749e8d62ff38257b41d9df37b0b7ac84e2/locust_cloud-1.21.8-py3-none-any.whl", hash = "sha256:4f06b5d8a26ba91840a768008f4870965b13cc71481de9797409556de2edc007", size = 407879, upload-time = "2025-05-22T08:30:25.512Z" },
 ]
 
 [[package]]
