@@ -65,7 +65,7 @@ def save_locust_env_variables():
                     ", ".join([f"``{c}``" for c in action.option_strings]),
                     f"``{action.env_var}``",
                     ", ".join([f"``{c}``" for c in parser.get_possible_config_keys(action) if not c.startswith("--")]),
-                    action.help,
+                    action.help.replace("\n", " "),
                 )
             )
     colsizes = [max(len(r[i]) for r in table_data) for i in range(len(table_data[0]))]
