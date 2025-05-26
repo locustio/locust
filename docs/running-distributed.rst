@@ -50,6 +50,9 @@ And then on each worker machine:
 Multiple machines, using locust-swarm
 =====================================
 
+.. note::
+    locust-swarm is no longer actively maintained. Check out the hosted :ref:`Locust Cloud <locust-cloud>` instead!
+
 When you make changes to the locustfile you'll need to restart all Locust processes. `locust-swarm <https://github.com/SvenskaSpel/locust-swarm>`_ automates this for you. It also solves the issue of firewall/network access from workers to master using SSH tunnels (this is often a problem if the master is running on your workstation and workers are running in some datacenter).
 
 .. code-block:: bash
@@ -58,7 +61,6 @@ When you make changes to the locustfile you'll need to restart all Locust proces
 
     swarm -f my_locustfile.py --loadgen-list worker-server1,worker-server2 <any other regular locust parameters>
 
-See `locust-swarm <https://github.com/SvenskaSpel/locust-swarm>`_ for more details.
 
 Options for distributed load generation
 =======================================
