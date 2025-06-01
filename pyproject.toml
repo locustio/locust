@@ -49,7 +49,7 @@ dependencies = [
     "pywin32; sys_platform == 'win32'",
     "setuptools>=70.0.0",
     "locust-cloud>=1.21.9",
-    "gevent>=24.10.1,<25.0.0",
+    "gevent>=24.10.1,<26.0.0",
 ]
 
 [project.urls]

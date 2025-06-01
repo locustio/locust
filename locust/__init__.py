@@ -13,6 +13,9 @@ if os.getenv("LOCUST_PLAYWRIGHT", None):
 if not os.getenv("LOCUST_SKIP_MONKEY_PATCH", None):
     from gevent import monkey, queue
 
+    # Workaround for https://github.com/miguelgrinberg/python-engineio/issues/403
+    os.environ["GEVENT_MONKEY_DISABLE_QUEUE_QUEUE"] = "true"
+
     monkey.patch_all()
 
     if not os.getenv("LOCUST_SKIP_URLLIB3_PATCH", None):
