@@ -23,6 +23,7 @@ import Select from 'components/Form/Select';
 import CustomParameters from 'components/SwarmForm/SwarmCustomParameters';
 import SwarmUserClassPicker from 'components/SwarmForm/SwarmUserClassPicker';
 import { SWARM_STATE } from 'constants/swarm';
+import useForm from 'hooks/useForm';
 import { useStartSwarmMutation } from 'redux/api/swarm';
 import { useSelector } from 'redux/hooks';
 import { swarmActions } from 'redux/slice/swarm.slice';
@@ -30,6 +31,8 @@ import { IRootState } from 'redux/store';
 import { ICustomInput } from 'types/form.types';
 import { ISwarmFormInput, ISwarmState } from 'types/swarm.types';
 import { isEmpty } from 'utils/object';
+
+const URL_VALIDATION_REGEX = /^(?:[a-zA-Z][a-zA-Z\d+\-.]*):\/\/[^\s/$.?#].[^\s]*$/;
 
 interface IDispatchProps {
   setSwarm: (swarmPayload: Partial<ISwarmState>) => void;
@@ -127,6 +130,20 @@ function SwarmForm({
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedUserClasses, setSelectedUserClasses] = useState(availableUserClasses);
   const swarm = useSelector(({ swarm }) => swarm);
+  const { register } = useForm();
+  const hostFieldProps = isHostRequired
+    ? register(
+        'host',
+        {
+          match: {
+            pattern: URL_VALIDATION_REGEX,
+            message: 'Please use a valid url format e.g. https://google.com',
+          },
+          level: 'warning',
+        },
+        'onBlur',
+      )
+    : {};
 
   const { reason: formDisabledReason, isFormDisabled } = useMemo(
     () => canSubmitSwarmForm({ isDisabled, ...swarm }),
@@ -233,8 +250,8 @@ function SwarmForm({
                     ? '(setting this will override the host for the User classes)'
                     : ''
                 }`}
-                name='host'
                 required={isHostRequired}
+                {...hostFieldProps}
               />
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
