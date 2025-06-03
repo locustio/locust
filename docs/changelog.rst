@@ -4,9 +4,14 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.37.7
+======
+* Web Ui: Add host field validation https://github.com/locustio/locust/pull/3149
+
 2.37.6
 ======
 * Doc updates, including a fix for config options https://github.com/locustio/locust/pull/3145
+* Bumped minimum ConfigArgParse dependency to 1.7.1
 
 2.37.5
 ======
