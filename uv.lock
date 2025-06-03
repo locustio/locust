@@ -920,7 +920,7 @@ requires-dist = [
     { name = "flask-login", specifier = ">=0.6.3" },
     { name = "gevent", specifier = ">=24.10.1,<25.0.0" },
     { name = "geventhttpclient", specifier = ">=2.3.1" },
-    { name = "locust-cloud", specifier = ">=1.21.9" },
+    { name = "locust-cloud", specifier = ">=1.23.0" },
     { name = "msgpack", specifier = ">=1.0.0" },
     { name = "psutil", specifier = ">=5.9.1" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
@@ -975,7 +975,7 @@ test = [
 
 [[package]]
 name = "locust-cloud"
-version = "1.21.9"
+version = "1.23.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "configargparse" },
@@ -984,9 +984,9 @@ dependencies = [
     { name = "python-socketio", extra = ["client"] },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/54/71/4f3dec44c419f7e5706e117fae7dda7c17d440d873c5e68aeb5843b7c9a9/locust_cloud-1.21.9.tar.gz", hash = "sha256:f3c81447cadfb533d1e2bbdbf95fac97316233cbbde779df56a7b447d77bd8ea", size = 450609, upload-time = "2025-05-28T13:31:32.755Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/69/cb/db2d9dd27317d22d98f7a4a0eebbe4dc6ff24e44c0ae509118370e605c3b/locust_cloud-1.23.0.tar.gz", hash = "sha256:4038a09eda858b483ced20f5cb82caf3f866244c2c7864e0da5c32722b97f532", size = 450778, upload-time = "2025-06-03T08:12:01.169Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/d6/88f69bae4ad908ebd381463a0530cd2586dd4efbea58711f069165983f51/locust_cloud-1.21.9-py3-none-any.whl", hash = "sha256:a81351ee6dd8071c3eb28bfafb1325273462dff037e8105896559ae3db4092c1", size = 408075, upload-time = "2025-05-28T13:31:31.297Z" },
+    { url = "https://files.pythonhosted.org/packages/a9/d8/0f633e39ed3f3237430c6bcb9d18402dea6bef7eaa60a484cd1d4d939e81/locust_cloud-1.23.0-py3-none-any.whl", hash = "sha256:936cc4feb0b0dd89e113f6318a1205f318ed49a9df4e0feca8d40f2d9b353d30", size = 408308, upload-time = "2025-06-03T08:11:58.228Z" },
 ]
 
 [[package]]
