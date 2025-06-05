@@ -4,6 +4,14 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.37.9
+======
+* Web UI: Fix host field name missing if host is not required https://github.com/locustio/locust/pull/3152
+
+2.37.8
+======
+* Allow 25.x versions of gevent https://github.com/locustio/locust/pull/3151
+
 2.37.7
 ======
 * Web Ui: Add host field validation https://github.com/locustio/locust/pull/3149
