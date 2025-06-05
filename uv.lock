@@ -918,9 +918,9 @@ requires-dist = [
     { name = "flask", specifier = ">=2.0.0" },
     { name = "flask-cors", specifier = ">=3.0.10" },
     { name = "flask-login", specifier = ">=0.6.3" },
-    { name = "gevent", specifier = ">=24.10.1,<25.0.0" },
+    { name = "gevent", specifier = ">=24.10.1,<26.0.0" },
     { name = "geventhttpclient", specifier = ">=2.3.1" },
-    { name = "locust-cloud", specifier = ">=1.23.0" },
+    { name = "locust-cloud", specifier = ">=1.23.1" },
     { name = "msgpack", specifier = ">=1.0.0" },
     { name = "psutil", specifier = ">=5.9.1" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
@@ -975,18 +975,19 @@ test = [
 
 [[package]]
 name = "locust-cloud"
-version = "1.23.0"
+version = "1.23.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "configargparse" },
     { name = "gevent" },
     { name = "platformdirs" },
+    { name = "python-engineio" },
     { name = "python-socketio", extra = ["client"] },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/69/cb/db2d9dd27317d22d98f7a4a0eebbe4dc6ff24e44c0ae509118370e605c3b/locust_cloud-1.23.0.tar.gz", hash = "sha256:4038a09eda858b483ced20f5cb82caf3f866244c2c7864e0da5c32722b97f532", size = 450778, upload-time = "2025-06-03T08:12:01.169Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bd/7c/d9cbbd051490aeedfbd6ddda8ad48f77dd848ee490f6ebd166d20db5911e/locust_cloud-1.23.1.tar.gz", hash = "sha256:a09161752b8c9a9205e97cef5223ee3ad967bc2d91c52d61952aaa3da6802a55", size = 450937, upload-time = "2025-06-05T06:07:53.773Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a9/d8/0f633e39ed3f3237430c6bcb9d18402dea6bef7eaa60a484cd1d4d939e81/locust_cloud-1.23.0-py3-none-any.whl", hash = "sha256:936cc4feb0b0dd89e113f6318a1205f318ed49a9df4e0feca8d40f2d9b353d30", size = 408308, upload-time = "2025-06-03T08:11:58.228Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/01/5af43edee540e38ba0ee0a2e3beb72c50073e0f646bb543a8b34650315e3/locust_cloud-1.23.1-py3-none-any.whl", hash = "sha256:11677895c6ed6d0beef1b425a6f04f10ea2cfcaeaefbf00a97fb3c9134296e54", size = 408323, upload-time = "2025-06-05T06:07:51.947Z" },
 ]
 
 [[package]]
@@ -1463,14 +1464,14 @@ wheels = [
 
 [[package]]
 name = "python-engineio"
-version = "4.12.1"
+version = "4.12.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "simple-websocket" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3c/9d/8492fbde3d4cb0e052de8a91a09754f222b5093f0342ef2dac92d60c751f/python_engineio-4.12.1.tar.gz", hash = "sha256:9f2b5a645c416208a9c727254316d487252493de52bee0ff70dc29ca9210397e", size = 91549, upload-time = "2025-05-11T15:35:23.048Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ba/0b/67295279b66835f9fa7a491650efcd78b20321c127036eef62c11a31e028/python_engineio-4.12.2.tar.gz", hash = "sha256:e7e712ffe1be1f6a05ee5f951e72d434854a32fcfc7f6e4d9d3cae24ec70defa", size = 91677, upload-time = "2025-06-04T19:22:18.789Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cf/f7/044532c6af7fe3135f572298f74d3e86fbb8d1803412f538403f175b16c6/python_engineio-4.12.1-py3-none-any.whl", hash = "sha256:9ec20d7900def0886fb9621f86fd1f05140d407f8d4e6a51bef0cfba2d112ff7", size = 59325, upload-time = "2025-05-11T15:35:20.337Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/fa/df59acedf7bbb937f69174d00f921a7b93aa5a5f5c17d05296c814fff6fc/python_engineio-4.12.2-py3-none-any.whl", hash = "sha256:8218ab66950e179dfec4b4bbb30aecf3f5d86f5e58e6fc1aa7fde2c698b2804f", size = 59536, upload-time = "2025-06-04T19:22:16.916Z" },
 ]
 
 [[package]]
