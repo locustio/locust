@@ -250,6 +250,7 @@ function SwarmForm({
                     ? '(setting this will override the host for the User classes)'
                     : ''
                 }`}
+                name='host'
                 required={isHostRequired}
                 {...hostFieldProps}
               />
