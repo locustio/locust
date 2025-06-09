@@ -131,19 +131,6 @@ function SwarmForm({
   const [selectedUserClasses, setSelectedUserClasses] = useState(availableUserClasses);
   const swarm = useSelector(({ swarm }) => swarm);
   const { register } = useForm();
-  const hostFieldProps = isHostRequired
-    ? register(
-        'host',
-        {
-          match: {
-            pattern: URL_VALIDATION_REGEX,
-            message: 'Please use a valid url format e.g. https://google.com',
-          },
-          level: 'warning',
-        },
-        'onBlur',
-      )
-    : {};
 
   const { reason: formDisabledReason, isFormDisabled } = useMemo(
     () => canSubmitSwarmForm({ isDisabled, ...swarm }),
@@ -244,6 +231,17 @@ function SwarmForm({
           {!isEditSwarm && (
             <>
               <TextField
+                {...register(
+                  'host',
+                  {
+                    match: {
+                      pattern: URL_VALIDATION_REGEX,
+                      message: 'Please use a valid url format e.g. https://google.com',
+                    },
+                    level: 'warning',
+                  },
+                  'onBlur',
+                )}
                 defaultValue={host}
                 label={`Host ${
                   overrideHostWarning
@@ -252,7 +250,6 @@ function SwarmForm({
                 }`}
                 name='host'
                 required={isHostRequired}
-                {...hostFieldProps}
               />
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
