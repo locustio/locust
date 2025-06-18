@@ -179,7 +179,7 @@ def main():
     options = parse_options()
 
     if getattr(options, "cloud", None):
-        sys.exit(locust_cloud.main())
+        sys.exit(locust_cloud.main(locustfiles=locustfiles))
 
     stats.validate_stats_configuration()
 
