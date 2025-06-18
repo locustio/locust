@@ -1,5 +1,5 @@
 from locust import main
-from locust.argument_parser import parse_locustfile_option, parse_options
+from locust.argument_parser import parse_options
 from locust.main import create_environment
 from locust.user import HttpUser, TaskSet, User
 from locust.util.load_locustfile import is_user_class
@@ -10,7 +10,7 @@ import textwrap
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .testcases import LocustTestCase
-from .util import temporary_file
+from .util import get_locustfiles_from_args, temporary_file
 
 
 class TestLoadLocustfile(LocustTestCase):
@@ -209,7 +209,7 @@ class TestLoadLocustfile(LocustTestCase):
             self.assertEqual("my_locust_file.py", options.locustfile)
 
     def test_locustfile_from_url(self):
-        locustfiles = parse_locustfile_option(
+        locustfiles = get_locustfiles_from_args(
             args=[
                 "-f",
                 "https://raw.githubusercontent.com/locustio/locust/master/examples/basic.py",

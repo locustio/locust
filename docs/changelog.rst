@@ -4,6 +4,58 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.37.10
+=======
+* Revert accidental removal of --json-file option https://github.com/locustio/locust/pull/3154
+
+2.37.9
+======
+* Web UI: Fix host field name missing if host is not required https://github.com/locustio/locust/pull/3152
+
+2.37.8
+======
+* Allow 25.x versions of gevent https://github.com/locustio/locust/pull/3151
+
+2.37.7
+======
+* Web Ui: Add host field validation https://github.com/locustio/locust/pull/3149
+
+2.37.6
+======
+* Doc updates, including a fix for config options https://github.com/locustio/locust/pull/3145
+* Bumped minimum ConfigArgParse dependency to 1.7.1
+
+2.37.5
+======
+* Locust Cloud: Stop requiring a locustfile when doing --login or --delete https://github.com/locustio/locust/pull/3141
+
+2.37.4
+======
+* Bump minimum version of locust-cloud
+
+2.37.3
+======
+* Webui: Warn on Missing Host https://github.com/locustio/locust/pull/3140
+
+2.37.2
+======
+* Improve the performance of the `/stats/requests` endpoint when there are >500 unique request names https://github.com/locustio/locust/pull/3136
+* Webui: Block starting test in distributed mode until workers have connected https://github.com/locustio/locust/pull/3138
+
+2.37.1
+======
+* Fix --json-file https://github.com/locustio/locust/pull/3131
+
+2.37.0
+======
+* Update uv to 0.7.2
+* Add --json-file by https://github.com/locustio/locust/pull/3124
+* Minor fixes
+
+2.36.3
+======
+* Bump minimum locust-cloud version + some minor fixes
+
 2.36.2
 ======
 * Remove circular dependency between locust and locust-cloud https://github.com/locustio/locust/pull/3119

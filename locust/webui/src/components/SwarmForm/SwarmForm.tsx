@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Accordion,
@@ -23,12 +23,16 @@ import Select from 'components/Form/Select';
 import CustomParameters from 'components/SwarmForm/SwarmCustomParameters';
 import SwarmUserClassPicker from 'components/SwarmForm/SwarmUserClassPicker';
 import { SWARM_STATE } from 'constants/swarm';
+import useForm from 'hooks/useForm';
 import { useStartSwarmMutation } from 'redux/api/swarm';
+import { useSelector } from 'redux/hooks';
 import { swarmActions } from 'redux/slice/swarm.slice';
 import { IRootState } from 'redux/store';
 import { ICustomInput } from 'types/form.types';
 import { ISwarmFormInput, ISwarmState } from 'types/swarm.types';
 import { isEmpty } from 'utils/object';
+
+const URL_VALIDATION_REGEX = /^(?:[a-zA-Z][a-zA-Z\d+\-.]*):\/\/[^\s/$.?#].[^\s]*$/;
 
 interface IDispatchProps {
   setSwarm: (swarmPayload: Partial<ISwarmState>) => void;
@@ -62,6 +66,8 @@ interface ISwarmForm
       | 'shapeUseCommonOptions'
       | 'host'
       | 'overrideHostWarning'
+      | 'missingHostWarning'
+      | 'isHostRequired'
       | 'profile'
       | 'runTime'
       | 'showUserclassPicker'
@@ -70,6 +76,30 @@ interface ISwarmForm
       | 'userCount'
     >,
     ISwarmFormProps {}
+
+interface ICanSubmitForm extends ISwarmState {
+  isDisabled?: boolean;
+}
+
+const canSubmitSwarmForm = ({
+  isDisabled,
+  isDistributed,
+  workerCount,
+}: ICanSubmitForm): { isFormDisabled?: boolean; reason?: string } => {
+  if (isDisabled) {
+    return { isFormDisabled: true };
+  }
+
+  if (isDistributed && !workerCount) {
+    return {
+      isFormDisabled: true,
+      reason:
+        "You can't start a distributed test before at least one worker processes has connected",
+    };
+  }
+
+  return {};
+};
 
 function SwarmForm({
   allProfiles,
@@ -82,6 +112,7 @@ function SwarmForm({
   numUsers,
   userCount,
   overrideHostWarning,
+  missingHostWarning,
   profile,
   runTime,
   setSwarm,
@@ -90,6 +121,7 @@ function SwarmForm({
   alert,
   isDisabled = false,
   isEditSwarm = false,
+  isHostRequired,
   onFormChange,
   onFormSubmit,
   advancedOptions,
@@ -97,6 +129,13 @@ function SwarmForm({
   const [startSwarm] = useStartSwarmMutation();
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedUserClasses, setSelectedUserClasses] = useState(availableUserClasses);
+  const swarm = useSelector(({ swarm }) => swarm);
+  const { register } = useForm();
+
+  const { reason: formDisabledReason, isFormDisabled } = useMemo(
+    () => canSubmitSwarmForm({ isDisabled, ...swarm }),
+    [isDisabled, swarm],
+  );
 
   const onStartSwarm = async (inputData: ISwarmFormInput) => {
     const { data } = await startSwarm({
@@ -192,6 +231,17 @@ function SwarmForm({
           {!isEditSwarm && (
             <>
               <TextField
+                {...register(
+                  'host',
+                  {
+                    match: {
+                      pattern: URL_VALIDATION_REGEX,
+                      message: 'Please use a valid url format e.g. https://google.com',
+                    },
+                    level: 'warning',
+                  },
+                  'onBlur',
+                )}
                 defaultValue={host}
                 label={`Host ${
                   overrideHostWarning
@@ -199,6 +249,7 @@ function SwarmForm({
                     : ''
                 }`}
                 name='host'
+                required={isHostRequired}
               />
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -249,8 +300,16 @@ function SwarmForm({
           {alert && !errorMessage && (
             <Alert severity={alert.level || 'info'}>{alert.message}</Alert>
           )}
-          {errorMessage && <Alert severity={'error'}>{errorMessage}</Alert>}
-          <Button disabled={isDisabled} size='large' type='submit' variant='contained'>
+          {(errorMessage || formDisabledReason) && (
+            <Alert severity={'error'}>{errorMessage || formDisabledReason}</Alert>
+          )}
+          {!isHostRequired && missingHostWarning && (
+            <Alert severity='warning'>
+              No host could not be detected on one or more user classes. Please ensure one is
+              provided before running your test.
+            </Alert>
+          )}
+          <Button disabled={isFormDisabled} size='large' type='submit' variant='contained'>
             {isEditSwarm ? 'Update' : 'Start'}
           </Button>
         </Box>
@@ -272,6 +331,8 @@ const storeConnector = (
       numUsers,
       userCount,
       overrideHostWarning,
+      missingHostWarning,
+      isHostRequired,
       profile,
       runTime,
       spawnRate,
@@ -288,6 +349,8 @@ const storeConnector = (
   shapeUseCommonOptions,
   host,
   overrideHostWarning,
+  missingHostWarning,
+  isHostRequired,
   profile,
   showUserclassPicker,
   numUsers,

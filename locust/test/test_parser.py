@@ -1,7 +1,6 @@
 import locust
 from locust.argument_parser import (
     get_parser,
-    parse_locustfile_option,
     parse_locustfile_paths,
     parse_options,
     ui_extra_args_dict,
@@ -15,6 +14,7 @@ from unittest import mock
 
 from .mock_locustfile import mock_locustfile
 from .testcases import LocustTestCase
+from .util import get_locustfiles_from_args
 
 
 class TestParser(unittest.TestCase):
@@ -153,7 +153,7 @@ class TestArgumentParser(LocustTestCase):
 
     def test_parse_locustfile(self):
         with mock_locustfile() as mocked:
-            locustfiles = parse_locustfile_option(
+            locustfiles = get_locustfiles_from_args(
                 args=[
                     "-f",
                     mocked.file_path,
@@ -172,7 +172,7 @@ class TestArgumentParser(LocustTestCase):
             locustfile = locustfiles[0]
             self.assertEqual(mocked.file_path, locustfile)
             assert len(locustfiles) == 1
-            locustfiles = parse_locustfile_option(
+            locustfiles = get_locustfiles_from_args(
                 args=[
                     "-f",
                     mocked.file_path,
@@ -185,7 +185,7 @@ class TestArgumentParser(LocustTestCase):
     def test_parse_locustfile_multiple_files(self):
         with mock_locustfile() as mocked1:
             with mock_locustfile(dir=self.parent_dir.name) as mocked2:
-                locustfiles = parse_locustfile_option(
+                locustfiles = get_locustfiles_from_args(
                     args=[
                         "-f",
                         f"{mocked1.file_path},{mocked2.file_path}",
@@ -198,7 +198,7 @@ class TestArgumentParser(LocustTestCase):
 
     def test_parse_locustfile_with_directory(self):
         with mock_locustfile(dir=self.parent_dir.name) as mocked:
-            locustfiles = parse_locustfile_option(
+            locustfiles = get_locustfiles_from_args(
                 args=[
                     "-f",
                     self.parent_dir.name,
@@ -220,7 +220,7 @@ class TestArgumentParser(LocustTestCase):
         with mock_locustfile(filename_prefix="mock_locustfile1", dir=self.parent_dir.name) as mock_locustfile1:
             with mock_locustfile(filename_prefix="mock_locustfile2", dir=self.child_dir.name) as mock_locustfile2:
                 with mock_locustfile(filename_prefix="mock_locustfile3", dir=self.child_dir.name) as mock_locustfile3:
-                    locustfiles = parse_locustfile_option(
+                    locustfiles = get_locustfiles_from_args(
                         args=[
                             "-f",
                             self.parent_dir.name,
@@ -235,7 +235,7 @@ class TestArgumentParser(LocustTestCase):
         with NamedTemporaryFile(suffix=".py", prefix="_", dir=self.parent_dir.name) as invalid_file1:
             with NamedTemporaryFile(suffix=".txt", prefix="", dir=self.parent_dir.name) as invalid_file2:
                 with mock_locustfile(filename_prefix="mock_locustfile1", dir=self.parent_dir.name) as mock_locustfile1:
-                    locustfiles = parse_locustfile_option(
+                    locustfiles = get_locustfiles_from_args(
                         args=[
                             "-f",
                             self.parent_dir.name,
@@ -249,7 +249,7 @@ class TestArgumentParser(LocustTestCase):
     def test_parse_locustfile_empty_directory_error(self):
         with mock.patch("sys.stderr", new=StringIO()):
             with self.assertRaises(SystemExit):
-                parse_locustfile_option(
+                get_locustfiles_from_args(
                     args=[
                         "-f",
                         self.parent_dir.name,
@@ -260,7 +260,7 @@ class TestArgumentParser(LocustTestCase):
         with mock_locustfile(filename_prefix="mock_locustfile1", dir=self.parent_dir.name) as mock_locustfile1:
             with mock_locustfile(filename_prefix="mock_locustfile2", dir=self.parent_dir.name) as mock_locustfile2:
                 with mock_locustfile(filename_prefix="mock_locustfile3", dir=self.child_dir.name) as mock_locustfile3:
-                    locustfiles = parse_locustfile_option(
+                    locustfiles = get_locustfiles_from_args(
                         args=[
                             "-f",
                             f"{mock_locustfile1.file_path},{self.child_dir.name}",
@@ -273,7 +273,7 @@ class TestArgumentParser(LocustTestCase):
     def test_parse_multiple_directories(self):
         with mock_locustfile(filename_prefix="mock_locustfile1", dir=self.child_dir.name) as mock_locustfile1:
             with mock_locustfile(filename_prefix="mock_locustfile2", dir=self.child_dir2.name) as mock_locustfile2:
-                locustfiles = parse_locustfile_option(
+                locustfiles = get_locustfiles_from_args(
                     args=[
                         "-f",
                         f"{self.child_dir.name},{self.child_dir2.name}",
@@ -286,7 +286,7 @@ class TestArgumentParser(LocustTestCase):
     def test_parse_locustfile_invalid_directory_error(self):
         with mock.patch("sys.stderr", new=StringIO()):
             with self.assertRaises(SystemExit):
-                parse_locustfile_option(
+                get_locustfiles_from_args(
                     args=[
                         "-f",
                         "non_existent_dir",

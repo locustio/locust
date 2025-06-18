@@ -1,3 +1,5 @@
+from locust.argument_parser import get_locustfiles_locally, parse_locustfile_option
+
 import datetime
 import functools
 import gc
@@ -86,3 +88,8 @@ def clear_all_functools_lru_cache() -> None:
     assert len(wrappers) > 0
     for wrapper in wrappers:
         wrapper.cache_clear()
+
+
+def get_locustfiles_from_args(*args, **kwargs):
+    options, _ = parse_locustfile_option(*args, **kwargs)
+    return get_locustfiles_locally(options)

@@ -39,6 +39,7 @@ export default function useFetchStats() {
       totalFailPerSec,
       failRatio,
       workers,
+      workerCount,
       userCount,
       totalAvgResponseTime,
     } = statsData;
@@ -82,7 +83,7 @@ export default function useFetchStats() {
     });
     updateCharts(newChartEntry);
 
-    setSwarm({ state });
+    setSwarm({ state, workerCount });
   }, [statsData]);
 
   useInterval(refetchStats, STATS_REFETCH_INTERVAL, {

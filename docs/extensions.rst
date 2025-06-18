@@ -23,11 +23,6 @@ Report OTEL traces for requests
 
 - `opentelemetry-demo repo <https://github.com/open-telemetry/opentelemetry-demo/tree/main/src/load-generator>`__
 
-Automate distributed runs over SSH
-----------------------------------
-
--  `locust-swarm <https://github.com/SvenskaSpel/locust-swarm/>`__
-
 Automatically translate a browser recording (HAR-file) to a locustfile
 ----------------------------------------------------------------------
 

@@ -306,3 +306,5 @@ This table lists the constants that are set within locust and may be overridden.
 | locust.runners.WORKER_LOG_REPORT_INTERVAL | Interval for how frequently worker logs are reported to master. Can be disabled      |
 |                                           | by setting to a negative number                                                      |
 +-------------------------------------------+--------------------------------------------------------------------------------------+
+| locust.web.HOST_IS_REQUIRED               | Makes the host field for the webui required                                          |
++-------------------------------------------+--------------------------------------------------------------------------------------+
