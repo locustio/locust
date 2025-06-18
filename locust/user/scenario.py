@@ -8,12 +8,6 @@ from typing import Protocol, TypeVar, runtime_checkable
 
 StepFunT = TypeVar("StepFunT", Callable[..., None], type["Scenario"])
 
-
-@runtime_checkable
-class StepHolder(Protocol[StepFunT]):
-    steps: list[StepFunT]
-
-
 def transition(id: Hashable, weight: int = 1) -> Callable[[StepFunT], StepFunT]:
     def decorator_func(decorated):
         if not hasattr(decorated, "locust_step_transitions"):
@@ -38,27 +32,6 @@ def transitions(weights: dict[Hashable, int] | list[tuple[Hashable, int]]) -> Ca
 
 def step(id: Hashable, weight: int | None = None) -> Callable[[StepFunT], StepFunT]:
     """
-    Used as a convenience decorator to be able to declare steps for a User or a Scenario
-    inline in the class. Example::
-
-        class ForumPage(Scenario):
-            @step("read")
-            def read_thread(self):
-                pass
-
-            @step("create")
-            def create_thread(self):
-                pass
-
-            @step(Pages.THREAD)
-            class ForumThread(Scenario):
-                @step("author")
-                def get_author(self):
-                    pass
-
-                @step("get created")
-                def get_created(self):
-                    pass
     """
 
     def decorator_func(func):
@@ -66,7 +39,7 @@ def step(id: Hashable, weight: int | None = None) -> Callable[[StepFunT], StepFu
             logging.warning(
                 "You have tagged your on_stop/start function with @step. This will make the method get called both as a step AND on stop/start."
             )  # this is usually not what the user intended
-        if func.__name__ == "run":
+        if func.__name__ == "run": # TODO: applies to task sets?
             raise Exception(
                 "User.run() is a method used internally by Locust, and you must not override it or register it as a step"
             )

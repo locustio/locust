@@ -14,7 +14,9 @@ class StoreScenario(Scenario):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    # weight is optional for @step, first step is assumed first if no other probabilities
+    # weight is optional for @step
+    #   first step is assumed to be the initial step
+    #   if weights are given, the initial step is chosen from those with weights
     @step(Pages.HOME, weight=1)
     @transition(Pages.BROWSE, 1)
     @transition(Pages.CHECKOUT, 1)
