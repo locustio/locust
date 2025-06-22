@@ -459,7 +459,7 @@ class FastHttpUser(User):
                 error_lines = []
                 for l in traceback.format_exc().split("\n"):
                     if m := self._callstack_regex.match(l):
-                        filename = re.sub(r"/(home|Users/\w*)/", "~/", m.group(1))
+                        filename = re.sub(r"/((home|Users)/\w*)/", "~/", m.group(1))
                         error_lines.append(filename + ":" + m.group(2) + m.group(3))
                     short_resp = resp.text[:200] if resp.text else resp.text
                     resp.failure(f"{e.__class__.__name__}: {e} at {', '.join(error_lines)}. Response was {short_resp}")
