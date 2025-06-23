@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.37.11
+=======
+* Web UI: Always Warn of Invalid Host https://github.com/locustio/locust/pull/3155
+* locust-cloud: bump minimum version and support multiple locustfiles https://github.com/locustio/locust/pull/3157 / https://github.com/locustcloud/locust-cloud/pull/38
+
 2.37.10
 =======
 * Revert accidental removal of --json-file option https://github.com/locustio/locust/pull/3154
