@@ -330,7 +330,7 @@ def main():
                 f"Total fixed_count of User classes ({fixed_count_total}) is greater than the specified number of users ({options.num_users}), so not all will be spawned."
             )
 
-    if os.name != "nt" and not options.master:
+    if os.name != "nt":
         try:
             import resource
 
