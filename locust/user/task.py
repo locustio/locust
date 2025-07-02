@@ -186,9 +186,11 @@ def filter_tasks_by_tags(
             continue
 
         passing = True
+        # TODO: Handle markov...
+        #   What if tags render the graph unusable?
         if hasattr(task, "tasks"):
             filter_tasks_by_tags(task, tags, exclude_tags, checked)
-            passing = len(task.tasks) > 0 or "locust_steps" in dir(task)
+            passing = len(task.tasks) > 0 or "current" in dir(task)
         else:
             if tags is not None:
                 passing &= "locust_tag_set" in dir(task) and len(task.locust_tag_set & tags) > 0
@@ -200,7 +202,7 @@ def filter_tasks_by_tags(
         checked[task] = passing
 
     task_holder.tasks = new_tasks
-    if not new_tasks and not "locust_steps" in dir(task_holder):
+    if not new_tasks and not "current" in dir(task_holder):
         logging.warning(f"{task_holder.__name__} had no tasks left after filtering, instantiating it will fail!")
 
 
