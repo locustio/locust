@@ -1,6 +1,86 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.37.12](https://github.com/locustio/locust/tree/2.37.12) (2025-07-08)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.11...2.37.12)
+
+**Fixed bugs:**
+
+- Error shutting down when using processes [\#3161](https://github.com/locustio/locust/issues/3161)
+- 1279 Locust instances makes master run at 100% continously [\#3142](https://github.com/locustio/locust/issues/3142)
+
+**Merged pull requests:**
+
+- Attempt to increase open file limit \(RLIMIT\_NOFILE\) even on master. [\#3162](https://github.com/locustio/locust/pull/3162) ([cyberw](https://github.com/cyberw))
+- Bump brace-expansion from 1.1.11 to 1.1.12 in /locust/webui [\#3160](https://github.com/locustio/locust/pull/3160) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [2.37.11](https://github.com/locustio/locust/tree/2.37.11) (2025-06-23)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.10...2.37.11)
+
+**Fixed bugs:**
+
+- FastHttpUser uses incorrect regex to hide home directory [\#3159](https://github.com/locustio/locust/issues/3159)
+
+**Closed issues:**
+
+- Define a list of paths to simulate an user journey [\#3150](https://github.com/locustio/locust/issues/3150)
+- export the results as a json file [\#3089](https://github.com/locustio/locust/issues/3089)
+
+**Merged pull requests:**
+
+- Forward locustfiles to locust cloud [\#3157](https://github.com/locustio/locust/pull/3157) ([amadeuppereira](https://github.com/amadeuppereira))
+- Web UI: Always Warn of Invalid Host [\#3155](https://github.com/locustio/locust/pull/3155) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
+## [2.37.10](https://github.com/locustio/locust/tree/2.37.10) (2025-06-07)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.9...2.37.10)
+
+**Merged pull requests:**
+
+- Revert accidental removal of --json-file option [\#3154](https://github.com/locustio/locust/pull/3154) ([brtkwr](https://github.com/brtkwr))
+
+## [2.37.9](https://github.com/locustio/locust/tree/2.37.9) (2025-06-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.8...2.37.9)
+
+**Merged pull requests:**
+
+- Web UI: Fix host field name missing if host is not required [\#3152](https://github.com/locustio/locust/pull/3152) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
+## [2.37.8](https://github.com/locustio/locust/tree/2.37.8) (2025-06-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.7...2.37.8)
+
+**Closed issues:**
+
+- Support gevent \>= 25.4.1 [\#3143](https://github.com/locustio/locust/issues/3143)
+
+**Merged pull requests:**
+
+- Bump locust-cloud dependency, allow 25.x versions of gevent [\#3151](https://github.com/locustio/locust/pull/3151) ([cyberw](https://github.com/cyberw))
+
+## [2.37.7](https://github.com/locustio/locust/tree/2.37.7) (2025-06-03)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.6...2.37.7)
+
+**Merged pull requests:**
+
+- Web Ui: Add host field validation [\#3149](https://github.com/locustio/locust/pull/3149) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
+## [2.37.6](https://github.com/locustio/locust/tree/2.37.6) (2025-05-28)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.5...2.37.6)
+
+**Fixed bugs:**
+
+- Documentation is Now Missing Table of "All available configuration options" [\#3144](https://github.com/locustio/locust/issues/3144)
+
+**Merged pull requests:**
+
+- Fix Docs Config Options [\#3145](https://github.com/locustio/locust/pull/3145) ([amadeuppereira](https://github.com/amadeuppereira))
+
 ## [2.37.5](https://github.com/locustio/locust/tree/2.37.5) (2025-05-22)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.37.4...2.37.5)
@@ -65,7 +145,7 @@ The most important changes can also be found in [the documentation](https://docs
 - Webui: Fix Failing Tests [\#3126](https://github.com/locustio/locust/pull/3126) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
 - Update uv to 0.7.2 [\#3125](https://github.com/locustio/locust/pull/3125) ([cyberw](https://github.com/cyberw))
 - Add command line option to export json results into a file [\#3124](https://github.com/locustio/locust/pull/3124) ([ajt89](https://github.com/ajt89))
-- Add locust exporter import [\#3122](https://github.com/locustio/locust/pull/3122) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add locust exporter import \(used in Locust Cloud\) [\#3122](https://github.com/locustio/locust/pull/3122) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
 - fix error message to be idiomatically correct English [\#3121](https://github.com/locustio/locust/pull/3121) ([davidxia](https://github.com/davidxia))
 - Web UI: Use mutations for state buttons [\#3120](https://github.com/locustio/locust/pull/3120) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
 
