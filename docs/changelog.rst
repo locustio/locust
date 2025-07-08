@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.37.12
+=======
+* Attempt to increase open file limit (RLIMIT_NOFILE) even on master https://github.com/locustio/locust/pull/3162
+
 2.37.11
 =======
 * Web UI: Always Warn of Invalid Host https://github.com/locustio/locust/pull/3155
