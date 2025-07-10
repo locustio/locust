@@ -1,14 +1,17 @@
-import time
-from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
-from pymilvus import MilvusClient, CollectionSchema
-from pymilvus.milvus_client import IndexParams
 from locust import User, events
 
+import time
+from abc import ABC, abstractmethod
+from typing import Any
+
 import gevent.monkey  # noqa: E402
+from pymilvus import CollectionSchema, MilvusClient
+from pymilvus.milvus_client import IndexParams
+
 gevent.monkey.patch_all()
 
 import grpc.experimental.gevent as grpc_gevent  # noqa: E402
+
 grpc_gevent.init_gevent()
 
 
@@ -116,11 +119,11 @@ class MilvusV2Client(BaseClient):
                 filter=filter,
                 limit=limit,
                 search_params=search_params,
-                output_fields=output_fields,                
+                output_fields=output_fields,
             )
             total_time = (time.time() - start) * 1000
             empty = len(result) == 0 or all(len(r) == 0 for r in result)
-            
+
             # Prepare base result
             search_result = {
                 "success": not empty,
@@ -128,12 +131,12 @@ class MilvusV2Client(BaseClient):
                 "empty": empty,
                 "result": result,
             }
-            
+
             # Calculate recall if requested
             if calculate_recall and ground_truth is not None and not empty:
                 recall_value = self.get_recall(result, ground_truth, limit)
                 search_result["recall"] = recall_value
-            
+
             return search_result
         except Exception as e:
             return {
@@ -141,7 +144,7 @@ class MilvusV2Client(BaseClient):
                 "response_time": (time.time() - start) * 1000,
                 "exception": e,
             }
-    
+
     def hybrid_search(self, reqs, ranker, limit, output_fields=None):
         if output_fields is None:
             output_fields = ["id"]
@@ -158,7 +161,7 @@ class MilvusV2Client(BaseClient):
             )
             total_time = (time.time() - start) * 1000
             empty = len(result) == 0 or all(len(r) == 0 for r in result)
-            
+
             # Prepare base result
             search_result = {
                 "success": not empty,
@@ -166,7 +169,7 @@ class MilvusV2Client(BaseClient):
                 "empty": empty,
                 "result": result,
             }
-            
+
             return search_result
         except Exception as e:
             return {
@@ -174,7 +177,7 @@ class MilvusV2Client(BaseClient):
                 "response_time": (time.time() - start) * 1000,
                 "exception": e,
             }
-    
+
     @staticmethod
     def get_recall(search_results, ground_truth, limit=None):
         """Calculate recall for V2 client search results."""
@@ -188,21 +191,21 @@ class MilvusV2Client(BaseClient):
                         retrieved_ids.append(hit['id'])
                     elif hasattr(hit, 'get'):
                         retrieved_ids.append(hit.get('id'))
-            
+
             # Apply limit if specified
             if limit is None:
                 limit = len(retrieved_ids)
-            
+
             if len(ground_truth) < limit:
                 raise ValueError(f"Ground truth length is less than limit: {len(ground_truth)} < {limit}")
-            
+
             # Calculate recall
             ground_truth_set = set(ground_truth[:limit])
             retrieved_set = set(retrieved_ids)
             intersect = len(ground_truth_set.intersection(retrieved_set))
             return intersect / len(ground_truth_set)
-                
-        except Exception as e:
+
+        except Exception:
             return 0.0
 
     def query(self, filter, output_fields=None):
@@ -279,8 +282,8 @@ class MilvusUser(User):
         collection_name: str = "test_collection",
         db_name: str = "default",
         timeout: int = 60,
-        schema: Optional[CollectionSchema] = None,
-        index_params: Optional[IndexParams] = None,
+        schema: CollectionSchema | None = None,
+        index_params: IndexParams | None = None,
         **client_kwargs,
     ):
         super().__init__(environment)
@@ -302,7 +305,7 @@ class MilvusUser(User):
             self.client.create_collection(schema=schema, index_params=index_params)
 
     @staticmethod
-    def _fire_event(request_type: str, name: str, result: Dict[str, Any]):
+    def _fire_event(request_type: str, name: str, result: dict[str, Any]):
         """Emit a Locust request event from a Milvus client result dict."""
         response_time = int(result.get("response_time", 0))
         events.request.fire(
@@ -312,9 +315,9 @@ class MilvusUser(User):
             response_length=0,
             exception=result.get("exception"),
         )
-    
+
     @staticmethod
-    def _fire_recall_event(request_type: str, name: str, result: Dict[str, Any]):
+    def _fire_recall_event(request_type: str, name: str, result: dict[str, Any]):
         """Emit a Locust request event for recall metric using recall value instead of response time."""
         recall_value = result.get("recall", 0.0)
         # Use recall value as response_time for metric display (scaled by 100 for better visualization) percentage
@@ -360,11 +363,11 @@ class MilvusUser(User):
         )
         # Fire search event
         self._fire_event(self.client_type, "search", result)
-        
+
         # Fire recall event if recall was calculated
         if calculate_recall and "recall" in result:
             self._fire_recall_event(self.client_type, "recall", result)
-        
+
         return result
 
     def hybrid_search(self, reqs, ranker, limit, output_fields=None):
