@@ -304,9 +304,9 @@ function SwarmForm({
             <Alert severity={'error'}>{errorMessage || formDisabledReason}</Alert>
           )}
           {!isHostRequired && missingHostWarning && (
-            <Alert severity='warning'>
-              No host could not be detected on one or more user classes. Please ensure one is
-              provided before running your test.
+            <Alert severity='info'>
+              One or more of your User classes have no host attribute set in your locustfile.
+              Please provide one in the field above.
             </Alert>
           )}
           <Button disabled={isFormDisabled} size='large' type='submit' variant='contained'>
