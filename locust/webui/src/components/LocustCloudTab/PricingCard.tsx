@@ -33,8 +33,8 @@ export default function PricingCard({
     <Card
       sx={{
         flex: 1,
-        border: recommended && 2,
-        borderColor: recommended && 'primary.main',
+        border: recommended ? 2 : undefined,
+        borderColor: recommended ? 'primary.main' : undefined,
         position: 'relative',
         overflow: 'visible',
       }}

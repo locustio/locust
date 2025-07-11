@@ -1,12 +1,8 @@
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import BoltIcon from '@mui/icons-material/Bolt';
-import ShieldIcon from '@mui/icons-material/Shield';
-import { Box, Button, Card, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { green, grey } from '@mui/material/colors';
 
 import FadeInBox from 'components/FadeInBox';
-import FadeInOnScroll from 'components/FadeInBox';
 import Pricing from 'components/LocustCloudTab/Pricing';
 import { useSelector } from 'redux/hooks';
 
