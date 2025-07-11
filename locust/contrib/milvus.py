@@ -33,7 +33,17 @@ class BaseClient(ABC):
         pass
 
     @abstractmethod
-    def search(self, data, anns_field, limit, filter="", search_params=None, output_fields=None, calculate_recall=False, ground_truth=None):
+    def search(
+        self,
+        data,
+        anns_field,
+        limit,
+        filter="",
+        search_params=None,
+        output_fields=None,
+        calculate_recall=False,
+        ground_truth=None,
+    ):
         pass
 
     @abstractmethod
@@ -104,8 +114,15 @@ class MilvusV2Client(BaseClient):
             }
 
     def search(
-        self, data, anns_field, limit, filter="", search_params=None, output_fields=None,
-        calculate_recall=False, ground_truth=None
+        self,
+        data,
+        anns_field,
+        limit,
+        filter="",
+        search_params=None,
+        output_fields=None,
+        calculate_recall=False,
+        ground_truth=None,
     ):
         if output_fields is None:
             output_fields = ["id"]
@@ -157,7 +174,7 @@ class MilvusV2Client(BaseClient):
                 ranker=ranker,
                 limit=limit,
                 output_fields=output_fields,
-                timeout=self.timeout
+                timeout=self.timeout,
             )
             total_time = (time.time() - start) * 1000
             empty = len(result) == 0 or all(len(r) == 0 for r in result)
@@ -187,10 +204,10 @@ class MilvusV2Client(BaseClient):
             if isinstance(search_results, list) and len(search_results) > 0:
                 # search_results[0] contains the search results for the first query
                 for hit in search_results[0] if isinstance(search_results[0], list) else search_results:
-                    if isinstance(hit, dict) and 'id' in hit:
-                        retrieved_ids.append(hit['id'])
-                    elif hasattr(hit, 'get'):
-                        retrieved_ids.append(hit.get('id'))
+                    if isinstance(hit, dict) and "id" in hit:
+                        retrieved_ids.append(hit["id"])
+                    elif hasattr(hit, "get"):
+                        retrieved_ids.append(hit.get("id"))
 
             # Apply limit if specified
             if limit is None:
@@ -237,9 +254,7 @@ class MilvusV2Client(BaseClient):
     def delete(self, filter):
         start = time.time()
         try:
-            result = self.client.delete(
-                collection_name=self.collection_name, filter=filter
-            )
+            result = self.client.delete(collection_name=self.collection_name, filter=filter)
             total_time = (time.time() - start) * 1000
             return {"success": True, "response_time": total_time, "result": result}
         except Exception as e:
