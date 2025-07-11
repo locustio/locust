@@ -305,7 +305,7 @@ function SwarmForm({
           )}
           {!isHostRequired && missingHostWarning && (
             <Alert severity='info'>
-              One or more of your User classes have no host attribute set in your locustfile.
+              One or more User class in your locustfile has no host attribute set.
               Please provide one in the field above.
             </Alert>
           )}
