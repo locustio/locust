@@ -674,7 +674,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     try:
         if options.class_picker:
-            logger.info("Locust is running with the UserClass Picker Enabled")
+            logger.debug("Locust is running with the UserClass Picker Enabled")
         if options.autostart and not options.headless:
             start_automatic_run()
 
