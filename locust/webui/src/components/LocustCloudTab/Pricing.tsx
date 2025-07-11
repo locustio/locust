@@ -1,15 +1,36 @@
-import { useEffect } from 'react';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CreditCardOffIcon from '@mui/icons-material/CreditCardOff';
+import GroupsIcon from '@mui/icons-material/Groups';
 import PersonIcon from '@mui/icons-material/Person';
 import SpeedIcon from '@mui/icons-material/Speed';
 import SupportIcon from '@mui/icons-material/Support';
 import { Box } from '@mui/material';
 
-import useUpgradeToPaid from 'hooks/useUpgradeToPaid';
-import { useAction } from 'redux/hooks';
-import { snackbarActions } from 'redux/slice/snackbar.slice';
+import PricingCard from 'components/LocustCloudTab/PricingCard';
 
-import PricingCard from './PricingCard';
+const freeFeatures = [
+  {
+    icon: <AccessTimeIcon />,
+    title: '200 VUh per month',
+    description: '',
+  },
+  {
+    icon: <PersonIcon />,
+    title: 'Up to 100 Virtual Users',
+    description: '',
+  },
+  {
+    icon: <SpeedIcon />,
+    title: 'Distributed Tests',
+    description: 'Get access to up to 2 workers',
+  },
+  {
+    icon: <CreditCardOffIcon />,
+    title: 'No Credit Card Required, no Trial Clock',
+    description: 'Free load testing, no strings attached!',
+  },
+  {},
+];
 
 const premiumFeatures = [
   {
@@ -25,7 +46,12 @@ const premiumFeatures = [
   {
     icon: <SpeedIcon />,
     title: 'Distributed Tests',
-    description: 'Get access to up to 100 workers',
+    description: 'Get access to up to 4 workers',
+  },
+  {
+    icon: <GroupsIcon />,
+    title: 'Teams',
+    description: 'Up to 5 users',
   },
   {
     icon: <SupportIcon />,
@@ -51,6 +77,11 @@ const unlimitedFeatures = [
     description: 'No limits on the number of workers',
   },
   {
+    icon: <GroupsIcon />,
+    title: 'Teams',
+    description: 'Unlimited users',
+  },
+  {
     icon: <SupportIcon />,
     title: 'Priority Support',
     description:
@@ -58,30 +89,16 @@ const unlimitedFeatures = [
   },
 ];
 
-export default function UpgradePrompt() {
-  const { onUpgradeTier, isLoading, error: upgradeTierError } = useUpgradeToPaid();
-  const setSnackbar = useAction(snackbarActions.setSnackbar);
-
-  useEffect(() => {
-    if (upgradeTierError) {
-      setSnackbar({
-        message:
-          'An unexpected error has occured. Please try again or contact support@locust.cloud.',
-        severity: 'error',
-      });
-    }
-  }, [upgradeTierError]);
-
+export default function Pricing() {
   return (
-    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
+    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4, m: 6 }}>
+      <PricingCard ctaText='Join for Free' features={freeFeatures} price='$0' tierName='Free' />
       <PricingCard
-        ctaText='Upgrade Now'
+        ctaText='Get Started'
         features={premiumFeatures}
-        isLoading={isLoading}
-        onClick={onUpgradeTier}
         price='$399'
         recommended
-        tierName='Unlock Premium Features'
+        tierName='Premium'
       />
       <PricingCard
         ctaText='Request a consultation'
