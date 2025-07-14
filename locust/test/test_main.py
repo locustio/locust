@@ -210,7 +210,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate()
             self.assertIn("Starting web interface at", stderr)
-            self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
             self.assertEqual(0, proc.returncode)
@@ -301,7 +300,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc.send_signal(signal.SIGTERM)
                 stdout, stderr = proc.communicate()
                 self.assertIn("Starting web interface at", stderr)
-                self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                 self.assertIn("Starting Locust", stderr)
                 self.assertIn("Shutting down (exit code 0)", stderr)
                 self.assertEqual(0, proc.returncode)
@@ -316,7 +314,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     proc.send_signal(signal.SIGTERM)
                     stdout, stderr = proc.communicate()
                     self.assertIn("Starting web interface at", stderr)
-                    self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                     self.assertIn("Starting Locust", stderr)
                     self.assertIn("Shutting down (exit code 0)", stderr)
                     self.assertEqual(0, proc.returncode)
@@ -355,7 +352,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 )
             ) as mocked2:
                 proc = subprocess.Popen(
-                    ["locust", "-f", f"{mocked1.file_path},{mocked2}"], stdout=PIPE, stderr=PIPE, text=True
+                    ["locust", "-f", f"{mocked1.file_path},{mocked2}", "-L", "DEBUG"],
+                    stdout=PIPE,
+                    stderr=PIPE,
+                    text=True,
                 )
                 gevent.sleep(SHORT_SLEEP)
                 proc.send_signal(signal.SIGTERM)
@@ -1259,7 +1259,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_B) as file2:
                 proc = subprocess.Popen(
-                    ["locust", "-f", f"{file1},{file2}", "--class-picker"],
+                    ["locust", "-f", f"{file1},{file2}", "--class-picker", "-L", "DEBUG"],
                     stdout=PIPE,
                     stderr=PIPE,
                     text=True,
