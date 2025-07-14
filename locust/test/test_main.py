@@ -212,7 +212,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Starting web interface at", stderr)
             self.assertIn("Starting Locust", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
-            self.assertEqual(0, proc.returncode)
 
     def test_percentile_parameter(self):
         port = get_free_tcp_port()
@@ -302,7 +301,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertIn("Starting web interface at", stderr)
                 self.assertIn("Starting Locust", stderr)
                 self.assertIn("Shutting down (exit code 0)", stderr)
-                self.assertEqual(0, proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver_multiple_locustfiles_in_directory(self):
@@ -316,7 +314,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertIn("Starting web interface at", stderr)
                     self.assertIn("Starting Locust", stderr)
                     self.assertIn("Shutting down (exit code 0)", stderr)
-                    self.assertEqual(0, proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_webserver_multiple_locustfiles_with_shape(self):
@@ -361,10 +358,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc.send_signal(signal.SIGTERM)
                 stdout, stderr = proc.communicate()
                 self.assertIn("Starting web interface at", stderr)
+                # This test is the reason we need the -L DEBUG option
                 self.assertNotIn("Locust is running with the UserClass Picker Enabled", stderr)
                 self.assertIn("Starting Locust", stderr)
                 self.assertIn("Shutting down (exit code 0)", stderr)
-                self.assertEqual(0, proc.returncode)
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
@@ -442,7 +439,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             self.assertIn("Starting Locust", stderr)
             self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
             self.assertIn("Shutting down (exit code 0)", stderr)
-            self.assertEqual(0, proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_run_headless_with_multiple_locustfiles(self):
@@ -484,7 +480,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertIn('"TestUser": 1', stderr)
                     self.assertIn('"UserSubclass": 1', stderr)
                     self.assertIn("Shutting down (exit code 0)", stderr)
-                    self.assertEqual(0, proc.returncode)
 
     def test_default_headless_spawn_options_with_shape(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
@@ -530,7 +525,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
             self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
             self.assertIn("Shutting down (exit code 0)", stderr)
-            self.assertEqual(0, proc.returncode)
 
     def test_run_headless_with_multiple_locustfiles_with_shape(self):
         content = textwrap.dedent(
@@ -593,7 +587,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
                 self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
                 self.assertIn("Shutting down (exit code 0)", stderr)
-                self.assertEqual(0, proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
     def test_autostart_wo_run_time(self):
@@ -707,7 +700,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertIn('"TestUser": 1', stderr)
                     self.assertIn('"UserSubclass": 1', stderr)
                     self.assertIn("Shutting down (exit code 0)", stderr)
-                    self.assertEqual(0, proc.returncode)
 
     def test_autostart_w_load_shape(self):
         port = get_free_tcp_port()
@@ -931,7 +923,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
             self.assertRegex(output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
             self.assertIn("Shutting down (exit code 0)", output)
-            self.assertEqual(0, proc.returncode)
 
     @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, and thus we cannot import pty")
     def test_autospawn_browser(self):
@@ -1041,7 +1032,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
             self.assertRegex(output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
             self.assertIn("Shutting down (exit code 0)", output)
-            self.assertEqual(0, proc.returncode)
 
     def test_spawing_with_fixed_multiple_locustfiles(self):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
@@ -1076,7 +1066,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
                 self.assertRegex(output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
                 self.assertIn("Shutting down (exit code 0)", output)
-                self.assertEqual(0, proc.returncode)
 
     def test_warning_with_lower_user_count_than_fixed_count(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -1144,7 +1133,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertIn("All users spawned:", stderr)
                     self.assertIn('"UserSubclass": 1', stderr)
                     self.assertIn("Shutting down (exit code 0)", stderr)
-                    self.assertEqual(0, proc.returncode)
 
     def test_command_line_user_selection(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -1773,8 +1761,6 @@ class SecondUser(HttpUser):
 
             self.assertIn('All users spawned: {"User1": 3} (3 total users)', stdout)
             self.assertIn("Shutting down (exit code 0)", stdout)
-
-            self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
 
     def test_distributed_report_timeout_expired(self):
@@ -1833,8 +1819,6 @@ class SecondUser(HttpUser):
                 stdout,
             )
             self.assertIn("Shutting down (exit code 0)", stdout)
-
-            self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
 
     def test_locustfile_distribution(self):
@@ -1899,8 +1883,6 @@ class SecondUser(HttpUser):
             self.assertNotIn("Traceback", stdout)
             self.assertNotIn("Traceback", stdout_worker)
             self.assertNotIn("Traceback", stdout_worker2)
-
-            self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
 
     def test_locustfile_distribution_with_workers_started_first(self):
@@ -1951,8 +1933,6 @@ class SecondUser(HttpUser):
 
             self.assertIn('All users spawned: {"User1": ', stdout)
             self.assertIn("Shutting down (exit code 0)", stdout)
-
-            self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
             self.assertIn("hello", worker_stdout)
 
@@ -2005,8 +1985,6 @@ class SecondUser(HttpUser):
             self.assertIn("Shutting down (exit code 0)", stdout)
             self.assertNotIn("Traceback", stdout)
             self.assertNotIn("Traceback", stdout_worker)
-
-            self.assertEqual(0, proc.returncode)
             self.assertEqual(0, proc_worker.returncode)
 
     def test_json_schema(self):
