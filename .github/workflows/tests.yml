@@ -261,7 +261,7 @@ jobs:
   #       Publishing
   # -------------------------
 
-  publish:
+  publish-docker:
     needs: [tests, test_webui, test_docker_image, build_package]
     if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
     runs-on: ubuntu-latest
@@ -315,6 +315,29 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.docker_meta.outputs.tags }}
+
+  publish-pypi:
+    needs: [tests, test_webui, test_docker_image, build_package]
+    if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Download Python dist artifact
+      - name: Download Python dist 
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: dist
+
+      # Download Web UI lib artifact
+      - name: Download UI lib
+        uses: actions/download-artifact@v4
+        with:
+          name: webui-lib-dist
+          path: locust/webui/lib
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
