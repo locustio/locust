@@ -384,6 +384,8 @@ class FastHttpUser(User):
 
     .. code-block:: python
 
+        from geventhttpclient.client import HTTPClientPool
+
         class MyUser(FastHttpUser):
             client_pool = HTTPClientPool(concurrency=5)
     """
