@@ -11,7 +11,6 @@ import time
 from abc import abstractmethod
 from collections import OrderedDict, defaultdict, namedtuple
 from copy import copy
-from html import escape
 from itertools import chain
 from typing import TYPE_CHECKING, Protocol, TypedDict, TypeVar, cast
 
@@ -673,9 +672,9 @@ class StatsEntry:
         }
 
         return {
-            "method": escape(self.method or "") if escape_string_values else self.method,
-            "name": escape(self.name) if escape_string_values else self.name,
-            "safe_name": escape(self.name, quote=False),
+            "method": self.method,
+            "name": self.name,
+            "safe_name": self.name,
             "num_requests": self.num_requests,
             "num_failures": self.num_failures,
             "min_response_time": 0 if self.min_response_time is None else proper_round(self.min_response_time),
@@ -756,11 +755,11 @@ class StatsError:
     def unserialize(cls, data: StatsErrorDict) -> StatsError:
         return cls(data["method"], data["name"], data["error"], data["occurrences"])
 
-    def to_dict(self, escape_string_values=False):
+    def to_dict(self):
         return {
-            "method": escape(self.method),
-            "name": escape(self.name),
-            "error": escape(self.parse_error(self.error)),
+            "method": self.method,
+            "name": self.name,
+            "error": self.parse_error(self.error),
             "occurrences": self.occurrences,
         }
 

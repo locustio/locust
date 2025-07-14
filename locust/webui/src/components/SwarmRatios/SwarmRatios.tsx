@@ -1,7 +1,4 @@
-import { connect } from 'react-redux';
-
 import { IUiState } from 'redux/slice/ui.slice';
-import { IRootState } from 'redux/store';
 import { IClassRatio } from 'types/ui.types';
 
 function getRatioPercent(ratio: number) {
@@ -21,7 +18,11 @@ function NestedRatioList({ classRatio }: { classRatio: IClassRatio }) {
   );
 }
 
-export function SwarmRatios({ ratios: { perClass, total } }: { ratios: IUiState['ratios'] }) {
+export default function SwarmRatios({
+  ratios: { perClass, total },
+}: {
+  ratios: IUiState['ratios'];
+}) {
   if (!perClass && !total) {
     return null;
   }
@@ -44,9 +45,3 @@ export function SwarmRatios({ ratios: { perClass, total } }: { ratios: IUiState[
     </div>
   );
 }
-
-const storeConnector = ({ ui: { ratios } }: IRootState) => ({
-  ratios,
-});
-
-export default connect(storeConnector)(SwarmRatios);

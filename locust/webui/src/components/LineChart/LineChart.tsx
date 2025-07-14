@@ -1,12 +1,14 @@
 import { useEffect, useState, useRef } from 'react';
+import type { XAXisComponentOption, GridComponentOption, ECharts } from 'echarts';
+import { LineChart as BaseLineChart } from 'echarts/charts';
 import {
-  init,
-  dispose,
-  ECharts,
-  connect,
-  XAXisComponentOption,
-  GridComponentOption,
-} from 'echarts';
+  GridComponent,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+} from 'echarts/components';
+import { use as echartsUse, init, dispose, connect } from 'echarts/core';
+import { CanvasRenderer } from 'echarts/renderers';
 
 import { CHART_THEME } from 'components/LineChart/LineChart.constants';
 import {
@@ -20,7 +22,6 @@ import {
   getSeriesData,
   onChartZoom,
 } from 'components/LineChart/LineChart.utils';
-import { useSelector } from 'redux/hooks';
 
 interface IBaseChartType extends ILineChartMarkers, ILineChartTimeAxis {
   [key: string]: any;
@@ -30,7 +31,17 @@ interface ILineChartProps<ChartType extends IBaseChartType> extends ILineChart<C
   shouldReplaceMergeLines?: boolean;
   xAxis?: XAXisComponentOption;
   grid?: GridComponentOption;
+  isDarkMode?: boolean;
 }
+
+echartsUse([
+  BaseLineChart,
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  CanvasRenderer,
+]);
 
 export default function LineChart<ChartType extends IBaseChartType>({
   charts,
@@ -44,9 +55,9 @@ export default function LineChart<ChartType extends IBaseChartType>({
   grid,
   scatterplot,
   shouldReplaceMergeLines = false,
+  isDarkMode = false,
 }: ILineChartProps<ChartType>) {
   const [chart, setChart] = useState<ECharts | null>(null);
-  const isDarkMode = useSelector(({ theme: { isDarkMode } }) => isDarkMode);
 
   const chartContainer = useRef<HTMLDivElement | null>(null);
 
@@ -55,7 +66,7 @@ export default function LineChart<ChartType extends IBaseChartType>({
       return;
     }
 
-    const initChart = init(chartContainer.current);
+    const initChart = init(chartContainer.current) as any;
 
     initChart.setOption(
       createOptions<ChartType>({

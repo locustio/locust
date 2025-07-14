@@ -1,10 +1,10 @@
 import ExceptionsTab from 'components/ExceptionsTab/ExceptionsTab';
-import FailuresTable from 'components/FailuresTable/FailuresTable';
+import FailuresTable from 'components/FailuresTable/FailuresTableContainer';
 import LocustCloudTab from 'components/LocustCloudTab/LocustCloudTab';
 import LogViewer from 'components/LogViewer/LogViewer';
 import Reports from 'components/Reports/Reports';
-import StatsTable from 'components/StatsTable/StatsTable';
-import SwarmCharts from 'components/SwarmCharts/SwarmCharts';
+import StatsTable from 'components/StatsTable/StatsTableContainer';
+import SwarmCharts from 'components/SwarmCharts/SwarmChartsContainer';
 import SwarmRatiosTab from 'components/SwarmRatiosTab/SwarmRatiosTab';
 import WorkersTable from 'components/WorkersTable/WorkersTable';
 import { LOG_VIEWER_KEY } from 'constants/logs';

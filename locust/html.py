@@ -1,5 +1,4 @@
 import os
-from html import escape
 from itertools import chain
 
 from jinja2 import Environment as JinjaEnvironment
@@ -81,13 +80,13 @@ def get_html_report(
         "report.html",
         template_args={
             "is_report": True,
-            "requests_statistics": [stat.to_dict(escape_string_values=True) for stat in requests_statistics],
+            "requests_statistics": [stat.to_dict() for stat in requests_statistics],
             "failures_statistics": [stat.to_dict() for stat in failures_statistics],
             "exceptions_statistics": [stat for stat in exceptions_statistics],
             "response_time_statistics": [
                 {
-                    "name": escape(stat.name),
-                    "method": escape(stat.method or ""),
+                    "name": stat.name,
+                    "method": stat.method or "",
                     **{
                         str(percentile): stat.get_response_time_percentile(percentile)
                         for percentile in PERCENTILES_FOR_HTML_REPORT
@@ -98,13 +97,13 @@ def get_html_report(
             "start_time": start_time,
             "end_time": end_time,
             "duration": format_duration(request_stats.start_time, end_ts),
-            "host": escape(str(host)),
+            "host": str(host),
             "history": history,
             "show_download_link": show_download_link,
-            "locustfile": escape(str(environment.locustfile)),
+            "locustfile": str(environment.locustfile),
             "tasks": task_data,
             "percentiles_to_chart": stats.PERCENTILES_TO_CHART,
-            "profile": escape(str(environment.profile)) if environment.profile else None,
+            "profile": str(environment.profile) if environment.profile else None,
         },
         theme=theme,
     )

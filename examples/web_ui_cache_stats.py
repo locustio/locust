@@ -8,7 +8,6 @@ from locust import HttpUser, TaskSet, between, events, task
 
 import json
 import os
-from html import escape
 from time import time
 
 from flask import Blueprint, make_response, render_template, request
@@ -79,7 +78,7 @@ def locust_init(environment, **kwargs):
                     stats_tmp.append(
                         {
                             "name": name,
-                            "safe_name": escape(name, quote=False),
+                            "safe_name": name,
                             "hit": inner_stats["hit"],
                             "miss": inner_stats["miss"],
                             "noinfo": inner_stats["noinfo"],

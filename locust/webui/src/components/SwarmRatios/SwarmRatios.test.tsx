@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 
-import SwarmRatios from 'components/SwarmRatios/SwarmRatios';
+import SwarmRatios from 'components/SwarmRatios/SwarmRatiosContainer';
 import { renderWithProvider } from 'test/testUtils';
 
 describe('SwarmRatios', () => {

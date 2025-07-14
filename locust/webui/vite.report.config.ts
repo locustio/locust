@@ -7,6 +7,7 @@ export default {
   plugins: [reactSwcPlugin(), tsconfigPaths(), viteSingleFile()],
   build: {
     emptyOutDir: false,
+    minify: 'terser',
     rollupOptions: {
       input: {
         report: './report.html',

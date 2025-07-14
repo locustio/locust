@@ -7,7 +7,6 @@ import logging
 import mimetypes
 import os.path
 from functools import wraps
-from html import escape
 from io import StringIO
 from json import dumps
 from typing import TYPE_CHECKING, Any, TypedDict
@@ -512,8 +511,8 @@ class WebUI:
                     "exceptions": [
                         {
                             "count": row["count"],
-                            "msg": escape(row["msg"]),
-                            "traceback": escape(row["traceback"]),
+                            "msg": row["msg"],
+                            "traceback": row["traceback"],
                             "nodes": ", ".join(row["nodes"]),
                         }
                         for row in (environment.runner.exceptions.values() if environment.runner is not None else [])

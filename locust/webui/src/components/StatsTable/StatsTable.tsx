@@ -1,11 +1,9 @@
 import { Box } from '@mui/material';
-import { connect } from 'react-redux';
 
 import Table from 'components/Table/Table';
 import ViewColumnSelector from 'components/ViewColumnSelector/ViewColumnSelector';
 import { swarmTemplateArgs } from 'constants/swarm';
 import useSelectViewColumns from 'hooks/useSelectViewColumns';
-import { IRootState } from 'redux/store';
 import { ITableStructure } from 'types/table.types';
 import { ISwarmStat } from 'types/ui.types';
 
@@ -36,7 +34,7 @@ interface IStatsTable {
   tableStructure?: ITableStructure[];
 }
 
-export function StatsTable({ stats, tableStructure = baseTableStructure }: IStatsTable) {
+export default function StatsTable({ stats, tableStructure = baseTableStructure }: IStatsTable) {
   const { selectedColumns, addColumn, removeColumn, filteredStructure } =
     useSelectViewColumns(tableStructure);
 
@@ -58,7 +56,3 @@ export function StatsTable({ stats, tableStructure = baseTableStructure }: IStat
     </Box>
   );
 }
-
-const storeConnector = ({ ui: { stats } }: IRootState) => ({ stats });
-
-export default connect(storeConnector)(StatsTable);

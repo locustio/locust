@@ -46,24 +46,6 @@ describe('Table', () => {
     expect(getByText(roundToDecimalPlaces(mockRowsWithRps[0].currentRps, 2))).toBeTruthy();
   });
 
-  test('parses special HTML symbols into characters', () => {
-    const mockStructureWithMarkdown = [{ title: 'Message', key: 'error', markdown: true }];
-    const mockRowsWithRps = [
-      {
-        method: 'GET',
-        name: '/test1',
-        occurrences: 1,
-        error: 'ConnectionRefusedError(111, &#x27;Connection refused&#x27;)',
-      },
-    ];
-
-    const { getByText } = render(
-      <Table rows={mockRowsWithRps} structure={mockStructureWithMarkdown} />,
-    );
-
-    expect(getByText("ConnectionRefusedError(111, 'Connection refused')")).toBeTruthy();
-  });
-
   test('formats row content according to a provided formatter', () => {
     const rowContent = 'message';
 
