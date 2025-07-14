@@ -8,7 +8,6 @@ from locust import HttpUser, TaskSet, between, events, task
 
 import json
 import os
-from html import escape
 from time import time
 
 from flask import Blueprint, make_response, render_template, request
@@ -63,9 +62,7 @@ def locust_init(environment, **kwargs):
                 for name, inner_stats in stats.items():
                     content_length = inner_stats["content-length"]
 
-                    stats_tmp.append(
-                        {"name": name, "safe_name": escape(name, quote=False), "content_length": content_length}
-                    )
+                    stats_tmp.append({"name": name, "safe_name": name, "content_length": content_length})
 
                 # Truncate the total number of stats and errors displayed since a large number of rows will cause the app
                 # to render extremely slowly.

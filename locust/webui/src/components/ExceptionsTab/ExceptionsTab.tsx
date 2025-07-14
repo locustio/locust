@@ -1,4 +1,4 @@
-import ExceptionsTable from 'components/ExceptionsTable/ExceptionsTable';
+import ExceptionsTable from 'components/ExceptionsTable/ExceptionsTableContainer';
 import useFetchExceptions from 'hooks/useFetchExceptions';
 
 export default function ExceptionsTab() {

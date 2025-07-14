@@ -1,9 +1,6 @@
-import { connect } from 'react-redux';
-
 import LineChart from 'components/LineChart/LineChart';
 import { ILineChart } from 'components/LineChart/LineChart.types';
 import { swarmTemplateArgs } from 'constants/swarm';
-import { IRootState } from 'redux/store';
 import { ICharts } from 'types/ui.types';
 
 const percentilesToChartLines = swarmTemplateArgs.percentilesToChart
@@ -44,12 +41,19 @@ const availableSwarmCharts: Omit<ILineChart<ICharts>, 'charts'>[] = [
   },
 ];
 
-export function SwarmCharts({ charts }: { charts: ICharts }) {
+export default function SwarmCharts({
+  charts,
+  isDarkMode,
+}: {
+  charts: ICharts;
+  isDarkMode?: boolean;
+}) {
   return availableSwarmCharts.map((lineChartProps, index) => (
-    <LineChart<ICharts> key={`swarm-chart-${index}`} {...lineChartProps} charts={charts} />
+    <LineChart<ICharts>
+      key={`swarm-chart-${index}`}
+      {...lineChartProps}
+      charts={charts}
+      isDarkMode={isDarkMode}
+    />
   ));
 }
-
-const storeConnector = ({ ui: { charts } }: IRootState) => ({ charts });
-
-export default connect(storeConnector)(SwarmCharts);

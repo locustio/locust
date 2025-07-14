@@ -8,7 +8,6 @@ import {
   TableRow,
 } from '@mui/material';
 
-import Markdown from 'components/Markdown/Markdown';
 import useSortByField, { ISortByFieldOptions } from 'hooks/useSortByField';
 import { ITableStructure } from 'types/table.types';
 import { roundToDecimalPlaces } from 'utils/number';
@@ -31,20 +30,15 @@ export interface ITableRowContent {
   content: string | number;
   formatter?: (content: string | number) => string;
   round?: number;
-  markdown?: boolean;
 }
 
-function TableRowContent({ content, formatter, round, markdown }: ITableRowContent) {
+function TableRowContent({ content, formatter, round }: ITableRowContent) {
   if (formatter) {
     return formatter(content);
   }
 
   if (round) {
     return roundToDecimalPlaces(content as number, round);
-  }
-
-  if (markdown) {
-    return <Markdown content={content as string} />;
   }
 
   return content;
