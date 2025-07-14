@@ -378,7 +378,15 @@ class FastHttpUser(User):
     """Parameter passed to FastHttpSession"""
 
     client_pool: HTTPClientPool | None = None
-    """HTTP client pool to use. If not given, a new pool is created per single user."""
+    """HTTP client pool to use. If not given, a new pool is created per single user.
+
+    For example, to have all instances of MyUser share a single HTTP client pool with concurrency of 5, you would do:
+
+    .. code-block:: python
+
+        class MyUser(FastHttpUser):
+            client_pool = HTTPClientPool(concurrency=5)
+    """
 
     ssl_context_factory: Callable | None = None
     """A callable that return a SSLContext for overriding the default context created by the FastHttpSession."""
