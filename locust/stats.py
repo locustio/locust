@@ -674,7 +674,6 @@ class StatsEntry:
         return {
             "method": self.method,
             "name": self.name,
-            "safe_name": self.name,
             "num_requests": self.num_requests,
             "num_failures": self.num_failures,
             "min_response_time": 0 if self.min_response_time is None else proper_round(self.min_response_time),

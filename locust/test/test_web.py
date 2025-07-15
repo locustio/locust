@@ -125,7 +125,6 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         data = json.loads(response.text)
         self.assertEqual(2, len(data["stats"]))  # one entry plus Aggregated
         self.assertEqual("/<html>", data["stats"][0]["name"])
-        self.assertEqual("/&lt;html&gt;", data["stats"][0]["safe_name"])
         self.assertEqual("GET", data["stats"][0]["method"])
 
         self.assertEqual("Aggregated", data["stats"][1]["name"])

@@ -49,7 +49,7 @@ function App() {
             extendedStats={[
                 {
                     key: "content-length",
-                    data: [{ name: "/", safeName: "/", content_length: "123" }],
+                    data: [{ name: "/", content_length: "123" }],
                 },
             ]}
         />
