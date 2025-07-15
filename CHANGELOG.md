@@ -1,6 +1,23 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.37.13](https://github.com/locustio/locust/tree/2.37.13) (2025-07-15)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.12...2.37.13)
+
+**Fixed bugs:**
+
+- Locust can't install on alpine linux anymore [\#3166](https://github.com/locustio/locust/issues/3166)
+
+**Closed issues:**
+
+- Decouple the JavaScript asset code from the report [\#3064](https://github.com/locustio/locust/issues/3064)
+
+**Merged pull requests:**
+
+- Remove safe\_name from /stats/requests response [\#3171](https://github.com/locustio/locust/pull/3171) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Web UI: Shrink Bundle Size [\#3169](https://github.com/locustio/locust/pull/3169) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.37.12](https://github.com/locustio/locust/tree/2.37.12) (2025-07-08)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.37.11...2.37.12)
