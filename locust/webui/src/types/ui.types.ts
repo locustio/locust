@@ -16,7 +16,6 @@ export interface ISwarmStat {
   [key: `responseTimePercentile${number}`]: number;
   numFailures: number;
   numRequests: number;
-  safeName: string;
 }
 
 export interface ISwarmError {
@@ -77,7 +76,6 @@ export interface ISwarmRatios {
 
 export interface IExtendedStatData {
   name: string;
-  safeName: string;
   [key: string]: number | string;
 }
 

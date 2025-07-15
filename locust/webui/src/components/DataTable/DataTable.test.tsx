@@ -19,7 +19,7 @@ const mockState = {
     extendedStats: [
       {
         key: 'content-length',
-        data: [{ name: '/test', safeName: '/test', contentLength: 200 }],
+        data: [{ name: '/test', contentLength: 200 }],
       },
     ],
   },

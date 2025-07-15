@@ -78,7 +78,6 @@ def locust_init(environment, **kwargs):
                     stats_tmp.append(
                         {
                             "name": name,
-                            "safe_name": name,
                             "hit": inner_stats["hit"],
                             "miss": inner_stats["miss"],
                             "noinfo": inner_stats["noinfo"],

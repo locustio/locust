@@ -62,7 +62,7 @@ def locust_init(environment, **kwargs):
                 for name, inner_stats in stats.items():
                     content_length = inner_stats["content-length"]
 
-                    stats_tmp.append({"name": name, "safe_name": name, "content_length": content_length})
+                    stats_tmp.append({"name": name, "content_length": content_length})
 
                 # Truncate the total number of stats and errors displayed since a large number of rows will cause the app
                 # to render extremely slowly.

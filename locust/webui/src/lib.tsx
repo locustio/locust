@@ -60,7 +60,6 @@ export type IStatData<StatKey extends string> = {
   [key in StatKey]: string;
 } & {
   name: string;
-  safeName: string;
 };
 
 export interface IExtendedStat<ExtendedTabKey, StatKey extends string> {

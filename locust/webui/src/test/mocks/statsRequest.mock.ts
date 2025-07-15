@@ -30,7 +30,6 @@ export const statsResponseMock = {
       'response_time_percentile_0.99': 1,
       num_failures: 12652,
       num_requests: 12652,
-      safe_name: '/',
     },
     {
       avg_content_length: 0.0,
@@ -46,7 +45,6 @@ export const statsResponseMock = {
       'response_time_percentile_0.99': 1,
       num_failures: 12652,
       num_requests: 12652,
-      safe_name: 'Aggregated',
     },
   ],
   total_avg_response_time: 0.41064205516736735,
@@ -119,7 +117,6 @@ export const statsResponseTransformed = {
       'responseTimePercentile0.99': 1,
       numFailures: 12652,
       numRequests: 12652,
-      safeName: '/',
     },
     {
       avgContentLength: 0,
@@ -135,7 +132,6 @@ export const statsResponseTransformed = {
       'responseTimePercentile0.99': 1,
       numFailures: 12652,
       numRequests: 12652,
-      safeName: 'Aggregated',
     },
   ],
   errors: [
