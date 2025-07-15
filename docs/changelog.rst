@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.37.13
+=======
+* Web UI: Shrink Bundle Size by https://github.com/locustio/locust/pull/3169
+* Remove safe_name from /stats/requests response https://github.com/locustio/locust/pull/3171
+
 2.37.12
 =======
 * Attempt to increase open file limit (RLIMIT_NOFILE) even on master https://github.com/locustio/locust/pull/3162
