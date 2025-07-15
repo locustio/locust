@@ -920,7 +920,7 @@ requires-dist = [
     { name = "flask-login", specifier = ">=0.6.3" },
     { name = "gevent", specifier = ">=24.10.1,<26.0.0" },
     { name = "geventhttpclient", specifier = ">=2.3.1" },
-    { name = "locust-cloud", specifier = ">=1.26.1" },
+    { name = "locust-cloud", specifier = ">=1.26.2" },
     { name = "msgpack", specifier = ">=1.0.0" },
     { name = "psutil", specifier = ">=5.9.1" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
@@ -975,7 +975,7 @@ test = [
 
 [[package]]
 name = "locust-cloud"
-version = "1.26.1"
+version = "1.26.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "configargparse" },
@@ -985,9 +985,9 @@ dependencies = [
     { name = "python-socketio", extra = ["client"] },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/40/2e/366fe6bfab5d029bfc5ab582bb0cef5d2ee40f6382cef9ac08f0bccdbcab/locust_cloud-1.26.1.tar.gz", hash = "sha256:86c9f4780712eb5c5aa70bd92940eccef73282ab35fdf5a130f6fbd127e1e742", size = 456014, upload-time = "2025-07-15T11:34:45.485Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ee/9c/5a23e9c4c616c4cfd1ee83097a021ff9f770a0b1705986ad4e4b92df1e44/locust_cloud-1.26.2.tar.gz", hash = "sha256:5568203599e3a38b2b115de9ef25a25fd0e755c62752866872e67c413dc62528", size = 455973, upload-time = "2025-07-15T15:51:58.275Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e8/e0/84e707ef5671ff0ff4de7d363b71fdc9b3a49a528f123e763f9b76a9471e/locust_cloud-1.26.1-py3-none-any.whl", hash = "sha256:eee80dd8c6a27efb7363ee2391255a499ccd40fa6d0e1997ab1a2d12d0741225", size = 409975, upload-time = "2025-07-15T11:34:43.672Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/d9/9a7e8a4e3a46fc8b854488d6f733066db920cab069eac413c2da4f7ac59a/locust_cloud-1.26.2-py3-none-any.whl", hash = "sha256:4e152a216b5e162546d49aa9b84dd6d663f4854015e4f822c3ea820e598647c9", size = 409923, upload-time = "2025-07-15T15:51:57Z" },
 ]
 
 [[package]]
