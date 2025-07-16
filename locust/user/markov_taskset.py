@@ -1,4 +1,4 @@
-from locust.user.task import TaskSetMeta
+from locust.user.task import TaskSetMeta, validate_task_name
 from locust.user.users import TaskSet
 
 import logging
@@ -11,22 +11,11 @@ MarkovTaskT = TypeVar("MarkovTaskT", Callable[..., None], type[TaskSet])
 
 @runtime_checkable
 class TransitionsHolder(Protocol[MarkovTaskT]):
-    transitions: dict[str, MarkovTaskT]
-
-# TODO: add @end decorator that termines a tasksets execution after the function is called
+    transitions: dict[str, MarkovTaskT] | list[str]
 
 
-# TODO: This should be deferred to once the graph is completed:
-#  - verify targets, warn if some functions are unreachable, etc.
-def verify_function_name(decorated_func):
-    if decorated_func.__name__ in ["on_stop", "on_start"]:
-        logging.warning(
-            "You have tagged your on_stop/start function with @transition. This will make the method get called both as a step AND on stop/start."
-        )  # this is usually not what the user intended
-    if decorated_func.__name__ == "run":
-        raise Exception(
-            "TaskSet.run() is a method used internally by Locust, and you must not override it or annotate it with transitions"
-        )
+def is_markov_task(task: MarkovTaskT):
+    return isinstance(task, TransitionsHolder)
 
 
 def transition(func_name: str, weight: int = 1) -> Callable[[MarkovTaskT], MarkovTaskT]:
@@ -59,21 +48,19 @@ def transitions(weights: dict[str, int] | list[tuple[str, int] | str]) -> Callab
     return decorator_func
 
 
-# TODO: Optimize out and delete all calls
-def random_choice(weights: dict):
-    return random.choice([v for v in weights for _ in range(weights[v])])
+def get_markov_tasks(class_dict: dict) -> list:
+    return [fn for fn in class_dict.values() if is_markov_task(fn)]
 
 
-def validate_markov_chain(class_dict: dict, classname: str):
-    def is_markov_task(func):
-        return hasattr(func, "transitions")
+def validate_has_markov_tasks(tasks: list[TransitionsHolder], classname: str):
+    if not tasks:
+        raise Exception(
+            f"No Markov tasks defined in class {classname}. Use the @transition(s) decorators to define some."
+        )
 
-    markov_tasks = [fn for fn in class_dict.values() if is_markov_task(fn)]
 
-    if not markov_tasks:
-        raise Exception("No steps defined. Use the @step decorator to define steps")
-
-    for task in markov_tasks:
+def validate_transitions(tasks: list, class_dict: dict, classname: str):
+    for task in tasks:
         for dest in task.transitions.keys():
             dest_task = class_dict.get(dest)
             if not dest_task:
@@ -86,46 +73,71 @@ def validate_markov_chain(class_dict: dict, classname: str):
                     + f"Used as a transition from {task.__name__}."
                 )
 
+
+def validate_no_unreachable_tasks(tasks: list, class_dict: dict, classname: str):
     visited = set()
+
     def dfs(task_name):
         visited.add(task_name)
         for dest in class_dict.get(task_name).transitions.keys():
             if dest not in visited:
                 dfs(dest)
 
-    dfs(markov_tasks[0].__name__)
-    unreachable = set([task.__name__ for task in markov_tasks]) - visited
+    dfs(tasks[0].__name__)
+    unreachable = set([task.__name__ for task in tasks]) - visited
 
     if len(unreachable) > 0:
-        # TODO: Warn instead of throw
-        raise Exception(f"The following markov tasks are unreachable in class {classname}: {unreachable}")
+        logging.warning(f"The following markov tasks are unreachable in class {classname}: {unreachable}")
 
-    return markov_tasks
+    return tasks
 
 
-class MarkvosTaskSetMeta(TaskSetMeta):
+def validate_no_tags(task, classname: str):
+    if "locust_tag_set" in dir(task):
+        raise Exception(
+            "Tags are unsupported for MarkovTaskSet since they can make the markov chain invalid. "
+            + f"Tags detected on {classname}.{task.__name__}: {task.locust_tag_set}"
+        )
+
+
+def validate_markov_chain(tasks: list, class_dict: dict, classname: str):
+    validate_has_markov_tasks(tasks, classname)
+    validate_transitions(tasks, class_dict, classname)
+    validate_no_unreachable_tasks(tasks, class_dict, classname)
+    for task in tasks:
+        validate_task_name(task)
+        validate_no_tags(task, classname)
+
+
+class MarkovTaskSetMeta(TaskSetMeta):
     """
     Meta class for MarkovTaskSet. It's used to allow MarkovTaskSet classes to specify
     task execution using the @transition(s) decorator
     """
 
     def __new__(mcs, classname, bases, class_dict):
-        if classname != "MarkovTaskSet" and not class_dict.get("abstract"):
-            markov_tasks = validate_markov_chain(class_dict, classname)
-            class_dict["current"] = markov_tasks[0]
+        if not class_dict.get("abstract"):
+            tasks = get_markov_tasks(class_dict)
+            validate_markov_chain(tasks, class_dict, classname)
+            class_dict["current"] = tasks[0]
+            for task in tasks:
+                task.transitions = [name for name in task.transitions.keys() for _ in range(task.transitions[name])]
 
         return type.__new__(mcs, classname, bases, class_dict)
 
 
-class MarkovTaskSet(TaskSet, metaclass=MarkvosTaskSetMeta):
+class MarkovTaskSet(TaskSet, metaclass=MarkovTaskSetMeta):
     """
     Class defining a probabilistic sequence of functions that a User will execute.
-    The sequence is defined by Markov Chain to describe a user's load.
+    The sequence is defined by a Markov Chain to describe a user's load.
     It holds a current state and a set of possible transitions for each state.
     Every transition as an associated weight that defines how likely it is to be taken.
     """
 
     current: Callable | TaskSet
+
+    abstract: bool = True
+    """If abstract is True, the class is meant to be subclassed, and the markov chain won't be validated"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -134,7 +146,7 @@ class MarkovTaskSet(TaskSet, metaclass=MarkvosTaskSetMeta):
         fn = self.current
 
         transitions = getattr(fn, "transitions")
-        next = random_choice(transitions)
+        next = random.choice(transitions)
         self.current = getattr(self, next)
 
         return fn

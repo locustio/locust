@@ -35,6 +35,16 @@ class TaskHolder(Protocol[TaskT]):
     tasks: list[TaskT]
 
 
+def validate_task_name(decorated_func):
+    if decorated_func.__name__ in ["on_stop", "on_start"]:
+        logging.warning(
+            "You have tagged your on_stop/start function with @transition. This will make the method get called both as a step AND on stop/start."
+        )  # this is usually not what the user intended
+    if decorated_func.__name__ == "run":
+        raise Exception(
+            "TaskSet.run() is a method used internally by Locust, and you must not override it or annotate it with transitions"
+        )
+
 @overload
 def task(weight: TaskT) -> TaskT: ...
 
@@ -69,14 +79,7 @@ def task(weight: TaskT | int = 1) -> TaskT | Callable[[TaskT], TaskT]:
     """
 
     def decorator_func(func):
-        if func.__name__ in ["on_stop", "on_start"]:
-            logging.warning(
-                "You have tagged your on_stop/start function with @task. This will make the method get called both as a task AND on stop/start."
-            )  # this is usually not what the user intended
-        if func.__name__ == "run":
-            raise Exception(
-                "User.run() is a method used internally by Locust, and you must not override it or register it as a task"
-            )
+        validate_task_name(func)
         func.locust_task_weight = weight
         return func
 
@@ -186,8 +189,6 @@ def filter_tasks_by_tags(
             continue
 
         passing = True
-        # TODO: Handle markov...
-        #   What if tags render the graph unusable?
         if hasattr(task, "tasks"):
             filter_tasks_by_tags(task, tags, exclude_tags, checked)
             passing = len(task.tasks) > 0 or "current" in dir(task)
