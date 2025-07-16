@@ -1,21 +1,37 @@
 from locust.user.task import TaskSetMeta, validate_task_name
 from locust.user.users import TaskSet
+from locust.exception import LocustError
 
 import logging
 import random
 from collections.abc import Callable
-from typing import Protocol, TypeVar, runtime_checkable
+from typing import Protocol, runtime_checkable
 
-MarkovTaskT = TypeVar("MarkovTaskT", Callable[..., None], type[TaskSet])
+MarkovTaskT = Callable[..., None]
 
 
-@runtime_checkable
-class TransitionsHolder(Protocol[MarkovTaskT]):
-    transitions: dict[str, MarkovTaskT] | list[str]
+class NoMarkovTasksError(LocustError):
+    """Raised when a MarkovTaskSet class doesn't define any Markov tasks."""
+    pass
+
+
+class InvalidTransitionError(LocustError):
+    """Raised when a transition in a MarkovTaskSet points to a non-existent task."""
+    pass
+
+
+class NonMarkovTaskTransitionError(LocustError):
+    """Raised when a transition in a MarkovTaskSet points to a task that doesn't define transitions."""
+    pass
+
+
+class MarkovTaskTagError(LocustError):
+    """Raised when tags are used with Markov tasks, which is unsupported."""
+    pass
 
 
 def is_markov_task(task: MarkovTaskT):
-    return isinstance(task, TransitionsHolder)
+    return "transitions" in dir(task)
 
 
 def transition(func_name: str, weight: int = 1) -> Callable[[MarkovTaskT], MarkovTaskT]:
@@ -52,9 +68,9 @@ def get_markov_tasks(class_dict: dict) -> list:
     return [fn for fn in class_dict.values() if is_markov_task(fn)]
 
 
-def validate_has_markov_tasks(tasks: list[TransitionsHolder], classname: str):
+def validate_has_markov_tasks(tasks: list, classname: str):
     if not tasks:
-        raise Exception(
+        raise NoMarkovTasksError(
             f"No Markov tasks defined in class {classname}. Use the @transition(s) decorators to define some."
         )
 
@@ -64,11 +80,11 @@ def validate_transitions(tasks: list, class_dict: dict, classname: str):
         for dest in task.transitions.keys():
             dest_task = class_dict.get(dest)
             if not dest_task:
-                raise Exception(
+                raise InvalidTransitionError(
                     f"Transition to {dest} from {task.__name__} is invalid since no such element exists on class {classname}"
                 )
             if not is_markov_task(dest_task):
-                raise Exception(
+                raise NonMarkovTaskTransitionError(
                     f"{classname}.{dest} cannot be used as a target for a transition since it does not define any transitions of its own."
                     + f"Used as a transition from {task.__name__}."
                 )
@@ -94,7 +110,7 @@ def validate_no_unreachable_tasks(tasks: list, class_dict: dict, classname: str)
 
 def validate_no_tags(task, classname: str):
     if "locust_tag_set" in dir(task):
-        raise Exception(
+        raise MarkovTaskTagError(
             "Tags are unsupported for MarkovTaskSet since they can make the markov chain invalid. "
             + f"Tags detected on {classname}.{task.__name__}: {task.locust_tag_set}"
         )
