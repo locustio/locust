@@ -20,7 +20,7 @@ import requests
 from pyquery import PyQuery as pq
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
-from .subprocess_utils import TestPTYProcess
+from .subprocess_utils import TestProcess
 from .util import get_free_tcp_port, patch_env, temporary_file
 
 SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give it some extra time
@@ -870,7 +870,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            with TestPTYProcess(f"locust -f {mocked.file_path} --headless -u 0 --loglevel INFO", self.fail) as proc:
+            with TestProcess(f"locust -f {mocked.file_path} --headless -u 0 --loglevel INFO", self.fail) as proc:
                 proc.expect_output('All users spawned: {"UserSubclass": 0} (0 total users)')
 
                 proc.send_input("w")

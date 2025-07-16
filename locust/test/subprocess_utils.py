@@ -1,5 +1,4 @@
 import os
-import pty
 import re
 import shlex
 import signal
@@ -7,28 +6,40 @@ import subprocess
 import time
 from collections.abc import Callable
 
+if os.name != "nt":
+    import pty
 
-class TestPTYProcess:
+
+class TestProcess:
     """
-    Wraps a subprocess attached to a pseudo-terminal (PTY).
+    Wraps a subprocess for testing purposes.
     """
 
-    def __init__(self, command: str, on_fail: Callable[[str], None], *, return_code: int = 0):
-        self.stdin_m: int
-        self.stdin_s: int
+    def __init__(
+        self,
+        command: str,
+        on_fail: Callable[[str], None],
+        *,
+        return_code: int = 0,
+        use_pty: bool = os.name != "nt",
+    ):
         self.proc: subprocess.Popen[str]
 
         self.on_fail = on_fail
         self.return_code = return_code
         self.expect_timeout: int = 5
 
+        self.use_pty = use_pty
         # Create PTY pair
-        self.stdin_m, self.stdin_s = pty.openpty()
+        if use_pty:
+            self.stdin_m: int
+            self.stdin_s: int
+            self.stdin_m, self.stdin_s = pty.openpty()
 
         self.proc = subprocess.Popen(
             shlex.split(command),
             env={"PYTHONUNBUFFERED": "1", **os.environ},
-            stdin=self.stdin_s,
+            stdin=self.stdin_s if self.use_pty else subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=1,
@@ -36,20 +47,18 @@ class TestPTYProcess:
             text=True,
         )
 
-    def __enter__(self) -> "TestPTYProcess":
+    def __enter__(self) -> "TestProcess":
         return self
 
     def __exit__(self, *_) -> None:
         self.close()
 
     def close(self) -> None:
-        """
-        Clean up the PTY file descriptors and wait for process to exit.
-        """
         error_message = "Process exited with return code %i. Expected %i (%i != %i)"
 
-        os.close(self.stdin_m)
-        os.close(self.stdin_s)
+        if self.use_pty:
+            os.close(self.stdin_m)
+            os.close(self.stdin_s)
 
         self.send_signal(signal.SIGINT)
 
@@ -107,7 +116,12 @@ class TestPTYProcess:
         self.on_fail(error_message % (pattern, self.expect_timeout, buffer))
 
     def send_input(self, content: str):
-        os.write(self.stdin_m, content.encode())
+        if self.use_pty:
+            os.write(self.stdin_m, content.encode())
+        else:
+            assert self.proc.stdin
+            self.proc.stdin.write(content)
+            self.proc.stdin.flush()
 
     def send_signal(self, sig: int):
         self.proc.send_signal(sig)
