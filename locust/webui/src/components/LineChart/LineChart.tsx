@@ -6,6 +6,8 @@ import {
   TitleComponent,
   TooltipComponent,
   LegendComponent,
+  ToolboxComponent,
+  DataZoomSliderComponent,
 } from 'echarts/components';
 import { use as echartsUse, init, dispose, connect } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
@@ -38,6 +40,8 @@ echartsUse([
   BaseLineChart,
   TitleComponent,
   TooltipComponent,
+  ToolboxComponent,
+  DataZoomSliderComponent,
   GridComponent,
   LegendComponent,
   CanvasRenderer,
