@@ -20,6 +20,7 @@ import requests
 from pyquery import PyQuery as pq
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
+from .subprocess_utils import TestPTYProcess
 from .util import get_free_tcp_port, patch_env, temporary_file
 
 SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give it some extra time
@@ -857,8 +858,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
     @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, and thus we cannot import pty")
     def test_input(self):
-        import pty
-
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
         from locust import User, TaskSet, task, between
@@ -871,58 +870,38 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            stdin_m, stdin_s = pty.openpty()
-            stdin = os.fdopen(stdin_m, "wb", 0)
+            with TestPTYProcess(f"locust -f {mocked.file_path} --headless -u 0 --loglevel INFO", self.fail) as proc:
+                proc.expect_output('All users spawned: {"UserSubclass": 0} (0 total users)')
 
-            proc = subprocess.Popen(
-                " ".join(
-                    [
-                        "locust",
-                        "-f",
-                        mocked.file_path,
-                        "--headless",
-                        "--run-time",
-                        "6s",
-                        "-u",
-                        "0",
-                        "--loglevel",
-                        "INFO",
-                    ]
-                ),
-                stderr=STDOUT,
-                stdin=stdin_s,
-                stdout=PIPE,
-                shell=True,
-                text=True,
-            )
-            gevent.sleep(1)
+                proc.send_input("w")
+                proc.expect_output("Ramping to 1 users at a rate of 100.00 per second")
+                proc.expect_output('All users spawned: {"UserSubclass": 1} (1 total users)')
+                proc.expect_output("Test task is running")
 
-            stdin.write(b"w")
-            gevent.sleep(1)
-            stdin.write(b"W")
-            gevent.sleep(1)
-            stdin.write(b"s")
-            gevent.sleep(1)
-            stdin.write(b"S")
-            gevent.sleep(1)
+                proc.send_input("W")
+                proc.expect_output("Ramping to 11 users at a rate of 100.00 per second")
+                proc.expect_output('All users spawned: {"UserSubclass": 11} (11 total users)')
+                proc.expect_output("Test task is running")
 
-            # This should not do anything since we are already at zero users
-            stdin.write(b"S")
+                proc.send_input("s")
+                proc.expect_output("Ramping to 10 users at a rate of 100.00 per second")
+                proc.expect_output('All users spawned: {"UserSubclass": 10} (10 total users)')
+                proc.expect_output("Test task is running")
 
-            output = proc.communicate()[0]
-            stdin.close()
-            self.assertIn("Ramping to 1 users at a rate of 100.00 per second", output)
-            self.assertIn('All users spawned: {"UserSubclass": 1} (1 total users)', output)
-            self.assertIn("Ramping to 11 users at a rate of 100.00 per second", output)
-            self.assertIn('All users spawned: {"UserSubclass": 11} (11 total users)', output)
-            self.assertIn("Ramping to 10 users at a rate of 100.00 per second", output)
-            self.assertIn('All users spawned: {"UserSubclass": 10} (10 total users)', output)
-            self.assertIn("Ramping to 0 users at a rate of 100.00 per second", output)
-            self.assertIn('All users spawned: {"UserSubclass": 0} (0 total users)', output)
-            self.assertIn("Test task is running", output)
-            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
-            self.assertRegex(output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
-            self.assertIn("Shutting down (exit code 0)", output)
+                proc.send_input("S")
+                proc.expect_output("Ramping to 0 users at a rate of 100.00 per second")
+                proc.expect_output('All users spawned: {"UserSubclass": 0} (0 total users)')
+
+                # This should not do anything since we are already at zero users
+                proc.send_input("S")
+
+                # Stop locust process
+                proc.send_signal(signal.SIGINT)
+                proc.expect_output("Shutting down (exit code 0)")
+
+                # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
+                proc.expect_regex(r"Type.*Name.*# reqs.*# fails.*Avg.*Min.*Max.*Med.*req\/s.*failures\/s.*")
+                proc.expect_output("Response time percentiles (approximated)")
 
     @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, and thus we cannot import pty")
     def test_autospawn_browser(self):
