@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.37.14
+=======
+* Web UI: Fix Chart Zoom Slider https://github.com/locustio/locust/pull/3174
+
 2.37.13
 =======
 * Web UI: Shrink Bundle Size by https://github.com/locustio/locust/pull/3169
