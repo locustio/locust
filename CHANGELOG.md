@@ -1,6 +1,15 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.37.14](https://github.com/locustio/locust/tree/2.37.14) (2025-07-16)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.13...2.37.14)
+
+**Merged pull requests:**
+
+- Web UI: Fix Chart Zoom Slider [\#3174](https://github.com/locustio/locust/pull/3174) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Web UI: Improve Locust Cloud Tab [\#3172](https://github.com/locustio/locust/pull/3172) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
 ## [2.37.13](https://github.com/locustio/locust/tree/2.37.13) (2025-07-15)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.37.12...2.37.13)
