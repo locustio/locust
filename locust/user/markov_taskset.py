@@ -5,7 +5,6 @@ from locust.exception import LocustError
 import logging
 import random
 from collections.abc import Callable
-from typing import Protocol, runtime_checkable
 
 MarkovTaskT = Callable[..., None]
 
