@@ -36,8 +36,8 @@ export default function LocustCloudTab() {
           sx={{ color: isDarkMode ? '#fff' : grey[700], textAlign: 'center' }}
           variant='h6'
         >
-          Load testing is hard. Let us take care of the heavy lifting. With Locust Cloud you'll be
-          ready to run distributed load tests in minutes.
+          Let us take care of the heavy lifting. With Locust Cloud you'll be ready to run
+          distributed load tests in minutes.
         </Typography>
         <Box sx={{ display: 'flex', columnGap: 1 }}>
           <Button
