@@ -13,7 +13,6 @@ repos:
       - id: yarn-lint
         name: yarn lint
         files: ^locust/webui/
-        types_or: [javascript, jsx, ts, tsx]
-        entry: cd locust/webui && yarn lint
+        entry: bash -c "cd locust/webui && yarn lint"
         language: system
         pass_filenames: false
