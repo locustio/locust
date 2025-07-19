@@ -62,9 +62,6 @@ class TransitionsExample(MarkovTaskSet):
 
 
 class TransitionsUser(User):
-    """
-    User class that uses the TransitionsDemo MarkovTaskSet.
-    """
     tasks = [TransitionsExample]
     wait_time = constant(1)
 

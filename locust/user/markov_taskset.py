@@ -128,6 +128,9 @@ def get_markov_tasks(class_dict: dict) -> list:
     return [fn for fn in class_dict.values() if is_markov_task(fn)]
 
 
+def to_weighted_list(transitions: dict):
+    return [name for name in transitions.keys() for _ in range(transitions[name])]
+
 def validate_has_markov_tasks(tasks: list, classname: str):
     """
     Validates that a MarkovTaskSet has at least one Markov task.
@@ -190,7 +193,8 @@ def validate_no_unreachable_tasks(tasks: list, class_dict: dict, classname: str)
 
     def dfs(task_name):
         visited.add(task_name)
-        for dest in class_dict.get(task_name).transitions.keys():
+        # Convert to a weighted list first to handle bad weights
+        for dest in set(to_weighted_list(class_dict.get(task_name).transitions)):
             if dest not in visited:
                 dfs(dest)
 
@@ -273,7 +277,7 @@ class MarkovTaskSetMeta(TaskSetMeta):
             validate_markov_chain(tasks, class_dict, classname)
             class_dict["current"] = tasks[0]
             for task in tasks:
-                task.transitions = [name for name in task.transitions.keys() for _ in range(task.transitions[name])]
+                task.transitions = to_weighted_list(task.transitions)
 
         return type.__new__(mcs, classname, bases, class_dict)
 

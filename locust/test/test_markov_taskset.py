@@ -11,11 +11,7 @@ from .testcases import LocustTestCase
 class TestMarkovTaskSet(LocustTestCase):
     def setUp(self):
         super().setUp()
-
-        class MyUser(User):
-            host = "127.0.0.1"
-
-        self.locust = MyUser(self.environment)
+        self.locust = User(self.environment)
 
     def test_basic_markov_chain(self):
         """Test a simple markov chain with transitions between tasks"""
@@ -179,11 +175,28 @@ class TestMarkovTaskSet(LocustTestCase):
         # Check that a warning was logged
         self.assertTrue(any("unreachable" in warning for warning in self.mocked_log.warning))
 
+    def test_validation_unreachable_tasks_because_of_weights(self):
+        """Test that a warning is logged when there are unreachable tasks"""
+
+        class UnreachableTaskSet(MarkovTaskSet):
+            @transition("t2", 0)
+            def t1(self):
+                pass
+
+            @transition("t1")
+            def t2(self):
+                pass
+
+        UnreachableTaskSet(self.locust)
+
+        # Check that a warning was logged
+        self.assertTrue(any("unreachable" in warning for warning in self.mocked_log.warning))
+
     def test_validation_no_tags(self):
         """Test that an exception is raised when a task has tags"""
         with self.assertRaises(MarkovTaskTagError) as context:
             class TaggedTaskSet(MarkovTaskSet):
-                @tag("tag1", "tag2", "tag3")
+                @tag("tag1")
                 @transition("t2")
                 def t1(self):
                     pass
