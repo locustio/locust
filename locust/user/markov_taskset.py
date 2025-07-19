@@ -11,21 +11,25 @@ MarkovTaskT = Callable[..., None]
 
 class NoMarkovTasksError(LocustError):
     """Raised when a MarkovTaskSet class doesn't define any Markov tasks."""
+
     pass
 
 
 class InvalidTransitionError(LocustError):
     """Raised when a transition in a MarkovTaskSet points to a non-existent task."""
+
     pass
 
 
 class NonMarkovTaskTransitionError(LocustError):
     """Raised when a transition in a MarkovTaskSet points to a task that doesn't define transitions."""
+
     pass
 
 
 class MarkovTaskTagError(LocustError):
     """Raised when tags are used with Markov tasks, which is unsupported."""
+
     pass
 
 
@@ -62,6 +66,7 @@ def transition(func_name: str, weight: int = 1) -> Callable[[MarkovTaskT], Marko
             def browse_products(self):
                 self.client.get("/products/")
     """
+
     def decorator_func(decorated):
         if not hasattr(decorated, "transitions"):
             decorated.transitions = {}
@@ -97,6 +102,7 @@ def transitions(weights: dict[str, int] | list[tuple[str, int] | str]) -> Callab
             def checkout(self):
                 self.client.get("/checkout/")
     """
+
     def parse_list_item(item: tuple[str, int] | str) -> tuple[str, int]:
         return item if isinstance(item, tuple) else (item, 1)
 
@@ -130,6 +136,7 @@ def get_markov_tasks(class_dict: dict) -> list:
 
 def to_weighted_list(transitions: dict):
     return [name for name in transitions.keys() for _ in range(transitions[name])]
+
 
 def validate_has_markov_tasks(tasks: list, classname: str):
     """

@@ -133,14 +133,15 @@ class TestMarkovTaskSet(LocustTestCase):
     def test_validation_no_markov_tasks(self):
         """Test that an exception is raised when no markov tasks are defined"""
         with self.assertRaises(NoMarkovTasksError) as context:
-            class EmptyMarkovTaskSet(MarkovTaskSet):
-                ...
+
+            class EmptyMarkovTaskSet(MarkovTaskSet): ...
 
         self.assertIn("No Markov tasks defined", str(context.exception))
 
     def test_validation_invalid_transition(self):
         """Test that an exception is raised when a transition points to a non-existent task"""
         with self.assertRaises(InvalidTransitionError) as context:
+
             class InvalidTransitionTaskSet(MarkovTaskSet):
                 @transition("non_existent_task")
                 def t1(self):
@@ -151,6 +152,7 @@ class TestMarkovTaskSet(LocustTestCase):
     def test_validation_non_markov_transition(self):
         """Test that an exception is raised when a transition points to a non-markov task"""
         with self.assertRaises(NonMarkovTaskTransitionError) as context:
+
             class NonMarkovTransitionTaskSet(MarkovTaskSet):
                 @transition("t2")
                 def t1(self):
@@ -202,6 +204,7 @@ class TestMarkovTaskSet(LocustTestCase):
     def test_validation_no_tags(self):
         """Test that an exception is raised when a task has tags"""
         with self.assertRaises(MarkovTaskTagError) as context:
+
             class TaggedTaskSet(MarkovTaskSet):
                 @tag("tag1")
                 @transition("t2")
