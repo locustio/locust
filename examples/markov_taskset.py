@@ -1,4 +1,4 @@
-from locust import constant, User
+from locust import User, constant
 from locust.user.markov_taskset import MarkovTaskSet, transition, transitions
 
 """

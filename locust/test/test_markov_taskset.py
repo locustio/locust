@@ -1,9 +1,16 @@
-import random
-
 from locust import User, tag
-from locust.user.markov_taskset import MarkovTaskSet, transition, transitions, MarkovTaskTagError, NoMarkovTasksError, \
-    InvalidTransitionError, NonMarkovTaskTransitionError
 from locust.exception import RescheduleTask
+from locust.user.markov_taskset import (
+    InvalidTransitionError,
+    MarkovTaskSet,
+    MarkovTaskTagError,
+    NoMarkovTasksError,
+    NonMarkovTaskTransitionError,
+    transition,
+    transitions,
+)
+
+import random
 
 from .testcases import LocustTestCase
 
