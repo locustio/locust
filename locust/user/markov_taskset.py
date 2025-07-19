@@ -1,4 +1,4 @@
-from locust.user.task import TaskSetMeta, validate_task_name
+from locust.user.task import TaskSetMeta
 from locust.user.users import TaskSet
 from locust.exception import LocustError
 
@@ -30,10 +30,38 @@ class MarkovTaskTagError(LocustError):
 
 
 def is_markov_task(task: MarkovTaskT):
+    """
+    Determines if a task is a Markov task by checking if it has transitions defined.
+    
+    :param task: The task to check
+    :return: True if the task is a Markov task, False otherwise
+    """
     return "transitions" in dir(task)
 
 
 def transition(func_name: str, weight: int = 1) -> Callable[[MarkovTaskT], MarkovTaskT]:
+    """
+    Decorator for adding a single transition to a Markov task.
+    
+    This decorator allows you to define a transition from one task to another in a MarkovTaskSet,
+    with an associated weight that determines the probability of taking this transition.
+    
+    :param func_name: The name of the target task function
+    :param weight: The weight of this transition (default: 1)
+    :return: The decorated function with the transition added
+    
+    Example::
+    
+        class UserBehavior(MarkovTaskSet):
+            @transition('browse_products')
+            def index(self):
+                self.client.get("/")
+                
+            @transition('index', weight=3)
+            @transition('product_page', weight=1)
+            def browse_products(self):
+                self.client.get("/products/")
+    """
     def decorator_func(decorated):
         if not hasattr(decorated, "transitions"):
             decorated.transitions = {}
@@ -45,6 +73,30 @@ def transition(func_name: str, weight: int = 1) -> Callable[[MarkovTaskT], Marko
 
 
 def transitions(weights: dict[str, int] | list[tuple[str, int] | str]) -> Callable[[MarkovTaskT], MarkovTaskT]:
+    """
+    Decorator for adding multiple transitions to a Markov task at once.
+    
+    This decorator allows you to define multiple transitions from one task to others in a MarkovTaskSet,
+    with associated weights that determine the probability of taking each transition.
+    
+    :param weights: Either a dictionary mapping function names to weights, or a list of function names 
+                   (with default weight 1) or (function_name, weight) tuples
+    :return: The decorated function with the transitions added
+    
+    Example::
+    
+        class UserBehavior(MarkovTaskSet):
+            @transitions({'checkout': 1, 'browse_products': 3, 'index': 2})
+            def view_cart(self):
+                self.client.get("/cart/")
+                
+            @transitions([
+                ('index', 2),      # with weight 2
+                'browse_products'  # with default weight 1
+            ])
+            def checkout(self):
+                self.client.get("/checkout/")
+    """
     def parse_list_item(item: tuple[str, int] | str) -> tuple[str, int]:
         return item if isinstance(item, tuple) else (item, 1)
 
@@ -64,10 +116,29 @@ def transitions(weights: dict[str, int] | list[tuple[str, int] | str]) -> Callab
 
 
 def get_markov_tasks(class_dict: dict) -> list:
+    """
+    Extracts all Markov tasks from a class dictionary.
+    
+    This function is used internally by MarkovTaskSetMeta to find all methods
+    that have been decorated with @transition or @transitions.
+    
+    :param class_dict: Dictionary containing class attributes and methods
+    :return: List of functions that are Markov tasks
+    """
     return [fn for fn in class_dict.values() if is_markov_task(fn)]
 
 
 def validate_has_markov_tasks(tasks: list, classname: str):
+    """
+    Validates that a MarkovTaskSet has at least one Markov task.
+    
+    This function is used internally during MarkovTaskSet validation to ensure
+    that the class has at least one method decorated with @transition or @transitions.
+    
+    :param tasks: List of tasks to validate
+    :param classname: Name of the class being validated (for error messages)
+    :raises NoMarkovTasksError: If no Markov tasks are found
+    """
     if not tasks:
         raise NoMarkovTasksError(
             f"No Markov tasks defined in class {classname}. Use the @transition(s) decorators to define some."
@@ -75,6 +146,19 @@ def validate_has_markov_tasks(tasks: list, classname: str):
 
 
 def validate_transitions(tasks: list, class_dict: dict, classname: str):
+    """
+    Validates that all transitions in Markov tasks point to existing Markov tasks.
+    
+    This function checks two conditions for each transition:
+    1. The target task exists in the class
+    2. The target task is also a Markov task (has transitions defined)
+    
+    :param tasks: List of Markov tasks to validate
+    :param class_dict: Dictionary containing class attributes and methods
+    :param classname: Name of the class being validated (for error messages)
+    :raises InvalidTransitionError: If a transition points to a non-existent task
+    :raises NonMarkovTaskTransitionError: If a transition points to a task that isn't a Markov task
+    """
     for task in tasks:
         for dest in task.transitions.keys():
             dest_task = class_dict.get(dest)
@@ -90,6 +174,18 @@ def validate_transitions(tasks: list, class_dict: dict, classname: str):
 
 
 def validate_no_unreachable_tasks(tasks: list, class_dict: dict, classname: str):
+    """
+    Checks for and warns about unreachable Markov tasks in a MarkovTaskSet.
+    
+    This function uses depth-first search (DFS) starting from the first task to identify
+    all reachable tasks. It then warns about any tasks that cannot be reached from the
+    starting task through the defined transitions.
+    
+    :param tasks: List of Markov tasks to validate
+    :param class_dict: Dictionary containing class attributes and methods
+    :param classname: Name of the class being validated (for warning messages)
+    :return: The original list of tasks
+    """
     visited = set()
 
     def dfs(task_name):
@@ -108,6 +204,16 @@ def validate_no_unreachable_tasks(tasks: list, class_dict: dict, classname: str)
 
 
 def validate_no_tags(task, classname: str):
+    """
+    Validates that Markov tasks don't have tags, which are unsupported.
+    
+    Tags are not supported for MarkovTaskSet because they can make the Markov chain invalid
+    by potentially filtering out tasks that are part of the chain.
+    
+    :param task: The task to validate
+    :param classname: Name of the class being validated (for error messages)
+    :raises MarkovTaskTagError: If the task has tags
+    """
     if "locust_tag_set" in dir(task):
         raise MarkovTaskTagError(
             "Tags are unsupported for MarkovTaskSet since they can make the markov chain invalid. "
@@ -115,7 +221,38 @@ def validate_no_tags(task, classname: str):
         )
 
 
+def validate_task_name(decorated_func):
+    """
+    Validates that certain method names aren't used as Markov tasks.
+    
+    This function checks for special method names that shouldn't be used as Markov tasks:
+    - "on_stop" and "on_start": Using these as Markov tasks will cause them to be called
+      both as tasks AND on stop/start, which is usually not what the user intended.
+    - "run": This method is used internally by Locust and must not be overridden or
+      annotated with transitions.
+    
+    :param decorated_func: The function to validate
+    :raises Exception: If the function name is "run"
+    """
+    if decorated_func.__name__ in ["on_stop", "on_start"]:
+        logging.warning(
+            "You have tagged your on_stop/start function with @transition. This will make the method get called both as a step AND on stop/start."
+        )  # this is usually not what the user intended
+    if decorated_func.__name__ == "run":
+        raise Exception(
+            "TaskSet.run() is a method used internally by Locust, and you must not override it or annotate it with transitions"
+        )
+
+
 def validate_markov_chain(tasks: list, class_dict: dict, classname: str):
+    """
+    Runs all validation functions on a Markov chain.
+    
+    :param tasks: List of Markov tasks to validate
+    :param class_dict: Dictionary containing class attributes and methods
+    :param classname: Name of the class being validated (for error/warning messages)
+    :raises: Various exceptions if validation fails
+    """
     validate_has_markov_tasks(tasks, classname)
     validate_transitions(tasks, class_dict, classname)
     validate_no_unreachable_tasks(tasks, class_dict, classname)
@@ -127,7 +264,7 @@ def validate_markov_chain(tasks: list, class_dict: dict, classname: str):
 class MarkovTaskSetMeta(TaskSetMeta):
     """
     Meta class for MarkovTaskSet. It's used to allow MarkovTaskSet classes to specify
-    task execution using the @transition(s) decorator
+    task execution using the @transition(s) decorators
     """
 
     def __new__(mcs, classname, bases, class_dict):
@@ -158,6 +295,11 @@ class MarkovTaskSet(TaskSet, metaclass=MarkovTaskSetMeta):
         super().__init__(*args, **kwargs)
 
     def get_next_task(self):
+        """
+        Gets the next task to execute based on the current state and transitions.
+        
+        :return: The current task to execute
+        """
         fn = self.current
 
         transitions = getattr(fn, "transitions")
