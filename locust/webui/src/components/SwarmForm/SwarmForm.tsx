@@ -129,6 +129,7 @@ function SwarmForm({
   const [startSwarm] = useStartSwarmMutation();
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedUserClasses, setSelectedUserClasses] = useState(availableUserClasses);
+  const [hostValue, setHostValue] = useState(host || '');
   const swarm = useSelector(({ swarm }) => swarm);
   const { register } = useForm();
 
@@ -249,7 +250,9 @@ function SwarmForm({
                     : ''
                 }`}
                 name='host'
+                onInput={event => setHostValue((event.target as HTMLInputElement).value)}
                 required={isHostRequired}
+                value={hostValue || ''}
               />
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -303,10 +306,10 @@ function SwarmForm({
           {(errorMessage || formDisabledReason) && (
             <Alert severity={'error'}>{errorMessage || formDisabledReason}</Alert>
           )}
-          {!isHostRequired && missingHostWarning && (
+          {!isHostRequired && missingHostWarning && !hostValue && (
             <Alert severity='info'>
-              One or more User class in your locustfile has no host attribute set.
-              Please provide one in the field above.
+              One or more User class in your locustfile has no host attribute set. Please provide
+              one in the field above.
             </Alert>
           )}
           <Button disabled={isFormDisabled} size='large' type='submit' variant='contained'>
