@@ -291,7 +291,7 @@ class WebUI:
                     elif parsed_options_value is None:
                         parsed_options_dict[key] = value
                     elif isinstance(parsed_options_value, list):
-                        value_as_list = value.split(',')
+                        value_as_list = value.split(",")
                         if all(isinstance(x, int) for x in parsed_options_value):
                             parsed_options_dict[key] = list(map(int, value_as_list))
                         else:
