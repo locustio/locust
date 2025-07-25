@@ -810,6 +810,58 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual(42, my_dict["val"])
 
+    def test_swarm_custom_argument_with_default_list_str_value(self):
+        my_dict = {}
+
+        class MyUser(User):
+            host = "http://example.com"
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                my_dict["val"] = self.environment.parsed_options.my_argument
+
+        @locust.events.init_command_line_parser.add_listener
+        def _(parser):
+            parser.add_argument("--my-argument", default=['*'], help="Give me a number", action='append')
+
+        parsed_options = parse_options()
+        self.environment.user_classes = [MyUser]
+        self.environment.parsed_options = parsed_options
+        self.environment.web_ui.parsed_options = parsed_options
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 1, "spawn_rate": 1, "host": "", "my_argument": "42,24"},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(['42', '24'], my_dict["val"])
+
+    def test_swarm_custom_argument_with_default_list_int_value(self):
+        my_dict = {}
+
+        class MyUser(User):
+            host = "http://example.com"
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                my_dict["val"] = self.environment.parsed_options.my_argument
+
+        @locust.events.init_command_line_parser.add_listener
+        def _(parser):
+            parser.add_argument("--my-argument", default=[1], help="Give me a number", action='append')
+
+        parsed_options = parse_options()
+        self.environment.user_classes = [MyUser]
+        self.environment.parsed_options = parsed_options
+        self.environment.web_ui.parsed_options = parsed_options
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 1, "spawn_rate": 1, "host": "", "my_argument": "42,24"},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual([42, 24], my_dict["val"])
+
     def test_swarm_override_command_line_argument(self):
         my_dict = {}
 
