@@ -280,6 +280,8 @@ class MarkovTaskSetMeta(TaskSetMeta):
 
     def __new__(mcs, classname, bases, class_dict):
         if not class_dict.get("abstract"):
+            class_dict["abstract"] = False
+
             tasks = get_markov_tasks(class_dict)
             validate_markov_chain(tasks, class_dict, classname)
             class_dict["current"] = tasks[0]

@@ -1,5 +1,4 @@
-from locust import User, constant
-from locust.user.markov_taskset import MarkovTaskSet, transition, transitions
+from locust import MarkovTaskSet, User, constant, transition, transitions
 
 """
 This example demonstrates the different ways to specify transitions in a MarkovTaskSet.

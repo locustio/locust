@@ -165,6 +165,17 @@ def get_tasks_from_base_classes(bases, class_dict):
     return new_tasks
 
 
+def is_markov_taskset(task):
+    """
+    Determines if a task is a MarkovTaskSet by checking if it has a current task defined.
+    Defined here to avoid circular imports.
+
+    :param task: The task to check
+    :return: True if the task is a MarkovTaskSet, False otherwise
+    """
+    return "current" in dir(task)
+
+
 def filter_tasks_by_tags(
     task_holder: type[TaskHolder],
     tags: set[str] | None = None,
@@ -188,7 +199,7 @@ def filter_tasks_by_tags(
         passing = True
         if hasattr(task, "tasks"):
             filter_tasks_by_tags(task, tags, exclude_tags, checked)
-            passing = len(task.tasks) > 0 or "current" in dir(task)
+            passing = len(task.tasks) > 0 or is_markov_taskset(task)
         else:
             if tags is not None:
                 passing &= "locust_tag_set" in dir(task) and len(task.locust_tag_set & tags) > 0
@@ -200,7 +211,7 @@ def filter_tasks_by_tags(
         checked[task] = passing
 
     task_holder.tasks = new_tasks
-    if not new_tasks and not "current" in dir(task_holder):
+    if not new_tasks and not is_markov_taskset(task_holder):
         logging.warning(f"{task_holder.__name__} had no tasks left after filtering, instantiating it will fail!")
 
 
