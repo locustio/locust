@@ -9,7 +9,6 @@ from locust.contrib.milvus import MilvusUser
 
 import random
 
-import numpy as np
 from pymilvus import CollectionSchema, DataType, FieldSchema
 from pymilvus.milvus_client import IndexParams
 
@@ -71,7 +70,7 @@ class SimpleMilvusTaskSet(TaskSet):
         self.inserted_ids = []
 
         # Pre-generate some test vectors
-        self.test_vectors = [np.random.random(self.dimension).astype(np.float32).tolist() for _ in range(10)]
+        self.test_vectors = [[random.random() for _ in range(self.dimension)] for _ in range(10)]
 
         # Insert some initial data
         self._insert_initial_data()
@@ -243,47 +242,3 @@ class SimpleMilvusUser(MilvusUser):
             schema=schema,
             index_params=index_params,
         )
-
-
-if __name__ == "__main__":
-    print("Simple Milvus Test Example")
-    print("==========================")
-    print("\nThis example demonstrates all Milvus request types:")
-    print("- Insert: Add new records")
-    print("- Upsert: Update existing or insert new records")
-    print("- Search: Find similar vectors")
-    print("- Search with filter: Find similar vectors with conditions")
-    print("- Search with recall: Search with recall calculation")
-    print("- Query by ID: Retrieve specific records")
-    print("- Query by category: Retrieve records by scalar field")
-    print("- Delete: Remove records")
-
-    print("\nUsage:")
-    print("locust -f locustfile.py --host=http://localhost:19530")
-    print("\nOr run headless:")
-    print("locust -f locustfile.py --host=http://localhost:19530 --headless --users=5 --spawn-rate=1 --run-time=60s")
-
-    print("\nCustom parameters:")
-    print("--token: Authentication token (default: root:Milvus)")
-    print("--collection-name: Collection name (default: simple_test_collection)")
-    print("--db-name: Database name (default: default)")
-    print("--timeout: Request timeout in seconds (default: 30)")
-    print("--dimension: Vector dimension (default: 128)")
-    print("--index-type: Index type (default: IVF_FLAT)")
-    print("--metric-type: Metric type (default: L2)")
-    print("--nlist: Number of cluster units (default: 128)")
-
-    print("\nExample with custom parameters:")
-    print(
-        "locust -f locustfile.py --host=http://milvus-server:19530 --token=user:password --collection-name=my_collection --dimension=256"
-    )
-
-    print("\nTask weights (relative frequency):")
-    print("- Search: 5")
-    print("- Query by ID: 4")
-    print("- Insert: 3")
-    print("- Search with filter: 3")
-    print("- Query by category: 3")
-    print("- Search with recall: 2")
-    print("- Upsert: 2")
-    print("- Delete: 1")

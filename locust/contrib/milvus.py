@@ -5,14 +5,12 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import gevent.monkey  # noqa: E402
+gevent.monkey.patch_all()  # noqa: E402
+import grpc.experimental.gevent as grpc_gevent  # noqa: E402
+grpc_gevent.init_gevent()  # noqa: E402
+
 from pymilvus import CollectionSchema, MilvusClient
 from pymilvus.milvus_client import IndexParams
-
-gevent.monkey.patch_all()
-
-import grpc.experimental.gevent as grpc_gevent  # noqa: E402
-
-grpc_gevent.init_gevent()
 
 
 class BaseClient(ABC):
