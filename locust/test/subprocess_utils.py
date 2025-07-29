@@ -25,14 +25,16 @@ class TestProcess:
         command: str,
         on_fail: Callable[[str], None],
         *,
-        return_code: int = 0,
+        expect_return_code: int | None = None,
+        should_send_sigint: bool = False,
         use_pty: bool = os.name != "nt",
     ):
         self.proc: subprocess.Popen[str]
         self._interrupted = False
 
         self.on_fail = on_fail
-        self.return_code = return_code
+        self.expect_return_code = expect_return_code
+        self.should_send_sigint = should_send_sigint
         self.expect_timeout: int = 5
 
         self.output_lines: list[str] = []
@@ -70,12 +72,15 @@ class TestProcess:
 
         try:
             # Check if process is running
-            if not self._interrupted and self.proc.poll() is None:
+            if self.should_send_sigint and not self._interrupted and self.proc.poll() is None:
                 self.sigint()
 
             proc_return_code = self.proc.wait(timeout=timeout)
-            if proc_return_code != self.return_code:
-                self.on_fail(error_message % (proc_return_code, self.return_code, proc_return_code, self.return_code))
+            if self.expect_return_code is not None and proc_return_code != self.expect_return_code:
+                self.on_fail(
+                    error_message
+                    % (proc_return_code, self.expect_return_code, proc_return_code, self.expect_return_code)
+                )
         except subprocess.TimeoutExpired:
             self.proc.kill()
             self.proc.wait()
