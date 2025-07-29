@@ -871,37 +871,37 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(f"locust -f {mocked.file_path} --headless -u 0 --loglevel INFO", self.fail) as proc:
-                proc.expect_output('All users spawned: {"UserSubclass": 0} (0 total users)')
+                proc.expect('All users spawned: {"UserSubclass": 0} (0 total users)')
 
                 proc.send_input("w")
-                proc.expect_output("Ramping to 1 users at a rate of 100.00 per second")
-                proc.expect_output('All users spawned: {"UserSubclass": 1} (1 total users)')
-                proc.expect_output("Test task is running")
+                proc.expect("Ramping to 1 users at a rate of 100.00 per second")
+                proc.expect('All users spawned: {"UserSubclass": 1} (1 total users)')
+                proc.expect("Test task is running")
 
                 proc.send_input("W")
-                proc.expect_output("Ramping to 11 users at a rate of 100.00 per second")
-                proc.expect_output('All users spawned: {"UserSubclass": 11} (11 total users)')
-                proc.expect_output("Test task is running")
+                proc.expect("Ramping to 11 users at a rate of 100.00 per second")
+                proc.expect('All users spawned: {"UserSubclass": 11} (11 total users)')
+                proc.expect("Test task is running")
 
                 proc.send_input("s")
-                proc.expect_output("Ramping to 10 users at a rate of 100.00 per second")
-                proc.expect_output('All users spawned: {"UserSubclass": 10} (10 total users)')
-                proc.expect_output("Test task is running")
+                proc.expect("Ramping to 10 users at a rate of 100.00 per second")
+                proc.expect('All users spawned: {"UserSubclass": 10} (10 total users)')
+                proc.expect("Test task is running")
 
                 proc.send_input("S")
-                proc.expect_output("Ramping to 0 users at a rate of 100.00 per second")
-                proc.expect_output('All users spawned: {"UserSubclass": 0} (0 total users)')
+                proc.expect("Ramping to 0 users at a rate of 100.00 per second")
+                proc.expect('All users spawned: {"UserSubclass": 0} (0 total users)')
 
                 # This should not do anything since we are already at zero users
                 proc.send_input("S")
 
                 # Stop locust process
-                proc.send_signal(signal.SIGINT)
-                proc.expect_output("Shutting down (exit code 0)")
+                proc.sigint()
+                proc.expect("Shutting down (exit code 0)")
 
                 # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
                 proc.expect_regex(r"Type.*Name.*# reqs.*# fails.*Avg.*Min.*Max.*Med.*req\/s.*failures\/s.*")
-                proc.expect_output("Response time percentiles (approximated)")
+                proc.expect("Response time percentiles (approximated)")
 
     @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, and thus we cannot import pty")
     def test_autospawn_browser(self):

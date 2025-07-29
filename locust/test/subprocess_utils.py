@@ -1,10 +1,13 @@
 import os
 import re
 import shlex
-import signal
 import subprocess
 import time
 from collections.abc import Callable
+from signal import SIGINT
+from typing import IO, Any
+
+import gevent
 
 if os.name != "nt":
     import pty
@@ -24,16 +27,18 @@ class TestProcess:
         use_pty: bool = os.name != "nt",
     ):
         self.proc: subprocess.Popen[str]
+        self._interrupted = False
 
         self.on_fail = on_fail
         self.return_code = return_code
         self.expect_timeout: int = 5
 
+        self.output_lines: list[str] = []
+        self._cursor: int = 0  # Used for stateful log matching
+
         self.use_pty = use_pty
         # Create PTY pair
         if use_pty:
-            self.stdin_m: int
-            self.stdin_s: int
             self.stdin_m, self.stdin_s = pty.openpty()
 
         self.proc = subprocess.Popen(
@@ -43,9 +48,10 @@ class TestProcess:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=1,
-            close_fds=True,
             text=True,
         )
+
+        self.stdout_reader = gevent.spawn(self._consume_output, self.proc.stdout)
 
     def __enter__(self) -> "TestProcess":
         return self
@@ -53,67 +59,85 @@ class TestProcess:
     def __exit__(self, *_) -> None:
         self.close()
 
-    def close(self) -> None:
+    def close(self, timeout: int = 5) -> None:
         error_message = "Process exited with return code %i. Expected %i (%i != %i)"
 
         if self.use_pty:
             os.close(self.stdin_m)
             os.close(self.stdin_s)
 
-        self.send_signal(signal.SIGINT)
+        try:
+            # Check if process is running
+            if not self._interrupted and self.proc.poll() is None:
+                self.sigint()
 
-        proc_return_code = self.proc.wait()
-        if proc_return_code != self.return_code:
-            self.on_fail(error_message % (proc_return_code, self.return_code, proc_return_code, self.return_code))
+            proc_return_code = self.proc.wait(timeout=timeout)
+            if proc_return_code != self.return_code:
+                self.on_fail(error_message % (proc_return_code, self.return_code, proc_return_code, self.return_code))
+        except subprocess.TimeoutExpired:
+            self.proc.kill()
+            self.proc.wait()
+            self.on_fail("Process took more than %i seconds to terminate.")
 
-    def expect_output(self, output: str):
-        assert self.proc.stdout
+        self.stdout_reader.join(timeout=timeout)
 
+    def _consume_output(self, source: IO[str]):
+        for line in source:
+            line = line.rstrip("\n")
+            self.output_lines.append(line)
+
+    # Check output logs from last found (stateful)
+    def _expect(self, to_expect, is_match: Callable[[Any, str], bool]):
         error_message = "Did not see expected message: '%s' within %s seconds. Got %s"
-        buffer = []
 
         start_time = time.time()
-
-        while line := self.proc.stdout.readline():
-            buffer.append(line)
-            # Do not check agains timestamps
-            if output in line:
-                return
-
-            if time.time() - start_time > self.expect_timeout:
-                break
-
+        while time.time() - start_time < self.expect_timeout:
+            new_lines = self.output_lines[self._cursor :]
+            for idx, line in enumerate(new_lines):
+                if is_match(to_expect, line):
+                    self._cursor += idx + 1
+                    return
             time.sleep(0.05)
 
-        self.on_fail(error_message % (output, self.expect_timeout, buffer))
+        self.on_fail(error_message % (to_expect, self.expect_timeout, self.output_lines[-5:]))
 
-    def expect_regex(
-        self,
-        pattern: str | re.Pattern[str],
-    ):
-        assert self.proc.stdout
+    # Check all output logs (stateless)
+    def _expect_any(self, to_expect, is_match: Callable[[Any, str], bool]):
+        error_message = "Did not see expected message: '%s' within %s seconds. Got %s"
 
-        error_message = "Did not find pattern: '%s' within %s seconds. Got %s"
-        buffer = []
+        start_time = time.time()
+        while time.time() - start_time < self.expect_timeout:
+            if any(is_match(to_expect, line) for line in self.output_lines):
+                return
+            time.sleep(0.05)
 
+        self.on_fail(error_message % (to_expect, self.expect_timeout, self.output_lines[-5:]))
+
+    def expect(self, output: str):
+        is_match: Callable[[str, str], bool] = lambda out, line: out in line
+        return self._expect(output, is_match)
+
+    def expect_any(self, output: str):
+        is_match: Callable[[str, str], bool] = lambda out, line: out in line
+        return self._expect_any(output, is_match)
+
+    def expect_regex(self, pattern: str | re.Pattern[str]):
         if isinstance(pattern, str):
             regex = re.compile(pattern)
         else:
             regex = pattern
 
-        start_time = time.time()
+        is_match: Callable[[re.Pattern, str], bool] = lambda pattern, line: pattern.search(line) is not None
+        return self._expect(regex, is_match)
 
-        while line := self.proc.stdout.readline():
-            buffer.append(line)
-            if regex.search(line):
-                return
+    def expect_regex_any(self, pattern: str | re.Pattern[str]):
+        if isinstance(pattern, str):
+            regex = re.compile(pattern)
+        else:
+            regex = pattern
 
-            if time.time() - start_time > self.expect_timeout:
-                break
-
-            time.sleep(0.05)
-
-        self.on_fail(error_message % (pattern, self.expect_timeout, buffer))
+        is_match: Callable[[re.Pattern, str], bool] = lambda pattern, line: pattern.search(line) is not None
+        return self._expect(regex, is_match)
 
     def send_input(self, content: str):
         if self.use_pty:
@@ -123,5 +147,6 @@ class TestProcess:
             self.proc.stdin.write(content)
             self.proc.stdin.flush()
 
-    def send_signal(self, sig: int):
-        self.proc.send_signal(sig)
+    def sigint(self):
+        self.proc.send_signal(SIGINT)
+        self._interrupted = True
