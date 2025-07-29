@@ -18,6 +18,8 @@ class TestProcess:
     Wraps a subprocess for testing purposes.
     """
 
+    __test__ = False
+
     def __init__(
         self,
         command: str,
