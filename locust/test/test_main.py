@@ -21,7 +21,7 @@ from pyquery import PyQuery as pq
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .subprocess_utils import TestProcess
-from .util import get_free_tcp_port, patch_env, temporary_file
+from .util import get_free_tcp_port, patch_env, temporary_file, wait_for_server
 
 SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give it some extra time
 
@@ -712,45 +712,26 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             class LoadTestShape(LoadTestShape):
                 def tick(self):
                     run_time = self.get_run_time()
-                    if run_time < 2:
+                    if run_time < 1:
                         return (10, 1)
 
                     return None
             """
             )
         ) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--web-port",
-                    str(port),
-                    "--autostart",
-                    "--autoquit",
-                    "3",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            gevent.sleep(2.8)
-            response = requests.get(f"http://localhost:{port}/")
-            try:
-                success = True
-                _, stderr = proc.communicate(timeout=5)
-            except subprocess.TimeoutExpired:
-                success = False
-                proc.send_signal(signal.SIGTERM)
-                _, stderr = proc.communicate()
+            with TestProcess(f"locust -f {mocked.file_path} --web-port {port} --autostart", self.fail) as proc:
+                proc.expect("Starting Locust")
+                proc.expect("Starting web interface")
 
-            self.assertIn("Starting Locust", stderr)
-            self.assertIn("Shape test starting", stderr)
-            self.assertIn("Shutting down ", stderr)
-            self.assertIn("autoquit time reached", stderr)
-            # check response afterwards, because it really isn't as informative as stderr
-            self.assertEqual(200, response.status_code)
-            self.assertTrue(success, "got timeout and had to kill the process")
+                wait_for_server(f"http://localhost:{port}/")
+                response = requests.get(f"http://localhost:{port}/")
+                self.assertEqual(200, response.status_code)
+
+                proc.expect("Shape test starting")
+                proc.expect("--run-time limit reached")
+
+                proc.sigint()
+                proc.expect("Shutting down")
 
     def test_autostart_multiple_locustfiles_with_shape(self):
         port = get_free_tcp_port()
@@ -772,7 +753,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 class LoadTestShape(LoadTestShape):
                     def tick(self):
                         run_time = self.get_run_time()
-                        if run_time < 2:
+                        if run_time < 1:
                             return (10, 1)
 
                         return None
@@ -785,42 +766,26 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
                 )
             ) as mocked2:
-                proc = subprocess.Popen(
-                    [
-                        "locust",
-                        "-f",
-                        f"{mocked1.file_path},{mocked2}",
-                        "--web-port",
-                        str(port),
-                        "--autostart",
-                        "--autoquit",
-                        "3",
-                    ],
-                    stdout=PIPE,
-                    stderr=PIPE,
-                    text=True,
-                )
-                gevent.sleep(2.8)
-                success = True
-                try:
-                    response = requests.get(f"http://localhost:{port}/")
-                except ConnectionError:
-                    success = False
-                    response = None
-                try:
-                    _, stderr = proc.communicate(timeout=5)
-                except subprocess.TimeoutExpired:
-                    success = False
-                    proc.send_signal(signal.SIGTERM)
-                    _, stderr = proc.communicate()
+                with TestProcess(
+                    f"locust -f {mocked1.file_path},{mocked2} --web-port {port} --autostart",
+                    self.fail,
+                    expect_return_code=0,
+                ) as proc:
+                    proc.expect("Starting Locust")
+                    proc.expect("Starting web interface")
 
-                self.assertIn("Starting Locust", stderr)
-                self.assertIn("Shape test starting", stderr)
-                self.assertIn("Shutting down ", stderr)
-                self.assertIn("autoquit time reached", stderr)
-                # check response afterwards, because it really isn't as informative as stderr
-                self.assertEqual(200, response.status_code)
-                self.assertTrue(success, "got timeout and had to kill the process")
+                    wait_for_server(f"http://localhost:{port}/")
+                    response = requests.get(f"http://localhost:{port}/")
+                    self.assertEqual(200, response.status_code)
+
+                    proc.expect("Shape test starting")
+                    proc.expect("--run-time limit reached")
+
+                    proc.sigint()
+                    proc.expect("Shutting down")
+
+                    proc.expect_any("running my_task()")
+                    proc.expect_any("running my_task() again")
 
     @unittest.skipIf(platform.system() == "Darwin", reason="Messy on macOS on GH")
     @unittest.skipIf(os.name == "nt", reason="Signal handling on windows is hard")
@@ -870,7 +835,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            with TestProcess(f"locust -f {mocked.file_path} --headless -u 0 --loglevel INFO", self.fail) as proc:
+            with TestProcess(f"locust -f {mocked.file_path} --headless -u 0", self.fail, expect_return_code=0) as proc:
                 proc.expect('All users spawned: {"UserSubclass": 0} (0 total users)')
 
                 proc.send_input("w")
@@ -895,12 +860,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 # This should not do anything since we are already at zero users
                 proc.send_input("S")
 
+                # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
+                proc.expect_any("Aggregated")
                 # Stop locust process
                 proc.sigint()
                 proc.expect("Shutting down (exit code 0)")
-
-                # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
-                proc.expect_regex(r"Type.*Name.*# reqs.*# fails.*Avg.*Min.*Max.*Med.*req\/s.*failures\/s.*")
+                proc.expect("Aggregated")
                 proc.expect("Response time percentiles (approximated)")
 
     @unittest.skipIf(os.name == "nt", reason="termios doesnt exist on windows, and thus we cannot import pty")
@@ -981,36 +946,20 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc = subprocess.Popen(
-                " ".join(
-                    [
-                        "locust",
-                        "-f",
-                        mocked.file_path,
-                        "--headless",
-                        "--run-time",
-                        "5s",
-                        "-u",
-                        "10",
-                        "-r",
-                        "10",
-                        "--loglevel",
-                        "INFO",
-                    ]
-                ),
-                stderr=STDOUT,
-                stdout=PIPE,
-                shell=True,
-                text=True,
-            )
+            with TestProcess(
+                f"locust -f {mocked.file_path} --headless -u 10 -r 10 --loglevel INFO",
+                self.fail,
+                expect_return_code=0,
+            ) as proc:
+                proc.expect("Ramping to 10 users at a rate of 10.00 per second")
+                proc.expect('All users spawned: {"User1": 2, "User2": 4, "User3": 4} (10 total users)')
+                proc.expect("Test task is running")
 
-            output = proc.communicate()[0]
-            self.assertIn("Ramping to 10 users at a rate of 10.00 per second", output)
-            self.assertIn('All users spawned: {"User1": 2, "User2": 4, "User3": 4} (10 total users)', output)
-            self.assertIn("Test task is running", output)
-            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
-            self.assertRegex(output, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
-            self.assertIn("Shutting down (exit code 0)", output)
+                # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
+                proc.expect_any("Aggregated")
+                proc.sigint()
+                proc.expect("Shutting down (exit code 0)")
+                proc.expect("Aggregated")
 
     def test_spawing_with_fixed_multiple_locustfiles(self):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:

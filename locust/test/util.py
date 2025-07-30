@@ -5,10 +5,12 @@ import functools
 import gc
 import os
 import socket
+import time
 import warnings
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
 
+import requests
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
@@ -93,3 +95,14 @@ def clear_all_functools_lru_cache() -> None:
 def get_locustfiles_from_args(*args, **kwargs):
     options, _ = parse_locustfile_option(*args, **kwargs)
     return get_locustfiles_locally(options)
+
+
+def wait_for_server(url, timeout=5, interval=0.5):
+    start = time.time()
+    while True:
+        try:
+            return requests.head(url)
+        except requests.RequestException:
+            if time.time() - start > timeout:
+                raise
+            time.sleep(interval)

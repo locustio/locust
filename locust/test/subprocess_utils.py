@@ -26,7 +26,7 @@ class TestProcess:
         on_fail: Callable[[str], None],
         *,
         expect_return_code: int | None = None,
-        should_send_sigint: bool = False,
+        should_send_sigint: bool = True,
         use_pty: bool = os.name != "nt",
     ):
         self.proc: subprocess.Popen[str]
