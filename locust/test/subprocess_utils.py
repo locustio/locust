@@ -64,8 +64,6 @@ class TestProcess:
         self.close()
 
     def close(self, timeout: int = 5) -> None:
-        error_message = "Process exited with return code %i. Expected %i (%i != %i)"
-
         if self.use_pty:
             os.close(self.stdin_m)
             os.close(self.stdin_s)
@@ -78,13 +76,12 @@ class TestProcess:
             proc_return_code = self.proc.wait(timeout=timeout)
             if self.expect_return_code is not None and proc_return_code != self.expect_return_code:
                 self.on_fail(
-                    error_message
-                    % (proc_return_code, self.expect_return_code, proc_return_code, self.expect_return_code)
+                    f"Process exited with return code {proc_return_code}. Expected {self.expect_return_code} ({proc_return_code} != {self.expect_return_code})"
                 )
         except subprocess.TimeoutExpired:
             self.proc.kill()
             self.proc.wait()
-            self.on_fail("Process took more than %i seconds to terminate.")
+            self.on_fail(f"Process took more than {timeout} seconds to terminate.")
 
         self.stdout_reader.join(timeout=timeout)
 
@@ -95,8 +92,6 @@ class TestProcess:
 
     # Check output logs from last found (stateful)
     def _expect(self, to_expect, is_match: Callable[[Any, str], bool]):
-        error_message = "Did not see expected message: '%s' within %s seconds. Got %s"
-
         start_time = time.time()
         while time.time() - start_time < self.expect_timeout:
             new_lines = self.output_lines[self._cursor :]
@@ -106,19 +101,21 @@ class TestProcess:
                     return
             time.sleep(0.05)
 
-        self.on_fail(error_message % (to_expect, self.expect_timeout, self.output_lines[-5:]))
+        self.on_fail(
+            f"Did not see expected message: '{to_expect}' within {self.expect_timeout} seconds. Got {self.output_lines[-5:]}"
+        )
 
     # Check all output logs (stateless)
     def _expect_any(self, to_expect, is_match: Callable[[Any, str], bool]):
-        error_message = "Did not see expected message: '%s' within %s seconds. Got %s"
-
         start_time = time.time()
         while time.time() - start_time < self.expect_timeout:
             if any(is_match(to_expect, line) for line in self.output_lines):
                 return
             time.sleep(0.05)
 
-        self.on_fail(error_message % (to_expect, self.expect_timeout, self.output_lines[-5:]))
+        self.on_fail(
+            f"Did not see expected message: '{to_expect}' within {self.expect_timeout} seconds. Got {self.output_lines[-5:]}"
+        )
 
     def expect(self, output: str):
         is_match: Callable[[str, str], bool] = lambda out, line: out in line
