@@ -165,15 +165,15 @@ def get_tasks_from_base_classes(bases, class_dict):
     return new_tasks
 
 
-def is_markov_taskset(task):
+def is_markov_taskset(task: type):
     """
-    Determines if a task is a MarkovTaskSet by checking if it has a current task defined.
+    Determines if a task is a MarkovTaskSet by checking its meta class
     Defined here to avoid circular imports.
 
     :param task: The task to check
     :return: True if the task is a MarkovTaskSet, False otherwise
     """
-    return "current" in dir(task)
+    return task.__class__.__name__ == "MarkovTaskSetMeta"
 
 
 def filter_tasks_by_tags(
