@@ -1,16 +1,15 @@
 import os
 import re
 import shlex
+import signal
 import subprocess
 import time
 from collections.abc import Callable
-from signal import SIGINT
 from typing import IO, Any
 
 import gevent
 
-if os.name != "nt":
-    import pty
+from .util import IS_WINDOWS
 
 
 class TestProcess:
@@ -26,36 +25,43 @@ class TestProcess:
         on_fail: Callable[[str], None],
         *,
         expect_return_code: int | None = None,
-        should_send_sigint: bool = True,
-        use_pty: bool = os.name != "nt",
+        use_pty: bool = False,
     ):
         self.proc: subprocess.Popen[str]
-        self._interrupted = False
+        self._exitted = False
 
         self.on_fail = on_fail
         self.expect_return_code = expect_return_code
-        self.should_send_sigint = should_send_sigint
         self.expect_timeout: int = 5
 
         self.output_lines: list[str] = []
         self._cursor: int = 0  # Used for stateful log matching
 
-        self.use_pty = use_pty
+        self.use_pty: bool = use_pty
         # Create PTY pair
-        if use_pty:
+        if self.use_pty:
+            if IS_WINDOWS:
+                raise Exception("termios doesn't exist on windows, and thus we cannot import pty")
+
+            import pty
+
             self.stdin_m, self.stdin_s = pty.openpty()
 
         self.proc = subprocess.Popen(
-            shlex.split(command),
+            shlex.split(command) if not IS_WINDOWS else command.split(" "),
             env={"PYTHONUNBUFFERED": "1", **os.environ},
-            stdin=self.stdin_s if self.use_pty else subprocess.PIPE,
+            stdin=self.stdin_s if self.use_pty else None,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            bufsize=1,
             text=True,
         )
 
-        self.stdout_reader = gevent.spawn(self._consume_output, self.proc.stdout)
+        def _consume_output(source: IO[str]):
+            for line in iter(source.readline, ""):
+                line = line.rstrip("\n")
+                self.output_lines.append(line)
+
+        self.stdout_reader = gevent.spawn(_consume_output, self.proc.stdout)
 
     def __enter__(self) -> "TestProcess":
         return self
@@ -63,18 +69,18 @@ class TestProcess:
     def __exit__(self, *_) -> None:
         self.close()
 
-    def close(self, timeout: int = 5) -> None:
+    def close(self, timeout: int = 1) -> None:
         if self.use_pty:
             os.close(self.stdin_m)
             os.close(self.stdin_s)
 
         try:
-            # Check if process is running
-            if self.should_send_sigint and not self._interrupted and self.proc.poll() is None:
-                self.sigint()
-
+            if not self._exitted:
+                self.terminate()
             proc_return_code = self.proc.wait(timeout=timeout)
-            if self.expect_return_code is not None and proc_return_code != self.expect_return_code:
+
+            # Locust does not perform a graceful shutdown on Windows since we send SIGTERM
+            if not IS_WINDOWS and self.expect_return_code is not None and proc_return_code != self.expect_return_code:
                 self.on_fail(
                     f"Process exited with return code {proc_return_code}. Expected {self.expect_return_code} ({proc_return_code} != {self.expect_return_code})"
                 )
@@ -84,11 +90,6 @@ class TestProcess:
             self.on_fail(f"Process took more than {timeout} seconds to terminate.")
 
         self.stdout_reader.join(timeout=timeout)
-
-    def _consume_output(self, source: IO[str]):
-        for line in source:
-            line = line.rstrip("\n")
-            self.output_lines.append(line)
 
     # Check output logs from last found (stateful)
     def _expect(self, to_expect, is_match: Callable[[Any, str], bool]):
@@ -146,11 +147,13 @@ class TestProcess:
     def send_input(self, content: str):
         if self.use_pty:
             os.write(self.stdin_m, content.encode())
-        else:
-            assert self.proc.stdin
-            self.proc.stdin.write(content)
-            self.proc.stdin.flush()
 
-    def sigint(self):
-        self.proc.send_signal(SIGINT)
-        self._interrupted = True
+    def terminate(self):
+        if not IS_WINDOWS:
+            sig = signal.SIGINT
+        else:
+            # Signals are hard on Windows
+            sig = signal.SIGTERM
+
+        self.proc.send_signal(sig)
+        self._exitted = True

@@ -17,6 +17,8 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
+IS_WINDOWS = os.name == "nt"
+
 
 @contextmanager
 def temporary_file(content, suffix="_locustfile.py", dir=None):
