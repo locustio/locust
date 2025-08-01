@@ -25,6 +25,7 @@ class TestProcess:
         on_fail: Callable[[str], None],
         *,
         expect_return_code: int | None = None,
+        should_send_sigint: bool = True,
         use_pty: bool = False,
     ):
         self.proc: subprocess.Popen[str]
@@ -33,6 +34,7 @@ class TestProcess:
         self.on_fail = on_fail
         self.expect_return_code = expect_return_code
         self.expect_timeout: int = 5
+        self.should_send_sigint = should_send_sigint
 
         self.output_lines: list[str] = []
         self._cursor: int = 0  # Used for stateful log matching
@@ -75,7 +77,7 @@ class TestProcess:
             os.close(self.stdin_s)
 
         try:
-            if not self._exitted:
+            if self.should_send_sigint and not self._exitted:
                 self.terminate()
             proc_return_code = self.proc.wait(timeout=timeout)
 
