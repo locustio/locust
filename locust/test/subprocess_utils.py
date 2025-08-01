@@ -108,15 +108,14 @@ class TestProcess:
 
     # Check all output logs (stateless)
     def _expect_any(self, to_expect, is_match: Callable[[Any, str], bool]):
-        start_time = time.time()
-        while time.time() - start_time < self.expect_timeout:
-            if any(is_match(to_expect, line) for line in self.output_lines):
-                return
-            time.sleep(0.05)
+        if any(is_match(to_expect, line) for line in self.output_lines):
+            return
 
-        self.on_fail(
-            f"Did not see expected message: '{to_expect}' within {self.expect_timeout} seconds. Got {self.output_lines[-5:]}"
-        )
+        self.on_fail(f"Did not see expected message: '{to_expect}'. Got {self.output_lines[-5:]}")
+
+    def _not_expect_any(self, to_not_expect, is_match: Callable[[Any, str], bool]):
+        if any(is_match(to_not_expect, line) for line in self.output_lines):
+            self.on_fail(f"Found unexpected message: '{to_not_expect}'.")
 
     def expect(self, output: str):
         is_match: Callable[[str, str], bool] = lambda out, line: out in line
@@ -125,6 +124,10 @@ class TestProcess:
     def expect_any(self, output: str):
         is_match: Callable[[str, str], bool] = lambda out, line: out in line
         return self._expect_any(output, is_match)
+
+    def not_expect_any(self, output: str):
+        is_match: Callable[[str, str], bool] = lambda out, line: out in line
+        return self._not_expect_any(output, is_match)
 
     def expect_regex(self, pattern: str | re.Pattern[str]):
         if isinstance(pattern, str):
