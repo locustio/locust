@@ -27,6 +27,7 @@ from .debug import run_single_user
 from .event import Events
 from .shape import LoadTestShape
 from .user import wait_time
+from .user.markov_taskset import MarkovTaskSet, transition, transitions
 from .user.sequential_taskset import SequentialTaskSet
 from .user.task import TaskSet, tag, task
 from .user.users import HttpUser, User
@@ -36,6 +37,9 @@ events = Events()
 
 __all__ = (
     "SequentialTaskSet",
+    "MarkovTaskSet",
+    "transition",
+    "transitions",
     "wait_time",
     "task",
     "tag",

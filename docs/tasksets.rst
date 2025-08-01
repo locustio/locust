@@ -175,3 +175,92 @@ For example, the following code will request URLs /1-/4 in order, and then repea
 
 Note that you dont need SequentialTaskSets to just do some requests in order. It is often easier to 
 just do a whole user flow in a single task.
+
+.. _markov-taskset:
+
+MarkovTaskSet class
+===================
+
+:py:class:`MarkovTaskSet <locust.MarkovTaskSet>` is a TaskSet that defines a probabilistic sequence of tasks 
+using a Markov chain. Unlike regular TaskSets where tasks are chosen randomly based on weight, MarkovTaskSets 
+allow you to define specific transitions between tasks with associated probabilities.
+
+This is useful for modeling user behavior where the next action depends on the current state, creating more 
+realistic user flows. For example, after viewing a product, a user might be more likely to add it to cart than 
+to log out.
+
+.. note::
+
+    MarkovTaskSets require at least one task with transitions defined. All tasks must eventually be reachable from the
+    first task, and tags are not supported with MarkovTaskSets as they could make the Markov chain invalid.
+
+.. code-block:: python
+
+    from locust import User, constant
+    from locust.user.markov_taskset import MarkovTaskSet, transition, transitions
+
+    class ShoppingBehavior(MarkovTaskSet):
+        wait_time = constant(1)
+        
+        @transition("view_product")
+        def browse_catalog(self):
+            self.client.get("/catalog")
+        
+        @transitions({
+            "add_to_cart": 3,  # Higher probability
+            "browse_catalog": 1,
+            "checkout": 1
+        })
+        def view_product(self):
+            self.client.get("/product/1")
+        
+        @transitions(["view_product", "checkout"])
+        def add_to_cart(self):
+            self.client.post("/cart/add", json={"product_id": 1})
+        
+        @transition("browse_catalog")
+        def checkout(self):
+            self.client.post("/checkout")
+    
+    class ShopperUser(HttpUser):
+        host = "http://localhost"
+        tasks = {ShoppingBehavior: 1}
+
+In this example, after browsing the catalog, the user will always view a product. After viewing a product, 
+the user has a 60% chance (3/5) of adding it to cart, a 20% chance (1/5) of returning to browsing, and a 
+20% chance (1/5) of going directly to checkout.
+
+Defining Transitions
+--------------------
+
+MarkovTaskSet provides two decorators for defining transitions between tasks:
+
+1. ``@transition(task_name, weight=1)``: Defines a single transition to another task.
+
+   .. code-block:: python
+   
+       @transition("next_task")
+       def current_task(self):
+           pass
+
+2. ``@transitions(weights)``: Defines multiple transitions at once. The ``weights`` parameter can be:
+   
+   - A dictionary mapping task names to weights:
+   
+     .. code-block:: python
+     
+         @transitions({
+             "task_a": 3,
+             "task_b": 1
+         })
+         def current_task(self):
+             pass
+   
+   - A list of task names or (task_name, weight) tuples:
+   
+     .. code-block:: python
+     
+         @transitions(["task_a", ("task_b", 2)])
+         def current_task(self):
+             pass
+   
