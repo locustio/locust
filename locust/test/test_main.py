@@ -207,7 +207,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with TestProcess(f"locust -f {file_path}") as proc:
                 proc.expect("Starting Locust")
                 proc.expect("Starting web interface at")
-                # Ensure we do not trigger SIGIN when instantiating webui as it can result
+                # Ensure we do not trigger SIGINT when instantiating webui as it can result
                 # in `create_web_ui` traceback
                 gevent.sleep(0.1)
 
