@@ -105,7 +105,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             # print(subprocess.check_output(["cat", file_path]))
             with TestProcess(
                 f"locust -f {file_path} --custom-string-arg command_line_value --web-port {port}",
-                expect_return_code=0,
             ) as proc:
                 proc.expect("Starting Locust")
                 wait_for_server(f"http://127.0.0.1:{port}/swarm")
@@ -205,7 +204,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
             )
         ) as file_path:
-            with TestProcess(f"locust -f {file_path}", expect_return_code=0) as proc:
+            with TestProcess(f"locust -f {file_path}") as proc:
                 proc.expect("Starting Locust")
                 proc.expect("Starting web interface at")
                 # Ensure we do not trigger SIGIN when instantiating webui as it can result
@@ -290,7 +289,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_webserver_multiple_locustfiles(self):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:
-                with TestProcess(f"locust -f {mocked1.file_path},{mocked2.file_path}", expect_return_code=0) as proc:
+                with TestProcess(f"locust -f {mocked1.file_path},{mocked2.file_path}") as proc:
                     proc.expect("Starting Locust")
                     proc.expect("Starting web interface at")
                     gevent.sleep(0.1)
@@ -299,7 +298,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with TemporaryDirectory() as temp_dir:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A, dir=temp_dir):
                 with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B, dir=temp_dir):
-                    with TestProcess(f"locust -f {temp_dir}", expect_return_code=0) as proc:
+                    with TestProcess(f"locust -f {temp_dir}") as proc:
                         proc.expect("Starting Locust")
                         proc.expect("Starting web interface at")
                         gevent.sleep(0.1)
@@ -336,7 +335,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
                 )
             ) as mocked2:
-                with TestProcess(f"locust -f {mocked1.file_path},{mocked2} -L DEBUG", expect_return_code=0) as proc:
+                with TestProcess(f"locust -f {mocked1.file_path},{mocked2} -L DEBUG") as proc:
                     proc.expect("Starting Locust")
                     proc.expect("Starting web interface at")
                     gevent.sleep(0.1)
@@ -440,9 +439,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     ),
                     dir=temp_dir,
                 ):
-                    with TestProcess(
-                        f"locust -f {temp_dir} --headless -u 2 --exit-code-on-error 0", expect_return_code=0
-                    ) as proc:
+                    with TestProcess(f"locust -f {temp_dir} --headless -u 2 --exit-code-on-error 0") as proc:
                         proc.expect("Starting Locust")
                         proc.expect('All users spawned: {"TestUser": 1, "UserSubclass": 1} (2 total users)')
                         proc.terminate()
@@ -463,7 +460,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=content) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --host https://test.com/ --headless --exit-code-on-error 0",
-                expect_return_code=0,
                 should_send_sigint=False,
             ) as proc:
                 proc.expect("Shape test updating to 10 users at 1.00 spawn rate")
@@ -506,7 +502,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             ) as mocked2:
                 with TestProcess(
                     f"locust -f {mocked1.file_path},{mocked2} --host https://test.com --headless --exit-code-on-error 0",
-                    expect_return_code=0,
                     should_send_sigint=False,
                 ) as proc:
                     proc.expect("Shape test updating to 10 users at 1.00 spawn rate")
@@ -604,9 +599,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     ),
                     dir=temp_dir,
                 ):
-                    with TestProcess(
-                        f"locust -f {temp_dir} --autostart -u 2 --exit-code-on-error 0", expect_return_code=0
-                    ) as proc:
+                    with TestProcess(f"locust -f {temp_dir} --autostart -u 2 --exit-code-on-error 0") as proc:
                         proc.expect("Starting Locust")
                         proc.expect('All users spawned: {"TestUser": 1, "UserSubclass": 1} (2 total users)')
                         proc.terminate()
@@ -629,7 +622,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
             )
         ) as mocked:
-            with TestProcess(f"locust -f {mocked.file_path} --web-port {port} --autostart") as proc:
+            with TestProcess(
+                f"locust -f {mocked.file_path} --web-port {port} --autostart", expect_return_code=None
+            ) as proc:
                 proc.expect("Starting Locust")
                 proc.expect("Starting web interface")
 
@@ -675,7 +670,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             ) as mocked2:
                 with TestProcess(
                     f"locust -f {mocked1.file_path},{mocked2} --web-port {port} --autostart",
-                    expect_return_code=0,
                 ) as proc:
                     proc.expect("Starting Locust")
                     proc.expect("Starting web interface")
@@ -742,9 +736,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            with TestProcess(
-                f"locust -f {mocked.file_path} --headless -u 0", expect_return_code=0, use_pty=True
-            ) as proc:
+            with TestProcess(f"locust -f {mocked.file_path} --headless -u 0", use_pty=True) as proc:
                 proc.expect('All users spawned: {"UserSubclass": 0} (0 total users)')
 
                 proc.send_input("w")
@@ -857,7 +849,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --headless -u 10 -r 10 --loglevel INFO",
-                expect_return_code=0,
             ) as proc:
                 proc.expect("Ramping to 10 users at a rate of 10.00 per second")
                 proc.expect('All users spawned: {"User1": 2, "User2": 4, "User3": 4} (10 total users)')
@@ -875,7 +866,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:
                 with TestProcess(
                     f"locust -f {mocked1.file_path},{mocked2.file_path} --headless -u 10 -r 10 --loglevel INFO",
-                    expect_return_code=0,
                 ) as proc:
                     proc.expect("Ramping to 10 users at a rate of 10.00 per second")
                     proc.expect('All users spawned: {"TestUser1": 5, "TestUser2": 5} (10 total users)')
@@ -934,9 +924,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with TemporaryDirectory() as temp_dir:
             with open(f"{temp_dir}/__init__.py", mode="w"):
                 with mock_locustfile(dir=temp_dir):
-                    with TestProcess(
-                        f"locust -f {temp_dir} --headless --exit-code-on-error 0", expect_return_code=0
-                    ) as proc:
+                    with TestProcess(f"locust -f {temp_dir} --headless --exit-code-on-error 0") as proc:
                         proc.expect("Starting Locust")
                         proc.expect('All users spawned: {"UserSubclass": 1} (1 total users)')
 
@@ -967,7 +955,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --headless -u 5 -r 10 User2 User3",
-                expect_return_code=0,
             ) as proc:
                 proc.expect('All users spawned: {"User2": 3, "User3": 2} (5 total users)')
                 proc.expect("User2 is running")
@@ -989,7 +976,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             with TestProcess(
                 f"locust -f {mocked.file_path} --host https://test.com/ -u 11 -r 5 -t 1s --headless --exit-code-on-error 0 --html {html_report_file_path}",
-                expect_return_code=0,
                 should_send_sigint=False,
             ) as proc:
                 # make sure correct name is generated based on filename arguments
@@ -1012,7 +998,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_run_with_userclass_picker(self):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_B) as file2:
-                with TestProcess(f"locust -f {file1},{file2} --class-picker -L DEBUG", expect_return_code=0) as proc:
+                with TestProcess(f"locust -f {file1},{file2} --class-picker -L DEBUG") as proc:
                     proc.expect("Starting Locust")
                     proc.expect("Starting web interface at")
                     proc.expect("Locust is running with the UserClass Picker Enabled")

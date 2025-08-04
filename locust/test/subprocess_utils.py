@@ -25,7 +25,7 @@ class TestProcess:
         command: str,
         on_fail: Callable[[str], None] = pytest.fail,
         *,
-        expect_return_code: int | None = None,
+        expect_return_code: int | None = 0,
         should_send_sigint: bool = True,
         use_pty: bool = False,
     ):
