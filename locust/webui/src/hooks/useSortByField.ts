@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export interface ISortByFieldOptions<Row> {
   hasTotalRow?: boolean;
@@ -31,34 +31,20 @@ export default function useSortByField<Row>(
     defaultSortKey: 'name' as keyof Row,
   },
 ) {
-  const [sortedRows, setSortedRows] = useState(rows);
+  const [sortField, setSortField] = useState<keyof Row | undefined>(undefined);
   const [shouldReverse, setShouldReverse] = useState(false);
-  const currentSortField = useRef<keyof Row>();
-
-  const sortStats = (sortField: keyof Row) => {
-    const rowsToSort = hasTotalRow ? rows.slice(0, -1) : [...rows];
-    const sortedRows = rowsToSort.sort(
-      // reverse will only happen when clicking twice on the same field
-      sortByField<Row>(sortField, sortField === currentSortField.current && !shouldReverse),
-    );
-
-    setSortedRows(hasTotalRow ? [...sortedRows, ...rows.slice(-1)] : sortedRows);
-  };
 
   const onTableHeadClick = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
-      if (!currentSortField.current) {
-        currentSortField.current = defaultSortKey;
-      }
+      const selectedSortField = (event.target as HTMLElement).getAttribute(
+        'data-sortkey',
+      ) as keyof Row;
 
-      const sortField = (event.target as HTMLElement).getAttribute('data-sortkey') as keyof Row;
-
-      if (sortField === currentSortField.current) {
+      if (selectedSortField === sortField) {
         if (shouldReverse) {
           // reset to initial state on 3rd click
           setShouldReverse(false);
-          currentSortField.current = undefined;
-          sortStats(defaultSortKey);
+          setSortField(undefined);
           return;
         } else {
           setShouldReverse(true);
@@ -68,24 +54,24 @@ export default function useSortByField<Row>(
         setShouldReverse(false);
       }
 
-      sortStats(sortField);
-      currentSortField.current = sortField;
+      setSortField(selectedSortField);
     },
-    [currentSortField, rows, shouldReverse],
+    [rows, shouldReverse, sortField],
   );
 
-  useEffect(() => {
-    if (rows.length) {
-      sortStats(currentSortField.current || defaultSortKey);
-    } else if (sortStats.length) {
-      // allows tables to be empty in the case of filtering
-      setSortedRows(rows);
-    }
-  }, [rows]);
+  const sortedRows = useMemo(() => {
+    const rowsToSort = hasTotalRow ? rows.slice(0, -1) : [...rows];
+    const sortedRows = rowsToSort.sort(
+      // reverse will only happen when clicking twice on the same field
+      sortByField<Row>(sortField || defaultSortKey, shouldReverse),
+    );
+
+    return hasTotalRow ? [...sortedRows, ...rows.slice(-1)] : sortedRows;
+  }, [rows, sortField, shouldReverse]);
 
   return {
     onTableHeadClick,
     sortedRows,
-    currentSortField: currentSortField.current,
+    currentSortField: sortField,
   };
 }
