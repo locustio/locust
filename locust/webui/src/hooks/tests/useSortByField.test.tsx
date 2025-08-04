@@ -106,6 +106,8 @@ describe('useSortByField', () => {
 
     act(() => {
       getByTestId('sortedByNumRequests').click();
+    });
+    act(() => {
       getByTestId('sortedByNumRequests').click();
     });
 
@@ -120,9 +122,10 @@ describe('useSortByField', () => {
 
     act(() => {
       getByTestId('sortedByNumRequests').click();
+    });
+    act(() => {
       getByTestId('sortedByNumRequests').click();
     });
-
     act(() => {
       getByTestId('sortedByNumRequests').click();
     });
