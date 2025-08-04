@@ -8,6 +8,7 @@ from collections.abc import Callable
 from typing import IO, Any
 
 import gevent
+import pytest
 
 from .util import IS_WINDOWS
 
@@ -22,7 +23,7 @@ class TestProcess:
     def __init__(
         self,
         command: str,
-        on_fail: Callable[[str], None],
+        on_fail: Callable[[str], None] = pytest.fail,
         *,
         expect_return_code: int | None = None,
         should_send_sigint: bool = True,
