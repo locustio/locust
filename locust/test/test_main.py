@@ -669,7 +669,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 )
             ) as mocked2:
                 with TestProcess(
-                    f"locust -f {mocked1.file_path},{mocked2} --web-port {port} --autostart",
+                    f"locust -f {mocked1.file_path},{mocked2} --web-port {port} --autostart --autoquit 0",
+                    should_send_sigint=False,
                 ) as proc:
                     proc.expect("Starting Locust")
                     proc.expect("Starting web interface")
@@ -679,11 +680,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     self.assertEqual(200, response.status_code)
 
                     proc.expect("Shape test starting")
-                    proc.expect("--run-time limit reached")
+                    proc.expect("Shape test stopping")
 
-                    if not IS_WINDOWS:
-                        proc.terminate()
-                        proc.expect("Shutting down")
+                    proc.expect("--run-time limit reached")
+                    proc.expect("--autoquit time reached")
+                    proc.expect("Shutting down")
 
                     proc.expect_any("running my_task()")
                     proc.expect_any("running my_task() again")
