@@ -145,21 +145,15 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             try:
                 with open("locust.conf", "w") as conf_file:
                     conf_file.write("custom-string-arg config_file_value")
-                proc = subprocess.Popen(
-                    ["locust", "-f", file_path, "--autostart"],
-                    stdout=PIPE,
-                    stderr=PIPE,
-                    text=True,
-                )
-                gevent.sleep(1)
+
+                with TestProcess(f"locust -f {file_path} --autostart") as proc:
+                    proc.expect("Starting Locust")
+                    proc.expect("config_file_value")
+                    proc.terminate()
+                    proc.expect("Shutting down")
+                    proc.not_expect_any("Traceback")
             finally:
                 os.remove("locust.conf")
-
-        proc.send_signal(signal.SIGTERM)
-        stdout, stderr = proc.communicate(timeout=3)
-        self.assertIn("Starting Locust", stderr)
-        self.assertNotIn("Traceback", stderr)
-        self.assertIn("config_file_value", stdout)
 
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
     def test_custom_exit_code(self):
@@ -181,15 +175,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
             )
         ) as file_path:
-            proc = subprocess.Popen(["locust", "-f", file_path], stdout=PIPE, stderr=PIPE, text=True)
-            gevent.sleep(1)
-            proc.send_signal(signal.SIGTERM)
-            stdout, stderr = proc.communicate()
-            self.assertIn("Starting web interface at", stderr)
-            self.assertIn("Starting Locust", stderr)
-            self.assertIn("Shutting down (exit code 42)", stderr)
-            self.assertIn("Exit code in quit event 42", stdout)
-            self.assertEqual(42, proc.returncode)
+            with TestProcess(f"locust -f {file_path}", expect_return_code=42) as proc:
+                proc.expect("Starting Locust")
+                proc.expect("Starting web interface at")
+                proc.terminate()
+                proc.expect("Shutting down (exit code 42)")
+                proc.expect("Exit code in quit event 42")
 
     def test_webserver(self):
         with temporary_file(
@@ -227,15 +218,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
             )
         ) as file_path:
-            proc = subprocess.Popen(
-                ["locust", "-f", file_path, "--web-port", str(port), "--autostart"], stdout=PIPE, stderr=PIPE, text=True
-            )
-            gevent.sleep(1)
-            response = requests.get(f"http://localhost:{port}/")
-            self.assertEqual(200, response.status_code)
-            proc.send_signal(signal.SIGTERM)
-            stdout, stderr = proc.communicate()
-            self.assertIn("Starting web interface at", stderr)
+            with TestProcess(f"locust -f {file_path} --web-port {port} --autostart") as proc:
+                proc.expect("Starting web interface at")
+
+                wait_for_server(f"http://localhost:{port}/")
+                response = requests.get(f"http://localhost:{port}/")
+                self.assertEqual(200, response.status_code)
 
     def test_percentiles_to_statistics(self):
         port = get_free_tcp_port()
@@ -253,18 +241,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
             )
         ) as file_path:
-            proc = subprocess.Popen(
-                ["locust", "-f", file_path, "--web-port", str(port), "--autostart"],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            gevent.sleep(1)
-            response = requests.get(f"http://localhost:{port}/")
-            self.assertEqual(200, response.status_code)
-            proc.send_signal(signal.SIGTERM)
-            stdout, stderr = proc.communicate()
-            self.assertIn("Starting web interface at", stderr)
+            with TestProcess(f"locust -f {file_path} --web-port {port} --autostart") as proc:
+                proc.expect("Starting web interface at")
+
+                wait_for_server(f"http://localhost:{port}/")
+                response = requests.get(f"http://localhost:{port}/")
+                self.assertEqual(200, response.status_code)
 
     def test_invalid_percentile_parameter(self):
         with temporary_file(
@@ -400,27 +382,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
     def test_headless_spawn_options_wo_run_time(self):
         with mock_locustfile() as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--host",
-                    "https://test.com/",
-                    "--headless",
-                    "--exit-code-on-error",
-                    "0",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            gevent.sleep(1)
-            proc.send_signal(signal.SIGTERM)
-            stdout, stderr = proc.communicate()
-            self.assertIn("Starting Locust", stderr)
-            self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
-            self.assertIn("Shutting down (exit code 0)", stderr)
+            with TestProcess(
+                f"locust -f {mocked.file_path} --host https://test.com --headless --exit-code-on-error 0"
+            ) as proc:
+                proc.expect("Starting Locust")
+                proc.expect("No run time limit set, use CTRL+C to interrupt")
+                proc.terminate()
+                proc.expect("Shutting down (exit code 0)")
 
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
     def test_run_headless_with_multiple_locustfiles(self):
@@ -514,36 +482,24 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_autostart_wo_run_time(self):
         port = get_free_tcp_port()
         with mock_locustfile() as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--web-port",
-                    str(port),
-                    "--autostart",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            gevent.sleep(1.9)
-            try:
-                response = requests.get(f"http://localhost:{port}/")
-            except Exception:
-                response = None
-            proc.send_signal(signal.SIGTERM)
-            stdout, stderr = proc.communicate()
-            self.assertIn("Starting Locust", stderr)
-            self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
-            self.assertIn("Shutting down ", stderr)
-            self.assertNotIn("Traceback", stderr)
-            # check response afterwards, because it really isn't as informative as stderr
-            self.assertEqual(200, response.status_code)
-            d = pq(response.content.decode("utf-8"))
+            with TestProcess(
+                f"locust -f {mocked.file_path} --web-port {port} --autostart", expect_return_code=None
+            ) as proc:
+                proc.expect("Starting Locust")
 
-            self.assertEqual(200, response.status_code)
-            self.assertIn('"state": "running"', str(d))
+                wait_for_server(f"http://localhost:{port}/")
+                response = requests.get(f"http://localhost:{port}/")
+
+                proc.expect("No run time limit set, use CTRL+C to interrupt")
+                proc.terminate()
+                proc.expect("Shutting down")
+
+                proc.not_expect_any("Traceback")
+
+                # check response afterwards, because it really isn't as informative as stderr
+                self.assertEqual(200, response.status_code)
+                d = pq(response.content.decode("utf-8"))
+                self.assertIn('"state": "running"', str(d))
 
     @unittest.skipIf(sys.platform == "darwin", reason="This is too messy on macOS")
     def test_autostart_w_run_time(self):
@@ -772,8 +728,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
     @unittest.skipIf(IS_WINDOWS, reason="termios doesnt exist on windows, and thus we cannot import pty")
     def test_autospawn_browser(self):
-        import pty
-
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
 
@@ -798,28 +752,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            stdin_m, stdin_s = pty.openpty()
-            stdin = os.fdopen(stdin_m, "wb", 0)
-
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                ],
-                stdin=stdin_s,
-                stdout=PIPE,
-                text=True,
-            )
-            gevent.sleep(1)
-            stdin.write(b"\n")
-            try:
-                output, _ = proc.communicate(timeout=1)
-            except Exception:
-                proc.kill()
-                output, _ = proc.communicate()
-
-            self.assertIn("browser opened", output)
+            with TestProcess(f"locust -f {mocked.file_path}", use_pty=True, should_send_sigint=False) as proc:
+                proc.expect("Starting web interface at")
+                proc.send_input("\n")
+                proc.expect("browser opened")
 
     def test_spawning_with_fixed(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -902,24 +838,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--headless",
-                    "--run-time",
-                    "1",
-                    "-u",
-                    "3",
-                ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-            )
-
-            output = proc.communicate()[0]
-            self.assertIn("Total fixed_count of User classes (4) is greater than ", output)
+            with TestProcess(f"locust -f {mocked.file_path} --headless -u 3") as proc:
+                proc.expect("Total fixed_count of User classes (4) is greater than ")
 
     def test_with_package_as_locustfile(self):
         with TemporaryDirectory() as temp_dir:
@@ -1032,13 +952,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
             print(MOCK_LOCUSTFILE_CONTENT_C)
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
-                proc = subprocess.Popen(
-                    ["locust", "-f", f"{file1},{file2}", "-t", "1", "--headless"], stdout=PIPE, stderr=PIPE, text=True
-                )
-                stdout, stderr = proc.communicate()
-
-                self.assertIn("running my_task", stdout)
-                self.assertEqual(0, proc.returncode)
+                with TestProcess(f"locust -f {file1},{file2} --headless") as proc:
+                    proc.expect("running my_task")
 
     def test_error_when_duplicate_shape_class_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent(
@@ -1173,25 +1088,9 @@ class MyUser(HttpUser):
         print("task1")
     """
         with mock_locustfile(content=content) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--headless",
-                    "-t",
-                    "1",
-                    "--tags",
-                    "tag2",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            stdout, stderr = proc.communicate()
-            self.assertIn("MyUser had no tasks left after filtering", stderr)
-            self.assertIn("No tasks defined on MyUser", stderr)
-            self.assertEqual(1, proc.returncode)
+            with TestProcess(f"locust -f {mocked.file_path} --headless --tags tag2", expect_return_code=1) as proc:
+                proc.expect("MyUser had no tasks left after filtering")
+                proc.expect("No tasks defined on MyUser")
 
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
     def test_graceful_exit_when_keyboard_interrupt(self):
@@ -1206,7 +1105,7 @@ class MyUser(HttpUser):
                 class LoadTestShape(LoadTestShape):
                     def tick(self):
                         run_time = self.get_run_time()
-                        if run_time < 2:
+                        if run_time < 1:
                             return (10, 1)
 
                         return None
@@ -1219,26 +1118,14 @@ class MyUser(HttpUser):
             """
             )
         ) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked,
-                    "--headless",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            gevent.sleep(1.9)
-            proc.send_signal(signal.SIGINT)
-            stdout, stderr = proc.communicate()
-            print(stderr, stdout)
-            self.assertIn("Shape test starting", stderr)
-            self.assertIn("Exiting due to CTRL+C interruption", stderr)
-            self.assertIn("Test Stopped", stdout)
-            # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
-            self.assertRegex(stderr, r".*Aggregated[\S\s]*Shutting down[\S\s]*Aggregated.*")
+            with TestProcess(f"locust -f {mocked} --headless") as proc:
+                proc.expect("Shape test starting")
+                proc.terminate()
+                proc.expect("Exiting due to CTRL+C interruption")
+                proc.expect("Test Stopped")
+
+                proc.expect("Shutting down")
+                proc.expect("Aggregated")
 
     def test_exception_in_init_event(self):
         with mock_locustfile(
