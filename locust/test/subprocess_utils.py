@@ -8,6 +8,7 @@ from collections.abc import Callable
 from typing import IO, Any
 
 import gevent
+import psutil
 import pytest
 
 from .util import IS_WINDOWS
@@ -19,6 +20,8 @@ class TestProcess:
     """
 
     __test__ = False
+    process_backend = subprocess
+    proc: subprocess.Popen[str]
 
     def __init__(
         self,
@@ -29,7 +32,6 @@ class TestProcess:
         should_send_sigint: bool = True,
         use_pty: bool = False,
     ):
-        self.proc: subprocess.Popen[str]
         self._exitted = False
 
         self.on_fail = on_fail
@@ -50,7 +52,7 @@ class TestProcess:
 
             self.stdin_m, self.stdin_s = pty.openpty()
 
-        self.proc = subprocess.Popen(
+        self.proc = self.process_backend.Popen(
             shlex.split(command) if not IS_WINDOWS else command.split(" "),
             env={"PYTHONUNBUFFERED": "1", **os.environ},
             stdin=self.stdin_s if self.use_pty else None,
@@ -163,3 +165,11 @@ class TestProcess:
 
         self.proc.send_signal(sig)
         self._exitted = True
+
+
+class PsutilTestProcess(TestProcess):
+    process_backend = psutil
+    proc: psutil.Popen  # type: ignore
+
+    def children(self, recursive: bool = True) -> list[psutil.Process]:
+        return self.proc.children(recursive=recursive)
