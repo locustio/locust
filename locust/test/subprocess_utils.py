@@ -31,13 +31,22 @@ class TestProcess:
         expect_return_code: int | None = 0,
         should_send_sigint: bool = True,
         use_pty: bool = False,
+        join_timeout: int = 1,
     ):
         self._exitted = False
+        self._failed = False
 
-        self.on_fail = on_fail
+        def wrapped_on_fail(*args):
+            if self._failed:
+                return
+            self._failed = True
+            on_fail(*args)
+
+        self.on_fail = wrapped_on_fail
         self.expect_return_code = expect_return_code
         self.expect_timeout: int = 5
         self.should_send_sigint = should_send_sigint
+        self.join_timeout = join_timeout
 
         self.output_lines: list[str] = []
         self._cursor: int = 0  # Used for stateful log matching
@@ -74,7 +83,7 @@ class TestProcess:
     def __exit__(self, *_) -> None:
         self.close()
 
-    def close(self, timeout: int = 1) -> None:
+    def close(self) -> None:
         if self.use_pty:
             os.close(self.stdin_m)
             os.close(self.stdin_s)
@@ -82,7 +91,7 @@ class TestProcess:
         try:
             if self.should_send_sigint and not self._exitted:
                 self.terminate()
-            proc_return_code = self.proc.wait(timeout=timeout)
+            proc_return_code = self.proc.wait(timeout=self.join_timeout)
 
             # Locust does not perform a graceful shutdown on Windows since we send SIGTERM
             if not IS_WINDOWS and self.expect_return_code is not None and proc_return_code != self.expect_return_code:
@@ -92,9 +101,9 @@ class TestProcess:
         except subprocess.TimeoutExpired:
             self.proc.kill()
             self.proc.wait()
-            self.on_fail(f"Process took more than {timeout} seconds to terminate.")
+            self.on_fail(f"Process took more than {self.join_timeout} seconds to terminate.")
 
-        self.stdout_reader.join(timeout=timeout)
+        self.stdout_reader.join(timeout=self.join_timeout)
 
     # Check output logs from last found (stateful)
     def _expect(self, to_expect, is_match: Callable[[Any, str], bool]):
