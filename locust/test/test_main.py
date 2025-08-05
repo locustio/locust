@@ -20,7 +20,7 @@ import requests
 from pyquery import PyQuery as pq
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
-from .subprocess_utils import TestProcess
+from .subprocess_utils import PsutilTestProcess, TestProcess
 from .util import IS_WINDOWS, get_free_tcp_port, patch_env, temporary_file, wait_for_server
 
 SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give it some extra time
@@ -782,6 +782,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(f"locust -f {mocked.file_path} --headless -u 3") as proc:
                 proc.expect("Total fixed_count of User classes (4) is greater than ")
+                proc.expect("Aggregated")
 
     def test_with_package_as_locustfile(self):
         with TemporaryDirectory() as temp_dir:
@@ -1388,55 +1389,18 @@ class SecondUser(HttpUser):
             """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--headless",
-                    "--master",
-                    "--expect-workers",
-                    "2",
-                    "-t",
-                    "1s",
-                ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
+            proc = TestProcess(
+                f"locust -f {mocked.file_path} --headless --master --expect-workers 2 -t 1s", should_send_sigint=False
             )
-            proc_worker = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    "-",
-                    "--worker",
-                ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-            )
-            gevent.sleep(1)
-            proc_worker2 = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    "-",
-                    "--worker",
-                ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-            )
-            stdout = proc.communicate()[0]
-            stdout_worker = proc_worker.communicate()[0]
-            stdout_worker2 = proc_worker2.communicate()[0]
+            proc_worker = TestProcess("locust -f - --worker", should_send_sigint=False)
+            proc_worker_2 = TestProcess("locust -f - --worker", should_send_sigint=False)
 
-            self.assertIn('All users spawned: {"User1": 1} (1 total users)', stdout)
-            self.assertIn("Shutting down (exit code 0)", stdout)
-            self.assertNotIn("Traceback", stdout)
-            self.assertNotIn("Traceback", stdout_worker)
-            self.assertNotIn("Traceback", stdout_worker2)
-            self.assertEqual(0, proc_worker.returncode)
+            proc.expect('All users spawned: {"User1": 1} (1 total users)')
+            proc.expect("Shutting down (exit code 0)")
+
+            for p in [proc, proc_worker, proc_worker_2]:
+                p.close()
+                proc.not_expect_any("Traceback")
 
     def test_locustfile_distribution_with_workers_started_first(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -1452,42 +1416,15 @@ class SecondUser(HttpUser):
             """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc_worker = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    "-",
-                    "--worker",
-                ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-            )
-            gevent.sleep(1)
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--headless",
-                    "--master",
-                    "--expect-workers",
-                    "1",
-                    "-t",
-                    "1",
-                ],
-                stderr=STDOUT,
-                stdout=PIPE,
-                text=True,
-            )
+            with TestProcess("locust -f - --worker", should_send_sigint=False) as proc_worker:
+                with TestProcess(
+                    f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -t 1",
+                    should_send_sigint=False,
+                ) as proc:
+                    proc.expect('All users spawned: {"User1": ')
+                    proc.expect("Shutting down (exit code 0)")
 
-            stdout = proc.communicate()[0]
-            worker_stdout = proc_worker.communicate()[0]
-
-            self.assertIn('All users spawned: {"User1": ', stdout)
-            self.assertIn("Shutting down (exit code 0)", stdout)
-            self.assertEqual(0, proc_worker.returncode)
-            self.assertIn("hello", worker_stdout)
+                proc_worker.expect("hello")
 
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -1758,22 +1695,14 @@ class AnyUser(HttpUser):
     @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
     def test_processes_autodetect(self):
         with mock_locustfile() as mocked:
-            command = f"locust -f {mocked.file_path} --processes -1 --headless --run-time 1 --exit-code-on-error 0"
-            proc = subprocess.Popen(
-                command,
-                shell=True,
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            try:
-                _, stderr = proc.communicate(timeout=9)
-            except Exception:
-                proc.kill()
-                assert False, f"locust process never finished: {command}"
-            self.assertNotIn("Traceback", stderr)
-            self.assertIn("(index 0) reported as ready", stderr)
-            self.assertIn("Shutting down (exit code 0)", stderr)
+            with TestProcess(
+                f"locust -f {mocked.file_path} --processes -1 --headless --exit-code-on-error 0", join_timeout=2
+            ) as proc:
+                proc.expect("(index 0) reported as ready")
+                proc.expect("All users spawned")
+                proc.terminate()
+                proc.expect("The last worker quit, stopping test")
+                proc.not_expect_any("Traceback")
 
     @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
     def test_processes_separate_worker(self):
@@ -1823,44 +1752,39 @@ class AnyUser(HttpUser):
     @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
     def test_processes_ctrl_c(self):
         with mock_locustfile() as mocked:
-            proc = psutil.Popen(  # use psutil.Popen instead of subprocess.Popen to use extra features
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--processes",
-                    "4",
-                    "--headless",
-                    "-L",
-                    "DEBUG",
-                ],
-                stdout=PIPE,
-                stderr=PIPE,
-                text=True,
-            )
-            gevent.sleep(3)
-            children = proc.children(recursive=True)
-            self.assertEqual(len(children), 4, "unexpected number of child worker processes")
+            # use psutil.Popen instead of subprocess.Popen to use extra features
+            with PsutilTestProcess(
+                f"locust -f {mocked.file_path} --processes 4 --headless -L DEBUG", expect_return_code=1
+            ) as proc:
+                proc.expect("Starting Locust")
+                proc.expect("Started child worker")
+                proc.expect("Started child worker")
+                proc.expect("Started child worker")
+                proc.expect("Started child worker")
+                proc.expect("Waiting for workers to be ready, 0 of 4 connected")
 
-            proc.send_signal(signal.SIGINT)
-            gevent.sleep(2)
+                children: list[psutil.Process] = proc.children(recursive=True)
+                self.assertEqual(len(children), 4, "unexpected number of child worker processes")
 
-            for child in children:
-                self.assertFalse(child.is_running(), "child processes failed to terminate")
+                proc.expect("(index 3) reported as ready")
+                proc.expect("All users spawned")
 
-            try:
-                _, stderr = proc.communicate(timeout=1)
-            except Exception:
-                proc.kill()
-                _, stderr = proc.communicate()
-                assert False, f"locust process never finished: {stderr}"
+                proc.terminate()
 
-            self.assertNotIn("Traceback", stderr)
-            self.assertIn("(index 3) reported as ready", stderr)
-            self.assertIn("The last worker quit, stopping test", stderr)
-            self.assertIn("Shutting down (exit code 0)", stderr)
-            # ensure no weird escaping in error report. Not really related to ctrl-c...
-            self.assertIn(", 'Connection refused') ", stderr)
+                proc.expect("Shutting down (exit code 0)")
+                proc.expect("The last worker quit, stopping test.")
+
+                gone, alive = psutil.wait_procs(children, timeout=2)
+                self.assertEqual(len(gone), len(children), "child processes failed to terminate")
+
+                # Be good boys and cleanup if needed
+                for p in alive:
+                    p.kill()
+
+                # ensure no weird escaping in error report. Not really related to ctrl-c...
+                proc.expect(", 'Connection refused') ")
+
+                proc.not_expect_any("Traceback")
 
     @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
     def test_workers_shut_down_if_master_is_gone(self):
