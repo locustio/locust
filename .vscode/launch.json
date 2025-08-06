@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "Run current file",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
@@ -11,7 +11,7 @@
         },
         {
             "name": "Run current locust scenario headless",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "locust",
             "args": [
@@ -25,7 +25,7 @@
         },
         {
             "name": "Run current locust scenario, autostart",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "locust",
             "args": [
@@ -38,6 +38,13 @@
             ],
             "console": "integratedTerminal",
             "gevent": true
+        },
+        {
+            "name": "(test debug only)",
+            "type": "debugpy",
+            "request": "launch",
+            "gevent": true,
+            "purpose": ["debug-test"]
         }
     ]
 }
