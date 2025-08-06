@@ -1010,7 +1010,7 @@ class MyUser(HttpUser):
                 class LoadTestShape(LoadTestShape):
                     def tick(self):
                         run_time = self.get_run_time()
-                        if run_time < 1:
+                        if run_time < 2:
                             return (10, 1)
 
                         return None
@@ -1217,15 +1217,14 @@ class SecondUser(HttpUser):
 """
         with mock_locustfile(content=content) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -u 2 --exit-code-on-error 0 -L DEBUG --tags tag1",
+                f"locust -f {mocked.file_path} --headless --master -t 1 --expect-workers 1 -u 2 --exit-code-on-error 0 -L DEBUG --tags tag1",
                 join_timeout=2,
-            ) as proc:
+            ):
                 with TestProcess(
-                    f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False, join_timeout=2
+                    f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False
                 ) as proc_worker:
                     proc_worker.expect("task1", stream="stdout")
-                    proc.terminate()
-                    proc_worker.wait()
+                    proc_worker.wait(2)
                     proc_worker.not_expect_any("task2", stream="stdout")
                     proc_worker.not_expect_any("ERROR")
                     proc_worker.not_expect_any("Traceback")
@@ -1245,11 +1244,12 @@ class SecondUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -u 3 -r 99", join_timeout=2
+                f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -u 3 -r 99 -t 1",
+                join_timeout=2,
+                should_send_sigint=False,
             ) as proc:
                 with TestProcess(f"locust -f {mocked.file_path} --worker", should_send_sigint=False, join_timeout=3):
                     proc.expect('All users spawned: {"User1": 3} (3 total users)')
-                    proc.terminate()
                     proc.expect("Shutting down (exit code 0)")
 
     def test_distributed_report_timeout_expired(self):
@@ -1269,12 +1269,14 @@ class SecondUser(HttpUser):
             mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked,
             patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.01") as _,
         ):
-            with TestProcess(f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -u 3 -r 99") as proc:
+            with TestProcess(
+                f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -u 3 -r 99 -t 1",
+                should_send_sigint=False,
+            ) as proc:
                 with TestProcess(f"locust -f {mocked.file_path} --worker", should_send_sigint=False, join_timeout=2):
                     proc.expect(
                         "Spawning is complete and report waittime is expired, but not all reports received from workers:",
                     )
-                    proc.terminate()
                     proc.expect("Shutting down (exit code 0)")
 
     def test_locustfile_distribution(self):
@@ -1343,13 +1345,13 @@ class SecondUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path},{mocked.file_path} --headless --master --expect-workers 1",
+                f"locust -f {mocked.file_path},{mocked.file_path} --headless --master --expect-workers 1 -t 1",
+                should_send_sigint=False,
                 join_timeout=2,
             ) as proc:
                 with TestProcess("locust -f - --worker", should_send_sigint=False) as proc_worker:
                     proc.expect('All users spawned: {"User1": 1} (1 total users)')
-                    proc.terminate()
-                    proc_worker.wait()
+                    proc_worker.wait(2)
                     proc_worker.not_expect_any("Traceback")
 
                 proc.not_expect_any("Traceback")
@@ -1367,16 +1369,17 @@ class AnyUser(HttpUser):
 """
         with mock_locustfile(content=content) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --headless --master --expect-workers 2 -u 2 -L DEBUG", join_timeout=2
+                f"locust -f {mocked.file_path} --headless --master --expect-workers 2 -u 2 -L DEBUG -t 2",
+                join_timeout=3,
+                should_send_sigint=False,
             ) as proc:
                 with TestProcess(
-                    f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False
+                    f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False, join_timeout=2
                 ) as proc_worker_1:
                     with TestProcess(
-                        f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False
+                        f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False, join_timeout=2
                     ) as proc_worker_2:
                         proc.expect("All users spawned")
-                        proc.terminate()
 
                         # worker index: {id}
                         indexes = [int(proc_worker_1.stdout_output[0][-1]), int(proc_worker_2.stdout_output[0][-1])]
@@ -1486,7 +1489,9 @@ class AnyUser(HttpUser):
                 expect_return_code=None,
             ) as master_proc:
                 with TestProcess(
-                    f"locust -f {mocked.file_path} --worker --processes 2 --headless", should_send_sigint=False
+                    f"locust -f {mocked.file_path} --worker --processes 2 --headless",
+                    should_send_sigint=False,
+                    join_timeout=2,
                 ) as worker_parent_proc:
                     master_proc.expect("All users spawned")
                     master_proc.proc.kill()
