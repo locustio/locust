@@ -61,11 +61,6 @@ class ProcessIntegrationTest(TestCase):
         self.timeout.cancel()
         super().tearDown()
 
-    def assert_run(self, cmd: list[str], timeout: int = 5) -> subprocess.CompletedProcess[str]:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-        self.assertEqual(0, out.returncode, f"locust run failed with exit code {out.returncode}:\n{out.stderr}")
-        return out
-
 
 class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_help_arg(self):
@@ -933,20 +928,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
         )
         with mock_locustfile(content=content) as mocked:
-            out = self.assert_run(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--run-time=1s",
-                    "--headless",
-                    "--exit-code-on-error",
-                    "0",
-                ]
-            )
-
-            self.assertIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", out.stderr)
-            self.assertIn("The following option(s) will be ignored: --run-time", out.stderr)
+            with TestProcess(
+                f"locust -f {mocked.file_path} --run-time 1s --headless --exit-code-on-error 0",
+                should_send_sigint=False,
+            ) as proc:
+                proc.expect("--run-time, --users or --spawn-rate have no impact on LoadShapes")
+                proc.expect("The following option(s) will be ignored: --run-time")
 
     def test_shape_class_log_disabled_parameters(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
@@ -959,20 +946,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
         )
         with mock_locustfile(content=content) as mocked:
-            out = self.assert_run(
-                [
-                    "locust",
-                    "--headless",
-                    "-f",
-                    mocked.file_path,
-                    "--exit-code-on-error=0",
-                    "--users=1",
-                    "--spawn-rate=1",
-                ]
-            )
-            self.assertIn("Shape test starting.", out.stderr)
-            self.assertIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", out.stderr)
-            self.assertIn("The following option(s) will be ignored: --users, --spawn-rate", out.stderr)
+            with TestProcess(
+                f"locust -f {mocked.file_path} --headless --exit-code-on-error 0 --users 1 --spawn-rate 1",
+                should_send_sigint=False,
+            ) as proc:
+                proc.expect("Shape test starting.")
+                proc.expect("--run-time, --users or --spawn-rate have no impact on LoadShapes")
+                proc.expect("The following option(s) will be ignored: --users, --spawn-rate")
 
     def test_shape_class_with_use_common_options(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
@@ -987,21 +967,14 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
         )
         with mock_locustfile(content=content) as mocked:
-            out = self.assert_run(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--run-time=1s",
-                    "--users=1",
-                    "--spawn-rate=1",
-                    "--headless",
-                    "--exit-code-on-error=0",
-                ]
-            )
-            self.assertIn("Shape test starting.", out.stderr)
-            self.assertNotIn("--run-time, --users or --spawn-rate have no impact on LoadShapes", out.stderr)
-            self.assertNotIn("The following option(s) will be ignored:", out.stderr)
+            with TestProcess(
+                f"locust -f {mocked.file_path} --run-time 1s --users 1 --spawn-rate 1 --headless --exit-code-on-error 0",
+                should_send_sigint=False,
+            ) as proc:
+                proc.expect("Shape test starting.")
+                proc.wait()
+                proc.not_expect_any("--run-time, --users or --spawn-rate have no impact on LoadShapes")
+                proc.not_expect_any("The following option(s) will be ignored:")
 
     def test_error_when_locustfiles_directory_is_empty(self):
         with TemporaryDirectory() as temp_dir:
