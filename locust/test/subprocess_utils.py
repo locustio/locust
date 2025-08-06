@@ -38,6 +38,7 @@ class TestProcess:
         self._failed = False
 
         def wrapped_on_fail(*args):
+            __tracebackhide__ = True
             if self._failed:
                 return
             self._failed = True
@@ -114,6 +115,8 @@ class TestProcess:
 
     # Check output logs from last found (stateful)
     def _expect(self, to_expect, is_match: Callable[[Any, str], bool], *, stream="stderr"):
+        __tracebackhide__ = True
+
         if stream == "stdout":
             buffer = self.stdout_output
             cursor = self._stdout_cursor
@@ -136,6 +139,8 @@ class TestProcess:
 
     # Check all output logs (stateless)
     def _expect_any(self, to_expect, is_match: Callable[[Any, str], bool], *, stream="stderr"):
+        __tracebackhide__ = True
+
         if stream == "stdout":
             buffer = self.stdout_output
         else:
@@ -147,6 +152,8 @@ class TestProcess:
         self.on_fail(f"Did not see expected message: '{to_expect}'. Got {buffer[-5:]}")
 
     def _not_expect_any(self, to_not_expect, is_match: Callable[[Any, str], bool], *, stream="stderr"):
+        __tracebackhide__ = True
+
         if stream == "stdout":
             buffer = self.stdout_output
         else:
@@ -156,18 +163,26 @@ class TestProcess:
             self.on_fail(f"Found unexpected message: '{to_not_expect}'.")
 
     def expect(self, output: str, **kwargs):
+        __tracebackhide__ = True
+
         is_match: Callable[[str, str], bool] = lambda out, line: out in line
         return self._expect(output, is_match, **kwargs)
 
     def expect_any(self, output: str, **kwargs):
+        __tracebackhide__ = True
+
         is_match: Callable[[str, str], bool] = lambda out, line: out in line
         return self._expect_any(output, is_match, **kwargs)
 
     def not_expect_any(self, output: str, **kwargs):
+        __tracebackhide__ = True
+
         is_match: Callable[[str, str], bool] = lambda out, line: out in line
         return self._not_expect_any(output, is_match, **kwargs)
 
     def expect_regex(self, pattern: str | re.Pattern[str], **kwargs):
+        __tracebackhide__ = True
+
         if isinstance(pattern, str):
             regex = re.compile(pattern)
         else:
@@ -177,6 +192,8 @@ class TestProcess:
         return self._expect(regex, is_match, **kwargs)
 
     def expect_regex_any(self, pattern: str | re.Pattern[str], **kwargs):
+        __tracebackhide__ = True
+
         if isinstance(pattern, str):
             regex = re.compile(pattern)
         else:
