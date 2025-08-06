@@ -577,6 +577,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 autoquit = 5 if sys.platform == "darwin" else 0
                 with TestProcess(
                     f"locust -f {mocked1.file_path},{mocked2} --web-port {port} --autostart --autoquit {autoquit}",
+                    expect_timeout=6,
                     should_send_sigint=False,
                 ) as proc:
                     proc.expect("Starting Locust")

@@ -30,6 +30,7 @@ class TestProcess:
         *,
         expect_return_code: int | None = 0,
         should_send_sigint: bool = True,
+        expect_timeout: int = 5,
         use_pty: bool = False,
         join_timeout: int = 1,
     ):
@@ -46,7 +47,7 @@ class TestProcess:
 
         self.on_fail = wrapped_on_fail
         self.expect_return_code = expect_return_code
-        self.expect_timeout: int = 5
+        self.expect_timeout = expect_timeout
         self.should_send_sigint = should_send_sigint
         self.join_timeout = join_timeout
 
