@@ -1098,35 +1098,21 @@ class MyUser(HttpUser):
             """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--host",
-                    "http://google.com",
-                    "--headless",
-                    "-u",
-                    "1",
-                    "-t",
-                    "2s",
-                    "--json",
-                ],
-                stderr=PIPE,
-                stdout=PIPE,
-                text=True,
+            proc = TestProcess(
+                f"locust -f {mocked.file_path} --host http://google.com --headless -u 1 -t 1 --json",
+                should_send_sigint=False,
+                join_timeout=2,
             )
-            stdout, stderr = proc.communicate()
+            proc.close()
+            stdout = "\n".join(proc.stdout_output)
 
             try:
                 data = json.loads(stdout)
             except json.JSONDecodeError:
                 self.fail(f"Trying to parse {stdout} as json failed")
 
-            self.assertEqual(0, proc.returncode)
-
             if not data:
-                self.fail(f"No data in json: {stdout}, stderr: {stderr}")
+                self.fail(f"No data in json: {stdout}")
 
             result = data[0]
             self.assertEqual(float, type(result["last_request_timestamp"]))
@@ -1160,27 +1146,13 @@ class MyUser(HttpUser):
         if os.path.exists(output_filepath):
             os.remove(output_filepath)
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--host",
-                    "http://google.com",
-                    "--headless",
-                    "-u",
-                    "1",
-                    "-t",
-                    "2s",
-                    "--json-file",
-                    output_base,
-                ],
-                stderr=PIPE,
-                stdout=PIPE,
-                text=True,
-            )
-            stdout, stderr = proc.communicate()
-            self.assertNotIn("error: argument --json-file: expected one argument", stderr)
+            with TestProcess(
+                f"locust -f {mocked.file_path} --host http://google.com --headless -u 1 -t 1 --json-file {output_base}",
+                should_send_sigint=False,
+            ) as proc:
+                proc.wait(3)
+                proc.not_expect_any("error: argument --json-file: expected one argument")
+
             self.assertTrue(os.path.exists(output_filepath))
             with open(output_filepath, encoding="utf-8") as file:
                 [stats] = json.load(file)
