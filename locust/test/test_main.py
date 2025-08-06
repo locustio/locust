@@ -116,7 +116,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     },
                 )
                 proc.expect('All users spawned: {"TestUser": 1} (1 total users)')
-                proc.expect("web_form_value")
+                proc.expect("web_form_value", stream="stdout")
                 proc.terminate()
                 proc.expect("Shutting down")
                 proc.expect("Aggregated")
@@ -146,7 +146,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
                 with TestProcess(f"locust -f {file_path} --autostart") as proc:
                     proc.expect("Starting Locust")
-                    proc.expect("config_file_value")
+                    proc.expect("config_file_value", stream="stdout")
                     proc.terminate()
                     proc.expect("Shutting down")
                     proc.not_expect_any("Traceback")
@@ -177,7 +177,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc.expect("Starting Locust")
                 proc.terminate()
                 proc.expect("Shutting down (exit code 42)")
-                proc.expect("Exit code in quit event 42")
+                proc.expect("Exit code in quit event 42", stream="stdout")
 
     def test_webserver(self):
         with temporary_file(
@@ -598,8 +598,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     proc.expect("--autoquit time reached")
                     proc.expect("Shutting down")
 
-                    proc.expect_any("running my_task()")
-                    proc.expect_any("running my_task() again")
+                    proc.expect_any("running my_task()", stream="stdout")
+                    proc.expect_any("running my_task() again", stream="stdout")
 
     @unittest.skipIf(platform.system() == "Darwin", reason="Messy on macOS on GH")
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
@@ -639,17 +639,17 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 proc.send_input("w")
                 proc.expect("Ramping to 1 users at a rate of 100.00 per second")
                 proc.expect('All users spawned: {"UserSubclass": 1} (1 total users)')
-                proc.expect("Test task is running")
+                proc.expect("Test task is running", stream="stdout")
 
                 proc.send_input("W")
                 proc.expect("Ramping to 11 users at a rate of 100.00 per second")
                 proc.expect('All users spawned: {"UserSubclass": 11} (11 total users)')
-                proc.expect("Test task is running")
+                proc.expect("Test task is running", stream="stdout")
 
                 proc.send_input("s")
                 proc.expect("Ramping to 10 users at a rate of 100.00 per second")
                 proc.expect('All users spawned: {"UserSubclass": 10} (10 total users)')
-                proc.expect("Test task is running")
+                proc.expect("Test task is running", stream="stdout")
 
                 proc.send_input("S")
                 proc.expect("Ramping to 0 users at a rate of 100.00 per second")
@@ -695,7 +695,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with TestProcess(f"locust -f {mocked.file_path}", use_pty=True, should_send_sigint=False) as proc:
                 proc.expect("Starting web interface at")
                 proc.send_input("\n")
-                proc.expect("browser opened")
+                proc.expect("browser opened", stream="stdout")
 
     def test_spawning_with_fixed(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -729,7 +729,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             ) as proc:
                 proc.expect("Ramping to 10 users at a rate of 10.00 per second")
                 proc.expect('All users spawned: {"User1": 2, "User2": 4, "User3": 4} (10 total users)')
-                proc.expect("Test task is running")
+                proc.expect("Test task is running", stream="stdout")
 
                 # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
                 proc.expect_any("Aggregated")
@@ -746,7 +746,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 ) as proc:
                     proc.expect("Ramping to 10 users at a rate of 10.00 per second")
                     proc.expect('All users spawned: {"TestUser1": 5, "TestUser2": 5} (10 total users)')
-                    proc.expect("running my_task()")
+                    proc.expect("running my_task()", stream="stdout")
 
                     # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
                     proc.expect("Aggregated")
@@ -819,10 +819,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 f"locust -f {mocked.file_path} --headless -u 5 -r 10 User2 User3",
             ) as proc:
                 proc.expect('All users spawned: {"User2": 3, "User3": 2} (5 total users)')
-                proc.expect("User2 is running")
-                proc.expect("User3 is running")
+                proc.expect("User2 is running", stream="stdout")
+                proc.expect("User3 is running", stream="stdout")
                 proc.terminate()
-                proc.not_expect_any("User1 is running")
+                proc.not_expect_any("User1 is running", stream="stdout")
 
     def test_html_report_option(self):
         html_template = "some_name_{u}_{r}_{t}.html"
@@ -891,7 +891,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             print(MOCK_LOCUSTFILE_CONTENT_C)
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
                 with TestProcess(f"locust -f {file1},{file2} --headless") as proc:
-                    proc.expect("running my_task")
+                    proc.expect("running my_task", stream="stdout")
 
     def test_error_when_duplicate_shape_class_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent(
@@ -1054,7 +1054,7 @@ class MyUser(HttpUser):
                 proc.expect("Shape test starting")
                 proc.terminate()
                 proc.expect("Exiting due to CTRL+C interruption")
-                proc.expect("Test Stopped")
+                proc.expect("Test Stopped", stream="stdout")
 
                 proc.expect("Shutting down")
                 proc.expect("Aggregated")
