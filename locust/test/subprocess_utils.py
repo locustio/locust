@@ -40,7 +40,7 @@ class TestProcess:
             if self._failed:
                 return
             self._failed = True
-            for line in self.output_lines:
+            for line in self.stderr_output:
                 print(line)
             on_fail(*args)
 
@@ -50,8 +50,10 @@ class TestProcess:
         self.should_send_sigint = should_send_sigint
         self.join_timeout = join_timeout
 
-        self.output_lines: list[str] = []
-        self._cursor: int = 0  # Used for stateful log matching
+        self.stderr_output: list[str] = []
+        self.stdout_output: list[str] = []
+        self._stderr_cursor: int = 0  # Used for stateful log matching
+        self._stdout_cursor: int = 0
 
         self.use_pty: bool = use_pty
         # Create PTY pair
@@ -68,16 +70,17 @@ class TestProcess:
             env={"PYTHONUNBUFFERED": "1", **os.environ},
             stdin=self.stdin_s if self.use_pty else None,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stderr=subprocess.PIPE,
             text=True,
         )
 
-        def _consume_output(source: IO[str]):
+        def _consume_output(source: IO[str], to: list[str]):
             for line in iter(source.readline, ""):
                 line = line.rstrip("\n")
-                self.output_lines.append(line)
+                to.append(line)
 
-        self.stdout_reader = gevent.spawn(_consume_output, self.proc.stdout)
+        self.stdout_reader = gevent.spawn(_consume_output, self.proc.stdout, self.stdout_output)
+        self.stderr_reader = gevent.spawn(_consume_output, self.proc.stderr, self.stderr_output)
 
     def __enter__(self) -> "TestProcess":
         return self
@@ -106,62 +109,80 @@ class TestProcess:
             self.on_fail(f"Process took more than {self.join_timeout} seconds to terminate.")
 
         self.stdout_reader.join(timeout=self.join_timeout)
+        self.stderr_reader.join(timeout=self.join_timeout)
 
     # Check output logs from last found (stateful)
-    def _expect(self, to_expect, is_match: Callable[[Any, str], bool]):
+    def _expect(self, to_expect, is_match: Callable[[Any, str], bool], *, stream="stderr"):
+        if stream == "stdout":
+            buffer = self.stdout_output
+            cursor = self._stdout_cursor
+        else:
+            buffer = self.stderr_output
+            cursor = self._stderr_cursor
+
         start_time = time.time()
         while time.time() - start_time < self.expect_timeout:
-            new_lines = self.output_lines[self._cursor :]
+            new_lines = buffer[cursor:]
             for idx, line in enumerate(new_lines):
                 if is_match(to_expect, line):
-                    self._cursor += idx + 1
+                    cursor += idx + 1
                     return
             time.sleep(0.05)
 
         self.on_fail(
-            f"Did not see expected message: '{to_expect}' within {self.expect_timeout} seconds. Got {self.output_lines[-5:]}"
+            f"Did not see expected message: '{to_expect}' within {self.expect_timeout} seconds. Got {buffer[-5:]}"
         )
 
     # Check all output logs (stateless)
-    def _expect_any(self, to_expect, is_match: Callable[[Any, str], bool]):
-        if any(is_match(to_expect, line) for line in self.output_lines):
+    def _expect_any(self, to_expect, is_match: Callable[[Any, str], bool], *, stream="stderr"):
+        if stream == "stdout":
+            buffer = self.stdout_output
+        else:
+            buffer = self.stderr_output
+
+        if any(is_match(to_expect, line) for line in buffer):
             return
 
-        self.on_fail(f"Did not see expected message: '{to_expect}'. Got {self.output_lines[-5:]}")
+        self.on_fail(f"Did not see expected message: '{to_expect}'. Got {buffer[-5:]}")
 
-    def _not_expect_any(self, to_not_expect, is_match: Callable[[Any, str], bool]):
-        if any(is_match(to_not_expect, line) for line in self.output_lines):
+    def _not_expect_any(self, to_not_expect, is_match: Callable[[Any, str], bool], *, stream="stderr"):
+        if stream == "stdout":
+            buffer = self.stdout_output
+        else:
+            buffer = self.stderr_output
+
+        if any(is_match(to_not_expect, line) for line in buffer):
             self.on_fail(f"Found unexpected message: '{to_not_expect}'.")
 
-    def expect(self, output: str):
+    def expect(self, output: str, **kwargs):
         is_match: Callable[[str, str], bool] = lambda out, line: out in line
-        return self._expect(output, is_match)
+        return self._expect(output, is_match, **kwargs)
 
-    def expect_any(self, output: str):
+    def expect_any(self, output: str, **kwargs):
         is_match: Callable[[str, str], bool] = lambda out, line: out in line
-        return self._expect_any(output, is_match)
+        return self._expect_any(output, is_match, **kwargs)
 
-    def not_expect_any(self, output: str):
+    def not_expect_any(self, output: str, **kwargs):
         is_match: Callable[[str, str], bool] = lambda out, line: out in line
-        return self._not_expect_any(output, is_match)
+        return self._not_expect_any(output, is_match, **kwargs)
 
-    def expect_regex(self, pattern: str | re.Pattern[str]):
+    def expect_regex(self, pattern: str | re.Pattern[str], **kwargs):
         if isinstance(pattern, str):
             regex = re.compile(pattern)
         else:
             regex = pattern
 
         is_match: Callable[[re.Pattern, str], bool] = lambda pattern, line: pattern.search(line) is not None
-        return self._expect(regex, is_match)
+        return self._expect(regex, is_match, **kwargs)
 
-    def expect_regex_any(self, pattern: str | re.Pattern[str]):
+    def expect_regex_any(self, pattern: str | re.Pattern[str], **kwargs):
         if isinstance(pattern, str):
             regex = re.compile(pattern)
         else:
             regex = pattern
 
         is_match: Callable[[re.Pattern, str], bool] = lambda pattern, line: pattern.search(line) is not None
-        return self._expect(regex, is_match)
+        return self._expect(regex, is_match, **kwargs)
 
     def send_input(self, content: str):
         if self.use_pty:
