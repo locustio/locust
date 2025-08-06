@@ -33,7 +33,7 @@ class TestProcess:
         use_pty: bool = False,
         join_timeout: int = 1,
     ):
-        self._exitted = False
+        self._terminated = False
         self._failed = False
 
         def wrapped_on_fail(*args):
@@ -94,7 +94,7 @@ class TestProcess:
             os.close(self.stdin_s)
 
         try:
-            if self.should_send_sigint and not self._exitted:
+            if self.should_send_sigint and not self._terminated:
                 self.terminate()
             proc_return_code = self.proc.wait(timeout=self.join_timeout)
 
@@ -196,7 +196,7 @@ class TestProcess:
             sig = signal.SIGTERM
 
         self.proc.send_signal(sig)
-        self._exitted = True
+        self._terminated = True
 
     def wait(self, timeout=None):
         return self.proc.wait(timeout=timeout or self.join_timeout)
