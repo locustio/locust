@@ -40,6 +40,8 @@ class TestProcess:
             if self._failed:
                 return
             self._failed = True
+            for line in self.output_lines:
+                print(line)
             on_fail(*args)
 
         self.on_fail = wrapped_on_fail
