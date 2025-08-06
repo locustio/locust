@@ -198,6 +198,9 @@ class TestProcess:
         self.proc.send_signal(sig)
         self._exitted = True
 
+    def wait(self, timeout=None):
+        return self.proc.wait(timeout=timeout or self.join_timeout)
+
 
 class PsutilTestProcess(TestProcess):
     process_backend = psutil
