@@ -1083,6 +1083,112 @@ class MyUser(HttpUser):
             ) as proc:
                 proc.expect("something went wrong")
 
+    def test_json_schema(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import HttpUser, task, constant
+
+            class QuickstartUser(HttpUser):
+                wait_time = constant(1)
+
+                @task
+                def hello_world(self):
+                    self.client.get("/")
+
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "http://google.com",
+                    "--headless",
+                    "-u",
+                    "1",
+                    "-t",
+                    "2s",
+                    "--json",
+                ],
+                stderr=PIPE,
+                stdout=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+
+            try:
+                data = json.loads(stdout)
+            except json.JSONDecodeError:
+                self.fail(f"Trying to parse {stdout} as json failed")
+
+            self.assertEqual(0, proc.returncode)
+
+            if not data:
+                self.fail(f"No data in json: {stdout}, stderr: {stderr}")
+
+            result = data[0]
+            self.assertEqual(float, type(result["last_request_timestamp"]))
+            self.assertEqual(float, type(result["start_time"]))
+            self.assertEqual(int, type(result["num_requests"]))
+            self.assertEqual(int, type(result["num_none_requests"]))
+            self.assertEqual(float, type(result["total_response_time"]))
+            self.assertEqual(float, type(result["max_response_time"]))
+            self.assertEqual(float, type(result["min_response_time"]))
+            self.assertEqual(int, type(result["total_content_length"]))
+            self.assertEqual(dict, type(result["response_times"]))
+            self.assertEqual(dict, type(result["num_reqs_per_sec"]))
+            self.assertEqual(dict, type(result["num_fail_per_sec"]))
+
+    def test_json_file(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import HttpUser, task, constant
+
+            class QuickstartUser(HttpUser):
+                wait_time = constant(1)
+
+                @task
+                def hello_world(self):
+                    self.client.get("/")
+
+            """
+        )
+        output_base = "locust_output"
+        output_filepath = f"{output_base}.json"
+        if os.path.exists(output_filepath):
+            os.remove(output_filepath)
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            proc = subprocess.Popen(
+                [
+                    "locust",
+                    "-f",
+                    mocked.file_path,
+                    "--host",
+                    "http://google.com",
+                    "--headless",
+                    "-u",
+                    "1",
+                    "-t",
+                    "2s",
+                    "--json-file",
+                    output_base,
+                ],
+                stderr=PIPE,
+                stdout=PIPE,
+                text=True,
+            )
+            stdout, stderr = proc.communicate()
+            self.assertNotIn("error: argument --json-file: expected one argument", stderr)
+            self.assertTrue(os.path.exists(output_filepath))
+            with open(output_filepath, encoding="utf-8") as file:
+                [stats] = json.load(file)
+                self.assertEqual(stats["name"], "/")
+
+        if os.path.exists(output_filepath):
+            os.remove(output_filepath)
+
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
     failed_port_check = False
@@ -1476,112 +1582,6 @@ class SecondUser(HttpUser):
             self.assertNotIn("Traceback", stdout)
             self.assertNotIn("Traceback", stdout_worker)
             self.assertEqual(0, proc_worker.returncode)
-
-    def test_json_schema(self):
-        LOCUSTFILE_CONTENT = textwrap.dedent(
-            """
-            from locust import HttpUser, task, constant
-
-            class QuickstartUser(HttpUser):
-                wait_time = constant(1)
-
-                @task
-                def hello_world(self):
-                    self.client.get("/")
-
-            """
-        )
-        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--host",
-                    "http://google.com",
-                    "--headless",
-                    "-u",
-                    "1",
-                    "-t",
-                    "2s",
-                    "--json",
-                ],
-                stderr=PIPE,
-                stdout=PIPE,
-                text=True,
-            )
-            stdout, stderr = proc.communicate()
-
-            try:
-                data = json.loads(stdout)
-            except json.JSONDecodeError:
-                self.fail(f"Trying to parse {stdout} as json failed")
-
-            self.assertEqual(0, proc.returncode)
-
-            if not data:
-                self.fail(f"No data in json: {stdout}, stderr: {stderr}")
-
-            result = data[0]
-            self.assertEqual(float, type(result["last_request_timestamp"]))
-            self.assertEqual(float, type(result["start_time"]))
-            self.assertEqual(int, type(result["num_requests"]))
-            self.assertEqual(int, type(result["num_none_requests"]))
-            self.assertEqual(float, type(result["total_response_time"]))
-            self.assertEqual(float, type(result["max_response_time"]))
-            self.assertEqual(float, type(result["min_response_time"]))
-            self.assertEqual(int, type(result["total_content_length"]))
-            self.assertEqual(dict, type(result["response_times"]))
-            self.assertEqual(dict, type(result["num_reqs_per_sec"]))
-            self.assertEqual(dict, type(result["num_fail_per_sec"]))
-
-    def test_json_file(self):
-        LOCUSTFILE_CONTENT = textwrap.dedent(
-            """
-            from locust import HttpUser, task, constant
-
-            class QuickstartUser(HttpUser):
-                wait_time = constant(1)
-
-                @task
-                def hello_world(self):
-                    self.client.get("/")
-
-            """
-        )
-        output_base = "locust_output"
-        output_filepath = f"{output_base}.json"
-        if os.path.exists(output_filepath):
-            os.remove(output_filepath)
-        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            proc = subprocess.Popen(
-                [
-                    "locust",
-                    "-f",
-                    mocked.file_path,
-                    "--host",
-                    "http://google.com",
-                    "--headless",
-                    "-u",
-                    "1",
-                    "-t",
-                    "2s",
-                    "--json-file",
-                    output_base,
-                ],
-                stderr=PIPE,
-                stdout=PIPE,
-                text=True,
-            )
-            stdout, stderr = proc.communicate()
-            self.assertNotIn("error: argument --json-file: expected one argument", stderr)
-            self.assertTrue(os.path.exists(output_filepath))
-            with open(output_filepath, encoding="utf-8") as file:
-                [stats] = json.load(file)
-                self.assertEqual(stats["name"], "/")
-
-        if os.path.exists(output_filepath):
-            os.remove(output_filepath)
 
     @unittest.skipIf(True, reason="This test is too slow for the value it provides")
     def test_worker_indexes(self):
