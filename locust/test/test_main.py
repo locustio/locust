@@ -1221,7 +1221,7 @@ class SecondUser(HttpUser):
                 join_timeout=2,
             ) as proc:
                 with TestProcess(
-                    f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False
+                    f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False, join_timeout=2
                 ) as proc_worker:
                     proc_worker.expect("task1", stream="stdout")
                     proc.terminate()
@@ -1244,8 +1244,10 @@ class SecondUser(HttpUser):
             """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            with TestProcess(f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -u 3 -r 99") as proc:
-                with TestProcess(f"locust -f {mocked.file_path} --worker", should_send_sigint=False):
+            with TestProcess(
+                f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -u 3 -r 99", join_timeout=2
+            ) as proc:
+                with TestProcess(f"locust -f {mocked.file_path} --worker", should_send_sigint=False, join_timeout=3):
                     proc.expect('All users spawned: {"User1": 3} (3 total users)')
                     proc.terminate()
                     proc.expect("Shutting down (exit code 0)")
@@ -1268,7 +1270,7 @@ class SecondUser(HttpUser):
             patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.01") as _,
         ):
             with TestProcess(f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -u 3 -r 99") as proc:
-                with TestProcess(f"locust -f {mocked.file_path} --worker", should_send_sigint=False):
+                with TestProcess(f"locust -f {mocked.file_path} --worker", should_send_sigint=False, join_timeout=2):
                     proc.expect(
                         "Spawning is complete and report waittime is expired, but not all reports received from workers:",
                     )
@@ -1365,7 +1367,7 @@ class AnyUser(HttpUser):
 """
         with mock_locustfile(content=content) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --headless --master --expect-workers 2 -u 2 -L DEBUG"
+                f"locust -f {mocked.file_path} --headless --master --expect-workers 2 -u 2 -L DEBUG", join_timeout=2
             ) as proc:
                 with TestProcess(
                     f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False
@@ -1534,12 +1536,11 @@ class AnyUser(User):
             with TestProcess(
                 f"locust -f {mocked.file_path} --processes 2 --worker", should_send_sigint=False, expect_return_code=42
             ) as worker_proc:
-                with TestProcess(
-                    f"locust -f {mocked.file_path} --master --headless -t 1", should_send_sigint=False
-                ) as master_proc:
+                with TestProcess(f"locust -f {mocked.file_path} --master --headless -t 1") as master_proc:
                     worker_proc.expect("INFO/locust.runners: sys.exit(42) called")
-                    worker_proc.wait()
+                    worker_proc.wait(2)
                     worker_proc.not_expect_any("Traceback")
-                    master_proc.wait()
                     master_proc.expect("failed to send heartbeat, setting state to missing")
+                    master_proc.terminate()
+                    master_proc.expect("Shutting down")
                     master_proc.not_expect_any("Traceback")
