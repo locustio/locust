@@ -23,7 +23,6 @@ class TestProcess:
     def __init__(
         self,
         command: str,
-        on_fail: Callable[[str], None] = pytest.fail,
         *,
         expect_return_code: int | None = 0,
         should_send_sigint: bool = True,
@@ -35,16 +34,6 @@ class TestProcess:
         self._terminated = False
         self._failed = False
 
-        def wrapped_on_fail(*args):
-            __tracebackhide__ = True
-            if self._failed:
-                return
-            self._failed = True
-            for line in self.stderr_output:
-                print(line)
-            on_fail(*args)
-
-        self.on_fail = wrapped_on_fail
         self.expect_return_code = expect_return_code
         self.expect_timeout = expect_timeout
         self.should_send_sigint = should_send_sigint
@@ -81,6 +70,15 @@ class TestProcess:
 
         self.stdout_reader = gevent.spawn(_consume_output, self.proc.stdout, self.stdout_output)
         self.stderr_reader = gevent.spawn(_consume_output, self.proc.stderr, self.stderr_output)
+
+    def on_fail(self, reason: str = ""):
+        __tracebackhide__ = True
+        if self._failed:
+            return
+        self._failed = True
+        for line in self.stderr_output:
+            print(line)
+        pytest.fail(reason)
 
     def __enter__(self) -> "TestProcess":
         return self
