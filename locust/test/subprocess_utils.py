@@ -8,7 +8,6 @@ from collections.abc import Callable
 from typing import IO, Any
 
 import gevent
-import psutil
 import pytest
 
 from .util import IS_WINDOWS
@@ -20,8 +19,6 @@ class TestProcess:
     """
 
     __test__ = False
-    process_backend = subprocess
-    proc: subprocess.Popen[str]
 
     def __init__(
         self,
@@ -34,6 +31,7 @@ class TestProcess:
         use_pty: bool = False,
         join_timeout: int = 1,
     ):
+        self.proc: subprocess.Popen[str]
         self._terminated = False
         self._failed = False
 
@@ -67,7 +65,7 @@ class TestProcess:
 
             self.stdin_m, self.stdin_s = pty.openpty()
 
-        self.proc = self.process_backend.Popen(
+        self.proc = subprocess.Popen(
             shlex.split(command) if not IS_WINDOWS else command.split(" "),
             env={"PYTHONUNBUFFERED": "1", **os.environ},
             stdin=self.stdin_s if self.use_pty else None,
@@ -209,22 +207,14 @@ class TestProcess:
             raise Exception("Cannot send input to proccess without pty.")
 
     def terminate(self):
-        if not IS_WINDOWS:
-            sig = signal.SIGINT
-        else:
+        if IS_WINDOWS:
             # Signals are hard on Windows
             sig = signal.SIGTERM
+        else:
+            sig = signal.SIGINT
 
         self.proc.send_signal(sig)
         self._terminated = True
 
     def wait(self, timeout=None):
         return self.proc.wait(timeout=timeout or self.join_timeout)
-
-
-class PsutilTestProcess(TestProcess):
-    process_backend = psutil
-    proc: psutil.Popen  # type: ignore
-
-    def children(self, recursive: bool = True) -> list[psutil.Process]:
-        return self.proc.children(recursive=recursive)

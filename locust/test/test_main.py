@@ -18,7 +18,7 @@ import requests
 from pyquery import PyQuery as pq
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
-from .subprocess_utils import PsutilTestProcess, TestProcess
+from .subprocess_utils import TestProcess
 from .util import IS_WINDOWS, get_free_tcp_port, patch_env, temporary_file, wait_for_server
 
 SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give it some extra time
@@ -1436,8 +1436,7 @@ class AnyUser(HttpUser):
     @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
     def test_processes_ctrl_c(self):
         with mock_locustfile() as mocked:
-            # use psutil.Popen instead of subprocess.Popen to use extra features
-            with PsutilTestProcess(
+            with TestProcess(
                 f"locust -f {mocked.file_path} --processes 4 --headless -L DEBUG", expect_return_code=1
             ) as proc:
                 proc.expect("Starting Locust")
@@ -1447,7 +1446,7 @@ class AnyUser(HttpUser):
                 proc.expect("Started child worker")
                 proc.expect("Waiting for workers to be ready, 0 of 4 connected")
 
-                children: list[psutil.Process] = proc.children(recursive=True)
+                children: list[psutil.Process] = psutil.Process(proc.proc.pid).children(recursive=True)
                 self.assertEqual(len(children), 4, "unexpected number of child worker processes")
 
                 proc.expect("(index 3) reported as ready")
