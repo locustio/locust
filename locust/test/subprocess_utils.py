@@ -1,11 +1,9 @@
 import os
-import re
 import shlex
 import signal
 import subprocess
 import time
-from collections.abc import Callable
-from typing import IO, Any
+from typing import IO
 
 import gevent
 import pytest
@@ -25,7 +23,7 @@ class TestProcess:
         command: str,
         *,
         expect_return_code: int | None = 0,
-        should_send_sigint: bool = True,
+        sigint_on_exit: bool = True,
         expect_timeout: int = 5,
         use_pty: bool = False,
         join_timeout: int = 1,
@@ -36,7 +34,7 @@ class TestProcess:
 
         self.expect_return_code = expect_return_code
         self.expect_timeout = expect_timeout
-        self.should_send_sigint = should_send_sigint
+        self.sigint_on_exit = sigint_on_exit
         self.join_timeout = join_timeout
 
         self.stderr_output: list[str] = []
@@ -92,7 +90,7 @@ class TestProcess:
             os.close(self.stdin_s)
 
         try:
-            if self.should_send_sigint and not self._terminated:
+            if self.sigint_on_exit and not self._terminated:
                 self.terminate()
             proc_return_code = self.proc.wait(timeout=self.join_timeout)
 
@@ -110,7 +108,7 @@ class TestProcess:
         self.stderr_reader.join(timeout=self.join_timeout)
 
     # Check output logs from last found (stateful)
-    def _expect(self, to_expect, is_match: Callable[[Any, str], bool], *, stream="stderr"):
+    def expect(self, to_expect, *, stream="stderr"):
         __tracebackhide__ = True
 
         if stream == "stdout":
@@ -124,7 +122,7 @@ class TestProcess:
         while time.time() - start_time < self.expect_timeout:
             new_lines = buffer[cursor:]
             for idx, line in enumerate(new_lines):
-                if is_match(to_expect, line):
+                if to_expect in line:
                     cursor += idx + 1
                     return
             time.sleep(0.05)
@@ -134,7 +132,7 @@ class TestProcess:
         )
 
     # Check all output logs (stateless)
-    def _expect_any(self, to_expect, is_match: Callable[[Any, str], bool], *, stream="stderr"):
+    def expect_any(self, to_expect, *, stream="stderr"):
         __tracebackhide__ = True
 
         if stream == "stdout":
@@ -142,12 +140,12 @@ class TestProcess:
         else:
             buffer = self.stderr_output
 
-        if any(is_match(to_expect, line) for line in buffer):
+        if any(to_expect in line for line in buffer):
             return
 
         self.on_fail(f"Did not see expected message: '{to_expect}'. Got {buffer[-5:]}")
 
-    def _not_expect_any(self, to_not_expect, is_match: Callable[[Any, str], bool], *, stream="stderr"):
+    def not_expect_any(self, to_not_expect, *, stream="stderr"):
         __tracebackhide__ = True
 
         if stream == "stdout":
@@ -155,48 +153,8 @@ class TestProcess:
         else:
             buffer = self.stderr_output
 
-        if any(is_match(to_not_expect, line) for line in buffer):
+        if any(to_not_expect in line for line in buffer):
             self.on_fail(f"Found unexpected message: '{to_not_expect}'.")
-
-    def expect(self, output: str, **kwargs):
-        __tracebackhide__ = True
-
-        is_match: Callable[[str, str], bool] = lambda out, line: out in line
-        return self._expect(output, is_match, **kwargs)
-
-    def expect_any(self, output: str, **kwargs):
-        __tracebackhide__ = True
-
-        is_match: Callable[[str, str], bool] = lambda out, line: out in line
-        return self._expect_any(output, is_match, **kwargs)
-
-    def not_expect_any(self, output: str, **kwargs):
-        __tracebackhide__ = True
-
-        is_match: Callable[[str, str], bool] = lambda out, line: out in line
-        return self._not_expect_any(output, is_match, **kwargs)
-
-    def expect_regex(self, pattern: str | re.Pattern[str], **kwargs):
-        __tracebackhide__ = True
-
-        if isinstance(pattern, str):
-            regex = re.compile(pattern)
-        else:
-            regex = pattern
-
-        is_match: Callable[[re.Pattern, str], bool] = lambda pattern, line: pattern.search(line) is not None
-        return self._expect(regex, is_match, **kwargs)
-
-    def expect_regex_any(self, pattern: str | re.Pattern[str], **kwargs):
-        __tracebackhide__ = True
-
-        if isinstance(pattern, str):
-            regex = re.compile(pattern)
-        else:
-            regex = pattern
-
-        is_match: Callable[[re.Pattern, str], bool] = lambda pattern, line: pattern.search(line) is not None
-        return self._expect(regex, is_match, **kwargs)
 
     def send_input(self, content: str):
         if self.use_pty:
@@ -213,6 +171,3 @@ class TestProcess:
 
         self.proc.send_signal(sig)
         self._terminated = True
-
-    def wait(self, timeout=None):
-        return self.proc.wait(timeout=timeout or self.join_timeout)

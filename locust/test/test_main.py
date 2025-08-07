@@ -98,8 +98,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             # print(subprocess.check_output(["cat", file_path]))
             with TestProcess(
                 f"locust -f {file_path} --custom-string-arg command_line_value --web-port {port}",
-            ) as proc:
-                proc.expect("Starting Locust")
+            ) as tp:
+                tp.expect("Starting Locust")
                 wait_for_server(f"http://127.0.0.1:{port}/swarm")
                 requests.post(
                     f"http://127.0.0.1:{port}/swarm",
@@ -110,12 +110,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         "custom_string_arg": "web_form_value",
                     },
                 )
-                proc.expect('All users spawned: {"TestUser": 1} (1 total users)')
-                proc.expect("web_form_value", stream="stdout")
-                proc.terminate()
-                proc.expect("Shutting down")
-                proc.expect("Aggregated")
-                proc.not_expect_any("command_line_value")
+                tp.expect('All users spawned: {"TestUser": 1} (1 total users)')
+                tp.expect("web_form_value", stream="stdout")
+                tp.terminate()
+                tp.expect("Shutting down")
+                tp.expect("Aggregated")
+                tp.not_expect_any("command_line_value")
 
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
     def test_custom_arguments_in_file(self):
@@ -139,12 +139,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 with open("locust.conf", "w") as conf_file:
                     conf_file.write("custom-string-arg config_file_value")
 
-                with TestProcess(f"locust -f {file_path} --autostart") as proc:
-                    proc.expect("Starting Locust")
-                    proc.expect("config_file_value", stream="stdout")
-                    proc.terminate()
-                    proc.expect("Shutting down")
-                    proc.not_expect_any("Traceback")
+                with TestProcess(f"locust -f {file_path} --autostart") as tp:
+                    tp.expect("Starting Locust")
+                    tp.expect("config_file_value", stream="stdout")
+                    tp.terminate()
+                    tp.expect("Shutting down")
+                    tp.not_expect_any("Traceback")
             finally:
                 os.remove("locust.conf")
 
@@ -168,11 +168,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
             )
         ) as file_path:
-            with TestProcess(f"locust -f {file_path} --headless", expect_return_code=42) as proc:
-                proc.expect("Starting Locust")
-                proc.terminate()
-                proc.expect("Shutting down (exit code 42)")
-                proc.expect("Exit code in quit event 42", stream="stdout")
+            with TestProcess(f"locust -f {file_path} --headless", expect_return_code=42) as tp:
+                tp.expect("Starting Locust")
+                tp.terminate()
+                tp.expect("Shutting down (exit code 42)")
+                tp.expect("Exit code in quit event 42", stream="stdout")
 
     def test_webserver(self):
         with temporary_file(
@@ -187,9 +187,9 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
             )
         ) as file_path:
-            with TestProcess(f"locust -f {file_path}") as proc:
-                proc.expect("Starting Locust")
-                proc.expect("Starting web interface at")
+            with TestProcess(f"locust -f {file_path}") as tp:
+                tp.expect("Starting Locust")
+                tp.expect("Starting web interface at")
                 # Ensure we do not trigger SIGINT when instantiating webui as it can result
                 # in `create_web_ui` traceback
                 gevent.sleep(0.1)
@@ -210,8 +210,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
             )
         ) as file_path:
-            with TestProcess(f"locust -f {file_path} --web-port {port} --autostart") as proc:
-                proc.expect("Starting web interface at")
+            with TestProcess(f"locust -f {file_path} --web-port {port} --autostart") as tp:
+                tp.expect("Starting web interface at")
 
                 wait_for_server(f"http://localhost:{port}/")
                 response = requests.get(f"http://localhost:{port}/")
@@ -233,8 +233,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
             )
         ) as file_path:
-            with TestProcess(f"locust -f {file_path} --web-port {port} --autostart") as proc:
-                proc.expect("Starting web interface at")
+            with TestProcess(f"locust -f {file_path} --web-port {port} --autostart") as tp:
+                tp.expect("Starting web interface at")
 
                 wait_for_server(f"http://localhost:{port}/")
                 response = requests.get(f"http://localhost:{port}/")
@@ -255,26 +255,24 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
             )
         ) as file_path:
-            with TestProcess(
-                f"locust -f {file_path} --autostart", should_send_sigint=False, expect_return_code=1
-            ) as proc:
-                proc.expect("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95")
+            with TestProcess(f"locust -f {file_path} --autostart", sigint_on_exit=False, expect_return_code=1) as tp:
+                tp.expect("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95")
 
     def test_webserver_multiple_locustfiles(self):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:
-                with TestProcess(f"locust -f {mocked1.file_path},{mocked2.file_path}") as proc:
-                    proc.expect("Starting Locust")
-                    proc.expect("Starting web interface at")
+                with TestProcess(f"locust -f {mocked1.file_path},{mocked2.file_path}") as tp:
+                    tp.expect("Starting Locust")
+                    tp.expect("Starting web interface at")
                     gevent.sleep(0.1)
 
     def test_webserver_multiple_locustfiles_in_directory(self):
         with TemporaryDirectory() as temp_dir:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A, dir=temp_dir):
                 with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B, dir=temp_dir):
-                    with TestProcess(f"locust -f {temp_dir}") as proc:
-                        proc.expect("Starting Locust")
-                        proc.expect("Starting web interface at")
+                    with TestProcess(f"locust -f {temp_dir}") as tp:
+                        tp.expect("Starting Locust")
+                        tp.expect("Starting web interface at")
                         gevent.sleep(0.1)
 
     def test_webserver_multiple_locustfiles_with_shape(self):
@@ -309,33 +307,33 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
                 )
             ) as mocked2:
-                with TestProcess(f"locust -f {mocked1.file_path},{mocked2} -L DEBUG") as proc:
-                    proc.expect("Starting Locust")
-                    proc.expect("Starting web interface at")
+                with TestProcess(f"locust -f {mocked1.file_path},{mocked2} -L DEBUG") as tp:
+                    tp.expect("Starting Locust")
+                    tp.expect("Starting web interface at")
                     gevent.sleep(0.1)
-                    proc.terminate()
+                    tp.terminate()
                     if not IS_WINDOWS:
-                        proc.expect("Shutting down")
+                        tp.expect("Shutting down")
                     # This test is the reason we need the -L DEBUG option
-                    proc.not_expect_any("Locust is running with the UserClass Picker Enabled")
+                    tp.not_expect_any("Locust is running with the UserClass Picker Enabled")
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
             # just to test --stop-timeout argument parsing, doesnt actually validate its function:
             with TestProcess(
                 f"locust -f {mocked.file_path} --host https://test.com --run-time 1s --headless --loglevel DEBUG --exit-code-on-error 0 --stop-timeout 0s",
-            ) as proc:
-                proc.expect('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...')
-                proc.not_expect_any("Traceback")
+            ) as tp:
+                tp.expect('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...')
+                tp.not_expect_any("Traceback")
 
     def test_invalid_stop_timeout_string(self):
         with mock_locustfile() as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --host https://test.com --stop-timeout asdf1",
                 expect_return_code=2,
-                should_send_sigint=False,
-            ) as proc:
-                proc.expect(
+                sigint_on_exit=False,
+            ) as tp:
+                tp.expect(
                     "locust: error: argument -s/--stop-timeout: Invalid time span format. Valid formats: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc."
                 )
 
@@ -344,11 +342,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile() as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --host https://test.com --headless --exit-code-on-error 0"
-            ) as proc:
-                proc.expect("Starting Locust")
-                proc.expect("No run time limit set, use CTRL+C to interrupt")
-                proc.terminate()
-                proc.expect("Shutting down (exit code 0)")
+            ) as tp:
+                tp.expect("Starting Locust")
+                tp.expect("No run time limit set, use CTRL+C to interrupt")
+                tp.terminate()
+                tp.expect("Shutting down (exit code 0)")
 
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
     def test_run_headless_with_multiple_locustfiles(self):
@@ -367,11 +365,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     ),
                     dir=temp_dir,
                 ):
-                    with TestProcess(f"locust -f {temp_dir} --headless -u 2 --exit-code-on-error 0") as proc:
-                        proc.expect("Starting Locust")
-                        proc.expect('All users spawned: {"TestUser": 1, "UserSubclass": 1} (2 total users)')
-                        proc.terminate()
-                        proc.expect("Shutting down (exit code 0)")
+                    with TestProcess(f"locust -f {temp_dir} --headless -u 2 --exit-code-on-error 0") as tp:
+                        tp.expect("Starting Locust")
+                        tp.expect('All users spawned: {"TestUser": 1, "UserSubclass": 1} (2 total users)')
+                        tp.terminate()
+                        tp.expect("Shutting down (exit code 0)")
 
     def test_default_headless_spawn_options_with_shape(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
@@ -388,13 +386,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=content) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --host https://test.com/ --headless --exit-code-on-error 0",
-                should_send_sigint=False,
-            ) as proc:
-                proc.expect("Shape test updating to 10 users at 1.00 spawn rate")
+                sigint_on_exit=False,
+            ) as tp:
+                tp.expect("Shape test updating to 10 users at 1.00 spawn rate")
                 # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
-                proc.expect_any("Aggregated")
-                proc.expect("Shutting down (exit code 0)")
-                proc.expect("Aggregated")
+                tp.expect_any("Aggregated")
+                tp.expect("Shutting down (exit code 0)")
+                tp.expect("Aggregated")
 
     def test_run_headless_with_multiple_locustfiles_with_shape(self):
         content = textwrap.dedent(
@@ -430,13 +428,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             ) as mocked2:
                 with TestProcess(
                     f"locust -f {mocked1.file_path},{mocked2} --host https://test.com --headless --exit-code-on-error 0",
-                    should_send_sigint=False,
-                ) as proc:
-                    proc.expect("Shape test updating to 10 users at 1.00 spawn rate")
+                    sigint_on_exit=False,
+                ) as tp:
+                    tp.expect("Shape test updating to 10 users at 1.00 spawn rate")
                     # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
-                    proc.expect_any("Aggregated")
-                    proc.expect("Shutting down (exit code 0)")
-                    proc.expect("Aggregated")
+                    tp.expect_any("Aggregated")
+                    tp.expect("Shutting down (exit code 0)")
+                    tp.expect("Aggregated")
 
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
     def test_autostart_wo_run_time(self):
@@ -444,17 +442,17 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile() as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --web-port {port} --autostart", expect_return_code=None
-            ) as proc:
-                proc.expect("Starting Locust")
+            ) as tp:
+                tp.expect("Starting Locust")
 
                 wait_for_server(f"http://localhost:{port}/")
                 response = requests.get(f"http://localhost:{port}/")
 
-                proc.expect("No run time limit set, use CTRL+C to interrupt")
-                proc.terminate()
-                proc.expect("Shutting down")
+                tp.expect("No run time limit set, use CTRL+C to interrupt")
+                tp.terminate()
+                tp.expect("Shutting down")
 
-                proc.not_expect_any("Traceback")
+                tp.not_expect_any("Traceback")
 
                 # check response afterwards, because it really isn't as informative as stderr
                 self.assertEqual(200, response.status_code)
@@ -467,18 +465,18 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile() as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --web-port {port} -t 1 --autostart --autoquit 0", expect_return_code=None
-            ) as proc:
-                proc.expect("Starting Locust")
-                proc.expect("Run time limit set to 1 seconds")
+            ) as tp:
+                tp.expect("Starting Locust")
+                tp.expect("Run time limit set to 1 seconds")
 
                 wait_for_server(f"http://localhost:{port}/")
                 response = requests.get(f"http://localhost:{port}/")
 
                 if not IS_WINDOWS:
-                    proc.terminate()
-                    proc.expect("Shutting down")
+                    tp.terminate()
+                    tp.expect("Shutting down")
 
-                proc.not_expect_any("Traceback")
+                tp.not_expect_any("Traceback")
 
                 # check response afterwards, because it really isn't as informative as stderr
                 d = pq(response.content.decode("utf-8"))
@@ -503,11 +501,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     ),
                     dir=temp_dir,
                 ):
-                    with TestProcess(f"locust -f {temp_dir} --autostart -u 2 --exit-code-on-error 0") as proc:
-                        proc.expect("Starting Locust")
-                        proc.expect('All users spawned: {"TestUser": 1, "UserSubclass": 1} (2 total users)')
-                        proc.terminate()
-                        proc.expect("Shutting down (exit code 0)")
+                    with TestProcess(f"locust -f {temp_dir} --autostart -u 2 --exit-code-on-error 0") as tp:
+                        tp.expect("Starting Locust")
+                        tp.expect('All users spawned: {"TestUser": 1, "UserSubclass": 1} (2 total users)')
+                        tp.terminate()
+                        tp.expect("Shutting down (exit code 0)")
 
     def test_autostart_w_load_shape(self):
         port = get_free_tcp_port()
@@ -528,16 +526,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         ) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --web-port {port} --autostart", expect_return_code=None
-            ) as proc:
-                proc.expect("Starting Locust")
-                proc.expect("Starting web interface")
+            ) as tp:
+                tp.expect("Starting Locust")
+                tp.expect("Starting web interface")
 
                 wait_for_server(f"http://localhost:{port}/")
                 response = requests.get(f"http://localhost:{port}/")
                 self.assertEqual(200, response.status_code)
 
-                proc.expect("Shape test starting")
-                proc.expect("--run-time limit reached")
+                tp.expect("Shape test starting")
+                tp.expect("--run-time limit reached")
 
     def test_autostart_multiple_locustfiles_with_shape(self):
         port = get_free_tcp_port()
@@ -578,24 +576,24 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 with TestProcess(
                     f"locust -f {mocked1.file_path},{mocked2} --web-port {port} --autostart --autoquit {autoquit}",
                     expect_timeout=6,
-                    should_send_sigint=False,
-                ) as proc:
-                    proc.expect("Starting Locust")
-                    proc.expect("Starting web interface")
+                    sigint_on_exit=False,
+                ) as tp:
+                    tp.expect("Starting Locust")
+                    tp.expect("Starting web interface")
 
                     wait_for_server(f"http://localhost:{port}/")
                     response = requests.get(f"http://localhost:{port}/")
                     self.assertEqual(200, response.status_code)
 
-                    proc.expect("Shape test starting")
-                    proc.expect("Shape test stopping")
+                    tp.expect("Shape test starting")
+                    tp.expect("Shape test stopping")
 
-                    proc.expect("--run-time limit reached")
-                    proc.expect("--autoquit time reached")
-                    proc.expect("Shutting down")
+                    tp.expect("--run-time limit reached")
+                    tp.expect("--autoquit time reached")
+                    tp.expect("Shutting down")
 
-                    proc.expect_any("running my_task()", stream="stdout")
-                    proc.expect_any("running my_task() again", stream="stdout")
+                    tp.expect_any("running my_task()", stream="stdout")
+                    tp.expect_any("running my_task() again", stream="stdout")
 
     @unittest.skipIf(platform.system() == "Darwin", reason="Messy on macOS on GH")
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
@@ -629,38 +627,38 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            with TestProcess(f"locust -f {mocked.file_path} --headless -u 0", use_pty=True) as proc:
-                proc.expect('All users spawned: {"UserSubclass": 0} (0 total users)')
+            with TestProcess(f"locust -f {mocked.file_path} --headless -u 0", use_pty=True) as tp:
+                tp.expect('All users spawned: {"UserSubclass": 0} (0 total users)')
 
-                proc.send_input("w")
-                proc.expect("Ramping to 1 users at a rate of 100.00 per second")
-                proc.expect('All users spawned: {"UserSubclass": 1} (1 total users)')
-                proc.expect("Test task is running", stream="stdout")
+                tp.send_input("w")
+                tp.expect("Ramping to 1 users at a rate of 100.00 per second")
+                tp.expect('All users spawned: {"UserSubclass": 1} (1 total users)')
+                tp.expect("Test task is running", stream="stdout")
 
-                proc.send_input("W")
-                proc.expect("Ramping to 11 users at a rate of 100.00 per second")
-                proc.expect('All users spawned: {"UserSubclass": 11} (11 total users)')
-                proc.expect("Test task is running", stream="stdout")
+                tp.send_input("W")
+                tp.expect("Ramping to 11 users at a rate of 100.00 per second")
+                tp.expect('All users spawned: {"UserSubclass": 11} (11 total users)')
+                tp.expect("Test task is running", stream="stdout")
 
-                proc.send_input("s")
-                proc.expect("Ramping to 10 users at a rate of 100.00 per second")
-                proc.expect('All users spawned: {"UserSubclass": 10} (10 total users)')
-                proc.expect("Test task is running", stream="stdout")
+                tp.send_input("s")
+                tp.expect("Ramping to 10 users at a rate of 100.00 per second")
+                tp.expect('All users spawned: {"UserSubclass": 10} (10 total users)')
+                tp.expect("Test task is running", stream="stdout")
 
-                proc.send_input("S")
-                proc.expect("Ramping to 0 users at a rate of 100.00 per second")
-                proc.expect('All users spawned: {"UserSubclass": 0} (0 total users)')
+                tp.send_input("S")
+                tp.expect("Ramping to 0 users at a rate of 100.00 per second")
+                tp.expect('All users spawned: {"UserSubclass": 0} (0 total users)')
 
                 # This should not do anything since we are already at zero users
-                proc.send_input("S")
+                tp.send_input("S")
 
                 # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
-                proc.expect_any("Aggregated")
+                tp.expect_any("Aggregated")
                 # Stop locust process
-                proc.terminate()
-                proc.expect("Shutting down (exit code 0)")
-                proc.expect("Aggregated")
-                proc.expect("Response time percentiles (approximated)")
+                tp.terminate()
+                tp.expect("Shutting down (exit code 0)")
+                tp.expect("Aggregated")
+                tp.expect("Response time percentiles (approximated)")
 
     @unittest.skipIf(IS_WINDOWS, reason="termios doesnt exist on windows, and thus we cannot import pty")
     def test_autospawn_browser(self):
@@ -688,10 +686,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            with TestProcess(f"locust -f {mocked.file_path}", use_pty=True, should_send_sigint=False) as proc:
-                proc.expect("Starting web interface at")
-                proc.send_input("\n")
-                proc.expect("browser opened", stream="stdout")
+            with TestProcess(f"locust -f {mocked.file_path}", use_pty=True, sigint_on_exit=False) as tp:
+                tp.expect("Starting web interface at")
+                tp.send_input("\n")
+                tp.expect("browser opened", stream="stdout")
 
     def test_spawning_with_fixed(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -722,34 +720,34 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --headless -u 10 -r 10 --loglevel INFO",
-            ) as proc:
-                proc.expect("Ramping to 10 users at a rate of 10.00 per second")
-                proc.expect('All users spawned: {"User1": 2, "User2": 4, "User3": 4} (10 total users)')
-                proc.expect("Test task is running", stream="stdout")
+            ) as tp:
+                tp.expect("Ramping to 10 users at a rate of 10.00 per second")
+                tp.expect('All users spawned: {"User1": 2, "User2": 4, "User3": 4} (10 total users)')
+                tp.expect("Test task is running", stream="stdout")
 
                 # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
-                proc.expect_any("Aggregated")
+                tp.expect_any("Aggregated")
                 if not IS_WINDOWS:
-                    proc.terminate()
-                    proc.expect("Shutting down (exit code 0)")
-                    proc.expect("Aggregated")
+                    tp.terminate()
+                    tp.expect("Shutting down (exit code 0)")
+                    tp.expect("Aggregated")
 
     def test_spawing_with_fixed_multiple_locustfiles(self):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:
                 with TestProcess(
                     f"locust -f {mocked1.file_path},{mocked2.file_path} --headless -u 10 -r 10 --loglevel INFO",
-                ) as proc:
-                    proc.expect("Ramping to 10 users at a rate of 10.00 per second")
-                    proc.expect('All users spawned: {"TestUser1": 5, "TestUser2": 5} (10 total users)')
-                    proc.expect("running my_task()", stream="stdout")
+                ) as tp:
+                    tp.expect("Ramping to 10 users at a rate of 10.00 per second")
+                    tp.expect('All users spawned: {"TestUser1": 5, "TestUser2": 5} (10 total users)')
+                    tp.expect("running my_task()", stream="stdout")
 
                     # ensure stats printer printed at least one report before shutting down and that there was a final report printed as well
-                    proc.expect("Aggregated")
+                    tp.expect("Aggregated")
                     if not IS_WINDOWS:
-                        proc.terminate()
-                        proc.expect("Shutting down (exit code 0)")
-                        proc.expect("Aggregated")
+                        tp.terminate()
+                        tp.expect("Shutting down (exit code 0)")
+                        tp.expect("Aggregated")
 
     def test_warning_with_lower_user_count_than_fixed_count(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -774,17 +772,17 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            with TestProcess(f"locust -f {mocked.file_path} --headless -u 3") as proc:
-                proc.expect("Total fixed_count of User classes (4) is greater than ")
-                proc.expect("Aggregated")
+            with TestProcess(f"locust -f {mocked.file_path} --headless -u 3") as tp:
+                tp.expect("Total fixed_count of User classes (4) is greater than ")
+                tp.expect("Aggregated")
 
     def test_with_package_as_locustfile(self):
         with TemporaryDirectory() as temp_dir:
             with open(f"{temp_dir}/__init__.py", mode="w"):
                 with mock_locustfile(dir=temp_dir):
-                    with TestProcess(f"locust -f {temp_dir} --headless --exit-code-on-error 0") as proc:
-                        proc.expect("Starting Locust")
-                        proc.expect('All users spawned: {"UserSubclass": 1} (1 total users)')
+                    with TestProcess(f"locust -f {temp_dir} --headless --exit-code-on-error 0") as tp:
+                        tp.expect("Starting Locust")
+                        tp.expect('All users spawned: {"UserSubclass": 1} (1 total users)')
 
     def test_command_line_user_selection(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -813,12 +811,12 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --headless -u 5 -r 10 User2 User3",
-            ) as proc:
-                proc.expect('All users spawned: {"User2": 3, "User3": 2} (5 total users)')
-                proc.expect("User2 is running", stream="stdout")
-                proc.expect("User3 is running", stream="stdout")
-                proc.terminate()
-                proc.not_expect_any("User1 is running", stream="stdout")
+            ) as tp:
+                tp.expect('All users spawned: {"User2": 3, "User3": 2} (5 total users)')
+                tp.expect("User2 is running", stream="stdout")
+                tp.expect("User3 is running", stream="stdout")
+                tp.terminate()
+                tp.not_expect_any("User1 is running", stream="stdout")
 
     def test_html_report_option(self):
         html_template = "some_name_{u}_{r}_{t}.html"
@@ -834,11 +832,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
             with TestProcess(
                 f"locust -f {mocked.file_path} --host https://test.com/ -u 11 -r 5 -t 1s --headless --exit-code-on-error 0 --html {html_report_file_path}",
-                should_send_sigint=False,
-            ) as proc:
+                sigint_on_exit=False,
+            ) as tp:
                 # make sure correct name is generated based on filename arguments
-                proc.expect(expected_filename)
-                proc.expect("Shutting down (exit code 0)")
+                tp.expect(expected_filename)
+                tp.expect("Shutting down (exit code 0)")
 
             with open(output_html_report_file_path, encoding="utf-8") as f:
                 html_report_content = f.read()
@@ -856,10 +854,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
     def test_run_with_userclass_picker(self):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_B) as file2:
-                with TestProcess(f"locust -f {file1},{file2} --class-picker -L DEBUG") as proc:
-                    proc.expect("Starting Locust")
-                    proc.expect("Starting web interface at")
-                    proc.expect("Locust is running with the UserClass Picker Enabled")
+                with TestProcess(f"locust -f {file1},{file2} --class-picker -L DEBUG") as tp:
+                    tp.expect("Starting Locust")
+                    tp.expect("Starting web interface at")
+                    tp.expect("Locust is running with the UserClass Picker Enabled")
 
     def test_error_when_duplicate_userclass_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = textwrap.dedent(
@@ -874,8 +872,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
-                with TestProcess(f"locust -f {file1},{file2}", expect_return_code=1, should_send_sigint=False) as proc:
-                    proc.expect("Duplicate user class names: TestUser1 is defined")
+                with TestProcess(f"locust -f {file1},{file2}", expect_return_code=1, sigint_on_exit=False) as tp:
+                    tp.expect("Duplicate user class names: TestUser1 is defined")
 
     def test_no_error_when_same_userclass_in_two_files(self):
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_A) as file1:
@@ -886,8 +884,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
             print(MOCK_LOCUSTFILE_CONTENT_C)
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
-                with TestProcess(f"locust -f {file1},{file2} --headless") as proc:
-                    proc.expect("running my_task", stream="stdout")
+                with TestProcess(f"locust -f {file1},{file2} --headless") as tp:
+                    tp.expect("running my_task", stream="stdout")
 
     def test_error_when_duplicate_shape_class_names(self):
         MOCK_LOCUSTFILE_CONTENT_C = MOCK_LOCUSTFILE_CONTENT_A + textwrap.dedent(
@@ -916,8 +914,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         )
         with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file1:
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_D) as file2:
-                with TestProcess(f"locust -f {file1},{file2}", should_send_sigint=False, expect_return_code=1) as proc:
-                    proc.expect("Duplicate shape classes: TestShape")
+                with TestProcess(f"locust -f {file1},{file2}", sigint_on_exit=False, expect_return_code=1) as tp:
+                    tp.expect("Duplicate shape classes: TestShape")
 
     def test_error_when_providing_both_run_time_and_a_shape_class(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
@@ -931,10 +929,10 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=content) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --run-time 1s --headless --exit-code-on-error 0",
-                should_send_sigint=False,
-            ) as proc:
-                proc.expect("--run-time, --users or --spawn-rate have no impact on LoadShapes")
-                proc.expect("The following option(s) will be ignored: --run-time")
+                sigint_on_exit=False,
+            ) as tp:
+                tp.expect("--run-time, --users or --spawn-rate have no impact on LoadShapes")
+                tp.expect("The following option(s) will be ignored: --run-time")
 
     def test_shape_class_log_disabled_parameters(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
@@ -949,11 +947,11 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=content) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --headless --exit-code-on-error 0 --users 1 --spawn-rate 1",
-                should_send_sigint=False,
-            ) as proc:
-                proc.expect("Shape test starting.")
-                proc.expect("--run-time, --users or --spawn-rate have no impact on LoadShapes")
-                proc.expect("The following option(s) will be ignored: --users, --spawn-rate")
+                sigint_on_exit=False,
+            ) as tp:
+                tp.expect("Shape test starting.")
+                tp.expect("--run-time, --users or --spawn-rate have no impact on LoadShapes")
+                tp.expect("The following option(s) will be ignored: --users, --spawn-rate")
 
     def test_shape_class_with_use_common_options(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
@@ -970,17 +968,17 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=content) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --run-time 1s --users 1 --spawn-rate 1 --headless --exit-code-on-error 0",
-                should_send_sigint=False,
-            ) as proc:
-                proc.expect("Shape test starting.")
-                proc.wait()
-                proc.not_expect_any("--run-time, --users or --spawn-rate have no impact on LoadShapes")
-                proc.not_expect_any("The following option(s) will be ignored:")
+                sigint_on_exit=False,
+            ) as tp:
+                tp.expect("Shape test starting.")
+                tp.proc.wait(1)
+                tp.not_expect_any("--run-time, --users or --spawn-rate have no impact on LoadShapes")
+                tp.not_expect_any("The following option(s) will be ignored:")
 
     def test_error_when_locustfiles_directory_is_empty(self):
         with TemporaryDirectory() as temp_dir:
-            with TestProcess(f"locust -f {temp_dir}", expect_return_code=1) as proc:
-                proc.expect(f"Could not find any locustfiles in directory '{temp_dir}'")
+            with TestProcess(f"locust -f {temp_dir}", expect_return_code=1) as tp:
+                tp.expect(f"Could not find any locustfiles in directory '{temp_dir}'")
 
     def test_error_when_no_tasks_match_tags(self):
         content = """
@@ -994,9 +992,9 @@ class MyUser(HttpUser):
         print("task1")
     """
         with mock_locustfile(content=content) as mocked:
-            with TestProcess(f"locust -f {mocked.file_path} --headless --tags tag2", expect_return_code=1) as proc:
-                proc.expect("MyUser had no tasks left after filtering")
-                proc.expect("No tasks defined on MyUser")
+            with TestProcess(f"locust -f {mocked.file_path} --headless --tags tag2", expect_return_code=1) as tp:
+                tp.expect("MyUser had no tasks left after filtering")
+                tp.expect("No tasks defined on MyUser")
 
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
     def test_graceful_exit_when_keyboard_interrupt(self):
@@ -1024,14 +1022,14 @@ class MyUser(HttpUser):
             """
             )
         ) as mocked:
-            with TestProcess(f"locust -f {mocked} --headless") as proc:
-                proc.expect("Shape test starting")
-                proc.terminate()
-                proc.expect("Exiting due to CTRL+C interruption")
-                proc.expect("Test Stopped", stream="stdout")
+            with TestProcess(f"locust -f {mocked} --headless") as tp:
+                tp.expect("Shape test starting")
+                tp.terminate()
+                tp.expect("Exiting due to CTRL+C interruption")
+                tp.expect("Test Stopped", stream="stdout")
 
-                proc.expect("Shutting down")
-                proc.expect("Aggregated")
+                tp.expect("Shutting down")
+                tp.expect("Aggregated")
 
     def test_exception_in_init_event(self):
         with mock_locustfile(
@@ -1051,9 +1049,9 @@ class MyUser(HttpUser):
             )
         ) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --host https://test.com", expect_return_code=1, should_send_sigint=False
-            ) as proc:
-                proc.expect("something went wrong")
+                f"locust -f {mocked.file_path} --host https://test.com", expect_return_code=1, sigint_on_exit=False
+            ) as tp:
+                tp.expect("something went wrong")
 
     def test_json_schema(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -1072,7 +1070,7 @@ class MyUser(HttpUser):
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             proc = TestProcess(
                 f"locust -f {mocked.file_path} --host http://google.com --headless -u 1 -t 1 --json",
-                should_send_sigint=False,
+                sigint_on_exit=False,
                 join_timeout=2,
             )
             proc.close()
@@ -1120,10 +1118,10 @@ class MyUser(HttpUser):
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --host http://google.com --headless -u 1 -t 1 --json-file {output_base}",
-                should_send_sigint=False,
-            ) as proc:
-                proc.wait(3)
-                proc.not_expect_any("error: argument --json-file: expected one argument")
+                sigint_on_exit=False,
+            ) as tp:
+                tp.proc.wait(3)
+                tp.not_expect_any("error: argument --json-file: expected one argument")
 
             self.assertTrue(os.path.exists(output_filepath))
             with open(output_filepath, encoding="utf-8") as file:
@@ -1156,12 +1154,12 @@ class DistributedIntegrationTests(ProcessIntegrationTest):
             with TestProcess(
                 f"locust -f {mocked.file_path} --headless --master --expect-workers 2 --expect-workers-max-wait 1 -L DEBUG",
                 expect_return_code=1,
-                should_send_sigint=False,
-            ) as proc:
-                proc.expect("Waiting for workers to be ready, 0 of 2 connected")
-                proc.expect("Gave up waiting for workers to connect")
-                proc.expect("Quitting")
-                proc.not_expect_any("Traceback")
+                sigint_on_exit=False,
+            ) as tp:
+                tp.expect("Waiting for workers to be ready, 0 of 2 connected")
+                tp.expect("Gave up waiting for workers to connect")
+                tp.expect("Quitting")
+                tp.not_expect_any("Traceback")
 
     def test_distributed_events(self):
         content = (
@@ -1187,18 +1185,16 @@ def on_test_stop(environment, **kwargs):
         with mock_locustfile(content=content) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -t 1 --exit-code-on-error 0 -L DEBUG",
-                should_send_sigint=False,
+                sigint_on_exit=False,
                 join_timeout=2,
-            ) as proc:
-                with TestProcess(
-                    f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False
-                ) as proc_worker:
-                    proc.expect("test_start on master", stream="stdout")
-                    proc_worker.expect("test_start on worker", stream="stdout")
-                    proc.expect("test_stop on master", stream="stdout")
-                    proc_worker.expect("test_stop on worker", stream="stdout")
-                    proc.not_expect_any("Traceback")
-                    proc_worker.not_expect_any("Traceback")
+            ) as tp:
+                with TestProcess(f"locust -f {mocked.file_path} --worker -L DEBUG", sigint_on_exit=False) as tp_worker:
+                    tp.expect("test_start on master", stream="stdout")
+                    tp_worker.expect("test_start on worker", stream="stdout")
+                    tp.expect("test_stop on master", stream="stdout")
+                    tp_worker.expect("test_stop on worker", stream="stdout")
+                    tp.not_expect_any("Traceback")
+                    tp_worker.not_expect_any("Traceback")
 
     def test_distributed_tags(self):
         content = """
@@ -1221,14 +1217,12 @@ class SecondUser(HttpUser):
                 f"locust -f {mocked.file_path} --headless --master -t 1 --expect-workers 1 -u 2 --exit-code-on-error 0 -L DEBUG --tags tag1",
                 join_timeout=2,
             ):
-                with TestProcess(
-                    f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False
-                ) as proc_worker:
-                    proc_worker.expect("task1", stream="stdout")
-                    proc_worker.wait(2)
-                    proc_worker.not_expect_any("task2", stream="stdout")
-                    proc_worker.not_expect_any("ERROR")
-                    proc_worker.not_expect_any("Traceback")
+                with TestProcess(f"locust -f {mocked.file_path} --worker -L DEBUG", sigint_on_exit=False) as tp_worker:
+                    tp_worker.expect("task1", stream="stdout")
+                    tp_worker.proc.wait(2)
+                    tp_worker.not_expect_any("task2", stream="stdout")
+                    tp_worker.not_expect_any("ERROR")
+                    tp_worker.not_expect_any("Traceback")
 
     def test_distributed(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -1247,11 +1241,11 @@ class SecondUser(HttpUser):
             with TestProcess(
                 f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -u 3 -r 99 -t 1",
                 join_timeout=2,
-                should_send_sigint=False,
-            ) as proc:
-                with TestProcess(f"locust -f {mocked.file_path} --worker", should_send_sigint=False, join_timeout=3):
-                    proc.expect('All users spawned: {"User1": 3} (3 total users)')
-                    proc.expect("Shutting down (exit code 0)")
+                sigint_on_exit=False,
+            ) as tp:
+                with TestProcess(f"locust -f {mocked.file_path} --worker", sigint_on_exit=False, join_timeout=3):
+                    tp.expect('All users spawned: {"User1": 3} (3 total users)')
+                    tp.expect("Shutting down (exit code 0)")
 
     def test_distributed_report_timeout_expired(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -1272,13 +1266,13 @@ class SecondUser(HttpUser):
         ):
             with TestProcess(
                 f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -u 3 -r 99 -t 1",
-                should_send_sigint=False,
-            ) as proc:
-                with TestProcess(f"locust -f {mocked.file_path} --worker", should_send_sigint=False, join_timeout=2):
-                    proc.expect(
+                sigint_on_exit=False,
+            ) as tp:
+                with TestProcess(f"locust -f {mocked.file_path} --worker", sigint_on_exit=False, join_timeout=2):
+                    tp.expect(
                         "Spawning is complete and report waittime is expired, but not all reports received from workers:",
                     )
-                    proc.expect("Shutting down (exit code 0)")
+                    tp.expect("Shutting down (exit code 0)")
 
     def test_locustfile_distribution(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -1295,10 +1289,10 @@ class SecondUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             proc = TestProcess(
-                f"locust -f {mocked.file_path} --headless --master --expect-workers 2 -t 1s", should_send_sigint=False
+                f"locust -f {mocked.file_path} --headless --master --expect-workers 2 -t 1s", sigint_on_exit=False
             )
-            proc_worker = TestProcess("locust -f - --worker", should_send_sigint=False)
-            proc_worker_2 = TestProcess("locust -f - --worker", should_send_sigint=False)
+            proc_worker = TestProcess("locust -f - --worker", sigint_on_exit=False)
+            proc_worker_2 = TestProcess("locust -f - --worker", sigint_on_exit=False)
 
             proc.expect('All users spawned: {"User1": 1} (1 total users)')
             proc.expect("Shutting down (exit code 0)")
@@ -1321,15 +1315,15 @@ class SecondUser(HttpUser):
             """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            with TestProcess("locust -f - --worker", should_send_sigint=False) as proc_worker:
+            with TestProcess("locust -f - --worker", sigint_on_exit=False) as tp_worker:
                 with TestProcess(
                     f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -t 1",
-                    should_send_sigint=False,
-                ) as proc:
-                    proc.expect('All users spawned: {"User1": ')
-                    proc.expect("Shutting down (exit code 0)")
+                    sigint_on_exit=False,
+                ) as tp:
+                    tp.expect('All users spawned: {"User1": ')
+                    tp.expect("Shutting down (exit code 0)")
 
-                proc_worker.expect("hello", stream="stdout")
+                tp_worker.expect("hello", stream="stdout")
 
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -1347,15 +1341,15 @@ class SecondUser(HttpUser):
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path},{mocked.file_path} --headless --master --expect-workers 1 -t 1",
-                should_send_sigint=False,
+                sigint_on_exit=False,
                 join_timeout=2,
-            ) as proc:
-                with TestProcess("locust -f - --worker", should_send_sigint=False) as proc_worker:
-                    proc.expect('All users spawned: {"User1": 1} (1 total users)')
-                    proc_worker.wait(2)
-                    proc_worker.not_expect_any("Traceback")
+            ) as tp:
+                with TestProcess("locust -f - --worker", sigint_on_exit=False) as tp_worker:
+                    tp.expect('All users spawned: {"User1": 1} (1 total users)')
+                    tp_worker.proc.wait(2)
+                    tp_worker.not_expect_any("Traceback")
 
-                proc.not_expect_any("Traceback")
+                tp.not_expect_any("Traceback")
 
     def test_worker_indexes(self):
         content = """
@@ -1372,18 +1366,18 @@ class AnyUser(HttpUser):
             with TestProcess(
                 f"locust -f {mocked.file_path} --headless --master --expect-workers 2 -u 2 -L DEBUG -t 2",
                 join_timeout=3,
-                should_send_sigint=False,
-            ) as proc:
+                sigint_on_exit=False,
+            ) as tp:
                 with TestProcess(
-                    f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False, join_timeout=2
-                ) as proc_worker_1:
+                    f"locust -f {mocked.file_path} --worker -L DEBUG", sigint_on_exit=False, join_timeout=2
+                ) as tp_worker_1:
                     with TestProcess(
-                        f"locust -f {mocked.file_path} --worker -L DEBUG", should_send_sigint=False, join_timeout=2
-                    ) as proc_worker_2:
-                        proc.expect("All users spawned")
+                        f"locust -f {mocked.file_path} --worker -L DEBUG", sigint_on_exit=False, join_timeout=2
+                    ) as tp_worker_2:
+                        tp.expect("All users spawned")
 
                         # worker index: {id}
-                        indexes = [int(proc_worker_1.stdout_output[0][-1]), int(proc_worker_2.stdout_output[0][-1])]
+                        indexes = [int(tp_worker_1.stdout_output[0][-1]), int(tp_worker_2.stdout_output[0][-1])]
                         indexes.sort()
                         self.assertEqual(0, indexes[0], f"expected index 0 but got {indexes[0]}")
                         self.assertEqual(1, indexes[1], f"expected index 1 but got {indexes[1]}")
@@ -1393,35 +1387,35 @@ class AnyUser(HttpUser):
         with mock_locustfile() as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --processes 4 --headless --exit-code-on-error 0", join_timeout=2
-            ) as proc:
-                proc.expect("(index 3) reported as ready")
-                proc.expect("All users spawned")
-                proc.terminate()
-                proc.expect("The last worker quit, stopping test")
-                proc.not_expect_any("Traceback")
+            ) as tp:
+                tp.expect("(index 3) reported as ready")
+                tp.expect("All users spawned")
+                tp.terminate()
+                tp.expect("The last worker quit, stopping test")
+                tp.not_expect_any("Traceback")
 
     @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
     def test_processes_autodetect(self):
         with mock_locustfile() as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --processes -1 --headless --exit-code-on-error 0", join_timeout=2
-            ) as proc:
-                proc.expect("(index 0) reported as ready")
-                proc.expect("All users spawned")
-                proc.terminate()
-                proc.expect("The last worker quit, stopping test")
-                proc.not_expect_any("Traceback")
+            ) as tp:
+                tp.expect("(index 0) reported as ready")
+                tp.expect("All users spawned")
+                tp.terminate()
+                tp.expect("The last worker quit, stopping test")
+                tp.not_expect_any("Traceback")
 
     @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
     def test_processes_separate_worker(self):
         with mock_locustfile() as mocked:
             master_proc = TestProcess(
                 f"locust -f {mocked.file_path} --master --headless --run-time 1 --exit-code-on-error 0 --expect-workers-max-wait 2",
-                should_send_sigint=False,
+                sigint_on_exit=False,
                 join_timeout=3,
             )
             worker_parent_proc = TestProcess(
-                f"locust -f {mocked.file_path} --processes 4 --worker", should_send_sigint=False, join_timeout=3
+                f"locust -f {mocked.file_path} --processes 4 --worker", sigint_on_exit=False, join_timeout=3
             )
 
             worker_parent_proc.close()
@@ -1438,24 +1432,24 @@ class AnyUser(HttpUser):
         with mock_locustfile() as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --processes 4 --headless -L DEBUG", expect_return_code=1
-            ) as proc:
-                proc.expect("Starting Locust")
-                proc.expect("Started child worker")
-                proc.expect("Started child worker")
-                proc.expect("Started child worker")
-                proc.expect("Started child worker")
-                proc.expect("Waiting for workers to be ready, 0 of 4 connected")
+            ) as tp:
+                tp.expect("Starting Locust")
+                tp.expect("Started child worker")
+                tp.expect("Started child worker")
+                tp.expect("Started child worker")
+                tp.expect("Started child worker")
+                tp.expect("Waiting for workers to be ready, 0 of 4 connected")
 
-                children: list[psutil.Process] = psutil.Process(proc.proc.pid).children(recursive=True)
+                children: list[psutil.Process] = psutil.Process(tp.proc.pid).children(recursive=True)
                 self.assertEqual(len(children), 4, "unexpected number of child worker processes")
 
-                proc.expect("(index 3) reported as ready")
-                proc.expect("All users spawned")
+                tp.expect("(index 3) reported as ready")
+                tp.expect("All users spawned")
 
-                proc.terminate()
+                tp.terminate()
 
-                proc.expect("Shutting down (exit code 0)")
-                proc.expect("The last worker quit, stopping test.")
+                tp.expect("Shutting down (exit code 0)")
+                tp.expect("The last worker quit, stopping test.")
 
                 gone, alive = psutil.wait_procs(children, timeout=2)
                 # Be good boys and cleanup if needed
@@ -1465,9 +1459,9 @@ class AnyUser(HttpUser):
                 self.assertEqual(len(gone), len(children), "child processes failed to terminate")
 
                 # ensure no weird escaping in error report. Not really related to ctrl-c...
-                proc.expect(", 'Connection refused') ")
+                tp.expect(", 'Connection refused') ")
 
-                proc.not_expect_any("Traceback")
+                tp.not_expect_any("Traceback")
 
     @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
     def test_workers_shut_down_if_master_is_gone(self):
@@ -1485,22 +1479,22 @@ class AnyUser(HttpUser):
         with mock_locustfile(content=content) as mocked:
             with TestProcess(
                 f"locust -f {mocked.file_path} --master --headless --expect-workers 2",
-                should_send_sigint=False,
+                sigint_on_exit=False,
                 expect_return_code=None,
-            ) as master_proc:
+            ) as tp_master:
                 with TestProcess(
                     f"locust -f {mocked.file_path} --worker --processes 2 --headless",
-                    should_send_sigint=False,
+                    sigint_on_exit=False,
                     join_timeout=2,
-                ) as worker_parent_proc:
-                    master_proc.expect("All users spawned")
-                    master_proc.proc.kill()
-                    master_proc.wait()
+                ) as tp_worker_parent:
+                    tp_master.expect("All users spawned")
+                    tp_master.proc.kill()
+                    tp_master.proc.wait(2)
 
-                    worker_parent_proc.expect("worker index:", stream="stdout")
-                    worker_parent_proc.expect("Didn't get heartbeat from master in over ")
-                    worker_parent_proc.expect("Shutting down")
-                    worker_parent_proc.not_expect_any("Traceback")
+                    tp_worker_parent.expect("worker index:", stream="stdout")
+                    tp_worker_parent.expect("Didn't get heartbeat from master in over ")
+                    tp_worker_parent.expect("Shutting down")
+                    tp_worker_parent.not_expect_any("Traceback")
 
     @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
     def test_processes_error_doesnt_blow_up_completely(self):
@@ -1508,16 +1502,16 @@ class AnyUser(HttpUser):
             with TestProcess(
                 f"locust -f {mocked.file_path} --processes 4 -L DEBUG UserThatDoesntExist",
                 expect_return_code=1,
-                should_send_sigint=False,
-            ) as proc:
-                proc.expect("Unknown User(s): UserThatDoesntExist")
-                proc.wait()
+                sigint_on_exit=False,
+            ) as tp:
+                tp.expect("Unknown User(s): UserThatDoesntExist")
+                tp.proc.wait(1)
                 # the error message should repeat 4 times for the workers and once for the master
                 total_logs = sum(
-                    [1 if ("Unknown User(s): UserThatDoesntExist" in line) else 0 for line in proc.stderr_output]
+                    [1 if ("Unknown User(s): UserThatDoesntExist" in line) else 0 for line in tp.stderr_output]
                 )
                 self.assertEqual(total_logs, 5)
-                proc.not_expect_any("Traceback")
+                tp.not_expect_any("Traceback")
 
     @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
     @unittest.skipIf(sys.platform == "darwin", reason="Flaky on macOS :-/")
@@ -1539,13 +1533,13 @@ class AnyUser(User):
 """
         with mock_locustfile(content=content) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --processes 2 --worker", should_send_sigint=False, expect_return_code=42
-            ) as worker_proc:
-                with TestProcess(f"locust -f {mocked.file_path} --master --headless -t 1") as master_proc:
-                    worker_proc.expect("INFO/locust.runners: sys.exit(42) called")
-                    worker_proc.wait(2)
-                    worker_proc.not_expect_any("Traceback")
-                    master_proc.expect("failed to send heartbeat, setting state to missing")
-                    master_proc.terminate()
-                    master_proc.expect("Shutting down")
-                    master_proc.not_expect_any("Traceback")
+                f"locust -f {mocked.file_path} --processes 2 --worker", sigint_on_exit=False, expect_return_code=42
+            ) as tp_worker:
+                with TestProcess(f"locust -f {mocked.file_path} --master --headless -t 1") as tp_master:
+                    tp_worker.expect("INFO/locust.runners: sys.exit(42) called")
+                    tp_worker.proc.wait(2)
+                    tp_worker.not_expect_any("Traceback")
+                    tp_master.expect("failed to send heartbeat, setting state to missing")
+                    tp_master.terminate()
+                    tp_master.expect("Shutting down")
+                    tp_master.not_expect_any("Traceback")
