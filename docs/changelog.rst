@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.38.0
+======
+* Add MarkovTaskSet https://github.com/locustio/locust/pull/3176
+* Support for list based custom arguments https://github.com/locustio/locust/pull/3181
+* Webui fixes https://github.com/locustio/locust/pull/3177 & https://github.com/locustio/locust/pull/3185
+
 2.37.14
 =======
 * Web UI: Fix Chart Zoom Slider https://github.com/locustio/locust/pull/3174
