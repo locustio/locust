@@ -205,6 +205,8 @@ class TestProcess:
     def send_input(self, content: str):
         if self.use_pty:
             os.write(self.stdin_m, content.encode())
+        else:
+            raise Exception("Cannot send input to proccess without pty.")
 
     def terminate(self):
         if not IS_WINDOWS:
