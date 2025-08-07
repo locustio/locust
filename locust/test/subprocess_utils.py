@@ -127,9 +127,7 @@ class TestProcess:
                     return
             time.sleep(0.05)
 
-        self.on_fail(
-            f"Did not see expected message: '{to_expect}' within {self.expect_timeout} seconds. Got {buffer[-5:]}"
-        )
+        self.on_fail(f"Timed out waiting for '{to_expect}' after {self.expect_timeout} seconds. Got {buffer[-5:]}")
 
     # Check all output logs (stateless)
     def expect_any(self, to_expect, *, stream="stderr"):

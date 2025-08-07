@@ -345,6 +345,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             ) as tp:
                 tp.expect("Starting Locust")
                 tp.expect("No run time limit set, use CTRL+C to interrupt")
+                tp.expect("All users spawned")
                 tp.terminate()
                 tp.expect("Shutting down (exit code 0)")
 
