@@ -1,6 +1,25 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.38.0](https://github.com/locustio/locust/tree/2.38.0) (2025-08-07)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.37.14...2.38.0)
+
+**Fixed bugs:**
+
+- Failures table sorting is reset to ascending after a few seconds [\#3184](https://github.com/locustio/locust/issues/3184)
+- argparse.ArgumentError: argument --profile: conflicting option string: --profile \(locust==2.37.14\) [\#3180](https://github.com/locustio/locust/issues/3180)
+
+**Merged pull requests:**
+
+- Webui: Fix useSortByField [\#3185](https://github.com/locustio/locust/pull/3185) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Optimize unit tests [\#3183](https://github.com/locustio/locust/pull/3183) ([amadeuppereira](https://github.com/amadeuppereira))
+- Support for list based custom arguments [\#3181](https://github.com/locustio/locust/pull/3181) ([mickdwyer](https://github.com/mickdwyer))
+- Bump form-data from 4.0.0 to 4.0.4 in /locust/webui [\#3179](https://github.com/locustio/locust/pull/3179) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Webui: Hide no Host Warning when one is Provided [\#3177](https://github.com/locustio/locust/pull/3177) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add MarkovTaskSet [\#3176](https://github.com/locustio/locust/pull/3176) ([Matthieu-Beauchamp](https://github.com/Matthieu-Beauchamp))
+- Add yarn lint precommit [\#3175](https://github.com/locustio/locust/pull/3175) ([cyberw](https://github.com/cyberw))
+
 ## [2.37.14](https://github.com/locustio/locust/tree/2.37.14) (2025-07-16)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.37.13...2.37.14)
