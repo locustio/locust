@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.38.1
+======
+* FastHttpUser: Dont send zstd in Accept-Encoding header https://github.com/locustio/locust/pull/3188
+
 2.38.0
 ======
 * Add MarkovTaskSet https://github.com/locustio/locust/pull/3176
