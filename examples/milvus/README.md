@@ -32,7 +32,7 @@ locust -f locustfile.py --host=http://localhost:19530 --headless --users=10 --sp
 ## Operations Tested
 
 - Insert vectors
-- Search vectors  
+- Search vectors
 - Query by filter
 - Delete records
 

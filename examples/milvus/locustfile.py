@@ -24,11 +24,13 @@ class SimpleMilvusUser(MilvusUser):
     @task(3)
     def insert_data(self):
         """Insert data into Milvus."""
-        data = [{
-            "id": random.randint(1, 10000),
-            "vector": random.choice(self.test_vectors),
-            "name": f"item_{random.randint(1, 1000)}"
-        }]
+        data = [
+            {
+                "id": random.randint(1, 10000),
+                "vector": random.choice(self.test_vectors),
+                "name": f"item_{random.randint(1, 1000)}",
+            }
+        ]
         self.insert(data)
 
     @task(5)
