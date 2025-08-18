@@ -50,6 +50,7 @@ dependencies = [
     "setuptools>=70.0.0",
     "locust-cloud>=1.26.3",
     "gevent>=24.10.1,<26.0.0",
+    "python-socketio[client]==5.13.0",
 ]
 
 [project.optional-dependencies]
