@@ -1,13 +1,15 @@
+import gevent.monkey
+
+gevent.monkey.patch_all()
+import grpc.experimental.gevent as grpc_gevent
+
+grpc_gevent.init_gevent()
+
 from locust import User, events
 
 import time
 from abc import ABC, abstractmethod
 from typing import Any
-
-import gevent.monkey  # noqa: E402
-gevent.monkey.patch_all()  # noqa: E402
-import grpc.experimental.gevent as grpc_gevent  # noqa: E402
-grpc_gevent.init_gevent()  # noqa: E402
 
 from pymilvus import CollectionSchema, MilvusClient
 from pymilvus.milvus_client import IndexParams
@@ -15,19 +17,19 @@ from pymilvus.milvus_client import IndexParams
 
 class BaseClient(ABC):
     @abstractmethod
-    def close(self):
+    def close(self) -> None:
         pass
 
     @abstractmethod
-    def create_collection(self, schema, index_params):
+    def create_collection(self, schema, index_params) -> None:
         pass
 
     @abstractmethod
-    def insert(self, data):
+    def insert(self, data) -> dict[str, Any]:
         pass
 
     @abstractmethod
-    def upsert(self, data):
+    def upsert(self, data) -> dict[str, Any]:
         pass
 
     @abstractmethod
@@ -41,19 +43,19 @@ class BaseClient(ABC):
         output_fields=None,
         calculate_recall=False,
         ground_truth=None,
-    ):
+    ) -> dict[str, Any]:
         pass
 
     @abstractmethod
-    def hybrid_search(self, reqs, ranker, limit, output_fields=None):
+    def hybrid_search(self, reqs, ranker, limit, output_fields=None) -> dict[str, Any]:
         pass
 
     @abstractmethod
-    def query(self, filter, output_fields=None):
+    def query(self, filter, output_fields=None) -> dict[str, Any]:
         pass
 
     @abstractmethod
-    def delete(self, filter):
+    def delete(self, filter) -> dict[str, Any]:
         pass
 
 

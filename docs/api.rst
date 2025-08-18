@@ -48,6 +48,13 @@ MongoDBUser class
     :members: wait_time, tasks, client, abstract
     :noindex:
 
+MilvusUser class
+================
+
+.. autoclass:: locust.contrib.milvus.MilvusUser
+    :members: wait_time, tasks, client, abstract
+    :noindex:
+
 TaskSet class
 =============
 
