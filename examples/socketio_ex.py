@@ -21,7 +21,8 @@ class MyUser(SocketIOUser):
     def my_task(self):
         self.event = Event()
         self.call("join_room", {"room": "room1"})
-        self.call("send_message", {"room": "room1", "message": "Message 1"})
+        # use socketio client directly to send a message that wont be logged as a request
+        self.client.call("send_message", {"room": "room1", "message": "Message 1"})
         self.emit("send_message", {"room": "room1", "message": "Message 2, Sent without waiting for response"})
         self.event.wait()  # wait for on_message to set this event
         self.call("leave_room", {"room": "room1"})
