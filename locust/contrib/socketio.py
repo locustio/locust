@@ -14,7 +14,7 @@ class SocketIOClient(socketio.Client):
 
 class SocketIOUser(User):
     abstract = True
-    options = {}  # socketio.Client options, e.g. {"reconnection_attempts": 1, "reconnection_delay": 2}
+    options: dict = {}  # socketio.Client options, e.g. {"reconnection_attempts": 1, "reconnection_delay": 2}
     client: SocketIOClient
 
     def __init__(self, *args, **kwargs):
