@@ -50,6 +50,7 @@ dependencies = [
     "setuptools>=70.0.0",
     "locust-cloud>=1.26.3",
     "gevent>=24.10.1,<26.0.0",
+    "python-socketio[client]==5.13.0",
 ]
 
 [project.optional-dependencies]
@@ -100,6 +101,10 @@ docs = [
     "sphinxcontrib-qthelp==1.0.3",
     "sphinxcontrib-serializinghtml==1.1.10",
     "sphinxcontrib-googleanalytics>=0.4",
+    # these optional dependencies are needed to build the some contrib modules
+    "pymilvus>=2.5.0",
+    "psycopg[binary]>=3.2.1",
+    "pymongo>=4.8.0"
 ]
 milvus = [
     "pymilvus>=2.5.0",

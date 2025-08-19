@@ -110,7 +110,13 @@ extensions = [
     "sphinx_search.extension",
     "sphinx_rtd_theme",
     "sphinxcontrib.googleanalytics",
+    "sphinx.ext.extlinks",
 ]
+
+extlinks = {
+    "gh": ("https://github.com/locustio/locust/blob/master/%s", "GitHub: %s"),
+}
+
 
 # autoclass options
 # autoclass_content = "both"
@@ -133,6 +139,7 @@ copyright = "2009-2025, Carl Byström, Jonatan Heyman, Lars Holmberg"
 # Intersphinx config
 intersphinx_mapping = {
     "requests": ("https://requests.readthedocs.io/en/latest/", None),
+    "socketio": ("https://python-socketio.readthedocs.io/en/stable/", None),
 }
 
 
