@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.39.0
+======
+* Add MilvusUser https://github.com/locustio/locust/pull/3168
+* Add SocketIOUser https://github.com/locustio/locust/pull/3189
+
 2.38.1
 ======
 * FastHttpUser: Dont send zstd in Accept-Encoding header https://github.com/locustio/locust/pull/3188

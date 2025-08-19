@@ -58,8 +58,8 @@ REST
 
 See :ref:`FastHttpUser <rest>`
 
-WebSockets / SocketIO
-=====================
+SocketIO
+========
 
 See :ref:`SocketIOUser <socketio>`
 
