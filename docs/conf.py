@@ -110,7 +110,13 @@ extensions = [
     "sphinx_search.extension",
     "sphinx_rtd_theme",
     "sphinxcontrib.googleanalytics",
+    "sphinx.ext.extlinks",
 ]
+
+extlinks = {
+    "gh": ("https://github.com/locustio/locust/blob/master/%s", "GitHub: %s"),
+}
+
 
 # autoclass options
 # autoclass_content = "both"

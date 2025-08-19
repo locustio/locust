@@ -6,8 +6,8 @@ import socketio
 
 class SocketIOUser(User):
     """
-    SocketIOUser wraps the `socketio.Client` to log requests.
-    See socketio_ex.py for an example of how to use it.
+    SocketIOUser wraps an instance of :class:`socketio.Client` to log requests.
+    See example in :gh:`examples/socketio/socketio_ex.py`.
     """
 
     abstract = True
