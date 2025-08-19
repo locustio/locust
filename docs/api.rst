@@ -28,6 +28,8 @@ FastHttpUser class
     :members: wait_time, tasks, client, abstract, rest
     :noindex:
 
+.. _socketio:
+
 SocketIOUser class
 ==================
 

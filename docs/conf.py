@@ -114,7 +114,7 @@ extensions = [
 ]
 
 extlinks = {
-    "gh": ("https://github.com/locustio/locust/blob/master/%s", "GitHub: %s"),
+    "gh": ("https://github.com/locustio/locust/blob/master/%s", "%s"),
 }
 
 

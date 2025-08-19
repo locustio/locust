@@ -58,6 +58,11 @@ REST
 
 See :ref:`FastHttpUser <rest>`
 
+WebSockets / SocketIO
+=====================
+
+See :ref:`SocketIOUser <socketio>`
+
 OpenAI
 ======
 
@@ -72,4 +77,4 @@ Performance/load testing AI services is a little different. While you could call
 Other examples
 ==============
 
-See `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_ it has users for WebSocket/SocketIO, Kafka, Selenium/WebDriver, Playwright and more.
+See `locust-plugins <https://github.com/SvenskaSpel/locust-plugins#users>`_ it has users for Kafka, Selenium/WebDriver, Playwright and more.
