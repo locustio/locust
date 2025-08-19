@@ -28,6 +28,13 @@ FastHttpUser class
     :members: wait_time, tasks, client, abstract, rest
     :noindex:
 
+SocketIOUser class
+==================
+
+.. autoclass:: locust.contrib.socketio.SocketIOUser
+    :members: connect, call, emit, send, on_message, client, options
+    :noindex:
+
 FastHttpSession class
 =====================
 

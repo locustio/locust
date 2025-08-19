@@ -133,6 +133,7 @@ copyright = "2009-2025, Carl Byström, Jonatan Heyman, Lars Holmberg"
 # Intersphinx config
 intersphinx_mapping = {
     "requests": ("https://requests.readthedocs.io/en/latest/", None),
+    "socketio": ("https://python-socketio.readthedocs.io/en/stable/", None),
 }
 
 

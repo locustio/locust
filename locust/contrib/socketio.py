@@ -14,7 +14,7 @@ class SocketIOUser(User):
     options: dict = {}
     """socketio.Client options, e.g. `{"reconnection_attempts": 1, "reconnection_delay": 2}`"""
     client: socketio.Client
-    """The underlying socketio.Client instance. Can be useful to call directly if you want to skip logging a requests."""
+    """The underlying :class:`socketio.Client` instance. Can be useful to call directly if you want to skip logging a requests."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -22,9 +22,12 @@ class SocketIOUser(User):
         self.ws_greenlet = gevent.spawn(self.client.wait)
         self.client.on("*", self.on_message)
 
-    # This is the default handler for events. You can override it for custom behavior,
-    # or even register separate handlers using self.client.on(event, handler)
+    #
     def on_message(self, event: str, data: str) -> None:
+        """
+        This is the default handler for events. You can override it for custom behavior,
+        or even register separate handlers using self.client.on(event, handler)
+        """
         self.environment.events.request.fire(
             request_type="WSR",
             name=event,
@@ -36,13 +39,19 @@ class SocketIOUser(User):
         )
 
     def connect(self, *args, **kwargs):
+        """
+        Wraps :meth:`socketio.Client.connect`.
+        """
         with self.environment.events.request.measure("WS", "connect") as _:
             self.client.connect(*args, **kwargs)
 
-    def send(self, name=None, data=None, namespace=None) -> None:
+    def send(self, name, data=None, namespace=None) -> None:
+        """
+        Wraps :meth:`socketio.Client.send`.
+        """
         exception = None
         try:
-            self.client.send(name, data, namespace)
+            self.client.send(data, namespace)
         except Exception as e:
             exception = e
         self.environment.events.request.fire(
@@ -54,7 +63,10 @@ class SocketIOUser(User):
             context={},
         )
 
-    def emit(self, name=None, data=None, namespace=None, callback=None) -> None:
+    def emit(self, name, data=None, namespace=None, callback=None) -> None:
+        """
+        Wraps :meth:`socketio.Client.emit`.
+        """
         exception = None
         try:
             self.client.emit(name, data, namespace, callback)
@@ -69,7 +81,10 @@ class SocketIOUser(User):
             context={},
         )
 
-    def call(self, event, data, *args, **kwargs):
+    def call(self, event, data=None, *args, **kwargs):
+        """
+        Wraps :meth:`socketio.Client.call`.
+        """
         with self.environment.events.request.measure("WSC", event) as _:
             return self.client.call(event, data, *args, **kwargs)
 
