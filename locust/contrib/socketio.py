@@ -27,11 +27,14 @@ class SocketIOUser(User):
         """
         This is the default handler for events. You can override it for custom behavior,
         or even register separate handlers using self.client.on(event, handler)
+
+        Measuring response_time isn't obvious for for WebSockets. Sometimes a response time
+        can be inferred from the event data (if it contains a timestamp) or related to
+        a message that you sent. Override this method in your User class to do that.
         """
         self.environment.events.request.fire(
             request_type="WSR",
             name=event,
-            # Response times are hard for WebSockets. Sometimes a response time can be inferred from the event data (if it contains a timestamp) or related to an event that you sent, but the default is just to set it to zero.
             response_time=0,
             response_length=len(data or []),
             exception=None,
