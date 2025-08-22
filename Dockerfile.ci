@@ -1,7 +1,7 @@
 # This is the image pushed to Dockerhub, containing the built and tested Locust package
 
 # Stage 1: Install Locust package
-FROM python:3.12-slim AS base
+FROM python:3.13-slim AS base
 
 FROM base AS builder
 RUN apt-get update && apt-get install -y git 
