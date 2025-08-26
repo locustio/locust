@@ -11,7 +11,7 @@ RUN yarn webui:install --production --network-timeout 60000
 RUN yarn webui:build
 
 # Stage 2: Build Locust package (make sure any changes here are also reflected in Dockerfile.ci)
-FROM python:3.12-slim AS base
+FROM python:3.13-slim AS base
 
 FROM base AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git
