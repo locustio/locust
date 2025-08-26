@@ -14,7 +14,6 @@ Support for load testing other protocols, reporting etc
       load html page resources
    -  readers (ways to get test data into your tests)
    -  wait time (custom wait time functions)
-   -  debug (support for running a single user in the debugger)
    -  checks (adds command line parameters to set locust exit code based
       on requests/s, error percentage and average response times)
 
