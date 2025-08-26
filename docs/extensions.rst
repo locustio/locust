@@ -10,7 +10,7 @@ Support for load testing other protocols, reporting etc
 -  `locust-plugins <https://github.com/SvenskaSpel/locust-plugins/>`__
 
    -  request logging & graphing
-   -  new protocols like websockets, selenium/webdriver, http users that
+   -  new protocols like selenium/webdriver, http users that
       load html page resources
    -  readers (ways to get test data into your tests)
    -  wait time (custom wait time functions)
