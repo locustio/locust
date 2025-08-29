@@ -104,7 +104,7 @@ def wait_for_server(url, timeout=5, interval=0.5):
     start = time.time()
     while True:
         try:
-            return requests.head(url)
+            return requests.head(url, timeout=0.1)
         except requests.RequestException:
             if time.time() - start > timeout:
                 raise
