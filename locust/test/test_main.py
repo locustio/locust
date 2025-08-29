@@ -577,6 +577,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 with TestProcess(
                     f"locust -f {mocked1.file_path},{mocked2} --web-port {port} --autostart --autoquit {autoquit}",
                     expect_timeout=6,
+                    join_timeout=7,  # for macOS on GH
                     sigint_on_exit=False,
                 ) as tp:
                     tp.expect("Starting Locust")
