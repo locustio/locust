@@ -53,6 +53,7 @@ from gevent.timeout import Timeout
 
 
 class TestTimeout(Timeout):
+    __test__ = False
     pass
 
 
