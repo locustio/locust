@@ -438,6 +438,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     tp.expect("Aggregated")
 
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
+    @unittest.skipIf(sys.platform == "darwin", reason="Disable on macOS for now because it has issues on GH")
     def test_autostart_wo_run_time(self):
         port = get_free_tcp_port()
         with mock_locustfile() as mocked:
