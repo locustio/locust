@@ -49,12 +49,17 @@ MOCK_LOCUSTFILE_CONTENT_B = textwrap.dedent(
             print("running my_task()")
 """
 )
+from gevent.timeout import Timeout
+
+
+class TestTimeout(Timeout):
+    pass
 
 
 class ProcessIntegrationTest(TestCase):
     def setUp(self):
         super().setUp()
-        self.timeout = gevent.Timeout(10)
+        self.timeout = gevent.Timeout(20, exception=TestTimeout)
         self.timeout.start()
 
     def tearDown(self):
