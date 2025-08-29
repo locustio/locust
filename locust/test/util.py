@@ -100,6 +100,7 @@ def get_locustfiles_from_args(*args, **kwargs):
 
 
 def wait_for_server(url, timeout=5, interval=0.5):
+    __tracebackhide__ = True
     start = time.time()
     while True:
         try:
