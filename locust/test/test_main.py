@@ -103,7 +103,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         ) as file_path:
             # print(subprocess.check_output(["cat", file_path]))
             with TestProcess(
-                f"locust -f {file_path} --custom-string-arg command_line_value --web-port {port}",
+                f"locust -f {file_path} --custom-string-arg command_line_value --web-port {port} --web-host 127.0.0.1",
             ) as tp:
                 tp.expect("Starting Locust")
                 try:
