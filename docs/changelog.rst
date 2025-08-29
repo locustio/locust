@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.39.1
+======
+* Avoid broken gevent version for now by @cyberw in https://github.com/locustio/locust/pull/3196
+
 2.39.0
 ======
 * Add MilvusUser https://github.com/locustio/locust/pull/3168
