@@ -10,7 +10,6 @@ import warnings
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
 
-import pytest
 import requests
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -108,5 +107,5 @@ def wait_for_server(url, timeout=5, interval=0.5):
             return requests.head(url, timeout=0.1)
         except (requests.RequestException, requests.exceptions.Timeout) as e:
             if time.time() - start > timeout:
-                pytest.fail(f"Server at {url} did not start within {timeout} seconds ({e.__class__.__name__})")
+                raise Exception(f"Server at {url} did not start within {timeout} seconds ({e.__class__.__name__})")
             time.sleep(interval)
