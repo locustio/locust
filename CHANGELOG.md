@@ -1,6 +1,29 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.39.0](https://github.com/locustio/locust/tree/2.39.0) (2025-08-19)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.38.1...2.39.0)
+
+**Merged pull requests:**
+
+- Add SocketIOUser [\#3189](https://github.com/locustio/locust/pull/3189) ([cyberw](https://github.com/cyberw))
+- Add MilvusUser and example [\#3168](https://github.com/locustio/locust/pull/3168) ([zhuwenxing](https://github.com/zhuwenxing))
+
+## [2.38.1](https://github.com/locustio/locust/tree/2.38.1) (2025-08-12)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.38.0...2.38.1)
+
+**Closed issues:**
+
+- Support for markov chains to describe a user's behavior [\#3156](https://github.com/locustio/locust/issues/3156)
+- Switch docker base image to one with uv preinstalled [\#3061](https://github.com/locustio/locust/issues/3061)
+
+**Merged pull requests:**
+
+- FastHttpUser: Dont send zstd in Accept-Encoding header  [\#3188](https://github.com/locustio/locust/pull/3188) ([cyberw](https://github.com/cyberw))
+- Fix test flakyness and update error message [\#3187](https://github.com/locustio/locust/pull/3187) ([amadeuppereira](https://github.com/amadeuppereira))
+
 ## [2.38.0](https://github.com/locustio/locust/tree/2.38.0) (2025-08-07)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.37.14...2.38.0)
