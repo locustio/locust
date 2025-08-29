@@ -508,6 +508,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                         tp.terminate()
                         tp.expect("Shutting down (exit code 0)")
 
+    @unittest.skipIf(sys.platform == "darwin", reason="Disable on macOS for now because it has issues on GH")
     def test_autostart_w_load_shape(self):
         port = get_free_tcp_port()
         with mock_locustfile(
@@ -538,7 +539,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 tp.expect("Shape test starting")
                 tp.expect("--run-time limit reached")
 
-    @unittest.skipIf(sys.platform == "darwin", reason="Disable on macOS for now")
+    @unittest.skipIf(sys.platform == "darwin", reason="Disable on macOS for now because it has issues on GH")
     def test_autostart_multiple_locustfiles_with_shape(self):
         port = get_free_tcp_port()
         content = textwrap.dedent(
