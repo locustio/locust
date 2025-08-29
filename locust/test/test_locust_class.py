@@ -333,7 +333,9 @@ class TestTaskSet(LocustTestCase):
         class MyTaskSet(TaskSet):
             a = 1
             b = 2
-            wait_time = lambda self: 1 + (self.b - self.a)
+
+            def wait_time(self):
+                return 1 + (self.b - self.a)
 
         taskset = MyTaskSet(self.locust)
         self.assertEqual(taskset.wait_time(), 2.0)
