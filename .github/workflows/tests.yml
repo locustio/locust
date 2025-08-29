@@ -139,7 +139,8 @@ jobs:
           # OS Integration tests 
           - { name: "Linux", python: "3.12", os: ubuntu-latest, group: "test", env: "integration_test_ci:fail_fast" }
           - { name: "Windows", python: '3.12', os: windows-latest, group: "test", env: "integration_test_ci:fail_fast" }
-          - { name: "MacOS", python: '3.12', os: macos-latest, group: "test", env: "integration_test_ci:fail_fast" }
+          # MacOS behaves super badly on GH actions right now, so let's disable it for the time being
+          # - { name: "MacOS", python: '3.12', os: macos-latest, group: "test", env: "integration_test_ci:fail_fast" } 
           
           # Unit tests on Python versions
           - { name: "Python 3.13", python: "3.13", os: ubuntu-latest, group: "test", env: "test:all" }
