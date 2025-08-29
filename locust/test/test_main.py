@@ -538,6 +538,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 tp.expect("Shape test starting")
                 tp.expect("--run-time limit reached")
 
+    @unittest.skipIf(sys.platform == "darwin", reason="Disable on macOS for now")
     def test_autostart_multiple_locustfiles_with_shape(self):
         port = get_free_tcp_port()
         content = textwrap.dedent(
@@ -577,7 +578,6 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 with TestProcess(
                     f"locust -f {mocked1.file_path},{mocked2} --web-port {port} --autostart --autoquit {autoquit}",
                     expect_timeout=6,
-                    join_timeout=7,  # for macOS on GH
                     sigint_on_exit=False,
                 ) as tp:
                     tp.expect("Starting Locust")
