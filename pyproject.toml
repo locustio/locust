@@ -16,7 +16,6 @@ maintainers = [
     { name = "Andrew Baldwin" },
 ]
 classifiers = [
-    "Topic :: Software Development :: Testing :: Traffic Generation",
     "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
