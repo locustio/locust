@@ -106,7 +106,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 f"locust -f {file_path} --custom-string-arg command_line_value --web-port {port}",
             ) as tp:
                 tp.expect("Starting Locust")
-                wait_for_server(f"http://127.0.0.1:{port}/swarm")
+                wait_for_server(f"http://127.0.0.1:{port}/swarm", timeout=15)
                 requests.post(
                     f"http://127.0.0.1:{port}/swarm",
                     data={
