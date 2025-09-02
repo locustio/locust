@@ -261,3 +261,6 @@ python = ["3.12"]
 
 [tool.hatch.envs.docs.scripts]
 build = ["sphinx-build -b html docs/ docs/_build/"]
+
+[project.entry-points.pytest11]
+locust = "locust.pytestplugin"
