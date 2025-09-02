@@ -105,7 +105,7 @@ class FastHttpSession:
 
     def __init__(
         self,
-        base_url: str,
+        base_url: str | None,
         request_event,
         user: User | None,
         insecure=True,
@@ -131,18 +131,28 @@ class FastHttpSession:
         )
 
         # Check for basic authentication
-        parsed_url = urlparse(self.base_url)
-        if parsed_url.username and parsed_url.password:
-            netloc = parsed_url.hostname or ""
-            if parsed_url.port:
-                netloc += ":%d" % parsed_url.port
+        if self.base_url:
+            parsed_url = urlparse(self.base_url)
+            if parsed_url.username and parsed_url.password:
+                netloc = parsed_url.hostname or ""
+                if parsed_url.port:
+                    netloc += ":%d" % parsed_url.port
 
-            # remove username and password from the base_url
-            self.base_url = urlunparse(
-                (parsed_url.scheme, netloc, parsed_url.path, parsed_url.params, parsed_url.query, parsed_url.fragment)
-            )
-            # store authentication header (we construct this by using _basic_auth_str() function from requests.auth)
-            self.auth_header = _construct_basic_auth_str(parsed_url.username, parsed_url.password)
+                # remove username and password from the base_url
+                self.base_url = str(
+                    urlunparse(
+                        (
+                            parsed_url.scheme,
+                            netloc,
+                            parsed_url.path,
+                            parsed_url.params,
+                            parsed_url.query,
+                            parsed_url.fragment,
+                        )
+                    )
+                )
+                # store authentication header (we construct this by using _basic_auth_str() function from requests.auth)
+                self.auth_header = _construct_basic_auth_str(parsed_url.username, parsed_url.password)
 
     def _build_url(self, path: str) -> str:
         """prepend url with hostname unless it's already an absolute URL"""
