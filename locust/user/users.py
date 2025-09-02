@@ -278,11 +278,10 @@ class HttpUser(User):
         self.client.trust_env = False
 
 
-class PytestHttpUser(HttpUser):
+class PytestUser(User):
     abstract = True
     functions: list[pytest.Function]
     fixtures: list
-    host = "http://PytestHttpUser-does-not-have-a-host"
 
     def run(self):  # type: ignore[override] # We actually DO want to change the default User behavior
         self._state = LOCUST_STATE_RUNNING

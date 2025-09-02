@@ -12,7 +12,7 @@ from _pytest.config import Config
 
 from ..shape import LoadTestShape
 from ..user import User
-from ..user.users import PytestHttpUser
+from ..user.users import PytestUser
 
 
 def is_user_class(item) -> bool:
@@ -92,7 +92,7 @@ def load_locustfile(path) -> tuple[dict[str, type[User]], list[LoadTestShape]]:
 
 
 def load_locustfile_pytest(path) -> Mapping[str, type[User]]:
-    user_classes: Mapping[str, type[PytestHttpUser]] = {}
+    user_classes: Mapping[str, type[PytestUser]] = {}
     config = Config.fromdictargs({}, [path])
     config._do_configure()
     session = pytest.Session.from_config(config)
@@ -113,7 +113,7 @@ def load_locustfile_pytest(path) -> Mapping[str, type[User]]:
                     raise ValueError(f"Multiple fixtures found for parameter {name!r} in {function.name}: {defs}")
                 function.fixturedef = fm.getfixturedefs(name, function)[0]  # type: ignore[attr-defined]
             if not function.name in user_classes:
-                user_classes[function.name] = type(function.name, (PytestHttpUser,), {})
+                user_classes[function.name] = type(function.name, (PytestUser,), {})
                 user_classes[function.name].functions = []
             user_classes[function.name].functions.append(function)
     return user_classes
