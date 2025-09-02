@@ -211,7 +211,11 @@ def filter_tasks_by_tags(
         checked[task] = passing
 
     task_holder.tasks = new_tasks
-    if not new_tasks and not is_markov_taskset(task_holder):
+    if (
+        not new_tasks
+        and not is_markov_taskset(task_holder)
+        and not getattr(task_holder, "functions", False)  # PytestUser
+    ):
         logging.warning(f"{task_holder.__name__} had no tasks left after filtering, instantiating it will fail!")
 
 

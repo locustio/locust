@@ -3,7 +3,7 @@ from locust.contrib.fasthttp import FastHttpSession
 
 
 def test_thing(session: HttpSession):
-    session.get("https://httpbin.org/get")
+    session.get("https://locust.cloud/")
     resp = session.get("https://locust.cloud/doesnt_exist")
     resp.raise_for_status()
     session.get("https://locust.cloud/should_never_run")
