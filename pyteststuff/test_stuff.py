@@ -1,6 +1,5 @@
 from locust.clients import HttpSession
-
-# from locust.contrib.fasthttp import FastHttpSession
+from locust.contrib.fasthttp import FastHttpSession
 
 
 def test_thing(session: HttpSession):
@@ -10,6 +9,6 @@ def test_thing(session: HttpSession):
     session.get("https://locust.cloud/should_never_run")
 
 
-# def test_other_thing(fastsession: FastHttpSession):
-#     resp = fastsession.get("https://locust.cloud/other_thing")
-#     resp.raise_for_status()
+def test_other_thing(fastsession: FastHttpSession):
+    resp = fastsession.get("https://locust.cloud/")
+    resp.raise_for_status()
