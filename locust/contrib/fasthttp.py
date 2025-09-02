@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from locust.env import Environment
 from locust.exception import CatchResponseError, LocustError, ResponseError
 from locust.user import User
 from locust.util.deprecation import DeprecatedFastHttpLocustClass as FastHttpLocust  # noqa: F401
@@ -106,16 +105,16 @@ class FastHttpSession:
 
     def __init__(
         self,
-        environment: Environment,
         base_url: str,
+        request_event,
         user: User | None,
         insecure=True,
         client_pool: HTTPClientPool | None = None,
         ssl_context_factory: Callable | None = None,
         **kwargs,
     ) -> None:
-        self.environment = environment
         self.base_url = base_url
+        self.request_event = request_event
         self.cookiejar = CookieJar()
         self.user = user
         if not ssl_context_factory:
@@ -273,7 +272,7 @@ class FastHttpSession:
             except HTTPParseError as e:
                 request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
                 request_meta["exception"] = e
-                self.environment.events.request.fire(**request_meta)
+                self.request_event.fire(**request_meta)
                 return response
 
         # Record the consumed time
@@ -282,14 +281,14 @@ class FastHttpSession:
         request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
 
         if catch_response:
-            return ResponseContextManager(response, environment=self.environment, request_meta=request_meta)
+            return ResponseContextManager(response, request_event=self.request_event, request_meta=request_meta)
         else:
             try:
                 response.raise_for_status()
             except FAILURE_EXCEPTIONS as e:
                 request_meta["exception"] = e
 
-            self.environment.events.request.fire(**request_meta)
+            self.request_event.fire(**request_meta)
             return response
 
     def delete(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | FastResponse:
@@ -406,8 +405,8 @@ class FastHttpUser(User):
             )
 
         self.client: FastHttpSession = FastHttpSession(
-            self.environment,
             base_url=self.host,
+            request_event=self.environment.events.request,
             network_timeout=self.network_timeout,
             connection_timeout=self.connection_timeout,
             max_redirects=self.max_redirects,
@@ -653,15 +652,14 @@ class ResponseContextManager(FastResponse):
     _manual_result = None
     _entered = False
 
-    def __init__(self, response, environment, request_meta):
+    def __init__(self, response, request_event, request_meta):
         # copy data from response to this object
         self.__dict__ = response.__dict__
         try:
             self._cached_content = response._cached_content
         except AttributeError:
             pass
-        # store reference to locust Environment
-        self._environment = environment
+        self._request_event = request_event
         self.request_meta = request_meta
 
     def __enter__(self):
@@ -696,7 +694,7 @@ class ResponseContextManager(FastResponse):
         return True
 
     def _report_request(self):
-        self._environment.events.request.fire(**self.request_meta)
+        self._request_event.fire(**self.request_meta)
 
     def success(self):
         """
