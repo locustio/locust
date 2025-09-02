@@ -5,9 +5,14 @@ import importlib.util
 import inspect
 import os
 import sys
+from collections.abc import Mapping
+
+import pytest
+from _pytest.config import Config
 
 from ..shape import LoadTestShape
 from ..user import User
+from ..user.users import PytestHttpUser
 
 
 def is_user_class(item) -> bool:
@@ -81,5 +86,34 @@ def load_locustfile(path) -> tuple[dict[str, type[User]], list[LoadTestShape]]:
 
     # Find shape class, if any, return it
     shape_classes = [value() for value in vars(imported).values() if is_shape_class(value)]
-
+    if not user_classes:
+        user_classes.update(load_locustfile_pytest(path))
     return user_classes, shape_classes
+
+
+def load_locustfile_pytest(path) -> Mapping[str, type[User]]:
+    user_classes: Mapping[str, type[PytestHttpUser]] = {}
+    config = Config.fromdictargs({}, [path])
+    config._do_configure()
+    session = pytest.Session.from_config(config)
+    config.hook.pytest_sessionstart(session=session)
+    session.perform_collect()
+    config.hook.pytest_collection_modifyitems(session=session, config=config, items=session.items)
+    fm = session._fixturemanager
+
+    for function in session.items:
+        if isinstance(function, pytest.Function):
+            sig = inspect.signature(function.obj)
+            function.kwargs = {}  # type: ignore[attr-defined]
+            for name in sig.parameters:
+                defs = fm.getfixturedefs(name, function)
+                if not defs:
+                    raise ValueError(f"Could not find fixture for parameter {name!r} in {function.name}")
+                if len(defs) > 1:
+                    raise ValueError(f"Multiple fixtures found for parameter {name!r} in {function.name}: {defs}")
+                function.fixturedef = fm.getfixturedefs(name, function)[0]  # type: ignore[attr-defined]
+            if not function.name in user_classes:
+                user_classes[function.name] = type(function.name, (PytestHttpUser,), {})
+                user_classes[function.name].functions = []
+            user_classes[function.name].functions.append(function)
+    return user_classes

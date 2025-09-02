@@ -19,6 +19,8 @@ import traceback
 from collections.abc import Callable
 from typing import final
 
+import pytest
+import requests
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from urllib3 import PoolManager
@@ -144,7 +146,7 @@ class User(metaclass=UserMeta):
         self._state = LOCUST_STATE_RUNNING
         self._taskset_instance = DefaultTaskSet(self)
         try:
-            # run the TaskSet on_start method, if it has one
+            # run the User on_start method, if it has one
             try:
                 self.on_start()
             except Exception as e:
@@ -274,3 +276,20 @@ class HttpUser(User):
         The client supports cookies, and therefore keeps the session between HTTP requests.
         """
         self.client.trust_env = False
+
+
+class PytestHttpUser(HttpUser):
+    abstract = True
+    functions: list[pytest.Function]
+    fixtures: list
+    host = "http://PytestHttpUser-does-not-have-a-host"
+
+    def run(self):  # type: ignore[override] # We actually DO want to change the default User behavior
+        self._state = LOCUST_STATE_RUNNING
+        self.fixtures = [next(f.fixturedef.func(self)) for f in self.functions]  # type: ignore[attr-defined]
+        while True:
+            for i in range(len(self.fixtures)):
+                try:
+                    self.functions[i].obj(self.fixtures[i])
+                except requests.exceptions.HTTPError as e:  # support .raise_for_status() in tests
+                    logger.debug("%s\n%s", e, traceback.format_exc())
