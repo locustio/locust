@@ -7,8 +7,8 @@ from locust.contrib.fasthttp import FastHttpSession
 def test_thing(session: HttpSession):
     session.get("https://locust.cloud/")
     resp = session.get("https://locust.cloud/doesnt_exist")
-    # the next line will raise a requests.Exception, which will be caught and ignored by Locust, but
-    # it prevents the test from continuing, and is very useful for failing the test case
+    # the next line will raise a requests.Exception, which will be caught and ignored by Locust.
+    # It still prevents the test from going to the next statement, and is very useful for failing the test case
     # resp.raise_for_status()
     session.get("https://locust.cloud/should_never_run")
 
