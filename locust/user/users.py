@@ -14,6 +14,7 @@ from locust.user.wait_time import constant
 from locust.util import deprecation
 
 import logging
+import sys
 import time
 import traceback
 from collections.abc import Callable
@@ -23,8 +24,12 @@ from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from geventhttpclient.useragent import ConnectionError
 from requests.exceptions import RequestException
-from typing_extensions import override
 from urllib3 import PoolManager
+
+if sys.version_info >= (3, 11):
+    from typing import override
+else:
+    from typing_extensions import override
 
 logger = logging.getLogger(__name__)
 
