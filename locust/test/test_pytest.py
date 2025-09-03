@@ -1,5 +1,4 @@
 # pytest style locustfiles, can be run from both pytest and locust!
-# Make sure you install pytest first
 from locust.clients import HttpSession
 from locust.contrib.fasthttp import FastHttpSession
 
