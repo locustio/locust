@@ -1162,7 +1162,7 @@ def test_xxcrash(session):
             os.remove(output_filepath)
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} -H https://google.com --headless -u 2 -r 10 -t 1 --exit-code-on-error 0",
+                f"locust -f {mocked.file_path} -H https://locust.cloud --headless -u 2 -r 10 -t 1 --exit-code-on-error 0",
             ) as tp:
                 tp.expect(
                     "/                                                                                  2     0(0.00%)"
