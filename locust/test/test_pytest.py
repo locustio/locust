@@ -21,7 +21,7 @@ def test_failure(session: HttpSession):
     # the next line will raise a requests.Exception, which will be caught and ignored by Locust.
     # It still prevents the test from going to the next statement, and is useful for failing the test case when run as pytest
     resp.raise_for_status()
-    session.get("https://locust.cloud/should_never_run")
+    session.get("https://locust.cloud/will_never_run")
 
 
 @pytest.mark.xfail(strict=True)
@@ -31,4 +31,11 @@ def test_fasthttp_failure(fastsession: FastHttpSession):
     # the next line will raise a requests.Exception, which will be caught and ignored by Locust.
     # It still prevents the test from going to the next statement, and is useful for failing the test case when run as pytest
     resp.raise_for_status()
-    fastsession.get("https://locust.cloud/should_never_run")
+    fastsession.get("https://locust.cloud/will_never_run")
+
+
+def test_host(fastsession: FastHttpSession):
+    if not fastsession.base_url:
+        pytest.skip("Set hostname with --host/-H to run this test (works for both locust and pytest)")
+    resp = fastsession.get("/")
+    resp.raise_for_status()
