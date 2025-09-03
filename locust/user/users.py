@@ -284,20 +284,23 @@ class HttpUser(User):
         self.client.trust_env = False
 
 
-class PytestUser(User):
+try:
     import pytest
 
-    abstract = True
-    functions: list[pytest.Function]
-    fixtures: list
+    class PytestUser(User):
+        abstract = True
+        functions: list[pytest.Function]
+        fixtures: list
 
-    @override
-    def run(self):  # type: ignore[override] # We actually DO want to change the default User behavior
-        self._state = LOCUST_STATE_RUNNING
-        self.fixtures = [next(f.fixturedef.func(self)) for f in self.functions]  # type: ignore[attr-defined]
-        while True:
-            for i in range(len(self.fixtures)):
-                try:  # try-except is for supporting .raise_for_status() in tests
-                    self.functions[i].obj(self.fixtures[i])
-                except (RequestException, ConnectionError) as e:
-                    logger.debug("%s\n%s", e, traceback.format_exc())
+        @override
+        def run(self):  # type: ignore[override] # We actually DO want to change the default User behavior
+            self._state = LOCUST_STATE_RUNNING
+            self.fixtures = [next(f.fixturedef.func(self)) for f in self.functions]  # type: ignore[attr-defined]
+            while True:
+                for i in range(len(self.fixtures)):
+                    try:  # try-except is for supporting .raise_for_status() in tests
+                        self.functions[i].obj(self.fixtures[i])
+                    except (RequestException, ConnectionError) as e:
+                        logger.debug("%s\n%s", e, traceback.format_exc())
+except ModuleNotFoundError:
+    pass
