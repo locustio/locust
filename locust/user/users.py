@@ -298,5 +298,9 @@ class PytestUser(User):
             for i in range(len(self.fixtures)):
                 try:  # try-except is for supporting .raise_for_status() in tests
                     self.functions[i].obj(self.fixtures[i])
-                except (RequestException, ConnectionError) as e:
+                except RequestException as e:
+                    if isinstance(e, ValueError):  # things like MissingSchema etc, lets not catch that
+                        raise
+                    logger.debug("%s\n%s", e, traceback.format_exc())
+                except ConnectionError as e:
                     logger.debug("%s\n%s", e, traceback.format_exc())
