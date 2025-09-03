@@ -6,7 +6,6 @@ import inspect
 import os
 import sys
 
-import pytest
 from _pytest.config import Config
 
 from ..shape import LoadTestShape
@@ -91,6 +90,11 @@ def load_locustfile(path) -> tuple[dict[str, type[User]], list[LoadTestShape]]:
 
 
 def load_locustfile_pytest(path) -> dict[str, type[User]]:
+    try:
+        import pytest
+    except ModuleNotFoundError:
+        return {}
+
     user_classes: dict[str, type[PytestUser]] = {}
     config = Config.fromdictargs({}, [path])
     config._do_configure()
@@ -115,4 +119,4 @@ def load_locustfile_pytest(path) -> dict[str, type[User]]:
                 user_classes[function.name] = type(function.name, (PytestUser,), {})
                 user_classes[function.name].functions = []
             user_classes[function.name].functions.append(function)
-    return user_classes  # type: ignore[return-value] PytestUser is a User, dont worry about it...
+    return user_classes  # type: ignore

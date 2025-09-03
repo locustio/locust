@@ -19,7 +19,6 @@ import traceback
 from collections.abc import Callable
 from typing import final
 
-import pytest
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from geventhttpclient.useragent import ConnectionError
@@ -281,6 +280,8 @@ class HttpUser(User):
 
 
 class PytestUser(User):
+    import pytest
+
     abstract = True
     functions: list[pytest.Function]
     fixtures: list
