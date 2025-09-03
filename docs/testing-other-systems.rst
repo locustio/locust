@@ -85,13 +85,12 @@ Locust provides a pytest fixture that enables you to use pytest syntax to define
 
 .. literalinclude:: ../examples/test_pytest.py
 
-.. code-block:: bash
+Example usage:
 
-    locust -H https://locust.cloud -f test_pytest.py
+.. code-block:: console
 
-.. code-block:: bash
-
-    pytest -H https://locust.cloud test_pytest.py
+    $ locust -H https://locust.cloud -f test_pytest.py
+    $ pytest -H https://locust.cloud test_pytest.py
 
 .. note::
 
