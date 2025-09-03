@@ -19,7 +19,7 @@ from .util import create_tls_cert
 
 class TestFastHttpSession(WebserverTestCase):
     def get_client(self):
-        return FastHttpSession(self.environment, base_url="http://127.0.0.1:%i" % self.port, user=None)
+        return FastHttpSession("http://127.0.0.1:%i" % self.port, self.environment.events.request, user=None)
 
     def test_get(self):
         s = self.get_client()
@@ -27,7 +27,7 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(200, r.status_code)
 
     def test_connection_error(self):
-        s = FastHttpSession(self.environment, "http://localhost:1", user=None)
+        s = FastHttpSession("http://localhost:1", self.environment.events.request, user=None)
         r = s.get("/", headers={"X-Test-Headers": "hello"})
         self.assertEqual(r.status_code, 0)
         self.assertEqual(None, r.content)
@@ -292,8 +292,8 @@ class TestFastHttpSession(WebserverTestCase):
             return context
 
         s = FastHttpSession(
-            self.environment,
             "https://127.0.0.1:%i" % self.port,
+            self.environment.events.request,
             ssl_context_factory=create_custom_context,
             user=None,
         )
@@ -323,8 +323,8 @@ class TestFastHttpSession(WebserverTestCase):
             return context
 
         s = FastHttpSession(
-            self.environment,
             "https://127.0.0.1:%i" % self.port,
+            self.environment.events.request,
             ssl_context_factory=custom_ssl_context,
             user=None,
         )
@@ -576,7 +576,7 @@ class TestFastHttpUserClass(WebserverTestCase):
         self.assertFalse("location" in resp.headers)
 
     def test_slow_redirect(self):
-        s = FastHttpSession(self.environment, "http://127.0.0.1:%i" % self.port, user=None)
+        s = FastHttpSession("http://127.0.0.1:%i" % self.port, self.environment.events.request, user=None)
         url = "/redirect?url=/redirect&delay=0.5"
         s.get(url)
         stats = self.runner.stats.get(url, method="GET")
@@ -828,7 +828,9 @@ class TestFastHttpSsl(LocustTestCase):
         self.web_ui.stop()
 
     def test_ssl_request_insecure(self):
-        s = FastHttpSession(self.environment, "https://127.0.0.1:%i" % self.web_port, insecure=True, user=None)
+        s = FastHttpSession(
+            "https://127.0.0.1:%i" % self.web_port, self.environment.events.request, insecure=True, user=None
+        )
         response = s.get("/")
         d = pq(response.content.decode("utf-8"))
 
