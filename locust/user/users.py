@@ -26,7 +26,7 @@ from geventhttpclient.useragent import ConnectionError
 from requests.exceptions import RequestException
 from urllib3 import PoolManager
 
-if sys.version_info >= (3, 11):
+if sys.version_info >= (3, 12):
     from typing import override
 else:
     from typing_extensions import override
