@@ -3,11 +3,13 @@ from locust.contrib.fasthttp import FastHttpSession
 import time
 
 
-def test_stuff(fastsession: FastHttpSession):  # session and fastsession are fixtures provided by Locust's pytest plugin
+# pytest will automatically discover any functions prefixed with "test_" as test cases
+# session and fastsession are pytest fixtures provided by Locust's pytest plugin
+def test_stuff(fastsession: FastHttpSession):
     resp = fastsession.get("https://locust.cloud/")
 
-    # The next line will raise a requests.Exception if the request failed.
-    # In Locust, the exception is ignored (and the function restarted), in pytest it will fail the test
+    # In Locust, standard request exception are ignored (and the function restarted)
+    # In pytest it fails the test
     resp.raise_for_status()
 
     # catch_response works just like in regular locustfiles
@@ -17,13 +19,13 @@ def test_stuff(fastsession: FastHttpSession):  # session and fastsession are fix
 
     helper_function(fastsession)  # you can call helper functions as needed
 
-    if fastsession.base_url:  # Set hostname with --host/-H to run this (works for both locust and pytest)
+    if fastsession.base_url:  # use --host/-H for relative paths (works for both locust and pytest)
         fastsession.get("/")
 
-    time.sleep(0.1)  # wait_time is not implemented in pytest, but you can use time.sleep() as needed
+    # unlike regular Locust Users, there's no wait_time, so use time.sleep instead
+    time.sleep(0.1)
 
 
-# This function doesn't have the test_ prefix/suffix and wont be detected as a test.
-# Locust uses pytest's collection method, so it won't see it either.
+# this is not a test case and won't be detected by pytest/locust
 def helper_function(fastsession: FastHttpSession):
     fastsession.get("https://locust.cloud/")
