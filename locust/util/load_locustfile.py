@@ -5,7 +5,6 @@ import importlib.util
 import inspect
 import os
 import sys
-from collections.abc import Mapping
 
 import pytest
 from _pytest.config import Config
@@ -91,8 +90,8 @@ def load_locustfile(path) -> tuple[dict[str, type[User]], list[LoadTestShape]]:
     return user_classes, shape_classes
 
 
-def load_locustfile_pytest(path) -> Mapping[str, type[User]]:
-    user_classes: Mapping[str, type[PytestUser]] = {}
+def load_locustfile_pytest(path) -> dict[str, type[User]]:
+    user_classes: dict[str, type[PytestUser]] = {}
     config = Config.fromdictargs({}, [path])
     config._do_configure()
     session = pytest.Session.from_config(config)
@@ -111,9 +110,9 @@ def load_locustfile_pytest(path) -> Mapping[str, type[User]]:
                     raise ValueError(f"Could not find fixture for parameter {name!r} in {function.name}")
                 if len(defs) > 1:
                     raise ValueError(f"Multiple fixtures found for parameter {name!r} in {function.name}: {defs}")
-                function.fixturedef = fm.getfixturedefs(name, function)[0]  # type: ignore[attr-defined]
+                function.fixturedef = defs[0]  # type: ignore[attr-defined]
             if not function.name in user_classes:
                 user_classes[function.name] = type(function.name, (PytestUser,), {})
                 user_classes[function.name].functions = []
             user_classes[function.name].functions.append(function)
-    return user_classes
+    return user_classes  # type: ignore[return-value] PytestUser is a User, dont worry about it...

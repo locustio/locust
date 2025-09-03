@@ -20,9 +20,11 @@ from collections.abc import Callable
 from typing import final
 
 import pytest
-import requests
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
+from geventhttpclient.useragent import ConnectionError
+from requests.exceptions import RequestException
+from typing_extensions import override
 from urllib3 import PoolManager
 
 logger = logging.getLogger(__name__)
@@ -283,12 +285,13 @@ class PytestUser(User):
     functions: list[pytest.Function]
     fixtures: list
 
+    @override
     def run(self):  # type: ignore[override] # We actually DO want to change the default User behavior
         self._state = LOCUST_STATE_RUNNING
         self.fixtures = [next(f.fixturedef.func(self)) for f in self.functions]  # type: ignore[attr-defined]
         while True:
             for i in range(len(self.fixtures)):
-                try:
+                try:  # try-except is for supporting .raise_for_status() in tests
                     self.functions[i].obj(self.fixtures[i])
-                except requests.exceptions.HTTPError as e:  # support .raise_for_status() in tests
+                except (RequestException, ConnectionError) as e:
                     logger.debug("%s\n%s", e, traceback.format_exc())

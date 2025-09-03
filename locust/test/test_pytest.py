@@ -3,15 +3,32 @@
 from locust.clients import HttpSession
 from locust.contrib.fasthttp import FastHttpSession
 
+import pytest
 
-def test_thing(session: HttpSession):
+
+def test_regular(session: HttpSession):
+    session.get("https://locust.cloud/")
+
+
+def test_fasthttp(fastsession: FastHttpSession):
+    fastsession.get("https://locust.cloud/")
+
+
+@pytest.mark.xfail(strict=True)
+def test_failure(session: HttpSession):
     session.get("https://locust.cloud/")
     resp = session.get("https://locust.cloud/doesnt_exist")
     # the next line will raise a requests.Exception, which will be caught and ignored by Locust.
-    # It still prevents the test from going to the next statement, and is very useful for failing the test case
-    # resp.raise_for_status()
+    # It still prevents the test from going to the next statement, and is useful for failing the test case when run as pytest
+    resp.raise_for_status()
     session.get("https://locust.cloud/should_never_run")
 
 
-def test_other_thing(fastsession: FastHttpSession):
+@pytest.mark.xfail(strict=True)
+def test_fasthttp_failure(fastsession: FastHttpSession):
     fastsession.get("https://locust.cloud/")
+    resp = fastsession.get("https://locust.cloud/doesnt_exist")
+    # the next line will raise a requests.Exception, which will be caught and ignored by Locust.
+    # It still prevents the test from going to the next statement, and is useful for failing the test case when run as pytest
+    resp.raise_for_status()
+    fastsession.get("https://locust.cloud/should_never_run")
