@@ -74,15 +74,28 @@ Performance/load testing AI services is a little different. While you could call
 
     OpenAIUser is experimental and may change without notice.
 
-Pytest
+pytest
 ======
 
-Locust provides a pytest fixture that enables you to use Pytest syntax to define Locust Users. It has multiple benefits:
+Locust provides a pytest fixture that enables you to use pytest syntax to define Locust Users. It has multiple benefits:
 
 * Simpler syntax than regular Locustfiles
 * You can run or even debug single tests easily from any editor that supports pytest
+* Your can potentially use the same tests for load testing and functional testing
 
 .. literalinclude:: ../examples/test_pytest.py
+
+.. code-block:: bash
+
+    locust -H https://locust.cloud -f test_pytest.py
+
+.. code-block:: bash
+
+    pytest -H https://locust.cloud test_pytest.py
+
+.. note::
+
+    This is experimental and may change without notice.
 
 Other examples
 ==============
