@@ -6,4 +6,4 @@ __all__ = (
     "User",
 )
 from .task import TaskSet, tag, task
-from .users import HttpUser, PytestUser, User  # noqa: F401
+from .users import HttpUser, User

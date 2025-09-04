@@ -1,7 +1,8 @@
 from locust import main
 from locust.argument_parser import parse_options
 from locust.main import create_environment
-from locust.user import HttpUser, PytestUser, TaskSet, User
+from locust.user import HttpUser, TaskSet, User
+from locust.user.users import PytestUser
 from locust.util.load_locustfile import is_user_class
 
 import filecmp
