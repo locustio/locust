@@ -63,17 +63,6 @@ SocketIO
 
 See :ref:`SocketIOUser <socketio>`
 
-OpenAI
-======
-
-Performance/load testing AI services is a little different. While you could call the OpenAI API using HttpUser or FastHttpUser, it is often convenient to use `the SDK <https://github.com/openai/openai-python>`_.
-
-.. literalinclude:: ../examples/openai_ex.py
-
-.. note::
-
-    OpenAIUser is experimental and may change without notice.
-
 pytest
 ======
 
@@ -101,6 +90,17 @@ Limitations:
 .. note::
 
     This is experimental and may change without notice.
+
+OpenAI
+======
+
+Performance/load testing AI services is a little different. While you could call the OpenAI API using HttpUser or FastHttpUser, it is often convenient to use `the SDK <https://github.com/openai/openai-python>`_.
+
+.. literalinclude:: ../examples/openai_ex.py
+
+.. note::
+
+    OpenAIUser is experimental and may change without notice.
 
 Other examples
 ==============
