@@ -89,7 +89,7 @@ Limitations:
 * For a more complex example, see  `<https://github.com/locustio/locust/blob/master/locust/test/test_pytest_locustfile.py>`_
 .. note::
 
-    This is experimental and may change without notice.
+    pytest support is experimental and may change without notice.
 
 OpenAI
 ======
