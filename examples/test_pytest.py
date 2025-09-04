@@ -13,7 +13,7 @@ def test_stuff(fastsession: FastHttpSession):
     resp.raise_for_status()
 
     # catch_response works just like in regular locustfiles
-    with fastsession.get("/", catch_response=True) as resp:
+    with fastsession.get("https://locust.cloud/", catch_response=True) as resp:
         if not resp.text or not "success" in resp.text:
             resp.failure("missing text in response")
 
