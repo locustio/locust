@@ -170,6 +170,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         ) as file_path:
             with TestProcess(f"locust -f {file_path} --headless", expect_return_code=42) as tp:
                 tp.expect("Starting Locust")
+                # if terminate happens too soon it might happen to be ignored, so wait for the first report:
+                tp.expect("failures/s")
                 tp.terminate()
                 tp.expect("Shutting down (exit code 42)")
                 tp.expect("Exit code in quit event 42", stream="stdout")
