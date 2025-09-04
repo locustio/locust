@@ -185,18 +185,20 @@ class HttpSession(requests.Session):
             name = self.request_name
 
         # prepend url with hostname unless it's already an absolute URL
-        url = self._build_url(url)
+        complete_url = self._build_url(url)
 
         start_time = time.time()
         start_perf_counter = time.perf_counter()
-        response = self._send_request_safe_mode(method, url, data=data, json=json, **kwargs)
+        response = self._send_request_safe_mode(method, complete_url, data=data, json=json, **kwargs)
         response_time = (time.perf_counter() - start_perf_counter) * 1000
 
-        request_before_redirect = (response.history and response.history[0] or response).request
-        url = request_before_redirect.url  # type: ignore
-
-        if not name:
-            name = request_before_redirect.path_url
+        if request_before_redirect := (response.history and response.history[0] or response).request:
+            complete_url = str(request_before_redirect.url)
+            if not name:
+                name = request_before_redirect.path_url
+        else:  # in rare cases, such as ProtocolError('Response ended prematurely'), response.request may be None
+            if not name:
+                name = str(url)
 
         if self.user:
             context = {**self.user.context(), **context}
@@ -210,7 +212,7 @@ class HttpSession(requests.Session):
             "response": response,
             "exception": None,
             "start_time": start_time,
-            "url": url,
+            "url": complete_url,
         }
 
         # get the length of the content, but if the argument stream is set to True, we take
