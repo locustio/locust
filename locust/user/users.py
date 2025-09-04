@@ -14,14 +14,23 @@ from locust.user.wait_time import constant
 from locust.util import deprecation
 
 import logging
+import sys
 import time
 import traceback
 from collections.abc import Callable
 from typing import final
 
+import pytest
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
+from geventhttpclient.useragent import ConnectionError
+from requests.exceptions import RequestException
 from urllib3 import PoolManager
+
+if sys.version_info >= (3, 12):
+    from typing import override
+else:
+    from typing_extensions import override
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +153,7 @@ class User(metaclass=UserMeta):
         self._state = LOCUST_STATE_RUNNING
         self._taskset_instance = DefaultTaskSet(self)
         try:
-            # run the TaskSet on_start method, if it has one
+            # run the User on_start method, if it has one
             try:
                 self.on_start()
             except Exception as e:
@@ -274,3 +283,24 @@ class HttpUser(User):
         The client supports cookies, and therefore keeps the session between HTTP requests.
         """
         self.client.trust_env = False
+
+
+class PytestUser(User):
+    abstract = True
+    functions: list[pytest.Function]
+    fixtures: list
+
+    @override
+    def run(self):  # type: ignore[override] # We actually DO want to change the default User behavior
+        self._state = LOCUST_STATE_RUNNING
+        self.fixtures = [next(f.fixturedef.func(self)) for f in self.functions]  # type: ignore[attr-defined]
+        while True:
+            for i in range(len(self.fixtures)):
+                try:  # try-except is for supporting .raise_for_status() in tests
+                    self.functions[i].obj(self.fixtures[i])
+                except RequestException as e:
+                    if isinstance(e, ValueError):  # things like MissingSchema etc, lets not catch that
+                        raise
+                    logger.debug("%s\n%s", e, traceback.format_exc())
+                except ConnectionError as e:
+                    logger.debug("%s\n%s", e, traceback.format_exc())

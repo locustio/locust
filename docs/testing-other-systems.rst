@@ -74,6 +74,34 @@ Performance/load testing AI services is a little different. While you could call
 
     OpenAIUser is experimental and may change without notice.
 
+pytest
+======
+
+Locust provides a pytest fixture that enables you to use pytest syntax to define Locust Users (currently only HttpUser and FastHttpUser). It has multiple benefits:
+
+* Simpler syntax than regular Locustfiles
+* Run or debug easily from any editor that supports pytest
+* Reliably reuse functional test cases for load testing
+
+.. literalinclude:: ../examples/test_pytest.py
+
+Example usage:
+
+.. code-block:: console
+
+    $ locust -H https://locust.cloud -f test_pytest.py
+    $ pytest -H https://locust.cloud test_pytest.py
+
+Limitations:
+
+* Combining this with other pytest fixtures or pytest plugins may have issues (do let us know though)
+* Each test case becomes a Locust User under the hood. We don't (yet) support weighting users.
+* Pytest detection happens if there are no regular User classes in the locustfile, so you can't combine them.
+* For a more complex example, see  `<https://github.com/locustio/locust/tree/master/locust/test/test_pytest.py>`_
+.. note::
+
+    This is experimental and may change without notice.
+
 Other examples
 ==============
 

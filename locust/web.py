@@ -320,7 +320,7 @@ class WebUI:
                     return jsonify({"success": False, "message": err_msg, "host": environment.host})
                 self._swarm_greenlet = gevent.spawn(environment.runner.start, user_count, spawn_rate)
                 self._swarm_greenlet.link_exception(greenlet_exception_handler)
-                response_data = {
+                response_data: dict[str, Any] = {
                     "success": True,
                     "message": "Swarming started",
                     "host": environment.host,

@@ -6,8 +6,12 @@ import inspect
 import os
 import sys
 
+import pytest
+from _pytest.config import Config
+
 from ..shape import LoadTestShape
 from ..user import User
+from ..user.users import PytestUser
 
 
 def is_user_class(item) -> bool:
@@ -81,5 +85,45 @@ def load_locustfile(path) -> tuple[dict[str, type[User]], list[LoadTestShape]]:
 
     # Find shape class, if any, return it
     shape_classes = [value() for value in vars(imported).values() if is_shape_class(value)]
-
     return user_classes, shape_classes
+
+
+def load_locustfile_pytest(path) -> dict[str, type[User]]:
+    """
+    Create User classes from pytest test functions.
+
+    It relies on some pytest internals to collect test functions and their fixtures,
+    but it should be reasonably stable for simple use cases.
+
+    Fixtures (like `session` and `fastsession`) are defined in `pytestplugin.py`
+
+    See `examples/test_pytest.py` and `locust/test/test_pytest_locustfile.py`
+    """
+    user_classes: dict[str, type[PytestUser]] = {}
+    # collect tests and set up fixture manager
+    config = Config.fromdictargs({}, [path])
+    config._do_configure()
+    session = pytest.Session.from_config(config)
+    config.hook.pytest_sessionstart(session=session)
+    session.perform_collect()
+    config.hook.pytest_collection_modifyitems(session=session, config=config, items=session.items)
+    fm = session._fixturemanager
+
+    for function in session.items:
+        if isinstance(function, pytest.Function):
+            sig = inspect.signature(function.obj)
+            function.kwargs = {}  # type: ignore[attr-defined]
+            for name in sig.parameters:
+                defs = fm.getfixturedefs(name, function)
+                if not defs:
+                    raise ValueError(f"Could not find fixture for parameter {name!r} in {function.name}")
+                if len(defs) > 1:
+                    raise ValueError(f"Multiple fixtures found for parameter {name!r} in {function.name}: {defs}")
+                function.fixturedef = defs[0]  # type: ignore[attr-defined]
+            if not function.name in user_classes:
+                user_classes[function.name] = type(function.name, (PytestUser,), {})
+                user_classes[function.name].functions = []
+            user_classes[function.name].functions.append(function)
+        else:
+            pass  # Skipping non-function item
+    return user_classes  # type: ignore

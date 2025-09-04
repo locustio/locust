@@ -170,6 +170,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         ) as file_path:
             with TestProcess(f"locust -f {file_path} --headless", expect_return_code=42) as tp:
                 tp.expect("Starting Locust")
+                # if terminate happens too soon it might happen to be ignored, so wait for the first report:
+                tp.expect("failures/s")
                 tp.terminate()
                 tp.expect("Shutting down (exit code 42)")
                 tp.expect("Exit code in quit event 42", stream="stdout")
@@ -369,6 +371,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     with TestProcess(f"locust -f {temp_dir} --headless -u 2 --exit-code-on-error 0") as tp:
                         tp.expect("Starting Locust")
                         tp.expect('All users spawned: {"TestUser": 1, "UserSubclass": 1} (2 total users)')
+                        # if terminate happens too soon it might happen to be ignored, so wait for the first report:
+                        tp.expect("failures/s")
                         tp.terminate()
                         tp.expect("Shutting down (exit code 0)")
 
@@ -1134,6 +1138,44 @@ class MyUser(HttpUser):
 
         if os.path.exists(output_filepath):
             os.remove(output_filepath)
+
+    def test_pytest_style_locustfile(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+import time
+
+def test_first(session):
+    resp = session.get("/")
+    resp.raise_for_status()
+    resp = session.get("/doesntexist")
+    time.sleep(10)
+
+def test_second(fastsession):
+    resp = fastsession.get("/")
+    resp.raise_for_status()
+    resp = fastsession.get("/doesntexist")
+    time.sleep(10)
+
+def test_xxcrash(session):
+    raise Exception("Only two users launched, and pytest sorts them alphabetically, this should never be called")
+"""
+        )
+        output_base = "locust_output"
+        output_filepath = f"{output_base}.json"
+        if os.path.exists(output_filepath):
+            os.remove(output_filepath)
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            with TestProcess(
+                f"locust -f {mocked.file_path} -H https://locust.cloud --headless -u 2 -r 10 -t 3 --exit-code-on-error 0",
+            ) as tp:
+                tp.expect(
+                    "/                                                                                  2     0(0.00%)",
+                )
+                tp.expect(
+                    "/doesntexist                                                                       2   2(100.00%)"
+                )
+                tp.not_expect_any("Traceback")
+                assert tp.proc.wait(3) == 0
 
 
 class DistributedIntegrationTests(ProcessIntegrationTest):

@@ -2,6 +2,7 @@ from locust import main
 from locust.argument_parser import parse_options
 from locust.main import create_environment
 from locust.user import HttpUser, TaskSet, User
+from locust.user.users import PytestUser
 from locust.util.load_locustfile import is_user_class
 
 import filecmp
@@ -245,3 +246,22 @@ class TestLoadLocustfile(LocustTestCase):
                 ]
             )
             self.assertEqual("test-profile-from-arg", options.profile)
+
+    def test_pytest_user(self):
+        content = """
+def test_thing(session):
+    session.get("https://locust.cloud/")
+    resp = session.get("https://locust.cloud/doesnt_exist")
+    # the next line will raise a requests.Exception, which will be caught and ignored by Locust, but
+    # it prevents the test from continuing, and is very useful for failing the test case
+    resp.raise_for_status()
+    session.get("https://locust.cloud/should_never_run")
+
+
+def test_other_thing(fastsession):
+    fastsession.get("https://locust.cloud/")
+        """
+        with mock_locustfile(content=content) as mocked:
+            user_classes = main.load_locustfile_pytest(mocked.file_path)
+            self.assertIn("test_other_thing", user_classes)
+            assert user_classes["test_thing"].__bases__[0] == PytestUser
