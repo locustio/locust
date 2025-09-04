@@ -80,8 +80,8 @@ pytest
 Locust provides a pytest fixture that enables you to use pytest syntax to define Locust Users (currently only HttpUser and FastHttpUser). It has multiple benefits:
 
 * Simpler syntax than regular Locustfiles
-* You can run or even debug single tests easily from any editor that supports pytest
-* Your can potentially use the same tests for load testing and functional testing
+* Run or debug single tests easily from any editor that supports pytest
+* Allows using the same test cases for load testing and functional testing
 
 .. literalinclude:: ../examples/test_pytest.py
 
