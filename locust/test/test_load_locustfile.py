@@ -262,6 +262,6 @@ def test_other_thing(fastsession):
     fastsession.get("https://locust.cloud/")
         """
         with mock_locustfile(content=content) as mocked:
-            user_classes, shape_classes = main.load_locustfile(mocked.file_path)
+            user_classes = main.load_locustfile_pytest(mocked.file_path)
             self.assertIn("test_other_thing", user_classes)
             assert user_classes["test_thing"].__bases__[0] == PytestUser
