@@ -96,6 +96,7 @@ Limitations:
 
 * Combining this with other pytest fixtures or pytest plugins may have issues (do let us know though)
 * Each test case becomes a Locust User under the hood. We don't (yet) support weighting users.
+* Pytest detection happens if there are no regular User classes in the locustfile, so you can't combine them.
 * For a more complex example, see  `<https://github.com/locustio/locust/tree/master/locust/test/test_pytest.py>`_
 .. note::
 
