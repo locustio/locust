@@ -30,7 +30,7 @@ from .html import get_html_report, process_html_filename
 from .input_events import input_listener
 from .log import greenlet_exception_logger, setup_logging
 from .user.inspectuser import print_task_ratio, print_task_ratio_json
-from .util.load_locustfile import load_locustfile
+from .util.load_locustfile import load_locustfile, load_locustfile_pytest
 
 # import external plugins if  installed to allow for registering custom arguments etc
 try:
@@ -123,9 +123,7 @@ def merge_locustfiles_content(
     #  Check docs for real supported task attribute signature for User\TaskSet class.
     available_user_tasks: dict[str, list[locust.TaskSet | Callable]] = {}
 
-    for _locustfile in locustfiles:
-        user_classes, shape_classes = load_locustfile(_locustfile)
-
+    def set_available_things(user_classes, shape_classes):
         # Setting Available Shape Classes
         for _shape_class in shape_classes:
             shape_class_name = type(_shape_class).__name__
@@ -151,6 +149,15 @@ def merge_locustfiles_content(
 
             available_user_classes[class_name] = class_definition
             available_user_tasks[class_name] = class_definition.tasks
+
+    for _locustfile in locustfiles:
+        user_classes, shape_classes = load_locustfile(_locustfile)
+        set_available_things(user_classes, shape_classes)
+
+    if not available_user_classes:  # only load pytest-based locustfiles if no regular ones were found
+        for _locustfile in locustfiles:
+            user_classes = load_locustfile_pytest(_locustfile)
+            set_available_things(user_classes, [])
 
     shape_class = list(available_shape_classes.values())[0] if available_shape_classes else None
 

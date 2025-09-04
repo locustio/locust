@@ -85,8 +85,6 @@ def load_locustfile(path) -> tuple[dict[str, type[User]], list[LoadTestShape]]:
 
     # Find shape class, if any, return it
     shape_classes = [value() for value in vars(imported).values() if is_shape_class(value)]
-    if not user_classes:
-        user_classes = load_locustfile_pytest(path)
     return user_classes, shape_classes
 
 
@@ -97,11 +95,12 @@ def load_locustfile_pytest(path) -> dict[str, type[User]]:
     It relies on some pytest internals to collect test functions and their fixtures,
     but it should be reasonably stable for simple use cases.
 
-    Fixtures (like `session` and `fastsession`) are defined in pytestplugin.py.
+    Fixtures (like `session` and `fastsession`) are defined in `pytestplugin.py`
 
-    See examples/test_pytest.py and locust/test/test_pytest_locustfile.py
+    See `examples/test_pytest.py` and `locust/test/test_pytest_locustfile.py`
     """
     user_classes: dict[str, type[PytestUser]] = {}
+    # collect tests and set up fixture manager
     config = Config.fromdictargs({}, [path])
     config._do_configure()
     session = pytest.Session.from_config(config)
@@ -125,4 +124,6 @@ def load_locustfile_pytest(path) -> dict[str, type[User]]:
                 user_classes[function.name] = type(function.name, (PytestUser,), {})
                 user_classes[function.name].functions = []
             user_classes[function.name].functions.append(function)
+        else:
+            pass  # Skipping non-function item
     return user_classes  # type: ignore
