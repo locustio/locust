@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.40.0
+======
+* Add support for pytests as locustfiles https://github.com/locustio/locust/pull/3200
+* Refactor FastHttpSession slightly https://github.com/locustio/locust/pull/3198
+* Update Dockerfile base to Python 3.13 https://github.com/locustio/locust/pull/3193
+
 2.39.1
 ======
 * Avoid broken gevent version for now by @cyberw in https://github.com/locustio/locust/pull/3196
