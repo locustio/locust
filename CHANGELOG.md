@@ -1,6 +1,15 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.39.1](https://github.com/locustio/locust/tree/2.39.1) (2025-08-29)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.39.0...2.39.1)
+
+**Merged pull requests:**
+
+- Avoid broken gevent version for now [\#3196](https://github.com/locustio/locust/pull/3196) ([cyberw](https://github.com/cyberw))
+- Remove duplicated line in pyproject.toml [\#3195](https://github.com/locustio/locust/pull/3195) ([JumboBear](https://github.com/JumboBear))
+
 ## [2.39.0](https://github.com/locustio/locust/tree/2.39.0) (2025-08-19)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.38.1...2.39.0)
