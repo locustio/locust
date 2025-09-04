@@ -1,4 +1,10 @@
 # pytest style locustfiles, can be run from both pytest and locust!
+#
+# Example use:
+#
+# locust -H https://locust.cloud -f test_pytest.py -u 2 test_regular test_host
+# pytest -H https://locust.cloud test_pytest.py
+
 from locust.clients import HttpSession
 from locust.contrib.fasthttp import FastHttpSession
 
