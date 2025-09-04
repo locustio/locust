@@ -371,6 +371,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     with TestProcess(f"locust -f {temp_dir} --headless -u 2 --exit-code-on-error 0") as tp:
                         tp.expect("Starting Locust")
                         tp.expect('All users spawned: {"TestUser": 1, "UserSubclass": 1} (2 total users)')
+                        # if terminate happens too soon it might happen to be ignored, so wait for the first report:
+                        tp.expect("failures/s")
                         tp.terminate()
                         tp.expect("Shutting down (exit code 0)")
 
