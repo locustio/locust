@@ -45,7 +45,7 @@ And then on each worker machine:
     locust -f - --worker --master-host <your master> --processes 4
 
 .. note::
-    The ``-f -`` argument tells Locust to get the locustfile from master instead of from its local filesystem. This feature was introduced in Locust 2.23.0.
+    The ``-f -`` argument tells Locust to get the locustfile from master instead of from its local filesystem. This only works for single locustfiles.
 
 Multiple machines, using locust-swarm
 =====================================
