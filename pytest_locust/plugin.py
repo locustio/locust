@@ -1,4 +1,4 @@
-# This is used in pytest-based, see examples/test_pytest.py
+# This is used in pytest style locustfiles, see examples/test_pytest.py
 from typing import TYPE_CHECKING
 
 import pytest
