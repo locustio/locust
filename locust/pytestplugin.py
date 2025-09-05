@@ -1,13 +1,15 @@
-from locust.clients import HttpSession
-from locust.contrib.fasthttp import FastHttpSession
-from locust.event import EventHook
-from locust.user.users import User
+# This is used in pytest-based, see examples/test_pytest.py
+from typing import TYPE_CHECKING
 
 import pytest
 
+if TYPE_CHECKING:
+    from locust.user.users import User
 
-class NoOpEvent(EventHook):
-    pass
+
+class NoOpEvent:  # Fake locust.event.EventHook
+    def fire(self, *, reverse=False, **kwargs):
+        pass
 
 
 _config: pytest.Config
@@ -20,7 +22,10 @@ def pytest_configure(config):
 
 
 @pytest.fixture
-def session(user: User | None = None):
+def session(user: "User | None" = None):
+    # lazy import to avoid gevent monkey patching unless you actually use this fixture
+    from locust.clients import HttpSession
+
     s = HttpSession(
         base_url=user.host if user else _config.getoption("--host"),
         request_event=user.environment.events.request if user else NoOpEvent(),
@@ -31,7 +36,10 @@ def session(user: User | None = None):
 
 
 @pytest.fixture
-def fastsession(user: User | None = None):
+def fastsession(user: "User | None" = None):
+    # lazy import to avoid gevent monkey patching unless you actually use this fixture
+    from locust.contrib.fasthttp import FastHttpSession
+
     s = FastHttpSession(
         base_url=user.host if user else _config.getoption("--host"),
         request_event=user.environment.events.request if user else NoOpEvent(),
