@@ -62,8 +62,8 @@ class SocketIOClient(socketio.Client):
 
     def on_message(self, event: str, data: str) -> None:
         """
-        This is the default handler for events received. You can override it for custom behavior,
-        or even register separate handlers using self.ws.on(event, handler)
+        This is the default handler for events received.
+        You can register separate handlers using self.sio.on(event, handler)
 
         Measuring response_time isn't obvious for for WebSockets/SocketIO so we set them to 0.
         Sometimes response time can be inferred from the event data (if it contains a timestamp)
@@ -87,12 +87,11 @@ class SocketIOUser(User):
 
     abstract = True
     options: dict = {}
-    """socketio.Client options, e.g. `{"reconnection_attempts": 1, "reconnection_delay": 2}`"""
-    ws: SocketIOClient
-    """The underlying :class:`socketio.Client` instance. Can be useful to call directly if you want to skip logging a requests."""
+    """socketio.Client options, e.g. `{"reconnection_attempts": 1, "reconnection_delay": 2, "logger": True, "engineio_logger": True}`"""
+    sio: SocketIOClient
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.ws = SocketIOClient(**self.options)
-        self.ws_greenlet = gevent.spawn(self.ws.wait)
-        self.ws.on("*", self.ws.on_message)
+        self.sio = SocketIOClient(**self.options)
+        self.sio_greenlet = gevent.spawn(self.sio.wait)
+        self.sio.on("*", self.sio.on_message)
