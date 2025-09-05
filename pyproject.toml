@@ -120,12 +120,12 @@ source = "vcs"
 version-file = "locust/_version.py"
 
 [tool.hatch.build.targets.sdist]
-include = ["locust"]
+include = ["locust", "pytest_locust"]
 exclude = ["locust/webui/*", "locust/test", "locust/build"]
 artifacts = ["locust/webui/dist"]
 
 [tool.hatch.build.targets.wheel]
-include = ["locust"]
+include = ["locust", "pytest_locust"]
 artifacts = ["locust/webui/dist"]
 
 [tool.hatch.version.raw-options]
@@ -265,4 +265,4 @@ python = ["3.12"]
 build = ["sphinx-build -b html docs/ docs/_build/"]
 
 [project.entry-points.pytest11]
-locust = "locust.pytestplugin"
+locust = "pytest_locust.plugin"
