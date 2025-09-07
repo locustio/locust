@@ -55,15 +55,6 @@ if TYPE_CHECKING:
 absolute_http_url_regexp = re.compile(r"^https?://", re.I)
 
 
-class LocustResponse(Response):
-    error: Exception | None = None
-
-    def raise_for_status(self) -> None:
-        if self.error:
-            raise self.error
-        Response.raise_for_status(self)
-
-
 class HttpSession(requests.Session):
     """
     Class for performing web requests and holding (session-) cookies between requests (in order
@@ -231,7 +222,7 @@ class HttpSession(requests.Session):
             rcm.__exit__(None, None, None)
         return rcm
 
-    def _send_request_safe_mode(self, method, url, **kwargs) -> Response | LocustResponse:
+    def _send_request_safe_mode(self, method, url, **kwargs) -> Response:
         """
         Send an HTTP request, and catch any exception that might occur due to connection problems.
 
@@ -242,11 +233,7 @@ class HttpSession(requests.Session):
         except (MissingSchema, InvalidSchema, InvalidURL):
             raise
         except RequestException as e:
-            r = LocustResponse()
-            r.error = e
-            r.status_code = 0
-            r.request = e.request  # type: ignore
-            return r
+            return ResponseContextManager(e)
 
     def get(
         self, url: str | bytes, *, data: Any = None, json: Any = None, **kwargs: Unpack[RESTKwargs]
@@ -323,7 +310,7 @@ class HttpSession(requests.Session):
         return self.request("DELETE", url, data=data, json=json, **kwargs)
 
 
-class ResponseContextManager(LocustResponse):
+class ResponseContextManager(Response):
     """
     A Response class that also acts as a context manager that provides the ability to manually
     control if an HTTP request should be marked as successful or a failure in Locust's statistics
@@ -333,14 +320,27 @@ class ResponseContextManager(LocustResponse):
     :py:meth:`failure <locust.clients.ResponseContextManager.failure>`.
     """
 
+    error: Exception | None = None
     _manual_result: bool | Exception | None
     _entered: bool
     _request_event: EventHook
     request_meta: Mapping[str, Any]
     _catch_response: bool
 
-    def __init__(self, *args, **kwargs):
-        raise TypeError("Use wrap_response on existing Response object, dont initialize directly")
+    def raise_for_status(self) -> None:
+        if self.error:
+            raise self.error
+        Response.raise_for_status(self)
+
+    def __init__(self, error: RequestException):
+        """
+        Direct instantiation is only used for errors caught when trying to send the request
+        Normally instances of this class are created from using wrap_response() on a Response object
+        """
+        super().__init__()
+        self.error = error
+        self.status_code = 0
+        self.request = error.request  # type: ignore
 
     @classmethod
     def wrap_response(
