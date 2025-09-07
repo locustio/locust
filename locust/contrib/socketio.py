@@ -1,63 +1,32 @@
 from locust import User
+from locust.event import EventHook
 
 import gevent
 import socketio
 
 
-class SocketIOUser(User):
-    """
-    SocketIOUser wraps an instance of :class:`socketio.Client` to log requests.
-    See example in :gh:`examples/socketio/socketio_ex.py`.
-    """
-
-    abstract = True
-    options: dict = {}
-    """socketio.Client options, e.g. `{"reconnection_attempts": 1, "reconnection_delay": 2}`"""
-    client: socketio.Client
-    """The underlying :class:`socketio.Client` instance. Can be useful to call directly if you want to skip logging a requests."""
-
-    def __init__(self, *args, **kwargs):
+class SocketIOClient(socketio.Client):
+    def __init__(self, request_event: EventHook, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.client = socketio.Client(**self.options)
-        self.ws_greenlet = gevent.spawn(self.client.wait)
-        self.client.on("*", self.on_message)
-
-    #
-    def on_message(self, event: str, data: str) -> None:
-        """
-        This is the default handler for events. You can override it for custom behavior,
-        or even register separate handlers using self.client.on(event, handler)
-
-        Measuring response_time isn't obvious for for WebSockets. Sometimes a response time
-        can be inferred from the event data (if it contains a timestamp) or related to
-        a message that you sent. Override this method in your User class to do that.
-        """
-        self.environment.events.request.fire(
-            request_type="WSR",
-            name=event,
-            response_time=0,
-            response_length=len(data or []),
-            exception=None,
-            context={},
-        )
+        self.request_event = request_event
 
     def connect(self, *args, **kwargs):
         """
         Wraps :meth:`socketio.Client.connect`.
         """
-        with self.environment.events.request.measure("WS", "connect") as _:
-            self.client.connect(*args, **kwargs)
+        with self.request_event.measure("WS", "connect") as _:
+            super().connect(*args, **kwargs)
 
-    def send(self, name, data=None, namespace=None) -> None:
+    def send(self, data, namespace=None, callback=None, name="Unnamed") -> None:
         """
         Wraps :meth:`socketio.Client.send`.
         """
         exception = None
         try:
-            self.client.send(data, namespace)
+            super().send(data, namespace, callback)
         except Exception as e:
             exception = e
-        self.environment.events.request.fire(
+        self.request_event.fire(
             request_type="WSS",
             name=name,
             response_time=0,
@@ -66,18 +35,18 @@ class SocketIOUser(User):
             context={},
         )
 
-    def emit(self, name, data=None, namespace=None, callback=None) -> None:
+    def emit(self, event, data=None, namespace=None, callback=None) -> None:
         """
         Wraps :meth:`socketio.Client.emit`.
         """
         exception = None
         try:
-            self.client.emit(name, data, namespace, callback)
+            super().emit(event, data, namespace, callback)
         except Exception as e:
             exception = e
-        self.environment.events.request.fire(
+        self.request_event.fire(
             request_type="WSE",
-            name=name,
+            name=str(event),
             response_time=0,
             response_length=len(data or []),
             exception=exception,
@@ -88,8 +57,41 @@ class SocketIOUser(User):
         """
         Wraps :meth:`socketio.Client.call`.
         """
-        with self.environment.events.request.measure("WSC", event) as _:
-            return self.client.call(event, data, *args, **kwargs)
+        with self.request_event.measure("WSC", event) as _:
+            return super().call(event, data, *args, **kwargs)
 
-    def on_stop(self):
-        self.client.disconnect()
+    def on_message(self, event: str, data: str) -> None:
+        """
+        This is the default handler for events received.
+        You can register separate handlers using self.sio.on(event, handler)
+
+        Measuring response_time isn't obvious for for WebSockets/SocketIO so we set them to 0.
+        Sometimes response time can be inferred from the event data (if it contains a timestamp)
+        or related to a message that you sent. Override this method in your User class to do that.
+        """
+        self.request_event.fire(
+            request_type="WSR",
+            name=event,
+            response_time=0,
+            response_length=len(data or []),
+            exception=None,
+            context={},
+        )
+
+
+class SocketIOUser(User):
+    """
+    SocketIOUser creates an instance of :class:`socketio.Client` to log requests.
+    See example in :gh:`examples/socketio/socketio_ex.py`.
+    """
+
+    abstract = True
+    options: dict = {}
+    """socketio.Client options, e.g. `{"reconnection_attempts": 1, "reconnection_delay": 2, "logger": True, "engineio_logger": True}`"""
+    sio: SocketIOClient
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.sio = SocketIOClient(**self.options)
+        self.sio_greenlet = gevent.spawn(self.sio.wait)
+        self.sio.on("*", self.sio.on_message)
