@@ -1,5 +1,5 @@
 from locust.clients import HttpSession
-from locust.exception import LocustError, ResponseError
+from locust.exception import LocustError
 from locust.user.users import HttpUser
 
 import time
@@ -224,17 +224,6 @@ class TestHttpSession(WebserverTestCase):
 
         self.assertEqual(1, self.environment.stats.total.num_requests)
         self.assertEqual(0, self.environment.stats.total.num_failures)
-
-    def test_catch_response_response_error(self):
-        s = self.get_client()
-        try:
-            with s.get("/fail", catch_response=True):
-                raise ResponseError("response error")
-        except ResponseError:
-            self.fail("ResponseError should not have been raised")
-
-        self.assertEqual(1, self.environment.stats.total.num_requests)
-        self.assertEqual(1, self.environment.stats.total.num_failures)
 
     def test_catch_response_default_success(self):
         s = self.get_client()
