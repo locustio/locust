@@ -249,7 +249,7 @@ class TestHttpSession(WebserverTestCase):
 
         self.environment.events.request.add_listener(on_request)
 
-        with s.get("/wrong_url/01", name="replaced_url_name"):
+        with s.get("/wrong_url/01", name="replaced_url_name", catch_response=True):
             pass
 
         self.assertIn("for url: replaced_url_name", str(kwargs["exception"]))
@@ -264,9 +264,12 @@ class TestHttpSession(WebserverTestCase):
 
     def test_missing_catch_response_true(self):
         s = self.get_client()
-        # incorrect usage, missing catch_response=True
-        with s.get("/fail") as resp:
-            self.assertRaises(LocustError, resp.success)
+
+        def forgot_to_pass_catch_response():
+            with s.get("/ultra_fast"):
+                pass
+
+        self.assertRaises(LocustError, forgot_to_pass_catch_response)
 
     def test_event_measure(self):
         kwargs = {}
