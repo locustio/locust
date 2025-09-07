@@ -5,7 +5,7 @@ import os
 import random
 
 
-class PostgresLocust(PostgresUser):
+class MyUser(PostgresUser):
     @task
     def run_select_query(self):
         self.client.execute_query(
