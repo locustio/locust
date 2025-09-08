@@ -101,7 +101,13 @@ def load_locustfile_pytest(path) -> dict[str, type[User]]:
     """
     user_classes: dict[str, type[PytestUser]] = {}
     # collect tests and set up fixture manager
-    config = Config.fromdictargs({}, [path])
+    config = Config.fromdictargs(
+        {},
+        [
+            "-q",  # suppress pytest loggings about "test session starts" and "collected 0 items" etc
+            path,
+        ],
+    )
     config._do_configure()
     session = pytest.Session.from_config(config)
     config.hook.pytest_sessionstart(session=session)
