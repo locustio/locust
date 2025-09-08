@@ -63,6 +63,10 @@ SocketIO
 
 See :ref:`SocketIOUser <socketio>`
 
+.. note::
+
+    SocketIO support is experimental and may change without notice.
+
 pytest
 ======
 
