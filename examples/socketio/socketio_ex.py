@@ -45,7 +45,7 @@ class MySIOHttpUser(SocketIOUser, HttpUser):
         self.client.get("/")
 
     def on_chat_message(self, event: str, data: str) -> None:
-        if event == "chat_message" and data.startswith("bar"):
+        if data.startswith("bar"):
             self.event.set()
         self.sio.on_message(event, data)
 
