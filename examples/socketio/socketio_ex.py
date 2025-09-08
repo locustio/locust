@@ -39,7 +39,7 @@ class MySIOHttpUser(SocketIOUser, HttpUser):
         Client.call(self.sio, "send_message", {"room": "room1", "message": "foo"})
         # Emit doesnt wait for confirmation
         self.sio.emit("send_message", {"room": "room1", "message": "bar"})
-        self.event.wait()  # wait for on_message to set this event
+        self.event.wait()  # wait for on_chat_message to set this event
         self.sio.call("leave_room", {"room": "room1"})
         # We've used multiple inheritance to combine this with HttpUser, so we can also make normal HTTP requests
         self.client.get("/")
