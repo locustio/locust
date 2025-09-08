@@ -20,10 +20,10 @@ class TestSocketIOUser(LocustTestCase):
 
         with patch.multiple(socketio.Client, connect=connect, emit=emit, call=call) as _mocks:
             user = SocketIOUser(self.environment)
-            user.connect("http://fake-url.com")
-            user.emit("test_event", {"data": "test_data"})
-            resp = user.call("test_2", {"data": "test_data"})
-            user.call("error", {})
+            user.sio.connect("http://fake-url.com")
+            user.sio.emit("test_event", {"data": "test_data"})
+            resp = user.sio.call("test_2", {"data": "test_data"})
+            user.sio.call("error", {})
             self.assertEqual(1, self.environment.stats.entries[("connect", "WS")].num_requests)
             self.assertEqual(1, self.environment.stats.entries[("test_event", "WSE")].num_requests)
             self.assertEqual(1, self.environment.stats.entries[("test_2", "WSC")].num_requests)
