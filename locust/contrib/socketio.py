@@ -92,6 +92,6 @@ class SocketIOUser(User):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.sio = SocketIOClient(**self.options)
+        self.sio = SocketIOClient(self.environment.events.request, **self.options)
         self.sio_greenlet = gevent.spawn(self.sio.wait)
         self.sio.on("*", self.sio.on_message)
