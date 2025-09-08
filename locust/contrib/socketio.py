@@ -1,6 +1,8 @@
 from locust import User
 from locust.event import EventHook
 
+from typing import Any
+
 import gevent
 import socketio
 
@@ -86,7 +88,7 @@ class SocketIOUser(User):
     """
 
     abstract = True
-    options: dict = {}
+    options: dict[str, Any] = {}
     """socketio.Client options, e.g. `{"reconnection_attempts": 1, "reconnection_delay": 2, "logger": True, "engineio_logger": True}`"""
     sio: SocketIOClient
 
