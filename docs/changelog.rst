@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.40.2
+======
+* Refactor clients.ResponseContextManager and fix GC issue https://github.com/locustio/locust/pull/3210
+* Refactor SocketIOUser to create separate SocketIOClient class https://github.com/locustio/locust/pull/3211
+
 2.40.1
 ======
 * Pytest plugin: Delay imports to avoid monkey patching until someone actually uses the fixtures https://github.com/locustio/locust/pull/3204 https://github.com/locustio/locust/pull/3205
