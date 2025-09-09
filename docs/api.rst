@@ -28,6 +28,11 @@ FastHttpUser class
     :members: wait_time, tasks, client, abstract, rest
     :noindex:
 
+MqttUser class
+==================
+.. autoclass:: locust.contrib.mqtt.MqttUser
+    :members 
+
 .. _socketio:
 
 SocketIOUser class
