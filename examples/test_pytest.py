@@ -8,11 +8,14 @@ import time
 def test_stuff(session: HttpSession):
     resp = session.get("https://locust.cloud/")
 
-    # In Locust's PytestUser, most Request exceptions are caught (and the test case restarted)
-    # In pytest any exceptions fail the test case
+    # Bad HTTP status codes in the response dont automatically raise an exception,
+    # so if that is what you want, you need to call:
     resp.raise_for_status()
+    # In Locust, request-related exceptions are caught (and the test case restarted),
+    # in pytest any exceptions fail the test case
 
-    # you can use --host/-H in pytest, just like with Locust, or you can set a default like this
+    # Just like with Locust, you can set a base URL using --host/-H when using pytest.
+    # Or you can set a default:
     if not session.base_url:
         session.base_url = "https://locust.cloud"
 
