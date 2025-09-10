@@ -780,8 +780,11 @@ class TestFastHttpCatchResponse(WebserverTestCase):
 
     def test_missing_catch_response_true(self):
         # incorrect usage, missing catch_response=True
-        with self.user.client.get("/fail") as resp:
-            self.assertRaises(LocustError, resp.success)
+        def missing_catch_response():
+            with self.user.client.get("/fail") as resp:
+                pass
+
+        self.assertRaises(LocustError, missing_catch_response)
 
     def test_rest_success(self):
         self.last_failure_exception = None

@@ -7,6 +7,7 @@
 
 from locust.clients import HttpSession
 from locust.contrib.fasthttp import FastHttpSession
+from locust.exception import CatchResponseError
 
 import pytest
 
@@ -27,6 +28,20 @@ def test_failure(session: HttpSession):
     # It still prevents the test from going to the next statement, and is useful for failing the test case when run as pytest
     resp.raise_for_status()
     session.get("https://locust.cloud/will_never_run")
+
+
+def test_catch_response(session: HttpSession):
+    with session.get("https://locust.cloud/", catch_response=True) as resp:
+        if not resp.text or not "asdfasdf" in resp.text:
+            resp.failure("important text was missing in response")
+    pytest.raises(CatchResponseError, resp.raise_for_status)
+
+
+def test_fasthttp_catch_response(fastsession: FastHttpSession):
+    with fastsession.get("https://locust.cloud/", catch_response=True) as resp:
+        if not resp.text or not "asdfasdf" in resp.text:
+            resp.failure("important text was missing in response")
+    pytest.raises(CatchResponseError, resp.raise_for_status)
 
 
 @pytest.mark.xfail(strict=True)

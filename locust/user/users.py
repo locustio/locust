@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from locust.clients import HttpSession
-from locust.exception import LocustError, StopUser
+from locust.exception import CatchResponseError, LocustError, StopUser
 from locust.user.task import (
     LOCUST_STATE_RUNNING,
     LOCUST_STATE_STOPPING,
@@ -301,6 +301,8 @@ class PytestUser(User):
                 except RequestException as e:
                     if isinstance(e, ValueError):  # things like MissingSchema etc, lets not catch that
                         raise
+                    logger.debug("%s\n%s", e, traceback.format_exc())
+                except CatchResponseError as e:
                     logger.debug("%s\n%s", e, traceback.format_exc())
                 except ConnectionError as e:
                     logger.debug("%s\n%s", e, traceback.format_exc())

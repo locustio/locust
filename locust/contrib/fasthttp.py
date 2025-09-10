@@ -161,7 +161,7 @@ class FastHttpSession:
         else:
             return f"{self.base_url}{path}"
 
-    def _send_request_safe_mode(self, method: str, url: str, **kwargs):
+    def _send_request_safe_mode(self, method: str, url: str, **kwargs) -> FastResponse:
         """
         Send an HTTP request, and catch any exception that might occur due to either
         connection problems, or invalid HTTP status codes
@@ -170,7 +170,9 @@ class FastHttpSession:
             return self.client.urlopen(url, method=method, **kwargs)
         except FAILURE_EXCEPTIONS as e:
             if hasattr(e, "response"):
-                r = e.response
+                # regular FastResponse object
+                resp = e.response
+                resp.error = e
             else:
                 req = self.client._make_request(
                     url,
@@ -179,9 +181,9 @@ class FastHttpSession:
                     payload=kwargs.get("payload"),
                     params=kwargs.get("params"),
                 )
-                r = ErrorResponse(url=url, request=req)
-            r.error = e
-            return r
+                # fake FastResponse object
+                resp = ErrorResponse(req, e)
+            return resp
 
     def request(
         self,
@@ -197,10 +199,9 @@ class FastHttpSession:
         allow_redirects: bool = True,
         context: dict = {},
         **kwargs,
-    ) -> ResponseContextManager | FastResponse:
+    ) -> ResponseContextManager:
         """
-        Send and HTTP request
-        Returns :py:class:`locust.contrib.fasthttp.FastResponse` object.
+        Send an HTTP request
 
         :param method: method for the new :class:`Request` object.
         :param url: path that will be concatenated with the base host URL that has been specified.
@@ -282,30 +283,31 @@ class FastHttpSession:
             except HTTPParseError as e:
                 request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
                 request_meta["exception"] = e
-                self.request_event.fire(**request_meta)
-                return response
+                rcm = ResponseContextManager(response, self.request_event, request_meta, catch_response)
+                if not catch_response:
+                    rcm.__exit__(None, None, None)
+                return rcm
 
+        rcm = ResponseContextManager(response, self.request_event, request_meta, catch_response)
         # Record the consumed time
         # Note: This is intentionally placed after we record the content_size above, since
         # we'll then trigger fetching of the body (unless stream=True)
         request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
 
-        if catch_response:
-            return ResponseContextManager(response, request_event=self.request_event, request_meta=request_meta)
-        else:
-            try:
-                response.raise_for_status()
-            except FAILURE_EXCEPTIONS as e:
-                request_meta["exception"] = e
+        try:
+            response.raise_for_status()
+        except FAILURE_EXCEPTIONS as e:
+            request_meta["exception"] = e  # type: ignore[assignment] # mypy, why are you so dumb..
 
-            self.request_event.fire(**request_meta)
-            return response
+        if not catch_response:  # if not using with-block, report the request immediately
+            rcm.__exit__(None, None, None)
+        return rcm
 
-    def delete(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | FastResponse:
+    def delete(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager:
         """Sends a DELETE request"""
         return self.request("DELETE", url, **kwargs)
 
-    def get(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | FastResponse:
+    def get(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager:
         """Sends a GET request"""
         return self.request("GET", url, **kwargs)
 
@@ -320,29 +322,25 @@ class FastHttpSession:
                 line, buffer = buffer.split("\n", 1)
                 yield line
 
-    def head(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | FastResponse:
+    def head(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager:
         """Sends a HEAD request"""
         return self.request("HEAD", url, **kwargs)
 
-    def options(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager | FastResponse:
+    def options(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager:
         """Sends a OPTIONS request"""
         return self.request("OPTIONS", url, **kwargs)
 
-    def patch(
-        self, url: str, data: str | dict | None = None, **kwargs: Unpack[PatchKwargs]
-    ) -> ResponseContextManager | FastResponse:
+    def patch(self, url: str, data: str | dict | None = None, **kwargs: Unpack[PatchKwargs]) -> ResponseContextManager:
         """Sends a PATCH request"""
         return self.request("PATCH", url, data=data, **kwargs)
 
     def post(
         self, url: str, data: str | dict | None = None, json: Any = None, **kwargs: Unpack[PostKwargs]
-    ) -> ResponseContextManager | FastResponse:
+    ) -> ResponseContextManager:
         """Sends a POST request"""
         return self.request("POST", url, data=data, json=json, **kwargs)
 
-    def put(
-        self, url: str, data: str | dict | None = None, **kwargs: Unpack[PutKwargs]
-    ) -> ResponseContextManager | FastResponse:
+    def put(self, url: str, data: str | dict | None = None, **kwargs: Unpack[PutKwargs]) -> ResponseContextManager:
         """Sends a PUT request"""
         return self.request("PUT", url, data=data, **kwargs)
 
@@ -563,8 +561,8 @@ class FastResponse(CompatResponse):
 
     def raise_for_status(self):
         """Raise any connection errors that occurred during the request"""
-        if hasattr(self, "error") and self.error:
-            raise self.error
+        if error := getattr(self, "error", None):
+            raise error
 
     @property
     def status_code(self) -> int:
@@ -595,7 +593,7 @@ class FastResponse(CompatResponse):
         )
 
 
-class ErrorResponse:
+class ErrorResponse(FastResponse):  # we're really just pretending to be a FastResponse
     """
     This is used as a dummy response object when geventhttpclient raises an error
     that doesn't have a real Response object attached. E.g. a socket error or similar
@@ -608,9 +606,9 @@ class ErrorResponse:
     text: str | None = None
     request: CompatRequest
 
-    def __init__(self, url: str, request: CompatRequest):
-        self.url = url
+    def __init__(self, request: CompatRequest, error: Exception):
         self.request = request
+        self.error = error
 
     def raise_for_status(self):
         raise self.error
@@ -662,8 +660,10 @@ class ResponseContextManager(FastResponse):
     _manual_result = None
     _entered = False
 
-    def __init__(self, response, request_event, request_meta):
+    def __init__(self, response, request_event, request_meta, catch_response: bool):
         # copy data from response to this object
+        # I wanted to change this to the approach from the HttpUser's ResponseContentManager.from_request,
+        # but it was such a mess
         self.__dict__ = response.__dict__
         try:
             self._cached_content = response._cached_content
@@ -671,16 +671,20 @@ class ResponseContextManager(FastResponse):
             pass
         self._request_event = request_event
         self.request_meta = request_meta
+        self._catch_response = catch_response
 
     def __enter__(self):
+        if not self._catch_response:
+            raise LocustError("In order to use a with-block for requests, you must also pass catch_response=True")
         self._entered = True
         return self
 
     def __exit__(self, exc, value, traceback):
         # if the user has already manually marked this response as failure or success
-        # we can ignore the default behaviour of letting the response code determine the outcome
+        # we ignore the default behaviour of letting the response code determine the outcome
         if self._manual_result is not None:
             if self._manual_result is True:
+                self.request_meta["exception"] = None
                 self._report_request()
             elif isinstance(self._manual_result, Exception):
                 self.request_meta["exception"] = self._manual_result
@@ -742,6 +746,13 @@ class ResponseContextManager(FastResponse):
         if not isinstance(exc, Exception):
             exc = CatchResponseError(exc)
         self._manual_result = exc
+
+    def raise_for_status(self):
+        """Raise any connection errors that occurred during the request"""
+        if not self._manual_result:
+            super().raise_for_status()
+        elif isinstance(self._manual_result, Exception):
+            raise self._manual_result
 
 
 class RestResponseContextManager(ResponseContextManager):

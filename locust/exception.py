@@ -28,6 +28,11 @@ class InterruptTaskSet(Exception):
 
 
 class StopUser(Exception):
+    """
+    This is only intended to be used internally in task.py.
+    Raising this in your locustfile in a full locust run may have unexpected results.
+    """
+
     pass
 
 
