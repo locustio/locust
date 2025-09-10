@@ -389,6 +389,7 @@ class MqttClient(mqtt.Client):
 
 
 class MqttUser(User):
+
     abstract = True
 
     host = "localhost"
