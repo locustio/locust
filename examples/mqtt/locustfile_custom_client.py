@@ -5,7 +5,7 @@ from locust.user.wait_time import between
 import time
 
 
-# extend the MqttClient class with your own custom implementation   
+# extend the MqttClient class with your own custom implementation
 class MyMqttClient(MqttClient):
     # you can override the event name with your custom implementation
     def _generate_event_name(self, event_type: str, qos: int, topic: str):
@@ -13,7 +13,6 @@ class MyMqttClient(MqttClient):
 
 
 class MyUser(MqttUser):
-
     host = "localhost"
     port = 1883
 
