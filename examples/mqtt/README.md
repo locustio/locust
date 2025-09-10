@@ -1,6 +1,5 @@
 # MQTT Load testing with Locust
 
-
 ## Prerequisites
 
 Have access to a running mqtt broker.
@@ -24,7 +23,9 @@ pip install locust[mqtt]
 ## Usage
 
 ```bash
-# Run with web UI
-locust -f locustfile.py --host=http://localhost:19530
+# Run simple example without web UI
+locust -f examples/mqtt/locustfile.py --headless
+# Run simple custom client example without web UI
+locust -f examples/mqtt/locustfile_custom_client.py --headless
 ```
 
