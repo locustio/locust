@@ -37,6 +37,13 @@ def test_catch_response(session: HttpSession):
     pytest.raises(CatchResponseError, resp.raise_for_status)
 
 
+def test_fasthttp_catch_response(fastsession: FastHttpSession):
+    with fastsession.get("https://locust.cloud/", catch_response=True) as resp:
+        if not resp.text or not "asdfasdf" in resp.text:
+            resp.failure("important text was missing in response")
+    pytest.raises(CatchResponseError, resp.raise_for_status)
+
+
 @pytest.mark.xfail(strict=True)
 def test_fasthttp_failure(fastsession: FastHttpSession):
     fastsession.get("https://locust.cloud/")
