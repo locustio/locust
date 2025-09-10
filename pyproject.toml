@@ -266,3 +266,11 @@ build = ["sphinx-build -b html docs/ docs/_build/"]
 
 [project.entry-points.pytest11]
 locust = "pytest_locust.plugin"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # sometimes, monkey patching happens too late 
+    # the proper fix for this is to run python -m gevent.monkey --module pytest ... 
+    # but that isnt always possible
+    "ignore::gevent.monkey.MonkeyPatchWarning" 
+]
