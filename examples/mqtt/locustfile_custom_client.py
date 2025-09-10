@@ -13,7 +13,7 @@ class MyMqttClient(MqttClient):
 
 
 class MyUser(MqttUser):
-    
+
     host = "localhost"
     port = 1883
 
@@ -25,7 +25,7 @@ class MyUser(MqttUser):
     # We'll probably want to throttle our publishing a bit: let's limit it to
     # 10-100 messages per second.
     wait_time = between(0.01, 0.1)
-    
+
     # override the client_cls with your custom MqttClient implementation
     client_cls: type[MyMqttClient] = MyMqttClient
 

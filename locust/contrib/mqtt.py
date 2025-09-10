@@ -25,7 +25,10 @@ SUBACK_FAILURE = 0x80
 REQUEST_TYPE = "MQTT"
 
 
-def _generate_random_id(length: int, alphabet: str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def _generate_random_id(
+    length: int,
+    alphabet: str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+):
     """Generate a random ID from the given alphabet.
 
     Args:
@@ -143,7 +146,9 @@ class MqttClient(mqtt.Client):
                 name="publish",
                 response_time=0,
                 response_length=0,
-                exception=AssertionError(f"Could not find message data for mid '{mid}' in _on_publish_cb."),
+                exception=AssertionError(
+                    f"Could not find message data for mid '{mid}' in _on_publish_cb."
+                ),
                 context={
                     "client_id": self.client_id,
                     "mid": mid,
@@ -153,7 +158,9 @@ class MqttClient(mqtt.Client):
             # fire successful publish event
             self.environment.events.request.fire(
                 request_type=REQUEST_TYPE,
-                name=self._generate_event_name("publish", request_context.qos, request_context.topic),
+                name=self._generate_event_name(
+                    "publish", request_context.qos, request_context.topic
+                ),
                 response_time=(cb_time - request_context.start_time) * 1000,
                 response_length=request_context.payload_size,
                 exception=None,
@@ -180,7 +187,9 @@ class MqttClient(mqtt.Client):
                 name="subscribe",
                 response_time=0,
                 response_length=0,
-                exception=AssertionError(f"Could not find message data for mid '{mid}' in _on_subscribe_cb."),
+                exception=AssertionError(
+                    f"Could not find message data for mid '{mid}' in _on_subscribe_cb."
+                ),
                 context={
                     "client_id": self.client_id,
                     "mid": mid,
@@ -190,10 +199,14 @@ class MqttClient(mqtt.Client):
             if SUBACK_FAILURE in granted_qos:
                 self.environment.events.request.fire(
                     request_type=REQUEST_TYPE,
-                    name=self._generate_event_name("subscribe", request_context.qos, request_context.topic),
+                    name=self._generate_event_name(
+                        "subscribe", request_context.qos, request_context.topic
+                    ),
                     response_time=(cb_time - request_context.start_time) * 1000,
                     response_length=0,
-                    exception=AssertionError(f"Broker returned an error response during subscription: {granted_qos}"),
+                    exception=AssertionError(
+                        f"Broker returned an error response during subscription: {granted_qos}"
+                    ),
                     context={
                         "client_id": self.client_id,
                         **request_context._asdict(),
@@ -203,7 +216,9 @@ class MqttClient(mqtt.Client):
                 # fire successful subscribe event
                 self.environment.events.request.fire(
                     request_type=REQUEST_TYPE,
-                    name=self._generate_event_name("subscribe", request_context.qos, request_context.topic),
+                    name=self._generate_event_name(
+                        "subscribe", request_context.qos, request_context.topic
+                    ),
                     response_time=(cb_time - request_context.start_time) * 1000,
                     response_length=0,
                     exception=None,
@@ -330,12 +345,16 @@ class MqttClient(mqtt.Client):
             payload_size=len(payload) if payload else 0,
         )
 
-        publish_info = super().publish(topic, payload=payload, qos=qos, retain=retain, properties=properties)
+        publish_info = super().publish(
+            topic, payload=payload, qos=qos, retain=retain, properties=properties
+        )
 
         if publish_info.rc != mqtt.MQTT_ERR_SUCCESS:
             self.environment.events.request.fire(
                 request_type=REQUEST_TYPE,
-                name=self._generate_event_name("publish", request_context.qos, request_context.topic),
+                name=self._generate_event_name(
+                    "publish", request_context.qos, request_context.topic
+                ),
                 response_time=0,
                 response_length=0,
                 exception=publish_info.rc,
@@ -373,7 +392,9 @@ class MqttClient(mqtt.Client):
         if result != mqtt.MQTT_ERR_SUCCESS:
             self.environment.events.request.fire(
                 request_type=REQUEST_TYPE,
-                name=self._generate_event_name("subscribe", request_context.qos, request_context.topic),
+                name=self._generate_event_name(
+                    "subscribe", request_context.qos, request_context.topic
+                ),
                 response_time=0,
                 response_length=0,
                 exception=result,
@@ -406,7 +427,10 @@ class MqttUser(User):
     def __init__(self, environment: Environment):
         super().__init__(environment)
         self.client: MqttClient = self.client_cls(
-            environment=self.environment, transport=self.transport, client_id=self.client_id, protocol=self.protocol
+            environment=self.environment,
+            transport=self.transport,
+            client_id=self.client_id,
+            protocol=self.protocol,
         )
 
         if self.tls_context:
