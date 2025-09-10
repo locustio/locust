@@ -233,7 +233,7 @@ class HttpSession(requests.Session):
         except (MissingSchema, InvalidSchema, InvalidURL):
             raise
         except RequestException as e:
-            return ResponseContextManager(e)
+            return ResponseContextManager(e)  # this is inconsistent, we should fix this some time
 
     def get(
         self, url: str | bytes, *, data: Any = None, json: Any = None, **kwargs: Unpack[RESTKwargs]
@@ -321,16 +321,23 @@ class ResponseContextManager(Response):
     """
 
     error: Exception | None = None
-    _manual_result: bool | Exception | None
+    _manual_result: bool | Exception | None = None
     _entered: bool
     _request_event: EventHook
     request_meta: Mapping[str, Any]
     _catch_response: bool
 
     def raise_for_status(self) -> None:
-        if self.error:
-            raise self.error
-        Response.raise_for_status(self)
+        """Wrapper around :py:meth:`Response.raise_for_status <requests.Response.raise_for_status>`
+        but also taking into account explicit failure()/success() calls.
+        """
+        __tracebackhide__ = True
+        if not self._manual_result:
+            if self.error:
+                raise self.error
+            Response.raise_for_status(self)
+        elif isinstance(self._manual_result, Exception):
+            raise self._manual_result
 
     def __init__(self, error: RequestException):
         """
@@ -340,6 +347,8 @@ class ResponseContextManager(Response):
         super().__init__()
         self.error = error
         self.status_code = 0
+        # this is a bit of an assumption but it is probably worth not to have to pass this around:
+        self._catch_response = True
         self.request = error.request  # type: ignore
 
     @classmethod
