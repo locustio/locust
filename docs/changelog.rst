@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.40.4
+======
+* Avoid pytest style locustfiles capturing keyboard input https://github.com/locustio/locust/pull/3219
+
 2.40.3
 ======
 * Make ResponseContextManager.raise_for_status() consider calls to failure() and success() https://github.com/locustio/locust/pull/3217
