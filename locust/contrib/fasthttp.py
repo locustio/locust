@@ -199,7 +199,7 @@ class FastHttpSession:
         allow_redirects: bool = True,
         context: dict = {},
         **kwargs,
-    ) -> ResponseContextManager:
+    ) -> ResponseContextManager:  # technically it can also return FastResponse
         """
         Send an HTTP request
 
@@ -226,6 +226,8 @@ class FastHttpSession:
             Another side effect of setting stream to True is that the time for downloading the response
             content will not be accounted for in the request time that is reported by Locust.
         :param allow_redirects: (optional) Set to True by default.
+        :return: A :py:class:`FastResponse <locust.contrib.fasthttp.FastResponse>` object if catch_response is False, and
+            :py:class:`ResponseContextManager <locust.contrib.fasthttp.ResponseContextManager>` if True.
         """
         # prepend url with hostname unless it's already an absolute URL
         built_url = self._build_url(url)
@@ -283,12 +285,12 @@ class FastHttpSession:
             except HTTPParseError as e:
                 request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
                 request_meta["exception"] = e
-                rcm = ResponseContextManager(response, self.request_event, request_meta, catch_response)
-                if not catch_response:
-                    rcm.__exit__(None, None, None)
-                return rcm
+                if catch_response:
+                    return ResponseContextManager(response, self.request_event, request_meta, catch_response)
+                else:
+                    self.request_event.fire(**request_meta)
+                    return response  # type: ignore[return-value]
 
-        rcm = ResponseContextManager(response, self.request_event, request_meta, catch_response)
         # Record the consumed time
         # Note: This is intentionally placed after we record the content_size above, since
         # we'll then trigger fetching of the body (unless stream=True)
@@ -299,9 +301,12 @@ class FastHttpSession:
         except FAILURE_EXCEPTIONS as e:
             request_meta["exception"] = e  # type: ignore[assignment] # mypy, why are you so dumb..
 
-        if not catch_response:  # if not using with-block, report the request immediately
-            rcm.__exit__(None, None, None)
-        return rcm
+        if catch_response:
+            return ResponseContextManager(response, self.request_event, request_meta, catch_response)
+        else:
+            # if not using with-block, report the request immediately
+            self.request_event.fire(**request_meta)
+            return response  # type: ignore[return-value]
 
     def delete(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager:
         """Sends a DELETE request"""
