@@ -105,7 +105,7 @@ def load_locustfile_pytest(path) -> dict[str, type[User]]:
         {},
         [
             "-q",  # suppress pytest loggings about "test session starts" and "collected 0 items" etc
-            "-s",  # dont capture stdin (locust uses it for opening a browser and for input events)
+            "-s",  # dont capture stdin (locust uses it for opening a browser and other input events)
             path,
         ],
     )
