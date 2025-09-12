@@ -82,8 +82,10 @@ Example usage:
 
 .. code-block:: console
 
-    $ locust -H https://locust.cloud -f test_pytest.py
-    $ pytest -H https://locust.cloud test_pytest.py
+    $ locust -f test_pytest.py
+    $ pytest test_pytest.py
+    # if you have issues with gevent patching (RecursionError: maximum recursion depth exceeded)
+    $ python -m gevent.monkey -m pytest test_pytest.py
 
 Limitations:
 
