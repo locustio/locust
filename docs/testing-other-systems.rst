@@ -90,12 +90,12 @@ Example usage:
 Limitations:
 
 * Each test case becomes a Locust User under the hood. We don't (yet) support weighting users.
-* Pytest detection happens if there are no regular User classes in the locustfile, so you can't combine them.
-* Combining this with other pytest fixtures or pytest plugins may have issues (do let us know though)
+* Locust will only look for pytest-style tests if there are no regular User classes defined.
+* Adding other pytest fixtures or pytest plugins may cause issues (do let us know though)
 * For a more complex example, see  `<https://github.com/locustio/locust/blob/master/locust/test/test_pytest_locustfile.py>`_
 .. note::
 
-    pytest support is experimental and may change without notice.
+    pytest support is experimental and may change without a new major release version.
 
 OpenAI
 ======
