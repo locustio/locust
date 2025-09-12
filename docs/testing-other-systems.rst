@@ -70,7 +70,7 @@ See :ref:`SocketIOUser <socketio>`
 pytest
 ======
 
-Locust allows you to use `pytest <https://docs.pytest.org/>`_ syntax to define Locust Users using pytest fixtures (currently ``HttpUser`` and ``FastHttpUser``). It has multiple benefits:
+Locust allows you to use `pytest <https://docs.pytest.org/>`_ syntax to define Locust Users using pytest fixtures (currently :py:class:`HttpSession <locust.clients.HttpSession>` and :py:class:`FastHttpSession <locust.contrib.fasthttp.FastHttpSession>`). It has multiple benefits:
 
 * Simpler syntax than regular Locustfiles
 * Run or debug easily from any editor that supports pytest
@@ -93,6 +93,7 @@ Limitations:
 * Locust will only look for pytest-style tests if there are no regular User classes defined.
 * Adding other pytest fixtures or pytest plugins may cause issues (do let us know though)
 * For a more complex example, see  `<https://github.com/locustio/locust/blob/master/locust/test/test_pytest_locustfile.py>`_
+
 .. note::
 
     pytest support is experimental and may change without a new major release version.
