@@ -80,7 +80,7 @@ Locust allows you to use `pytest <https://docs.pytest.org/>`_ syntax to define L
 
 Example usage:
 
-.. code-block:: console
+.. code-block:: sh
 
     $ locust -f test_pytest.py
     $ pytest test_pytest.py
