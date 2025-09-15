@@ -116,7 +116,7 @@ Locust uses to `paho-mqtt https://github.com/eclipse-paho/paho.mqtt.python`_ to 
 
 .. literalinclude:: ../examples/mqtt/locustfile.py
 
-Alternatively, if you need more control over the Mqtt client you can implement your own custom implementation.
+Alternatively, if you need more control over the Mqtt client you can use a custom implementation.
 
 .. literalinclude:: ../examples/mqtt/locustfile_custom_mqtt_client.py
 
