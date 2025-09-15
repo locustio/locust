@@ -109,6 +109,22 @@ Performance/load testing AI services is a little different. While you could call
 
     OpenAIUser is experimental and may change without notice.
 
+MQTT
+====
+
+Locust uses to `paho-mqtt https://github.com/eclipse-paho/paho.mqtt.python`_ to provide Mqtt connection capabilities.
+
+.. literalinclude:: ../examples/mqtt/locustfile.py
+
+Alternatively, if you need more control over the Mqtt client you can implement your own custom implementation.
+
+.. literalinclude:: ../examples/mqtt/locustfile_custom_mqtt_client.py
+
+.. note::
+
+    MqttUser is experimental and may change without notice.
+
+
 Other examples
 ==============
 
