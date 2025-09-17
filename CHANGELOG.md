@@ -1,6 +1,72 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.40.5](https://github.com/locustio/locust/tree/2.40.5) (2025-09-17)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.40.4...2.40.5)
+
+**Merged pull requests:**
+
+- Avoid wrapping fast response in response context manager when not needed [\#3222](https://github.com/locustio/locust/pull/3222) ([cyberw](https://github.com/cyberw))
+
+## [2.40.4](https://github.com/locustio/locust/tree/2.40.4) (2025-09-11)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.40.3...2.40.4)
+
+**Merged pull requests:**
+
+- Avoid pytest style locustfiles capturing keyboard input [\#3219](https://github.com/locustio/locust/pull/3219) ([cyberw](https://github.com/cyberw))
+
+## [2.40.3](https://github.com/locustio/locust/tree/2.40.3) (2025-09-11)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.40.2...2.40.3)
+
+**Merged pull requests:**
+
+- Bump requests minimum version [\#3218](https://github.com/locustio/locust/pull/3218) ([cyberw](https://github.com/cyberw))
+- Make ResponseContextManager.raise\_for\_status\(\) consider calls to failure\(\) and success\(\) [\#3217](https://github.com/locustio/locust/pull/3217) ([cyberw](https://github.com/cyberw))
+
+## [2.40.2](https://github.com/locustio/locust/tree/2.40.2) (2025-09-08)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.40.1...2.40.2)
+
+**Fixed bugs:**
+
+- Python 3.13: KeyError: 'name' on request\_meta in ResponseContextManager.\_\_exit\_\_ [\#3207](https://github.com/locustio/locust/issues/3207)
+
+**Merged pull requests:**
+
+- Refactor SocketIOUser to create separate SocketIOClient class [\#3211](https://github.com/locustio/locust/pull/3211) ([cyberw](https://github.com/cyberw))
+- Refactor clients.ResponseContextManager and fix gc issue [\#3210](https://github.com/locustio/locust/pull/3210) ([cyberw](https://github.com/cyberw))
+
+## [2.40.1](https://github.com/locustio/locust/tree/2.40.1) (2025-09-05)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.40.0...2.40.1)
+
+**Fixed bugs:**
+
+- 2.40.0 with pytest and xdist [\#3202](https://github.com/locustio/locust/issues/3202)
+
+**Merged pull requests:**
+
+- Move pytest plugin to its own directory, to prevent accidental import [\#3205](https://github.com/locustio/locust/pull/3205) ([cyberw](https://github.com/cyberw))
+- Pytest plugin: Delay imports to avoid monkey patching until someone uses the fixtures [\#3204](https://github.com/locustio/locust/pull/3204) ([cyberw](https://github.com/cyberw))
+
+## [2.40.0](https://github.com/locustio/locust/tree/2.40.0) (2025-09-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.39.1...2.40.0)
+
+**Fixed bugs:**
+
+- HTTP response 0 [\#3199](https://github.com/locustio/locust/issues/3199)
+
+**Merged pull requests:**
+
+- Avoid exception in HttpUser if requests has lost track of the request it made [\#3201](https://github.com/locustio/locust/pull/3201) ([cyberw](https://github.com/cyberw))
+- Support pytests as locustfiles [\#3200](https://github.com/locustio/locust/pull/3200) ([cyberw](https://github.com/cyberw))
+- Refactor FastHttpSession to be more like HttpSession [\#3198](https://github.com/locustio/locust/pull/3198) ([cyberw](https://github.com/cyberw))
+- Update Dockerfile base to Python 3.13 [\#3193](https://github.com/locustio/locust/pull/3193) ([adaamz](https://github.com/adaamz))
+
 ## [2.39.1](https://github.com/locustio/locust/tree/2.39.1) (2025-08-29)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.39.0...2.39.1)
@@ -396,10 +462,6 @@ The most important changes can also be found in [the documentation](https://docs
 ## [2.32.6](https://github.com/locustio/locust/tree/2.32.6) (2025-01-13)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.32.5...2.32.6)
-
-**Closed issues:**
-
-- Suggestion to Add  "iter\_lines"  Support for  "FastHttpUser"  in Locust [\#3018](https://github.com/locustio/locust/issues/3018)
 
 **Merged pull requests:**
 
