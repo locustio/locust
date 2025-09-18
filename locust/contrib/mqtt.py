@@ -112,9 +112,9 @@ class MqttClient(mqtt.Client):
         self.on_publish = self._on_publish_cb  # type: ignore[assignment]
 
         if protocol == mqtt.MQTTv5:
-            self.on_disconnect = self._on_disconnect_cb_v5 
-            self.on_connect = self._on_connect_cb_v5 
-            self.on_subscribe = self._on_subscribe_cb_v5 
+            self.on_disconnect = self._on_disconnect_cb_v5
+            self.on_connect = self._on_connect_cb_v5
+            self.on_subscribe = self._on_subscribe_cb_v5
         else:
             self.on_disconnect = self._on_disconnect_cb_v3x # type: ignore[assignment]
             self.on_connect = self._on_connect_cb_v3x # type: ignore[assignment]

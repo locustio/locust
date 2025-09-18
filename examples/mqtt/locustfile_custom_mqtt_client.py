@@ -1,4 +1,4 @@
-from locust import TaskSet, task
+from locust import task
 from locust.contrib.mqtt import MqttClient, MqttUser
 from locust.user.wait_time import between
 
