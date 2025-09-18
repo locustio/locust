@@ -28,16 +28,14 @@ class MyUser(MqttUser):
     # override the client_cls with your custom MqttClient implementation
     client_cls: type[MqttClient] = MyMqttClient
 
-    @task
-    class MyTasks(TaskSet):
-        # Sleep for a while to allow the client time to connect.
-        # This is probably not the most "correct" way to do this: a better method
-        # might be to add a gevent.event.Event to the MqttClient's on_connect
-        # callback and wait for that (with a timeout) here.
-        # However, this works well enough for the sake of an example.
-        def on_start(self):
-            time.sleep(5)
+    # Sleep for a while to allow the client time to connect.
+    # This is probably not the most "correct" way to do this: a better method
+    # might be to add a gevent.event.Event to the MqttClient's on_connect
+    # callback and wait for that (with a timeout) here.
+    # However, this works well enough for the sake of an example.
+    def on_start(self):
+        time.sleep(5)
 
-        @task
-        def say_hello(self):
-            self.client.publish("hello/locust", b"hello world locust custom client")
+    @task
+    def say_hello(self):
+        self.client.publish("hello/locust", b"hello world locust custom client")
