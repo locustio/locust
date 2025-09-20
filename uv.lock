@@ -977,6 +977,7 @@ dependencies = [
     { name = "geventhttpclient" },
     { name = "locust-cloud" },
     { name = "msgpack" },
+    { name = "paho-mqtt" },
     { name = "psutil" },
     { name = "pytest" },
     { name = "python-engineio" },
@@ -993,6 +994,9 @@ dependencies = [
 [package.optional-dependencies]
 milvus = [
     { name = "pymilvus" },
+]
+mqtt = [
+    { name = "paho-mqtt" },
 ]
 
 [package.dev-dependencies]
@@ -1032,6 +1036,9 @@ lint = [
 milvus = [
     { name = "pymilvus" },
 ]
+mqtt = [
+    { name = "paho-mqtt" },
+]
 release = [
     { name = "twine" },
 ]
@@ -1052,6 +1059,8 @@ requires-dist = [
     { name = "geventhttpclient", specifier = ">=2.3.1" },
     { name = "locust-cloud", specifier = ">=1.27.0" },
     { name = "msgpack", specifier = ">=1.0.0" },
+    { name = "paho-mqtt", specifier = ">=2.1.0" },
+    { name = "paho-mqtt", marker = "extra == 'mqtt'", specifier = ">=2.1.0" },
     { name = "psutil", specifier = ">=5.9.1" },
     { name = "pymilvus", marker = "extra == 'milvus'", specifier = ">=2.5.0" },
     { name = "pytest", specifier = ">=8.3.3,<9.0.0" },
@@ -1065,7 +1074,7 @@ requires-dist = [
     { name = "typing-extensions", marker = "python_full_version < '3.12'", specifier = ">=4.6.0" },
     { name = "werkzeug", specifier = ">=2.0.0" },
 ]
-provides-extras = ["milvus"]
+provides-extras = ["milvus", "mqtt"]
 
 [package.metadata.requires-dev]
 build = [
@@ -1102,6 +1111,7 @@ lint = [
     { name = "types-requests", specifier = ">=2.32.0.20240622,<3.0.0" },
 ]
 milvus = [{ name = "pymilvus", specifier = ">=2.5.0" }]
+mqtt = [{ name = "paho-mqtt", specifier = ">=2.1.0" }]
 release = [{ name = "twine", specifier = ">=5.1.1,<6.0.0" }]
 test = [
     { name = "cryptography", specifier = ">=43.0.1,<44.0.0" },
@@ -1634,6 +1644,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a1/d4/1fc4078c65507b51b96ca8f8c3ba19e6a61c8253c72794544580a7b6c24d/packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f", size = 165727, upload-time = "2025-04-19T11:48:59.673Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484", size = 66469, upload-time = "2025-04-19T11:48:57.875Z" },
+]
+
+[[package]]
+name = "paho-mqtt"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/39/15/0a6214e76d4d32e7f663b109cf71fb22561c2be0f701d67f93950cd40542/paho_mqtt-2.1.0.tar.gz", hash = "sha256:12d6e7511d4137555a3f6ea167ae846af2c7357b10bc6fa4f7c3968fc1723834", size = 148848, upload-time = "2024-04-29T19:52:55.591Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c4/cb/00451c3cf31790287768bb12c6bec834f5d292eaf3022afc88e14b8afc94/paho_mqtt-2.1.0-py3-none-any.whl", hash = "sha256:6db9ba9b34ed5bc6b6e3812718c7e06e2fd7444540df2455d2c51bd58808feee", size = 67219, upload-time = "2024-04-29T19:52:48.345Z" },
 ]
 
 [[package]]
