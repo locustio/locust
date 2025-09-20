@@ -26,7 +26,7 @@ class MyUser(MqttUser):
     wait_time = between(0.01, 0.1)
 
     # override the client_cls with your custom MqttClient implementation
-    client_cls: type[MqttClient] = MyMqttClient
+    client_cls = MyMqttClient
 
     # Sleep for a while to allow the client time to connect.
     # This is probably not the most "correct" way to do this: a better method
