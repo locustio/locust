@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.41.0
+======
+* Suggest possibly misspelled command line arguments (Did you mean ...) https://github.com/locustio/locust/pull/3224
+* Add Feedback Form https://github.com/locustio/locust/pull/3223
+* Add MqttUser https://github.com/locustio/locust/pull/3216
+
 2.40.5
 ======
 * Avoid wrapping FastResponse in response context manager when not needed https://github.com/locustio/locust/pull/3222
