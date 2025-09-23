@@ -221,7 +221,7 @@ class MqttClient(mqtt.Client):
         mid: int,
         reason_codes: list[ReasonCode],
         properties: Properties,
-    ):
+    ) -> None:
         granted_qos = [rc.value for rc in reason_codes]
         return self._on_subscribe_cb_v3x(client, userdata, mid, granted_qos)
 
@@ -269,8 +269,8 @@ class MqttClient(mqtt.Client):
         userdata: typing.Any,
         disconnect_flags: mqtt.DisconnectFlags,
         reasoncode: ReasonCode,
-        properties: Properties,
-    ):
+        properties: Properties | None,
+    ) -> None:
         return self._on_disconnect_cb(client, userdata, reasoncode)
 
     def _on_connect_cb(
@@ -319,9 +319,9 @@ class MqttClient(mqtt.Client):
         userdata: typing.Any,
         connect_flags: mqtt.ConnectFlags,
         reasoncode: ReasonCode,
-        properties: Properties,
-    ):
-        return self._on_connect_cb(client, userdata, {}, reasoncode)
+        properties: Properties | None,
+    ) -> None:
+        self._on_connect_cb(client, userdata, {}, reasoncode)
 
     def publish(
         self,
