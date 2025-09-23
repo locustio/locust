@@ -62,12 +62,9 @@ class LocustArgumentParser(configargparse.ArgumentParser):
     """
 
     def error(self, message):
-        # Extract the unknown option from the error message
         if "unrecognized arguments:" in message:
             bad_arg = message.split("unrecognized arguments:")[1].strip().split()[0]
-            # Compare with known arguments
-            options = [action.option_strings for action in self._actions]
-            options = [opt for sublist in options for opt in sublist]  # flatten
+            options = [opt for action in self._actions for opt in action.option_strings]
             suggestion = difflib.get_close_matches(bad_arg, options, n=1)
             if suggestion:
                 message += f"\nDid you mean '{suggestion[0]}'?"
