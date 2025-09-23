@@ -294,8 +294,9 @@ class TestArgumentParser(LocustTestCase):
                 )
 
     def test_unknown_command_line_arg(self):
+        err = StringIO()
         with self.assertRaises(SystemExit):
-            with mock.patch("sys.stderr", new=StringIO()):
+            with mock.patch("sys.stderr", new=err):
                 parse_options(
                     args=[
                         "-f",
@@ -309,10 +310,13 @@ class TestArgumentParser(LocustTestCase):
                         "--reset-stats",
                         "--stop-timeout",
                         "5",
-                        "--unknown-flag",
+                        "--unknown-flag-extra-files",
                         "MyUserClass",
                     ]
                 )
+        err.seek(0)
+        stderr = err.read()
+        self.assertIn("Did you mean '--extra-files'", stderr)
 
     def test_custom_argument(self):
         @locust.events.init_command_line_parser.add_listener
