@@ -66,9 +66,6 @@ class PublishedMessageContext(typing.NamedTuple):
     payload_size: int
 
 
-
-
-
 class MqttClient(mqtt.Client):
     def __init__(
         self,
@@ -116,9 +113,9 @@ class MqttClient(mqtt.Client):
             self.on_connect = self._on_connect_cb_v5
             self.on_subscribe = self._on_subscribe_cb_v5
         else:
-            self.on_disconnect = self._on_disconnect_cb_v3x # type: ignore[assignment]
-            self.on_connect = self._on_connect_cb_v3x # type: ignore[assignment]
-            self.on_subscribe = self._on_subscribe_cb_v3x # type: ignore[assignment]
+            self.on_disconnect = self._on_disconnect_cb_v3x  # type: ignore[assignment]
+            self.on_connect = self._on_connect_cb_v3x  # type: ignore[assignment]
+            self.on_subscribe = self._on_subscribe_cb_v3x  # type: ignore[assignment]
 
         self._publish_requests: dict[int, PublishedMessageContext] = {}
         self._subscribe_requests: dict[int, tuple[int, str, float]] = {}
@@ -368,7 +365,11 @@ class MqttClient(mqtt.Client):
 
     def subscribe(
         self,
-        topic: str | tuple[str, int] | tuple[str, SubscribeOptions] | list[tuple[str, int]] | list[tuple[str, SubscribeOptions]],
+        topic: str
+        | tuple[str, int]
+        | tuple[str, SubscribeOptions]
+        | list[tuple[str, int]]
+        | list[tuple[str, SubscribeOptions]],
         qos: int = 0,
         options: SubscribeOptions | None = None,
         properties: Properties | None = None,
@@ -455,7 +456,7 @@ class MqttUser(User):
             )
 
         self.client.connect_async(
-            host=self.host, # type: ignore
+            host=self.host,  # type: ignore
             port=self.port,
         )
         self.client.loop_start()
