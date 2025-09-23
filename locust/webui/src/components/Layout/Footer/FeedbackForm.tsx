@@ -71,8 +71,6 @@ export default function FeedbackForm() {
             <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2, my: 2 }}>
               <TextField label='Email' name='email' required type='email' />
               <TextField label='Name' name='name' />
-              <TextField label='Company' name='company' />
-
               <TextField label='Message' multiline name='message' required rows={3} />
               {!!errorMessage && <Alert severity='error'>{errorMessage}</Alert>}
 
