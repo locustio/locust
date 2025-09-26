@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import SendIcon from '@mui/icons-material/Send';
 import { Alert, Box, Button, TextField, Typography } from '@mui/material';
 
 import Form from 'components/Form/Form';
@@ -67,18 +68,27 @@ export default function FeedbackForm() {
             </Typography>
           </Box>
         ) : (
-          <Form<IFeedbackForm> onSubmit={onSubmitFeedback}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2, my: 2 }}>
-              <TextField label='Email' name='email' required type='email' />
-              <TextField label='Name' name='name' />
-              <TextField label='Message' multiline name='message' required rows={3} />
-              {!!errorMessage && <Alert severity='error'>{errorMessage}</Alert>}
+          <Box>
+            <Typography sx={{ mb: 3, mt: 1 }} variant='h6'>
+              Send us your feedback
+            </Typography>
+            <Form<IFeedbackForm> onSubmit={onSubmitFeedback}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2, my: 2 }}>
+                <TextField label='Email' name='email' required type='email' />
+                <TextField label='Name' name='name' />
+                <TextField label='Message' multiline name='message' required rows={3} />
+                {!!errorMessage && <Alert severity='error'>{errorMessage}</Alert>}
 
-              <LoadingButton isLoading={isLoading} type='submit'>
-                Submit
-              </LoadingButton>
-            </Box>
-          </Form>
+                <LoadingButton
+                  isLoading={isLoading}
+                  sx={{ display: 'flex', columnGap: 2 }}
+                  type='submit'
+                >
+                  Send <SendIcon sx={{ mt: -0.5 }} />
+                </LoadingButton>
+              </Box>
+            </Form>
+          </Box>
         )}
       </Modal>
     </>

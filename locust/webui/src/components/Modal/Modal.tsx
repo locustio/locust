@@ -26,6 +26,7 @@ export default function Modal({ open, onClose, children }: IModal) {
           boxShadow: 24,
           borderRadius: 4,
           border: '3px solid black',
+          width: { xs: '95vw' },
           p: 4,
         }}
       >
