@@ -1,5 +1,3 @@
-import { Box } from '@mui/material';
-
 import Table from 'components/Table/Table';
 import ViewColumnSelector from 'components/ViewColumnSelector/ViewColumnSelector';
 import { swarmTemplateArgs } from 'constants/swarm';
@@ -39,13 +37,7 @@ export default function StatsTable({ stats, tableStructure = baseTableStructure 
     useSelectViewColumns(tableStructure);
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: { xs: 'column', lg: 'row-reverse', alignItems: 'flex-start' },
-        columnGap: 1,
-      }}
-    >
+    <>
       <ViewColumnSelector
         addColumn={addColumn}
         removeColumn={removeColumn}
@@ -53,6 +45,6 @@ export default function StatsTable({ stats, tableStructure = baseTableStructure 
         structure={tableStructure}
       />
       <Table<ISwarmStat> hasTotalRow rows={stats} structure={filteredStructure} />
-    </Box>
+    </>
   );
 }
