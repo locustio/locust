@@ -49,4 +49,10 @@ def fastsession(user: "User | None" = None):
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
-    parser.addoption("--host", "-H", action="store", default=None)
+    try:
+        parser.addoption("--host", "-H", action="store", default=None)
+    except ValueError as e:
+        if "already added" in str(e):
+            pass  # just ignore duplicate definition, if someone other plugin defines it
+        else:
+            raise
