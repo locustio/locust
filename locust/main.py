@@ -437,7 +437,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     if options.run_time:
         if options.worker:
-            logger.info("--run-time specified for a worker node will be ignored.")
+            logger.debug("--run-time specified for a worker node will be ignored.")
 
     if options.csv_prefix:
         base_csv_file = os.path.basename(options.csv_prefix)
@@ -491,7 +491,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         logger.info("The --autostart argument is implied by --headless, no need to set both.")
 
     if options.autostart and options.worker:
-        logger.info("The --autostart argument has no meaning on a worker.")
+        logger.debug("The --autostart argument has no meaning on a worker.")
 
     def assign_equal_weights(environment, **kwargs):
         environment.assign_equal_weights()
