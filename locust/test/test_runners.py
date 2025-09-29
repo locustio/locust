@@ -4169,7 +4169,7 @@ class TestWorkerRunner(LocustTestCase):
             message = client.get_messages("logs")[0]
 
             self.assertEqual(
-                "The worker attempted to send more than 10 log lines in one interval. Further log sending was disabled for this worker.",
+                "The worker attempted to send more than 70 log lines in one interval. Further log sending was disabled for this worker.",
                 message.data.get("logs", [])[-1],
             )
             self.assertEqual(worker.client_id, message.data.get("worker_id"))
