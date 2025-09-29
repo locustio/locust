@@ -21,7 +21,7 @@ class BaseClient(ABC):
         pass
 
     @abstractmethod
-    def create_collection(self, schema, index_params) -> None:
+    def create_collection(self, schema, index_params, **kwargs) -> None:
         pass
 
     @abstractmethod
@@ -80,11 +80,12 @@ class MilvusV2Client(BaseClient):
     def close(self):
         self.client.close()
 
-    def create_collection(self, schema, index_params):
+    def create_collection(self, schema, index_params, **kwargs):
         self.client.create_collection(
             collection_name=self.collection_name,
             schema=schema,
             index_params=index_params,
+            **kwargs,
         )
 
     def insert(self, data):
@@ -299,7 +300,7 @@ class MilvusUser(User):
         timeout: int = 60,
         schema: CollectionSchema | None = None,
         index_params: IndexParams | None = None,
-        **client_kwargs,
+        **kwargs,  # enable_dynamic_field, num_shards, consistency_level etc. ref: https://milvus.io/api-reference/pymilvus/v2.6.x/MilvusClient/Collections/create_collection.md
     ):
         super().__init__(environment)
 
@@ -317,7 +318,7 @@ class MilvusUser(User):
             timeout=timeout,
         )
         if schema is not None:
-            self.client.create_collection(schema=schema, index_params=index_params)
+            self.client.create_collection(schema=schema, index_params=index_params, **kwargs)
 
     @staticmethod
     def _fire_event(request_type: str, name: str, result: dict[str, Any]):
