@@ -4159,7 +4159,7 @@ class TestWorkerRunner(LocustTestCase):
             logger.addHandler(log_handler)
             log_line = "spamming log"
 
-            for _ in range(11):
+            for _ in range(71):
                 logger.info(log_line)
 
             worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
