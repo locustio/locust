@@ -21,6 +21,36 @@ class SimpleMilvusUser(MilvusUser):
         self.dimension = 128
         self.test_vectors = [[random.random() for _ in range(self.dimension)] for _ in range(10)]
 
+    def __init__(self, environment):
+        # Define collection schema
+        schema = CollectionSchema(
+            fields=[
+                FieldSchema(name="id", dtype=DataType.INT64, is_primary=True),
+                FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=128),
+                FieldSchema(name="name", dtype=DataType.VARCHAR, max_length=50),
+            ],
+            description="Test collection",
+        )
+
+        # Define index parameters
+        index_params = IndexParams()
+        index_params.add_index(
+            field_name="vector",
+            index_type="IVF_FLAT",
+            metric_type="L2",
+        )
+
+        super().__init__(
+            environment,
+            uri=environment.host,
+            collection_name="load_test_collection",
+            schema=schema,
+            index_params=index_params,
+            enable_dynamic_field=True,
+            num_shards=2,
+            consistency_level="Eventually",
+        )
+
     @task(3)
     def insert_data(self):
         """Insert data into Milvus."""
@@ -50,30 +80,3 @@ class SimpleMilvusUser(MilvusUser):
         """Delete data."""
         delete_id = random.randint(1, 10000)
         self.delete(filter=f"id == {delete_id}")
-
-    def __init__(self, environment):
-        # Define collection schema
-        schema = CollectionSchema(
-            fields=[
-                FieldSchema(name="id", dtype=DataType.INT64, is_primary=True),
-                FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=128),
-                FieldSchema(name="name", dtype=DataType.VARCHAR, max_length=50),
-            ],
-            description="Test collection",
-        )
-
-        # Define index parameters
-        index_params = IndexParams()
-        index_params.add_index(
-            field_name="vector",
-            index_type="IVF_FLAT",
-            metric_type="L2",
-        )
-
-        super().__init__(
-            environment,
-            uri=environment.host,
-            collection_name="load_test_collection",
-            schema=schema,
-            index_params=index_params,
-        )
