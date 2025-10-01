@@ -5,9 +5,14 @@ Changelog Highlights
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
 
-2.41.2
+2.41.3
 ======
 * Make workers correctly ignore the --run-time flag https://github.com/locustio/locust/pull/3230
+
+2.41.2
+======
+* Fix Alignment of View Column Selector https://github.com/locustio/locust/pull/3226
+* Pytest plugin: Workaround issue with potential duplicate --host argument definition https://github.com/locustio/locust/pull/3228
 
 2.41.1
 ======
