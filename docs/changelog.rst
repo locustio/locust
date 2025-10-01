@@ -4,6 +4,15 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+
+2.41.2
+======
+* Make workers correctly ignore the --run-time flag https://github.com/locustio/locust/pull/3230
+
+2.41.1
+======
+* Fix incorrect url for feedback form
+
 2.41.0
 ======
 * Suggest possibly misspelled command line arguments (Did you mean ...) https://github.com/locustio/locust/pull/3224
