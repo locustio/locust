@@ -1056,7 +1056,7 @@ requires-dist = [
     { name = "flask-login", specifier = ">=0.6.3" },
     { name = "gevent", specifier = ">=24.10.1,<25.8.1" },
     { name = "geventhttpclient", specifier = ">=2.3.1" },
-    { name = "locust-cloud", specifier = ">=1.27.1" },
+    { name = "locust-cloud", specifier = ">=1.27.2" },
     { name = "msgpack", specifier = ">=1.0.0" },
     { name = "paho-mqtt", marker = "extra == 'mqtt'", specifier = ">=2.1.0" },
     { name = "psutil", specifier = ">=5.9.1" },
@@ -1120,7 +1120,7 @@ test = [
 
 [[package]]
 name = "locust-cloud"
-version = "1.27.1"
+version = "1.27.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "configargparse" },
@@ -1130,9 +1130,9 @@ dependencies = [
     { name = "python-socketio", extra = ["client"] },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/63/55/bfb342028f6942523184f7d0653b4b2047362d7c93f574803a8dd7750466/locust_cloud-1.27.1.tar.gz", hash = "sha256:ea2790fc14eb78a816852444c4eca00aeb351ebeacb88fca16b8aa0fd41b740d", size = 454359, upload-time = "2025-09-25T06:47:47.475Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/df/63/330c4a7a1d114c0687d1ad58326ad27fa128208f0166eb000331a5e9b72f/locust_cloud-1.27.2.tar.gz", hash = "sha256:0d80d63ba722a45c39dcdce66ca5a389944db2123a5fff59d1438e4ee3701258", size = 454487, upload-time = "2025-10-01T12:26:45.752Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/74/00/6a28b06722c0271030e2290f5d4b33fc5f9464e795f9f4d5d7346faea68b/locust_cloud-1.27.1-py3-none-any.whl", hash = "sha256:d2609af89bd7af7a33bda10b32a8edc50f116188c8da019f1785212678b55a11", size = 409249, upload-time = "2025-09-25T06:47:46.251Z" },
+    { url = "https://files.pythonhosted.org/packages/38/ef/49ecd09f0717494f1303b2889a4cdb4b2984465cf6c738812e9f23170b93/locust_cloud-1.27.2-py3-none-any.whl", hash = "sha256:cd21ee33e5ea721c0e4f3c0e691e9c637fc88783d234b060ae1693c26010604e", size = 409313, upload-time = "2025-10-01T12:26:43.682Z" },
 ]
 
 [[package]]
