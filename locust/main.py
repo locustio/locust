@@ -584,11 +584,11 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                 headless_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
                 headless_master_greenlet.link_exception(greenlet_exception_handler)
 
-        if options.run_time:
-            logger.info(f"Run time limit set to {options.run_time} seconds")
-            spawn_run_time_quit_greenlet()
-        elif not options.worker and not environment.shape_class:
-            logger.info("No run time limit set, use CTRL+C to interrupt")
+            if options.run_time:
+                logger.info(f"Run time limit set to {options.run_time} seconds")
+                spawn_run_time_quit_greenlet()
+            elif not environment.shape_class:
+                logger.info("No run time limit set, use CTRL+C to interrupt")
 
     if options.csv_prefix:
         gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
