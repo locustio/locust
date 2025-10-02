@@ -105,5 +105,5 @@ def get_html_report(
             "percentiles_to_chart": stats.PERCENTILES_TO_CHART,
             "profile": str(environment.profile) if environment.profile else None,
         },
-        theme=theme,
+        theme="dark" if theme == "dark" else "light",
     )
