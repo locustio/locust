@@ -5,8 +5,8 @@ import time
 
 # pytest/locust will discover any functions prefixed with "test_" as test cases.
 # session and fastsession are pytest fixtures provided by Locust's pytest plugin.
-def test_stuff(session: HttpSession):
-    resp = session.get("https://locust.cloud/")
+def test_stuff(session):
+    resp = session.get("https://www.locust.cloud/")
 
     # Bad HTTP status codes in the response dont automatically raise an exception,
     # so if that is what you want, you need to call:
@@ -17,7 +17,7 @@ def test_stuff(session: HttpSession):
     # Just like with Locust, you can set a base URL using --host/-H when using pytest.
     # Or you can set a default:
     if not session.base_url:
-        session.base_url = "https://locust.cloud"
+        session.base_url = "https://www.locust.cloud"
 
     # catch_response works just like in regular locustfiles
     with session.get("/", catch_response=True) as resp:
