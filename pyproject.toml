@@ -225,7 +225,7 @@ all = [
 fail_fast = "pytest -x {args:locust/test/test_main.py}"
 
 # Run pytest-style example locustfile in pytest
-test_pytest = "pytest -H https://locust.cloud examples/test_pytest.py"
+test_pytest = "pytest -H https://www.locust.cloud examples/test_pytest.py"
 
 ## CI integration testing
 
