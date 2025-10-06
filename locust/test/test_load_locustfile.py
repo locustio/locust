@@ -250,16 +250,16 @@ class TestLoadLocustfile(LocustTestCase):
     def test_pytest_user(self):
         content = """
 def test_thing(session):
-    session.get("https://locust.cloud/")
-    resp = session.get("https://locust.cloud/doesnt_exist")
+    session.get("https://www.locust.cloud/")
+    resp = session.get("https://www.locust.cloud/doesnt_exist")
     # the next line will raise a requests.Exception, which will be caught and ignored by Locust, but
     # it prevents the test from continuing, and is very useful for failing the test case
     resp.raise_for_status()
-    session.get("https://locust.cloud/should_never_run")
+    session.get("https://www.locust.cloud/should_never_run")
 
 
 def test_other_thing(fastsession):
-    fastsession.get("https://locust.cloud/")
+    fastsession.get("https://www.locust.cloud/")
         """
         with mock_locustfile(content=content) as mocked:
             user_classes = main.load_locustfile_pytest(mocked.file_path)
