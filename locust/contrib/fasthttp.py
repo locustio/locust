@@ -630,7 +630,7 @@ class LocustBadStatusCode(ConnectionError):
 class LocustUserAgent(UserAgent):
     response_type = FastResponse
     request_type = FastRequest
-    valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 304, 307])
+    valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 304, 307, 308])
 
     def __init__(self, client_pool: HTTPClientPool | None = None, **kwargs):
         super().__init__(**kwargs)
