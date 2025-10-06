@@ -22,7 +22,7 @@ def test_stuff(session):
     # catch_response works just like in regular locustfiles
     with session.get("/", catch_response=True) as resp:
         if not resp.text or not "Load" in resp.text:
-            resp.failure(f"important text was missing in response {resp.status_code} {resp.text}")
+            resp.failure("important text was missing in response")
 
     # raise_for_status also respects calls to resp.failure()/.success()
     # so this will raise an exception and fail the test case if "Load" was missing
