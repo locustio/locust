@@ -5,6 +5,19 @@ Changelog Highlights
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
 
+2.41.6
+======
+* Officially support Python 3.14 https://github.com/locustio/locust/pull/3235
+
+2.41.5
+======
+* Fix FastHttpUser handling of 308 response code
+* Fix Unsafe Template Arg https://github.com/locustio/locust/pull/3232
+
+2.41.4
+======
+(skipped because of failed publishing)
+
 2.41.3
 ======
 * Make workers correctly ignore the --run-time flag https://github.com/locustio/locust/pull/3230
