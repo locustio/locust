@@ -1,6 +1,70 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.41.6](https://github.com/locustio/locust/tree/2.41.6) (2025-10-10)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.41.5...2.41.6)
+
+**Merged pull requests:**
+
+- Officially support Python 3.14 and test it [\#3235](https://github.com/locustio/locust/pull/3235) ([cyberw](https://github.com/cyberw))
+
+## [2.41.5](https://github.com/locustio/locust/tree/2.41.5) (2025-10-06)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.41.4...2.41.5)
+
+**Merged pull requests:**
+
+- Use www host instead of bare locust.cloud in examples and tests [\#3234](https://github.com/locustio/locust/pull/3234) ([cyberw](https://github.com/cyberw))
+
+## [2.41.4](https://github.com/locustio/locust/tree/2.41.4) (2025-10-06)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.41.3...2.41.4)
+
+**Merged pull requests:**
+
+- Fix Unsafe Template Arg [\#3232](https://github.com/locustio/locust/pull/3232) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
+## [2.41.3](https://github.com/locustio/locust/tree/2.41.3) (2025-10-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.41.2...2.41.3)
+
+**Merged pull requests:**
+
+- Make workers correctly ignore the --run-time flag [\#3230](https://github.com/locustio/locust/pull/3230) ([cyberw](https://github.com/cyberw))
+- Enhance MilvusUser constructor to support additional collection parameters [\#3229](https://github.com/locustio/locust/pull/3229) ([zhuwenxing](https://github.com/zhuwenxing))
+
+## [2.41.2](https://github.com/locustio/locust/tree/2.41.2) (2025-09-29)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.41.1...2.41.2)
+
+**Fixed bugs:**
+
+- Locust pytest plugin option '--host' conflicts with common user options; suggest renaming to '--locust-host' [\#3227](https://github.com/locustio/locust/issues/3227)
+
+**Merged pull requests:**
+
+- Pytest plugin: Workaround issue with potential duplicate --host argument definition [\#3228](https://github.com/locustio/locust/pull/3228) ([cyberw](https://github.com/cyberw))
+- Fix Alignment of View Column Selector [\#3226](https://github.com/locustio/locust/pull/3226) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+
+## [2.41.1](https://github.com/locustio/locust/tree/2.41.1) (2025-09-25)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.41.0...2.41.1)
+
+## [2.41.0](https://github.com/locustio/locust/tree/2.41.0) (2025-09-25)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.40.5...2.41.0)
+
+**Fixed bugs:**
+
+- Master doesn't distribute user equally among workers [\#3209](https://github.com/locustio/locust/issues/3209)
+
+**Merged pull requests:**
+
+- Suggest possibly misspelled command line arguments \(Did you mean ...\) [\#3224](https://github.com/locustio/locust/pull/3224) ([cyberw](https://github.com/cyberw))
+- Add Locust Feedback Form [\#3223](https://github.com/locustio/locust/pull/3223) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Add MqttUser [\#3216](https://github.com/locustio/locust/pull/3216) ([ionutab](https://github.com/ionutab))
+
 ## [2.40.5](https://github.com/locustio/locust/tree/2.40.5) (2025-09-17)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.40.4...2.40.5)
