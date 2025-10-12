@@ -1,6 +1,7 @@
 # Locust
 
 [![PyPI](https://img.shields.io/pypi/v/locust.svg)](https://pypi.org/project/locust/)<!--![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Flocustio%2Flocust%2Fmaster%2Fpyproject.toml)-->
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/locust?color=brightgreen)](https://pypi.org/project/locust/)
 [![Downloads](https://pepy.tech/badge/locust/week)](https://pepy.tech/project/locust)
 [![GitHub contributors](https://img.shields.io/github/contributors/locustio/locust.svg)](https://github.com/locustio/locust/graphs/contributors)
 [![Support Ukraine Badge](https://bit.ly/support-ukraine-now)](https://github.com/support-ukraine/support-ukraine)
