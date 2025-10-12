@@ -23,10 +23,12 @@ const baseQuery = (args: any, api: any, extraOptions: any) =>
 
 export const api = createApi({
   baseQuery: baseQuery,
+  tagTypes: ['stats'],
   endpoints: builder => ({
     getStats: builder.query<IStatsResponse, void>({
       query: () => 'stats/requests',
       transformResponse: camelCaseKeys<IStatsResponse>,
+      providesTags: ['stats'],
     }),
     getTasks: builder.query<ISwarmRatios, void>({
       query: () => 'tasks',
@@ -62,16 +64,11 @@ export const api = createApi({
     }),
 
     resetStats: builder.mutation<void, void>({
-      query: () => ({
-        url: 'stats/reset',
-        method: 'GET',
-      }),
+      query: () => ({ url: 'stats/reset' }),
+      invalidatesTags: ['stats'],
     }),
     stopSwarm: builder.mutation<void, void>({
-      query: () => ({
-        url: 'stop',
-        method: 'GET',
-      }),
+      query: () => ({ url: 'stop' }),
     }),
   }),
 });
