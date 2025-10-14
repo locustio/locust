@@ -487,6 +487,13 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     else:
         web_ui = None
 
+    if options.num_users == 0:
+        if options.headless:
+            logger.error("Combining --headless with --users 0 makes no sense.")
+            sys.exit(1)
+        if options.autostart:
+            logger.warning("Combining --autostart with --users 0, is this a mistake?")
+
     if options.autostart and options.headless:
         logger.info("The --autostart argument is implied by --headless, no need to set both.")
 
