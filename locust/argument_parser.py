@@ -120,12 +120,14 @@ class LocustTomlConfigParser(configargparse.TomlConfigParser):
         except Exception as e:
             raise configargparse.ConfigFileParserException(f"Couldn't parse TOML file: {e}")
 
+        sectionDataNotFound = True
+
         # convert to dict and filter based on section names
         result = OrderedDict()
-
         for section in self.sections:
             if data := configargparse.get_toml_section(config, section):
                 for key, value in data.items():
+                    sectionDataNotFound = False
                     if isinstance(value, list):
                         result[key] = value
                     elif value is None:
@@ -133,7 +135,20 @@ class LocustTomlConfigParser(configargparse.TomlConfigParser):
                     else:
                         result[key] = str(value)
                 break
-
+        if sectionDataNotFound:
+            print( type(config).__name__ )
+            if data:= config:
+                for key, value in config.items():
+                    print( key, value )
+                    print( type(value).__name__ )
+                    if isinstance(value, list):
+                        result[key] = value
+                    elif isinstance(value, dict):
+                        pass
+                    elif value is None:
+                        pass
+                    else:
+                        result[key] = str(value)
         return result
 
 
@@ -206,7 +221,7 @@ def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG
         default_config_files=default_config_files,
         config_file_parser_class=configargparse.CompositeConfigParser(
             [
-                LocustTomlConfigParser(["tool.locust"]),
+                LocustTomlConfigParser(['tool.locust']),# ['tool.locust' ]
                 configargparse.DefaultConfigFileParser,
             ]
         ),
@@ -386,7 +401,7 @@ def retrieve_locustfiles_from_master(options) -> list[str]:
     return parse_locustfiles_from_master(locustfile_sources)
 
 
-# A hack for setting up an action that raises ArgumentError with configurable error messages.
+# A hack for setting up an action that raises ArgumentError with Configurable error messages.
 # This is meant to be used to immediately block use of deprecated arguments with some helpful messaging.
 
 
