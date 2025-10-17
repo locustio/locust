@@ -44,7 +44,7 @@ class DNSClient:
 
 class DNSUser(User):
     """
-    DNSUser provides a locust client class for dnspython's dns.query methods.
+    DNSUser provides a locust client class for dnspython's :py:mod:`dns.query` methods.
     See example in :gh:`examples/dns_ex.py`.
     """
 
