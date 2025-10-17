@@ -69,6 +69,13 @@ MilvusUser class
     :members: wait_time, tasks, client, abstract
     :noindex:
 
+DNSUser class
+==========
+
+.. autoclass:: locust.contrib.dns.DNSUser
+    :members: wait_time, tasks, client, abstract
+    :noindex:
+
 TaskSet class
 =============
 
