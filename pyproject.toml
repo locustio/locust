@@ -57,6 +57,7 @@ dependencies = [
 [project.optional-dependencies]
 milvus = ["pymilvus>=2.5.0"]
 mqtt = ["paho-mqtt>=2.1.0"]
+dns = ["dnspython>=2.8.0"]
 
 [project.urls]
 homepage = "https://locust.io/"
@@ -107,6 +108,7 @@ docs = [
 ]
 milvus = ["pymilvus>=2.5.0"]
 mqtt = ["paho-mqtt>=2.1.0"]
+dns = ["dnspython>=2.8.0"]
 
 [project.scripts]
 locust = "locust.main:main"
