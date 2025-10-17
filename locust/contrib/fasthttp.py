@@ -434,7 +434,7 @@ class FastHttpUser(User):
             proxy_port=self.proxy_port,
         )
         """
-        Instance of HttpSession that is created upon instantiation of User.
+        Instance of FastHttpSession that is created upon instantiation of User.
         The client support cookies, and therefore keeps the session between HTTP requests.
         """
 

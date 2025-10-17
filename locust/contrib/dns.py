@@ -43,8 +43,20 @@ class DNSClient:
 
 
 class DNSUser(User):
+    """
+    DNSUser provides a locust client class for dnspython's dns.query methods.
+    See example in :gh:`examples/dns_ex.py`.
+    """
+
     abstract = True
 
     def __init__(self, environment):
         super().__init__(environment)
         self.client = DNSClient(environment.events.request)
+        """
+        Example (inside task method)::
+
+            message = dns.message.make_query("example.com", dns.rdatatype.A)
+            self.client.udp(message, "1.1.1.1")
+            self.client.https(message, "1.1.1.1")
+        """

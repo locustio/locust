@@ -73,7 +73,7 @@ DNSUser class
 ==========
 
 .. autoclass:: locust.contrib.dns.DNSUser
-    :members: wait_time, tasks, client, abstract
+    :members: client
     :noindex:
 
 TaskSet class
