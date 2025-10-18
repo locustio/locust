@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import locust
+import locust.runners
 
 import atexit
 import errno
@@ -165,6 +166,7 @@ def merge_locustfiles_content(
 
 
 def main():
+    url = None
     # find specified locustfile(s) and make sure it exists, using a very simplified
     # command line parser that is only used to parse the -f option.
     options, unknown = parse_locustfile_option()
@@ -244,8 +246,10 @@ def main():
             # we're in the parent process
             if options.worker:
                 # ignore the first sigint in parent, and wait for the children to handle sigint
+                sigint_state = {"has_run": False}
+
                 def sigint_handler(_signal, _frame):
-                    if getattr(sigint_handler, "has_run", False):
+                    if sigint_state["has_run"]:
                         # if parent gets repeated sigint, we kill the children hard
                         for child_pid in children:
                             try:
@@ -256,7 +260,7 @@ def main():
                             except Exception:
                                 logging.error(traceback.format_exc())
                         sys.exit(1)
-                    sigint_handler.has_run = True
+                    sigint_state["has_run"] = True
 
                 signal.signal(signal.SIGINT, sigint_handler)
                 exit_code = 0
@@ -338,10 +342,11 @@ def main():
             )
 
     if os.name != "nt":
+        minimum_open_file_limit = 10000
+        soft_limit = None
         try:
             import resource
 
-            minimum_open_file_limit = 10000
             (soft_limit, hard_limit) = resource.getrlimit(resource.RLIMIT_NOFILE)
 
             if soft_limit < minimum_open_file_limit:
@@ -351,9 +356,9 @@ def main():
                 resource.setrlimit(resource.RLIMIT_NOFILE, limits)
         except BaseException:
             logger.warning(
-                f"""System open file limit '{soft_limit} is below minimum setting '{minimum_open_file_limit}'.
-It's not high enough for load testing, and the OS didn't allow locust to increase it by itself.
-See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."""
+                f"System open file limit '{soft_limit}' is below minimum setting '{minimum_open_file_limit}'.\n"
+                "It's not high enough for load testing, and the OS didn't allow locust to increase it by itself.\n"
+                "See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-number-of-open-files-limit for more info."
             )
 
     # At least one locust file exists, or system will exit earlier
@@ -510,6 +515,20 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         web_ui.start()
         main_greenlet = web_ui.greenlet
 
+    # Track if we've already emitted JSON output (to avoid double-printing in shutdown)
+    json_emitted = {"value": False}
+
+    def _emit_json_if_requested():
+        """Print/save JSON stats if requested and mark as emitted to avoid duplicates later."""
+        if (options.json or options.json_file) and runner is not None and not json_emitted["value"]:
+            try:
+                if options.json:
+                    stats.print_stats_json(runner.stats)
+                if options.json_file:
+                    stats.save_stats_json(runner.stats, options.json_file)
+            finally:
+                json_emitted["value"] = True
+
     def stop_and_optionally_quit():
         if options.autostart and not options.headless:
             logger.info("--run-time limit reached, stopping test")
@@ -518,6 +537,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                 logger.debug(f"Autoquit time limit set to {options.autoquit} seconds")
                 time.sleep(options.autoquit)
                 logger.info("--autoquit time reached, shutting down")
+                _emit_json_if_requested()
                 runner.quit()
                 if web_ui:
                     web_ui.stop()
@@ -525,6 +545,21 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                 logger.info("--autoquit not specified, leaving web ui running indefinitely")
         else:  # --headless run
             logger.info("--run-time limit reached, shutting down")
+            # For short runs, wait briefly for at least one sample if none recorded yet
+            if (options.json or options.json_file) and runner is not None:
+                try:
+                    max_wait = float(os.getenv("LOCUST_JSON_FINALIZE_WAIT", "1.5"))
+                except Exception:
+                    max_wait = 1.5
+                deadline = time.time() + max_wait
+                while (
+                    time.time() < deadline
+                    and (runner.stats.num_requests + runner.stats.num_failures) == 0
+                    and runner.user_count > 0
+                ):
+                    gevent.sleep(0.05)
+            # Emit JSON before quitting to avoid losing the last samples
+            _emit_json_if_requested()
             runner.quit()
 
     def spawn_run_time_quit_greenlet():
@@ -540,10 +575,24 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     gevent.spawn(stats.stats_history, runner)
 
     def start_automatic_run():
+        # Apply defaults if not specified
+        if options.num_users is None:
+            options.num_users = 1
+        if options.spawn_rate is None:
+            options.spawn_rate = 1
+
+        # Announce run time if set, or log that it's unlimited
+        if options.run_time:
+            logger.info(f"Run time limit set to {options.run_time} seconds")
+        else:
+            logger.info("No run time limit set, use CTRL+C to interrupt")
+
+        # If running as master, wait for workers before starting
         if options.master:
-            # wait for worker nodes to connect
             start_time = time.monotonic()
-            while len(runner.clients.ready) < options.expect_workers:
+            while (
+                isinstance(runner, locust.runners.MasterRunner) and len(runner.clients.ready) < options.expect_workers
+            ):
                 if options.expect_workers_max_wait and options.expect_workers_max_wait < time.monotonic() - start_time:
                     logger.error("Gave up waiting for workers to connect")
                     runner.quit()
@@ -560,45 +609,40 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                         len(runner.clients.ready),
                         options.expect_workers,
                     )
-                # TODO: Handle KeyboardInterrupt and send quit signal to workers that are started.
-                #       Right now, if the user sends a ctrl+c, the master will not gracefully
-                #       shutdown resulting in all the already started workers to stay active.
                 time.sleep(1)
-        if not options.worker:
-            # apply headless mode defaults
-            if options.num_users is None:
-                options.num_users = 1
-            if options.spawn_rate is None:
-                options.spawn_rate = 1
 
-            # start the test
-            if environment.shape_class:
-                try:
-                    environment.runner.start_shape()
+        # Start the test
+        if environment.shape_class:
+            try:
+                environment.runner.start_shape()
+                # In headless mode we block until shape completes so shutdown can proceed
+                if options.headless:
                     environment.runner.shape_greenlet.join()
-                except KeyboardInterrupt:
-                    logging.info("Exiting due to CTRL+C interruption")
-                finally:
+            except KeyboardInterrupt:
+                logging.info("Exiting due to CTRL+C interruption")
+            finally:
+                if options.headless:
                     stop_and_optionally_quit()
-            else:
-                headless_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
-                headless_master_greenlet.link_exception(greenlet_exception_handler)
+        else:
+            nonlocal headless_master_greenlet
+            headless_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
+            headless_master_greenlet.link_exception(greenlet_exception_handler)
 
-            if options.run_time:
-                logger.info(f"Run time limit set to {options.run_time} seconds")
-                spawn_run_time_quit_greenlet()
-            elif not environment.shape_class:
-                logger.info("No run time limit set, use CTRL+C to interrupt")
+        # Schedule run-time stop if set
+        if options.run_time:
+            spawn_run_time_quit_greenlet()
 
-    if options.csv_prefix:
+    # write CSV stats periodically if configured
+    if options.csv_prefix and isinstance(stats_csv_writer, stats.StatsCSVFileWriter):
         gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
 
-    if options.headless:
+    # In headless mode, automatically start the run (regardless of CSV configuration)
+    if options.headless and not options.worker:
         start_automatic_run()
 
+    # spawn input listener greenlet (only when not a worker)
     input_listener_greenlet = None
     if not options.worker:
-        # spawn input listener greenlet
         input_listener_greenlet = gevent.spawn(
             input_listener(
                 {
@@ -614,14 +658,12 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                     "S": lambda: runner.start(max(0, runner.user_count - 10), 100)
                     if runner.state != "spawning"
                     else logging.warning("Spawning users, can't stop right now"),
-                    "\r": lambda: webbrowser.open_new_tab(url),
-                    "\n": lambda: webbrowser.open_new_tab(url),
+                    "\r": lambda: webbrowser.open_new_tab(url) if url else None,
+                    "\n": lambda: webbrowser.open_new_tab(url) if url else None,
                 },
             )
         )
         input_listener_greenlet.link_exception(greenlet_exception_handler)
-        # ensure terminal is reset, even if there is an unhandled exception in locust or someone
-        # does something wild, like calling sys.exit() in the locustfile
         atexit.register(input_listener_greenlet.kill, block=True)
 
     def shutdown():
@@ -654,11 +696,13 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         logger.debug("Cleaning up runner...")
         if runner is not None:
             runner.quit()
-        if options.json:
-            stats.print_stats_json(runner.stats)
-        if options.json_file:
-            stats.save_stats_json(runner.stats, options.json_file)
-        elif not isinstance(runner, locust.runners.WorkerRunner):
+        # Avoid double-emitting JSON if it was already emitted when the run-time limit was reached
+        if not json_emitted["value"]:
+            if options.json:
+                stats.print_stats_json(runner.stats)
+            if options.json_file:
+                stats.save_stats_json(runner.stats, options.json_file)
+        if not isinstance(runner, locust.runners.WorkerRunner):
             stats.print_stats(runner.stats, current=False)
             stats.print_percentile_stats(runner.stats)
             stats.print_error_report(runner.stats)
