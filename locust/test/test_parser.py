@@ -393,6 +393,7 @@ class TestArgumentParser(LocustTestCase):
 
     def test_custom_argument_in_web_ui_with_parsed_options(self):
         """Test for issue #3206: ui_extra_args_dict should use parsed_options when provided"""
+
         @locust.events.init_command_line_parser.add_listener
         def _(parser, **kw):
             parser.add_argument("--custom-arg", type=str, default="default-value", help="Custom arg help")

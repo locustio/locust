@@ -21,7 +21,7 @@ Note: This was previously broken (issue #3206) where the Web UI would show
 default values instead of the values passed via command line.
 """
 
-from locust import HttpUser, task, constant, events
+from locust import HttpUser, constant, events, task
 
 
 @events.init_command_line_parser.add_listener
@@ -34,7 +34,7 @@ def add_custom_arguments(parser):
         default="default-string",
         include_in_web_ui=True,  # Make this argument editable in Web UI
     )
-    
+
     parser.add_argument(
         "--arg2",
         type=int,
@@ -42,7 +42,7 @@ def add_custom_arguments(parser):
         default=10,
         include_in_web_ui=True,  # Make this argument editable in Web UI
     )
-    
+
     parser.add_argument(
         "--secret-token",
         type=str,
@@ -55,6 +55,7 @@ def add_custom_arguments(parser):
 
 class MyUser(HttpUser):
     """Example user that uses custom arguments"""
+
     host = "http://example.com"
     wait_time = constant(1)
 
@@ -64,10 +65,10 @@ class MyUser(HttpUser):
         arg1 = self.environment.parsed_options.arg1
         arg2 = self.environment.parsed_options.arg2
         secret = self.environment.parsed_options.secret_token
-        
+
         # Log the arguments (in real scenarios, use them for your test logic)
         print(f"Task executing with: arg1={arg1}, arg2={arg2}, secret={'*' * len(secret)}")
-        
+
         # In a real test, you might use these arguments like this:
         # self.client.get(f"/api/endpoint?param={arg1}")
         # for _ in range(arg2):

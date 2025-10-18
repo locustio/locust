@@ -13,10 +13,10 @@ class DNSClient:
     def __init__(self, request_event):
         self.request_event = request_event
 
-    def __getattr__(self, function_name) -> Callable[..., Message]:
+    def __getattr__(self, function_name) -> Callable[..., Message | None]:
         func = getattr(dns.query, function_name)
 
-        def wrapper(message: Message, *args, name=None, **kwargs) -> Message:
+        def wrapper(message: Message, *args, name=None, **kwargs) -> Message | None:
             response = None
             request_meta = {
                 "request_type": "DNS",
