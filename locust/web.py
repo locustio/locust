@@ -691,7 +691,7 @@ class WebUI:
             worker_count = 0
 
         request_stats = self.environment.runner.stats
-        extra_options = argument_parser.ui_extra_args_dict()
+        extra_options = argument_parser.ui_extra_args_dict(parsed_options=options)
 
         available_user_classes = None
         users = None
