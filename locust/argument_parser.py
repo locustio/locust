@@ -136,11 +136,8 @@ class LocustTomlConfigParser(configargparse.TomlConfigParser):
                         result[key] = str(value)
                 break
         if sectionDataNotFound:
-            print( type(config).__name__ )
             if data:= config:
                 for key, value in config.items():
-                    print( key, value )
-                    print( type(value).__name__ )
                     if isinstance(value, list):
                         result[key] = value
                     elif isinstance(value, dict):
