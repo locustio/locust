@@ -136,7 +136,7 @@ class LocustTomlConfigParser(configargparse.TomlConfigParser):
                         result[key] = str(value)
                 break
         if sectionDataNotFound:
-            if data:= config:
+            if data := config:
                 for key, value in config.items():
                     if isinstance(value, list):
                         result[key] = value
@@ -218,7 +218,7 @@ def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG
         default_config_files=default_config_files,
         config_file_parser_class=configargparse.CompositeConfigParser(
             [
-                LocustTomlConfigParser(['tool.locust']),# ['tool.locust' ]
+                LocustTomlConfigParser(["tool.locust"]),  # ['tool.locust' ]
                 configargparse.DefaultConfigFileParser,
             ]
         ),
