@@ -25,12 +25,7 @@ def process_html_filename(options) -> None:
 
 
 def render_template_from(file, build_path=DEFAULT_BUILD_PATH, **kwargs):
-    # Prefer built assets (dist), but fall back to source templates if not found (e.g., report.html in repo)
-    fallback_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui")
-    search_paths = [build_path]
-    if fallback_path not in search_paths:
-        search_paths.append(fallback_path)
-    env = JinjaEnvironment(loader=FileSystemLoader(search_paths))
+    env = JinjaEnvironment(loader=FileSystemLoader(build_path))
     template = env.get_template(file)
     return template.render(**kwargs)
 

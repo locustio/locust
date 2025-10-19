@@ -531,7 +531,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         else:  # --headless run
             logger.info("--run-time limit reached, shutting down")
             # For very short runs, give a longer moment for any in-flight requests to complete
-            gevent.sleep(0.6)
+            gevent.sleep(0.5)
             # Emit JSON before quitting to avoid empty output in short runs
             if options.json:
                 stats.print_stats_json(runner.stats)
