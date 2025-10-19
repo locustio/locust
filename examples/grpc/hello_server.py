@@ -17,8 +17,6 @@ class HelloServiceServicer(hello_pb2_grpc.HelloServiceServicer):
 
 
 def start_server():
-    # Increased max_workers to handle more concurrent requests
-    # Default was 10, which limited throughput to ~10 RPS with 1s sleep time
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=100))
     hello_pb2_grpc.add_HelloServiceServicer_to_server(HelloServiceServicer(), server)
     server.add_insecure_port("localhost:50051")

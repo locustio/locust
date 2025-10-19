@@ -1076,11 +1076,10 @@ class MyUser(HttpUser):
             """
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            # Increase duration to 3 seconds for reliability
             proc = TestProcess(
-                f"locust -f {mocked.file_path} --host http://google.com --headless -u 1 -t 3 --json",
+                f"locust -f {mocked.file_path} --host http://google.com --headless -u 1 -t 1 --json",
                 sigint_on_exit=False,
-                join_timeout=4,
+                join_timeout=2,
             )
             proc.close()
             stdout = "\n".join(proc.stdout_output)
@@ -1091,7 +1090,8 @@ class MyUser(HttpUser):
                 self.fail(f"Trying to parse {stdout} as json failed")
 
             if not data:
-                self.skipTest(f"No data in json output (likely due to timing or environment): {stdout}")
+                self.fail(f"No data in json: {stdout}")
+
             result = data[0]
             self.assertEqual(float, type(result["last_request_timestamp"]))
             self.assertEqual(float, type(result["start_time"]))
@@ -1124,20 +1124,16 @@ class MyUser(HttpUser):
         if os.path.exists(output_filepath):
             os.remove(output_filepath)
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
-            # Increase duration to 3 seconds for reliability
             with TestProcess(
-                f"locust -f {mocked.file_path} --host http://google.com --headless -u 1 -t 3 --json-file {output_base}",
+                f"locust -f {mocked.file_path} --host http://google.com --headless -u 1 -t 1 --json-file {output_base}",
                 sigint_on_exit=False,
             ) as tp:
-                tp.proc.wait(4)
+                tp.proc.wait(3)
                 tp.not_expect_any("error: argument --json-file: expected one argument")
 
             self.assertTrue(os.path.exists(output_filepath))
             with open(output_filepath, encoding="utf-8") as file:
-                stats_list = json.load(file)
-                if not stats_list:
-                    self.skipTest("No stats found in JSON output (likely due to timing or environment)")
-                stats = stats_list[0]
+                [stats] = json.load(file)
                 self.assertEqual(stats["name"], "/")
 
         if os.path.exists(output_filepath):
@@ -1589,8 +1585,7 @@ class AnyUser(User):
                     tp_worker.expect("INFO/locust.runners: sys.exit(42) called")
                     tp_worker.proc.wait(2)
                     tp_worker.not_expect_any("Traceback")
-                    tp_master.expect("failed to send heartbeat, setting state to missing")
-                    tp_master.terminate()
-                    tp_master.expect("Shutting down")
-                    # Tracebacks may occur due to KeyboardInterrupt or shutdown race conditions in CI/Python 3.11+
-                    # tp_master.not_expect_any("Traceback")
+                tp_master.expect("failed to send heartbeat, setting state to missing")
+                tp_master.terminate()
+                tp_master.expect("Shutting down")
+                tp_master.not_expect_any("Traceback")
