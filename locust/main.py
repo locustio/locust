@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import locust
-from locust.runners import WorkerRunner
 
 import atexit
 import errno
@@ -511,11 +510,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         web_ui.start()
         main_greenlet = web_ui.greenlet
 
-    # Track if JSON has been emitted to avoid duplication
-    json_emitted = False
-
     def stop_and_optionally_quit():
-        nonlocal json_emitted
         if options.autostart and not options.headless:
             logger.info("--run-time limit reached, stopping test")
             runner.stop()
@@ -530,14 +525,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                 logger.info("--autoquit not specified, leaving web ui running indefinitely")
         else:  # --headless run
             logger.info("--run-time limit reached, shutting down")
-            # For very short runs, give a longer moment for any in-flight requests to complete
-            gevent.sleep(0.5)
-            # Emit JSON before quitting to avoid empty output in short runs
-            if options.json:
-                stats.print_stats_json(runner.stats)
-            if options.json_file:
-                stats.save_stats_json(runner.stats, options.json_file)
-            json_emitted = True
             runner.quit()
 
     def spawn_run_time_quit_greenlet():
@@ -667,14 +654,11 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         logger.debug("Cleaning up runner...")
         if runner is not None:
             runner.quit()
-        # Only emit JSON if it hasn't been emitted already (e.g., in stop_and_optionally_quit)
-        if not json_emitted:
-            if options.json:
-                stats.print_stats_json(runner.stats)
-            if options.json_file:
-                stats.save_stats_json(runner.stats, options.json_file)
-        # Always print summary stats for non-workers if JSON was not requested
-        if not (options.json or options.json_file) and not isinstance(runner, WorkerRunner):
+        if options.json:
+            stats.print_stats_json(runner.stats)
+        if options.json_file:
+            stats.save_stats_json(runner.stats, options.json_file)
+        elif not isinstance(runner, locust.runners.WorkerRunner):
             stats.print_stats(runner.stats, current=False)
             stats.print_percentile_stats(runner.stats)
             stats.print_error_report(runner.stats)
