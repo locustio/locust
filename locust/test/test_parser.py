@@ -57,6 +57,28 @@ class TestParser(unittest.TestCase):
         self.assertTrue(options.headless)
         self.assertEqual(["Critical", "Normal"], options.tags)
         self.assertEqual("https://example.com", options.host)
+    
+    def test_parse_options_from_conf_file_headless_true(self):
+        with NamedTemporaryFile(mode="w", suffix=".conf") as file:
+            config_data = """\
+            locustfile = ./test_locustfile.py
+            web-host = 127.0.0.1
+            web-port = 45787
+            headless = true
+            tags = [Critical, Normal]
+            """
+
+            file.write(config_data)
+            file.flush()
+            parser = get_parser(default_config_files=[file.name])
+            options = parser.parse_args(["-H", "https://example.com"])
+
+        self.assertEqual("./test_locustfile.py", options.locustfile)
+        self.assertEqual("127.0.0.1", options.web_host)
+        self.assertEqual(45787, options.web_port)
+        self.assertTrue(options.headless)
+        self.assertEqual(["Critical", "Normal"], options.tags)
+        self.assertEqual("https://example.com", options.host)
 
     def test_parse_options_from_toml_file(self):
         with NamedTemporaryFile(mode="w", suffix=".toml") as file:
