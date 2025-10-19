@@ -7,7 +7,7 @@ For full details of changes, please see https://github.com/locustio/locust/relea
 2.42.0
 ======
 * Introduce DNSUser https://github.com/locustio/locust/pull/3243
-* Dependencies: allow gevent >25.8.1, avoid python-requests >2.32.5 https://github.com/locustio/locust/pull/3244
+* Dependencies: allow gevent >25.8.1, avoid python-requests >2.32.5
 
 2.41.6
 ======
