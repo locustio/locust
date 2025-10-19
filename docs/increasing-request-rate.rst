@@ -24,7 +24,7 @@ Also, if you are using a custom client (not HttpUser or FastHttpUser), make sure
 
 If you're doing really high throughput or using a lot of bandwidth, you may also want to check out your network utilization and other OS level metrics.
 
-If you have issues with load generator performance and would rather pay to make it someone else's problem, you should check out  `Locust Cloud <https://locust.cloud/>`__.
+If you prefer to have someone else worry about load generator performance, you should check out :ref:`Locust Cloud <locust-cloud>`.
 
 Actual issues with the system under test
 ----------------------------------------
