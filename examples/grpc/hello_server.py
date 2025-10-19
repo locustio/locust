@@ -17,7 +17,7 @@ class HelloServiceServicer(hello_pb2_grpc.HelloServiceServicer):
 
 
 def start_server():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=100))
     hello_pb2_grpc.add_HelloServiceServicer_to_server(HelloServiceServicer(), server)
     server.add_insecure_port("localhost:50051")
     server.start()
