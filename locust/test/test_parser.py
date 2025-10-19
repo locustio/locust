@@ -57,7 +57,7 @@ class TestParser(unittest.TestCase):
         self.assertTrue(options.headless)
         self.assertEqual(["Critical", "Normal"], options.tags)
         self.assertEqual("https://example.com", options.host)
-    
+
     def test_parse_options_from_conf_file_headless_true(self):
         with NamedTemporaryFile(mode="w", suffix=".conf") as file:
             config_data = """\
