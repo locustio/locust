@@ -174,18 +174,18 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             ) as tp:
                 tp.expect("Starting Locust")
                 wait_for_server(f"http://127.0.0.1:{port}")
-                
+
                 # Check that the Web UI index page shows custom arguments with command-line values
                 response = requests.get(f"http://127.0.0.1:{port}/")
                 self.assertEqual(response.status_code, 200)
-                
+
                 # The Web UI should show the command-line values, not the defaults
                 self.assertIn("cmdline-value", response.text)
                 self.assertIn("123", response.text)
                 # Should not show the default values in the UI
                 self.assertNotIn('value="default-value"', response.text)
                 self.assertNotIn('value="10"', response.text)
-                
+
                 tp.terminate()
 
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
