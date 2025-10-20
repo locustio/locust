@@ -391,32 +391,6 @@ class TestArgumentParser(LocustTestCase):
         self.assertIn("a4", extra_args)
         self.assertEqual("v1", extra_args["a1"]["default_value"])
 
-    def test_custom_argument_in_web_ui_with_parsed_options(self):
-        """Test for issue #3206: ui_extra_args_dict should use parsed_options when provided"""
-
-        @locust.events.init_command_line_parser.add_listener
-        def _(parser, **kw):
-            parser.add_argument("--custom-arg", type=str, default="default-value", help="Custom arg help")
-            parser.add_argument("--custom-int", type=int, default=10, help="Custom int help")
-
-        # Parse options with custom argument values from command line
-        args = ["--custom-arg", "cmdline-value", "--custom-int", "123"]
-        options = parse_options(args=args)
-        self.assertEqual("cmdline-value", options.custom_arg)
-        self.assertEqual(123, options.custom_int)
-
-        # Get extra args without passing parsed_options (old behavior - would show defaults)
-        extra_args_without_parsed_options = ui_extra_args_dict(args=[])
-        # Without the fix, this would be "default-value"
-        self.assertEqual("default-value", extra_args_without_parsed_options["custom_arg"]["default_value"])
-        self.assertEqual(10, extra_args_without_parsed_options["custom_int"]["default_value"])
-
-        # Get extra args with parsed_options (new behavior - should show actual values)
-        extra_args_with_parsed_options = ui_extra_args_dict(parsed_options=options)
-        # With the fix, this should be "cmdline-value"
-        self.assertEqual("cmdline-value", extra_args_with_parsed_options["custom_arg"]["default_value"])
-        self.assertEqual(123, extra_args_with_parsed_options["custom_int"]["default_value"])
-
 
 class TestFindLocustfiles(LocustTestCase):
     def setUp(self):

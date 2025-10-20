@@ -149,6 +149,46 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 os.remove("locust.conf")
 
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
+    def test_custom_arguments_in_web_ui(self):
+        """Test that custom arguments passed via command line appear correctly in Web UI (issue #3206)"""
+        port = get_free_tcp_port()
+        with temporary_file(
+            content=textwrap.dedent(
+                """
+            from locust import User, task, constant, events
+            @events.init_command_line_parser.add_listener
+            def _(parser, **kw):
+                parser.add_argument("--custom-string-arg", default="default-value", include_in_web_ui=True)
+                parser.add_argument("--custom-int-arg", type=int, default=10, include_in_web_ui=True)
+
+            class TestUser(User):
+                wait_time = constant(10)
+                @task
+                def my_task(self):
+                    pass
+        """
+            )
+        ) as file_path:
+            with TestProcess(
+                f"locust -f {file_path} --custom-string-arg cmdline-value --custom-int-arg 123 --web-port {port}",
+            ) as tp:
+                tp.expect("Starting Locust")
+                wait_for_server(f"http://127.0.0.1:{port}")
+                
+                # Check that the Web UI index page shows custom arguments with command-line values
+                response = requests.get(f"http://127.0.0.1:{port}/")
+                self.assertEqual(response.status_code, 200)
+                
+                # The Web UI should show the command-line values, not the defaults
+                self.assertIn("cmdline-value", response.text)
+                self.assertIn("123", response.text)
+                # Should not show the default values in the UI
+                self.assertNotIn('value="default-value"', response.text)
+                self.assertNotIn('value="10"', response.text)
+                
+                tp.terminate()
+
+    @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
     def test_custom_exit_code(self):
         with temporary_file(
             content=textwrap.dedent(
