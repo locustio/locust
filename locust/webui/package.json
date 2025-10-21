@@ -57,7 +57,7 @@
     "react-redux": "^9.1.2",
     "rimraf": "^6.0.1",
     "terser": "^5.43.1",
-    "vite": "^6.3.4",
+    "vite": "^6.4.1",
     "vite-plugin-checker": "^0.8.0",
     "vite-plugin-dts": "^4.3.0",
     "vite-plugin-singlefile": "^2.0.3",

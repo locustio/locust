@@ -5319,7 +5319,7 @@ __metadata:
     rimraf: "npm:^6.0.1"
     terser: "npm:^5.43.1"
     typescript: "npm:^5.7.2"
-    vite: "npm:^6.3.4"
+    vite: "npm:^6.4.1"
     vite-plugin-checker: "npm:^0.8.0"
     vite-plugin-dts: "npm:^4.3.0"
     vite-plugin-singlefile: "npm:^2.0.3"
@@ -8205,9 +8205,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^6.3.4":
-  version: 6.3.5
-  resolution: "vite@npm:6.3.5"
+"vite@npm:^6.4.1":
+  version: 6.4.1
+  resolution: "vite@npm:6.4.1"
   dependencies:
     esbuild: "npm:^0.25.0"
     fdir: "npm:^6.4.4"
@@ -8256,7 +8256,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10c0/df70201659085133abffc6b88dcdb8a57ef35f742a01311fc56a4cfcda6a404202860729cc65a2c401a724f6e25f9ab40ce4339ed4946f550541531ced6fe41c
+  checksum: 10c0/77bb4c5b10f2a185e7859cc9a81c789021bc18009b02900347d1583b453b58e4b19ff07a5e5a5b522b68fc88728460bb45a63b104d969e8c6a6152aea3b849f7
   languageName: node
   linkType: hard
 
