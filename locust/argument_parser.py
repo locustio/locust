@@ -250,9 +250,9 @@ See documentation for more details, including how to set options using a file or
     return parser
 
 
-def download_locustfile_from_master(master_host: str, master_port: int) -> str:
+def download_locustfile_from_master(master_host: str, master_port: int, ipv4_only: bool) -> str:
     client_id = socket.gethostname() + "_download_locustfile_" + uuid4().hex
-    tempclient = zmqrpc.Client(master_host, master_port, client_id)
+    tempclient = zmqrpc.Client(master_host, master_port, client_id, ipv4_only)
     got_reply = False
 
     def ask_for_locustfile():
@@ -338,6 +338,13 @@ def parse_locustfile_option(args=None) -> tuple[argparse.Namespace, list[str]]:
         default=5557,
         env_var="LOCUST_MASTER_NODE_PORT",
     )
+    parser.add_argument(
+        "--master-ipv4-only",
+        action="store_true",
+        default=False,
+        help="Only use IPv4 when connecting to the master node",
+        env_var="LOCUST_MASTER_NODE_IPV4_ONLY",
+    )
 
     options, unknown = parser.parse_known_args(args=args)
 
@@ -382,7 +389,9 @@ def retrieve_locustfiles_from_master(options) -> list[str]:
         )
         sys.exit(1)
     # having this in argument_parser module is a bit weird, but it needs to be done early
-    locustfile_sources = download_locustfile_from_master(options.master_host, options.master_port)
+    locustfile_sources = download_locustfile_from_master(
+        options.master_host, options.master_port, options.master_ipv4_only
+    )
     return parse_locustfiles_from_master(locustfile_sources)
 
 
@@ -701,6 +710,13 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         default=5557,
         help="Port to connect to on master node. Defaults to 5557.",
         env_var="LOCUST_MASTER_NODE_PORT",
+    )
+    worker_group.add_argument(
+        "--master-ipv4-only",
+        action="store_true",
+        default=False,
+        help="Only use IPv4 when connecting to the master node",
+        env_var="LOCUST_MASTER_NODE_IPV4_ONLY",
     )
 
     web_ui_group.add_argument(

@@ -419,10 +419,13 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         runner = environment.create_master_runner(
             master_bind_host=options.master_bind_host,
             master_bind_port=options.master_bind_port,
+            master_ipv4_only=options.master_ipv4_only,
         )
     elif options.worker:
         try:
-            runner = environment.create_worker_runner(options.master_host, options.master_port)
+            runner = environment.create_worker_runner(
+                options.master_host, options.master_port, options.master_ipv4_only
+            )
             logger.debug(
                 "Connected to locust master: %s:%s%s", options.master_host, options.master_port, options.web_base_path
             )
