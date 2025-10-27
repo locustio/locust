@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.42.1
+======
+
+* Add VS Code Extension and k8s Operator to documentation https://github.com/locustio/locust/pull/3251
+* modified ui_extra_args_dict function to pick arguments https://github.com/locustio/locust/pull/3245
+
 2.42.0
 ======
 * Introduce DNSUser https://github.com/locustio/locust/pull/3243
