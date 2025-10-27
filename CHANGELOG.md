@@ -1,6 +1,34 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.42.1](https://github.com/locustio/locust/tree/2.42.1) (2025-10-27)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.42.0...2.42.1)
+
+**Merged pull requests:**
+
+- Add VS Code Extension and k8s operator to documentation [\#3251](https://github.com/locustio/locust/pull/3251) ([cyberw](https://github.com/cyberw))
+- Bump vite from 6.3.5 to 6.4.1 in /locust/webui [\#3249](https://github.com/locustio/locust/pull/3249) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bumped the gRPC example server’s worker pool to 100 [\#3248](https://github.com/locustio/locust/pull/3248) ([sonianuj287](https://github.com/sonianuj287))
+- modified ui\_extra\_args\_dict function to pick arguments [\#3245](https://github.com/locustio/locust/pull/3245) ([sonianuj287](https://github.com/sonianuj287))
+
+## [2.42.0](https://github.com/locustio/locust/tree/2.42.0) (2025-10-17)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.41.6...2.42.0)
+
+**Fixed bugs:**
+
+- Extend Locust UI with new tab does not work [\#3240](https://github.com/locustio/locust/issues/3240)
+- Reset button not working after stopping the run [\#3197](https://github.com/locustio/locust/issues/3197)
+
+**Merged pull requests:**
+
+- Avoid using most recent python-requests because it may introduce performance issues [\#3244](https://github.com/locustio/locust/pull/3244) ([cyberw](https://github.com/cyberw))
+- Introduce DNSUser [\#3243](https://github.com/locustio/locust/pull/3243) ([cyberw](https://github.com/cyberw))
+- Fix reset button not working after stopping the run [\#3238](https://github.com/locustio/locust/pull/3238) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Added readme badge for supported python versions [\#3237](https://github.com/locustio/locust/pull/3237) ([Nirzak](https://github.com/Nirzak))
+- loosen dependency on gevent [\#3236](https://github.com/locustio/locust/pull/3236) ([bollwyvl](https://github.com/bollwyvl))
+
 ## [2.41.6](https://github.com/locustio/locust/tree/2.41.6) (2025-10-10)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.41.5...2.41.6)
