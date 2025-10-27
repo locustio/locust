@@ -3,6 +3,10 @@
 VS Code Extension
 =================
 
-Locust has an official extension for Visual Studio Code that helps you set up your Python environment, create and run tests and use Copilot to generate/adjust Locust test code.
+Locust has an official extension for Visual Studio Code that helps you set up your Python environment, create and run tests and even use Copilot to generate/adjust Locust test code.
 
-See `https://github.com/locustcloud/extension <https://github.com/locustcloud/extension>`__
+Check it out at:
+
+* `VS Code Marketplace <https://marketplace.visualstudio.com/items?itemName=locust.locust-vscode-extension>`__
+* `Open VSX Registry <https://open-vsx.org/extension/locust/locust-vscode-extension>`__ 
+* `Git Repo <https://github.com/locustcloud/extension>`__
