@@ -991,6 +991,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+dns = [
+    { name = "dnspython" },
+]
 milvus = [
     { name = "pymilvus" },
 ]
@@ -1002,6 +1005,9 @@ mqtt = [
 build = [
     { name = "hatch" },
     { name = "hatch-vcs" },
+]
+dns = [
+    { name = "dnspython" },
 ]
 docs = [
     { name = "alabaster" },
@@ -1051,12 +1057,13 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "configargparse", specifier = ">=1.7.1" },
+    { name = "dnspython", marker = "extra == 'dns'", specifier = ">=2.8.0" },
     { name = "flask", specifier = ">=2.0.0" },
     { name = "flask-cors", specifier = ">=3.0.10" },
     { name = "flask-login", specifier = ">=0.6.3" },
     { name = "gevent", specifier = ">=24.10.1,!=25.8.1,<26.0.0" },
     { name = "geventhttpclient", specifier = ">=2.3.1" },
-    { name = "locust-cloud", specifier = ">=1.27.6" },
+    { name = "locust-cloud", specifier = ">=1.27.7" },
     { name = "msgpack", specifier = ">=1.0.0" },
     { name = "paho-mqtt", marker = "extra == 'mqtt'", specifier = ">=2.1.0" },
     { name = "psutil", specifier = ">=5.9.1" },
@@ -1066,19 +1073,20 @@ requires-dist = [
     { name = "python-socketio", extras = ["client"], specifier = ">=5.13.0" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
     { name = "pyzmq", specifier = ">=25.0.0" },
-    { name = "requests", specifier = ">=2.32.2" },
+    { name = "requests", specifier = ">=2.32.2,<2.32.5" },
     { name = "setuptools", specifier = ">=70.0.0" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=1.1.0" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'", specifier = ">=4.6.0" },
     { name = "werkzeug", specifier = ">=2.0.0" },
 ]
-provides-extras = ["milvus", "mqtt"]
+provides-extras = ["dns", "milvus", "mqtt"]
 
 [package.metadata.requires-dev]
 build = [
     { name = "hatch", specifier = ">=1.14.0" },
     { name = "hatch-vcs", specifier = ">=0.4.0" },
 ]
+dns = [{ name = "dnspython", specifier = ">=2.8.0" }]
 docs = [
     { name = "alabaster", specifier = "==0.7.16" },
     { name = "babel", specifier = "==2.13.0" },
@@ -1120,7 +1128,7 @@ test = [
 
 [[package]]
 name = "locust-cloud"
-version = "1.27.6"
+version = "1.27.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "configargparse" },
@@ -1130,9 +1138,9 @@ dependencies = [
     { name = "python-socketio", extra = ["client"] },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/76/b5/151d10938883fb70538fbb532dc1b94eca868291c5415db374669bafbb02/locust_cloud-1.27.6.tar.gz", hash = "sha256:28c64c56a04a0f7e5893237402fa14092d4f57dcada0ec6208c2ba7d6acf110c", size = 454690, upload-time = "2025-10-15T07:11:36.256Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a4/f5/4cc40080fc70c38dfb2b853c28620b728f91750d045c8116eb455071f5c5/locust_cloud-1.27.7.tar.gz", hash = "sha256:2d69bfb356729c08fcad8ef9bf2b55114180e10cd97602d6a8d91902046bbf61", size = 456693, upload-time = "2025-10-27T16:54:37.431Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/b0/4b3ba3db1e1821c4e7115d08aad5254c6b80e8c73595c74aca83dc1903f2/locust_cloud-1.27.6-py3-none-any.whl", hash = "sha256:29db6e7b94d1b7f45c133d4d399309865adcd4fe82c9a6c4e0f2735677593bf9", size = 409491, upload-time = "2025-10-15T07:11:34.488Z" },
+    { url = "https://files.pythonhosted.org/packages/e0/f9/04d9d4f63992850e833bb7f982311b8a0b1902f6d2a12baebf416ffb2793/locust_cloud-1.27.7-py3-none-any.whl", hash = "sha256:83543fea58ffc7f8ecb4860db661c030d88c1c02bc55e6a70e59af6f50ff22bb", size = 412503, upload-time = "2025-10-27T16:54:35.663Z" },
 ]
 
 [[package]]
@@ -2245,7 +2253,7 @@ wheels = [
 
 [[package]]
 name = "requests"
-version = "2.32.5"
+version = "2.32.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "certifi" },
@@ -2253,9 +2261,9 @@ dependencies = [
     { name = "idna" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c9/74/b3ff8e6c8446842c3f5c837e9c3dfcfe2018ea6ecef224c710c85ef728f4/requests-2.32.5.tar.gz", hash = "sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf", size = 134517, upload-time = "2025-08-18T20:46:02.573Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e1/0a/929373653770d8a0d7ea76c37de6e41f11eb07559b103b1c02cafb3f7cf8/requests-2.32.4.tar.gz", hash = "sha256:27d0316682c8a29834d3264820024b62a36942083d52caf2f14c0591336d3422", size = 135258, upload-time = "2025-06-09T16:43:07.34Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1e/db/4254e3eabe8020b458f1a747140d32277ec7a271daf1d235b70dc0b4e6e3/requests-2.32.5-py3-none-any.whl", hash = "sha256:2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6", size = 64738, upload-time = "2025-08-18T20:46:00.542Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/e4/56027c4a6b4ae70ca9de302488c5ca95ad4a39e190093d6c1a8ace08341b/requests-2.32.4-py3-none-any.whl", hash = "sha256:27babd3cda2a6d50b30443204ee89830707d396671944c998b5975b031ac2b2c", size = 64847, upload-time = "2025-06-09T16:43:05.728Z" },
 ]
 
 [[package]]
