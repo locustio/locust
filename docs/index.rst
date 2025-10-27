@@ -64,6 +64,7 @@ Other functionalities
     logging
     use-as-lib
     extensions
+    vscode-extension
 
 
 Further reading / knowledgebase
