@@ -1063,7 +1063,7 @@ requires-dist = [
     { name = "flask-login", specifier = ">=0.6.3" },
     { name = "gevent", specifier = ">=24.10.1,!=25.8.1,<26.0.0" },
     { name = "geventhttpclient", specifier = ">=2.3.1" },
-    { name = "locust-cloud", specifier = ">=1.27.8" },
+    { name = "locust-cloud", specifier = ">=1.27.9" },
     { name = "msgpack", specifier = ">=1.0.0" },
     { name = "paho-mqtt", marker = "extra == 'mqtt'", specifier = ">=2.1.0" },
     { name = "psutil", specifier = ">=5.9.1" },
@@ -1128,7 +1128,7 @@ test = [
 
 [[package]]
 name = "locust-cloud"
-version = "1.27.8"
+version = "1.27.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "configargparse" },
@@ -1138,9 +1138,9 @@ dependencies = [
     { name = "python-socketio", extra = ["client"] },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ae/ad/76c4a6af4394c28b8845bcecd60ac5dfb489878028a31b81d5db0bc3e156/locust_cloud-1.27.8.tar.gz", hash = "sha256:cc7821417643db34628551dddd0accc7451511b8160ddb001d60013c44f26d0b", size = 456694, upload-time = "2025-10-27T19:01:02.617Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f6/b1/76542f2a9cd7d67c265c0aaf88442874f00249215e3a43f1de8a1dba0f27/locust_cloud-1.27.9.tar.gz", hash = "sha256:cd0c194bbcb8ef42ee00b99ec049b5322fd59620c35ba892b664aa77334e7f9c", size = 456691, upload-time = "2025-10-28T08:45:20.635Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d7/17/2480341c78fe157011998da71f5787fcdfe1f78e218be7aac996831325e3/locust_cloud-1.27.8-py3-none-any.whl", hash = "sha256:dd1e2a0ddbf173f4d0e4ddf88ff239c70f75c295ef46a2a7c5a4a8bc2ff6d813", size = 412516, upload-time = "2025-10-27T19:01:00.316Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/6b/2c8fb542b5b87e4c97734cbdf759e1b56bbbd7264bf0e1eaf2d8c0edf4aa/locust_cloud-1.27.9-py3-none-any.whl", hash = "sha256:887a519dc18d89223eaf8ae710437bc75a035013c62e61bec886108c678bf48b", size = 412513, upload-time = "2025-10-28T08:45:19.103Z" },
 ]
 
 [[package]]
