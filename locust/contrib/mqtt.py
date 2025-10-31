@@ -101,7 +101,7 @@ class MqttClient(mqtt.Client):
         if not client_id:
             client_id = f"locust-{_generate_random_id(16)}"
 
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, client_id=self.client_id, protocol=protocol, **kwargs)
         self.environment = environment
         # we need to set client_id in case the broker assigns one to us
         self.client_id = client_id
