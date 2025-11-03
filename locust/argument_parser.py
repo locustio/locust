@@ -909,22 +909,12 @@ class UIExtraArgOptions(NamedTuple):
     choices: list[str] | None = None
 
 
-def ui_extra_args_dict(args=None, parsed_options=None) -> dict[str, dict[str, Any]]:
-    """Get all the UI visible arguments
-
-    Args:
-        args: Optional list of command-line arguments to parse (legacy parameter)
-        parsed_options: Optional already-parsed options namespace to extract values from
-    """
+def ui_extra_args_dict(args=None) -> dict[str, dict[str, Any]]:
+    """Get all the UI visible arguments"""
     locust_args = default_args_dict()
 
     parser = get_parser()
-
-    # If parsed_options is provided, use it directly; otherwise parse args
-    if parsed_options is not None:
-        all_args = vars(parsed_options)
-    else:
-        all_args = vars(parser.parse_args(args))
+    all_args = vars(parser.parse_args(args))
 
     extra_args = {
         k: UIExtraArgOptions(
