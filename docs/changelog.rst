@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.42.2
+======
+* Remove setuptools from dependencies https://github.com/locustio/locust/pull/3253
+* Revert "modified ui_extra_args_dict function to pick arguments" https://github.com/locustio/locust/pull/3255
+* Fix an issue with .conf-files https://github.com/locustio/locust/pull/3256
+
 2.42.1
 ======
 
