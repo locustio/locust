@@ -50,6 +50,9 @@ jobs:
 
       - run: uv venv
 
+      # ensure uv.lock doesnt contain anything not in pyproject.toml
+      - run: uv lock --check
+
       - name: Install the project
         run: uv sync
   
