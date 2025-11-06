@@ -133,6 +133,8 @@ class LocustTomlConfigParser(configargparse.TomlConfigParser):
                     else:
                         result[key] = str(value)
                 break
+        else:
+            raise configargparse.ConfigFileParserException("Not a toml file. Fall back to DefaultConfigFileParser.")
 
         return result
 
