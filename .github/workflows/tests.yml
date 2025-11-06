@@ -44,9 +44,11 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          version: "0.7.2"
+          version: "0.9.7"
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: |
+            "pyproject.toml"
+            "uv.lock"
 
       - run: uv venv
 
@@ -164,9 +166,11 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          version: "0.7.2"
+          version: "0.9.7"
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: |
+            "pyproject.toml"
+            "uv.lock"
 
       - run: uv venv --python ${{ matrix.python }}
 
