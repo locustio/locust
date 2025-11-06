@@ -58,6 +58,16 @@ class TestParser(unittest.TestCase):
         self.assertEqual(["Critical", "Normal"], options.tags)
         self.assertEqual("https://example.com", options.host)
 
+    def test_parse_single_line_conf_file(self):  # there was an issue with conf files identified as toml
+        with NamedTemporaryFile(mode="w", suffix=".conf") as file:
+            config_data = "users = 10\n"
+            file.write(config_data)
+            file.flush()
+            parser = get_parser(default_config_files=[file.name])
+            options = parser.parse_args()
+
+        self.assertEqual(10, options.num_users)
+
     def test_parse_options_from_toml_file(self):
         with NamedTemporaryFile(mode="w", suffix=".toml") as file:
             config_data = """\

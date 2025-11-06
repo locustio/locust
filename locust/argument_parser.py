@@ -133,6 +133,9 @@ class LocustTomlConfigParser(configargparse.TomlConfigParser):
                     else:
                         result[key] = str(value)
                 break
+        else:
+            if not stream.name.endswith("toml"):
+                raise configargparse.ConfigFileParserException("Not a toml file. Fall back to DefaultConfigFileParser.")
 
         return result
 
