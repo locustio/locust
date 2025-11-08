@@ -12,20 +12,9 @@ from json import dumps
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import gevent
-from flask import (
-    Blueprint,
-    Flask,
-    Response,
-    jsonify,
-    make_response,
-    redirect,
-    render_template,
-    request,
-    send_file,
-    send_from_directory,
-    session,
-    url_for,
-)
+from flask import (Blueprint, Flask, Response, jsonify, make_response,
+                   redirect, render_template, request, send_file,
+                   send_from_directory, session, url_for)
 from flask_cors import CORS
 from flask_login import LoginManager, login_required
 from gevent import pywsgi
