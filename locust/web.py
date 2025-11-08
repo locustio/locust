@@ -59,6 +59,7 @@ class InputField(TypedDict, total=False):
     type: str | None
     default_value: bool | None
     choices: list[str] | None
+    is_multiple: bool | None
     is_secret: bool | None
     is_required: bool | None
 
@@ -291,7 +292,10 @@ class WebUI:
                     elif parsed_options_value is None:
                         parsed_options_dict[key] = value
                     elif isinstance(parsed_options_value, list):
-                        value_as_list = value.split(",")
+                        if ',' in value:
+                            value_as_list = value.split(",")
+                        else:
+                            value_as_list = request.form.getlist(key)
                         if all(isinstance(x, int) for x in parsed_options_value):
                             parsed_options_dict[key] = list(map(int, value_as_list))
                         else:

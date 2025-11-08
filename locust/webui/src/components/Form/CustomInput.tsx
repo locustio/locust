@@ -10,6 +10,7 @@ export default function CustomInput({
   type = 'text',
   defaultValue,
   choices,
+  isMultiple,
   isSecret,
   isRequired,
 }: ICustomInput) {
@@ -20,6 +21,7 @@ export default function CustomInput({
         label={label}
         name={name}
         options={choices}
+        multiple={isMultiple}
         required={isRequired}
         sx={{ width: '100%' }}
       />

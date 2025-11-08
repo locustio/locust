@@ -862,6 +862,75 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(200, response.status_code)
         self.assertEqual([42, 24], my_dict["val"])
 
+    def test_swarm_custom_argument_with_multiple_values_use_default(self):
+        my_dict = {}
+
+        class MyUser(User):
+            @task(1)
+            def my_task(self):
+                my_dict["val"] = self.environment.parsed_options.my_argument
+
+        @locust.events.init_command_line_parser.add_listener
+        def _(parser):
+            parser.add_argument("--my-argument", default=[1], choices=[1,2,3,4], help="Give me some numbers", is_multiple=True)
+
+        parsed_options = parse_options()
+        self.environment.user_classes = [MyUser]
+        self.environment.parsed_options = parsed_options
+        self.environment.web_ui.parsed_options = parsed_options
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 1, "spawn_rate": 1, "host": ""},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual([1], my_dict["val"])
+
+    def test_swarm_custom_argument_with_multiple_values_select_one(self):
+        my_dict = {}
+
+        class MyUser(User):
+            @task(1)
+            def my_task(self):
+                my_dict["val"] = self.environment.parsed_options.my_argument
+
+        @locust.events.init_command_line_parser.add_listener
+        def _(parser):
+            parser.add_argument("--my-argument", default=[1], choices=[1,2,3,4], help="Give me some numbers", is_multiple=True)
+
+        parsed_options = parse_options()
+        self.environment.user_classes = [MyUser]
+        self.environment.parsed_options = parsed_options
+        self.environment.web_ui.parsed_options = parsed_options
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 1, "spawn_rate": 1, "host": "", "my_argument": [4]},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual([4], my_dict["val"])
+
+    def test_swarm_custom_argument_with_multiple_values_select_many(self):
+        my_dict = {}
+
+        class MyUser(User):
+            @task(1)
+            def my_task(self):
+                my_dict["val"] = self.environment.parsed_options.my_argument
+
+        @locust.events.init_command_line_parser.add_listener
+        def _(parser):
+            parser.add_argument("--my-argument", default=[1], choices=[1,2,3,4], help="Give me some numbers", is_multiple=True)
+
+        parsed_options = parse_options()
+        self.environment.user_classes = [MyUser]
+        self.environment.parsed_options = parsed_options
+        self.environment.web_ui.parsed_options = parsed_options
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 1, "spawn_rate": 1, "host": "", "my_argument": [2, 3]},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertEqual([2, 3], my_dict["val"])
+
     def test_swarm_override_command_line_argument(self):
         my_dict = {}
 
