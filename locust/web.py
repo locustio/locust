@@ -12,9 +12,20 @@ from json import dumps
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import gevent
-from flask import (Blueprint, Flask, Response, jsonify, make_response,
-                   redirect, render_template, request, send_file,
-                   send_from_directory, session, url_for)
+from flask import (
+    Blueprint,
+    Flask,
+    Response,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    send_from_directory,
+    session,
+    url_for,
+)
 from flask_cors import CORS
 from flask_login import LoginManager, login_required
 from gevent import pywsgi
@@ -281,7 +292,7 @@ class WebUI:
                     elif parsed_options_value is None:
                         parsed_options_dict[key] = value
                     elif isinstance(parsed_options_value, list):
-                        if ',' in value:
+                        if "," in value:
                             value_as_list = value.split(",")
                         else:
                             value_as_list = request.form.getlist(key)

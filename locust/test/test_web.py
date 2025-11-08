@@ -872,7 +872,9 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         @locust.events.init_command_line_parser.add_listener
         def _(parser):
-            parser.add_argument("--my-argument", default=[1], choices=[1,2,3,4], help="Give me some numbers", is_multiple=True)
+            parser.add_argument(
+                "--my-argument", default=[1], choices=[1, 2, 3, 4], help="Give me some numbers", is_multiple=True
+            )
 
         parsed_options = parse_options()
         self.environment.user_classes = [MyUser]
@@ -895,7 +897,9 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         @locust.events.init_command_line_parser.add_listener
         def _(parser):
-            parser.add_argument("--my-argument", default=[1], choices=[1,2,3,4], help="Give me some numbers", is_multiple=True)
+            parser.add_argument(
+                "--my-argument", default=[1], choices=[1, 2, 3, 4], help="Give me some numbers", is_multiple=True
+            )
 
         parsed_options = parse_options()
         self.environment.user_classes = [MyUser]
@@ -918,7 +922,9 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         @locust.events.init_command_line_parser.add_listener
         def _(parser):
-            parser.add_argument("--my-argument", default=[1], choices=[1,2,3,4], help="Give me some numbers", is_multiple=True)
+            parser.add_argument(
+                "--my-argument", default=[1], choices=[1, 2, 3, 4], help="Give me some numbers", is_multiple=True
+            )
 
         parsed_options = parse_options()
         self.environment.user_classes = [MyUser]
