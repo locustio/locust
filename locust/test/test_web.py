@@ -1,5 +1,15 @@
 from __future__ import annotations
 
+import locust
+from locust import LoadTestShape, constant, stats
+from locust.argument_parser import get_parser, parse_options
+from locust.env import Environment
+from locust.log import LogReader
+from locust.runners import Runner
+from locust.stats import StatsCSVFileWriter
+from locust.user import User, task
+from locust.web import WebUI
+
 import csv
 import json
 import logging
@@ -12,16 +22,6 @@ import gevent
 import requests
 from flask_login import UserMixin
 from pyquery import PyQuery as pq
-
-import locust
-from locust import LoadTestShape, constant, stats
-from locust.argument_parser import get_parser, parse_options
-from locust.env import Environment
-from locust.log import LogReader
-from locust.runners import Runner
-from locust.stats import StatsCSVFileWriter
-from locust.user import User, task
-from locust.web import WebUI
 
 from .testcases import LocustTestCase
 from .util import create_tls_cert
