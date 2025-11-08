@@ -19,9 +19,9 @@ export default function CustomInput({
       <Select
         defaultValue={defaultValue as string}
         label={label}
+        multiple={isMultiple}
         name={name}
         options={choices}
-        multiple={isMultiple}
         required={isRequired}
         sx={{ width: '100%' }}
       />
