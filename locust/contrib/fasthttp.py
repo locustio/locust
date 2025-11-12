@@ -72,7 +72,7 @@ CompatRequest.unverifiable = False
 CompatRequest.type = "https"
 
 # Regexp for checking if an absolute URL was specified
-absolute_http_url_regexp = re.compile(r"^https?://", re.I)
+absolute_http_url_regexp = re.compile(r"^https?://", re.IGNORECASE)
 
 # List of exceptions that can be raised by geventhttpclient when sending an HTTP request,
 # and that should result in a Locust failure
