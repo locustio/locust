@@ -4,17 +4,20 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.42.3
+======
+* Fix single line .conf files incorrectly being treated as toml https://github.com/locustio/locust/pull/3257
+* Update various GitHub actions used in the build https://github.com/locustio/locust/pull/3266, https://github.com/locustio/locust/pull/3259
+
 2.42.2
 ======
 * Remove setuptools from dependencies https://github.com/locustio/locust/pull/3253
-* Revert "modified ui_extra_args_dict function to pick arguments" https://github.com/locustio/locust/pull/3255
 * Fix an issue with .conf-files https://github.com/locustio/locust/pull/3256
 
 2.42.1
 ======
 
 * Add VS Code Extension and k8s Operator to documentation https://github.com/locustio/locust/pull/3251
-* modified ui_extra_args_dict function to pick arguments https://github.com/locustio/locust/pull/3245
 
 2.42.0
 ======
