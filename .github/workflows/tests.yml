@@ -33,16 +33,16 @@ jobs:
       python_version: ${{ steps.set_python_version.outputs.python_version }}
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           fetch-tags: true 
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
         with:
           version: "0.9.7"
           enable-cache: true
@@ -63,7 +63,7 @@ jobs:
   
       # Install node and yarn in order to build the front end during packaging  
       - name: Set Node.js 22.x
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.x
           cache: 'yarn'
@@ -74,13 +74,13 @@ jobs:
         run: uv build
 
       - name: Upload Python dist as Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: python-dist
           path: dist/*
 
       - name: Upload Web UI as Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: webui-dist
           path: locust/webui/dist/*
@@ -89,7 +89,7 @@ jobs:
         run: yarn webui:build:lib
 
       - name: Upload web UI library as Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: webui-lib-dist
           path: locust/webui/lib
@@ -156,15 +156,15 @@ jobs:
           - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, group: "test", env: "test:all" }
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
         with:
           version: "0.9.7"
           enable-cache: true
@@ -180,13 +180,13 @@ jobs:
 
       # Grab the built artifacts to ensure we're testing what we eventually publish
       - name: Download Python dist
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: python-dist
           path: dist
     
       - name: Download WebUI dist
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: webui-dist
           path: locust/webui/dist
@@ -200,13 +200,13 @@ jobs:
     needs: build_package
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
   
       # Grab the built artifacts to ensure we're testing what we eventually publish
       - name: Download Python dist
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: python-dist
           path: dist
@@ -235,8 +235,8 @@ jobs:
   test_webui:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: 22.x
           cache: 'yarn'
@@ -276,20 +276,20 @@ jobs:
     if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       # Download Python dist artifact
       - name: Download Python dist 
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: python-dist
           path: dist
 
       # Download Web UI lib artifact
       - name: Download UI lib
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: webui-lib-dist
           path: locust/webui/lib
@@ -331,20 +331,20 @@ jobs:
     if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       # Download Python dist artifact
       - name: Download Python dist 
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: python-dist
           path: dist
 
       # Download Web UI lib artifact
       - name: Download UI lib
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: webui-lib-dist
           path: locust/webui/lib
