@@ -78,7 +78,7 @@ lint = [
     "pre-commit>=3.7.1,<4.0.0",
     "ruff==0.14.3",
     "mypy>=1.13.0,<1.15.0",
-    "types-requests>=2.32.0.20240622,<3.0.0",
+    "types-requests==2.32.4.20250809",
 ]
 release = ["twine>=5.1.1,<6.0.0"]
 docs = [
