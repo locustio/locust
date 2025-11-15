@@ -31,7 +31,7 @@ def _calc_distribution(user_classes, num_users):
     total_weight = sum(u.weight for u in user_classes if not u.fixed_count)
     num_users = num_users or (total_weight if not fixed_count else 1)
     weighted_count = num_users - fixed_count
-    weighted_count = weighted_count if weighted_count > 0 else 0
+    weighted_count = max(0, weighted_count)
     user_classes_count = {}
 
     for u in user_classes:

@@ -52,7 +52,7 @@ if TYPE_CHECKING:
         context: dict
 
 
-absolute_http_url_regexp = re.compile(r"^https?://", re.I)
+absolute_http_url_regexp = re.compile(r"^https?://", re.IGNORECASE)
 
 
 class HttpSession(requests.Session):

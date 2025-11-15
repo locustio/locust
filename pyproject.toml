@@ -76,7 +76,7 @@ test = [
 ]
 lint = [
     "pre-commit>=3.7.1,<4.0.0",
-    "ruff==0.13.0",
+    "ruff==0.14.3",
     "mypy>=1.13.0,<1.15.0",
     "types-requests>=2.32.0.20240622,<3.0.0",
 ]
@@ -142,7 +142,7 @@ extend-exclude = [
     "src/readthedocs-sphinx-search/",
 ]
 lint.ignore = ["E402", "E501", "E713", "E731", "E741", "UP031"]
-lint.select = ["E", "F", "W", "UP", "FA102", "I001"]
+lint.select = ["E", "F", "W", "UP", "FA102", "I001", "FURB"]
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?)|resp)$"
 
 [tool.ruff.lint.per-file-ignores]
@@ -271,5 +271,5 @@ filterwarnings = [
     # sometimes, monkey patching happens too late 
     # the proper fix for this is to run python -m gevent.monkey --module pytest ... 
     # but that isnt always possible
-    "ignore::gevent.monkey.MonkeyPatchWarning" 
+    "ignore::gevent.monkey.MonkeyPatchWarning",
 ]
