@@ -236,7 +236,9 @@ On windows:
 Custom arguments
 ----------------
 
-You can add your own command line arguments to Locust, using the :py:attr:`init_command_line_parser <locust.event.Events.init_command_line_parser>` Event. Custom arguments are also presented and editable in the web UI. If `choices` are specified for the argument, they will be presented as a dropdown in the web UI.
+You can add your own command line arguments to Locust, using the :py:attr:`init_command_line_parser <locust.event.Events.init_command_line_parser>` Event. Custom arguments are also presented and editable in the web UI. 
+If `choices` are specified for the argument, they will be presented as a dropdown in the web UI.
+If `is_multiple` is set to True together with `choices`, the argument will be presented as a multi-select dropdown in the web UI.
 
 .. literalinclude:: ../examples/add_command_line_argument.py
     :language: python

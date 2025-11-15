@@ -10,6 +10,7 @@ export default function CustomInput({
   type = 'text',
   defaultValue,
   choices,
+  isMultiple,
   isSecret,
   isRequired,
 }: ICustomInput) {
@@ -18,6 +19,7 @@ export default function CustomInput({
       <Select
         defaultValue={defaultValue as string}
         label={label}
+        multiple={isMultiple}
         name={name}
         options={choices}
         required={isRequired}
