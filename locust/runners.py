@@ -641,7 +641,7 @@ class MasterRunner(DistributedRunner):
     :class:`WorkerRunners <WorkerRunner>` will aggregated.
     """
 
-    def __init__(self, environment, master_bind_host, master_bind_port) -> None:
+    def __init__(self, environment, master_bind_host, master_bind_port, master_ipv4_only) -> None:
         """
         :param environment: Environment instance
         :param master_bind_host: Host/interface to use for incoming worker connections
@@ -651,6 +651,7 @@ class MasterRunner(DistributedRunner):
         self.worker_cpu_warning_emitted = False
         self.master_bind_host = master_bind_host
         self.master_bind_port = master_bind_port
+        self.master_ipv4_only = master_ipv4_only
         self.spawn_rate: float = 0.0
         self.spawning_completed = False
         self.worker_indexes: dict[str, int] = {}
@@ -658,7 +659,7 @@ class MasterRunner(DistributedRunner):
 
         self.clients = WorkerNodes()
         try:
-            self.server = rpc.Server(master_bind_host, master_bind_port)
+            self.server = rpc.Server(master_bind_host, master_bind_port, master_ipv4_only)
         except RPCError as e:
             if e.args[0] == "Socket bind failure: Address already in use":
                 port_string = (
@@ -951,7 +952,7 @@ class MasterRunner(DistributedRunner):
         logger.info("Resetting RPC server and all worker connections.")
         try:
             self.server.close(linger=0)
-            self.server = rpc.Server(self.master_bind_host, self.master_bind_port)
+            self.server = rpc.Server(self.master_bind_host, self.master_bind_port, self.master_ipv4_only)
             self.connection_broken = False
         except RPCError as e:
             logger.error(f"Temporary failure when resetting connection: {e}, will retry later.")
@@ -1201,7 +1202,7 @@ class WorkerRunner(DistributedRunner):
     # the worker index is set on ACK, if master provided it (masters <= 2.10.2 do not provide it)
     worker_index = -1
 
-    def __init__(self, environment: Environment, master_host: str, master_port: int) -> None:
+    def __init__(self, environment: Environment, master_host: str, master_port: int, master_ipv4_only: bool) -> None:
         """
         :param environment: Environment instance
         :param master_host: Host/IP to use for connection to the master
@@ -1216,11 +1217,12 @@ class WorkerRunner(DistributedRunner):
         self.client_id = socket.gethostname() + "_" + uuid4().hex
         self.master_host = master_host
         self.master_port = master_port
+        self.master_ipv4_only = master_ipv4_only
         self.web_base_path = environment.parsed_options.web_base_path if environment.parsed_options else ""
         self.logs: list[str] = []
         self.worker_cpu_warning_emitted = False
         self._users_dispatcher: UsersDispatcher | None = None
-        self.client = rpc.Client(master_host, master_port, self.client_id)
+        self.client = rpc.Client(master_host, master_port, self.client_id, self.master_ipv4_only)
         self.greenlet.spawn(self.worker).link_exception(greenlet_exception_handler)
         self.connect_to_master()
         self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
@@ -1324,7 +1326,7 @@ class WorkerRunner(DistributedRunner):
         logger.info("Reset connection to master")
         try:
             self.client.close()
-            self.client = rpc.Client(self.master_host, self.master_port, self.client_id)
+            self.client = rpc.Client(self.master_host, self.master_port, self.client_id, self.master_ipv4_only)
         except RPCError as e:
             logger.error(f"Temporary failure when resetting connection: {e}, will retry later.")
 
