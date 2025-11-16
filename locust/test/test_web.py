@@ -779,11 +779,33 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         def _(parser):
             parser.add_argument("--one-argument", type=int, help="Give me a number")
             parser.add_argument("--default-argument", type=int, help="Give me a number", default=24)
-            parser.add_argument("--default-list-argument", default=["*"], help="Give me a list of numbers", action="append")
-            parser.add_argument("--default-int-list-argument", default=[1], help="Give me a list of numbers", action="append")
-            parser.add_argument("--default-multiple-list-argument", default=[1], choices=[1, 2, 3, 4], help="Give me some numbers", is_multiple=True)
-            parser.add_argument("--default-multiple-list-one-argument", default=[1], choices=[1, 2, 3, 4], help="Give me some numbers", is_multiple=True)
-            parser.add_argument("--default-multiple-list-many-argument", default=[1], choices=[1, 2, 3, 4], help="Give me some numbers", is_multiple=True)
+            parser.add_argument(
+                "--default-list-argument", default=["*"], help="Give me a list of numbers", action="append"
+            )
+            parser.add_argument(
+                "--default-int-list-argument", default=[1], help="Give me a list of numbers", action="append"
+            )
+            parser.add_argument(
+                "--default-multiple-list-argument",
+                default=[1],
+                choices=[1, 2, 3, 4],
+                help="Give me some numbers",
+                is_multiple=True,
+            )
+            parser.add_argument(
+                "--default-multiple-list-one-argument",
+                default=[1],
+                choices=[1, 2, 3, 4],
+                help="Give me some numbers",
+                is_multiple=True,
+            )
+            parser.add_argument(
+                "--default-multiple-list-many-argument",
+                default=[1],
+                choices=[1, 2, 3, 4],
+                help="Give me some numbers",
+                is_multiple=True,
+            )
 
         parsed_options = parse_options()
         self.environment.user_classes = [MyUser]
@@ -801,7 +823,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
                 "default_int_list_argument": "42,24",
                 "default_multiple_list_one_argument": [4],
                 "default_multiple_list_many_argument": [2, 3],
-            }
+            },
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual("42", my_dict["one_arg"])
