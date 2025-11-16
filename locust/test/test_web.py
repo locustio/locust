@@ -792,9 +792,9 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={
-                "user_count": 1, 
-                "spawn_rate": 1, 
-                "host": "", 
+                "user_count": 1,
+                "spawn_rate": 1,
+                "host": "",
                 "one_argument": "42",
                 "default_argument": "42",
                 "default_list_argument": "42,24",
@@ -807,7 +807,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual("42", my_dict["one_arg"])
         self.assertEqual(42, my_dict["def_arg"])
         self.assertEqual(["42", "24"], my_dict["def_list_arg"])
-        self.assertEqual([42, 24], my_dict["def_int_list_arg"])       
+        self.assertEqual([42, 24], my_dict["def_int_list_arg"])
         self.assertEqual([1], my_dict["def_mult_list_arg"])
         self.assertEqual([4], my_dict["def_mult_list_one_arg"])
         self.assertEqual([2, 3], my_dict["def_mult_list_many_arg"])
