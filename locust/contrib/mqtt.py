@@ -100,6 +100,7 @@ class MqttClient(mqtt.Client):
         # See https://github.com/eclipse/paho.mqtt.python/issues/237
         if not client_id:
             client_id = f"locust-{_generate_random_id(16)}"
+
         super().__init__(*args, client_id=client_id, protocol=protocol, **kwargs)
         self.environment = environment
         # we need to set client_id in case the broker assigns one to us
