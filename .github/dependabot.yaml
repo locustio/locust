@@ -9,3 +9,29 @@ updates:
       all_dependencies:
         patterns:
           - "*"
+
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: npm
+    directory: /locust/webui
+    schedule:
+      interval: weekly
+    groups:
+      eslint:
+        patterns:
+          - "*eslint*"
+      vite:
+        patterns:
+          - "*vite*"
+      react:
+        patterns:
+          - "*react*"
+      emotion:
+        patterns:
+          - "*emotion*"
+      mui:
+        patterns:
+          - "*mui*"
