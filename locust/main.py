@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import locust
+from locust.opentelemetry import setup_opentelemetry
 
 import atexit
 import errno
@@ -200,6 +201,8 @@ def main():
     # setup logging
     if not options.skip_log_setup:
         setup_logging(options.loglevel, options.logfile)
+
+    setup_opentelemetry()
 
     children = []
     logger = logging.getLogger(__name__)
