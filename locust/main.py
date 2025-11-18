@@ -202,7 +202,8 @@ def main():
     if not options.skip_log_setup:
         setup_logging(options.loglevel, options.logfile)
 
-    setup_opentelemetry()
+    if options.otel:
+        setup_opentelemetry()
 
     children = []
     logger = logging.getLogger(__name__)

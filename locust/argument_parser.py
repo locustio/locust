@@ -876,6 +876,12 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         type=str,
         help="Set a profile to group the testruns together",
     )
+    other_group.add_argument(
+        "--otel",
+        action="store_true",
+        help="Instrument the Locust test run with OpenTelemetry.",
+        env_var="LOCUST_ENABLE_OPENTELEMETRY",
+    )
 
     user_classes_group = parser.add_argument_group("User classes")
     user_classes_group.add_argument(
