@@ -129,9 +129,15 @@ def _setup_meter_provider(resource, metrics_exporters):
 
 def _setup_auto_instrumentation():
     try:
+        import requests
         from opentelemetry.instrumentation.requests import RequestsInstrumentor
+        from opentelemetry.sdk.trace import Span
 
-        RequestsInstrumentor().instrument()
+        def request_hook(span: Span, request: requests.PreparedRequest):
+            span.update_name(f"{request.method} {request.url}")
+            return
+
+        RequestsInstrumentor().instrument(request_hook=request_hook)
     except ImportError:
         logger.info(
             "OpenTelemetry 'requests' instrumentation is not installed. Please install 'opentelemetry-instrumentation-requests'"
