@@ -3,6 +3,7 @@ from __future__ import annotations
 from locust.event import EventHook
 
 import re
+import sys
 import time
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, cast
@@ -17,8 +18,13 @@ from urllib3 import PoolManager
 
 from .exception import CatchResponseError, LocustError, ResponseError
 
+if sys.version_info >= (3, 12):
+    from typing import override
+else:
+    from typing_extensions import override
+
+
 if TYPE_CHECKING:
-    import sys
     from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping
     from typing import Any, TypedDict
 
@@ -177,6 +183,8 @@ class HttpSession(requests.Session):
         if self.request_name and not name:
             name = self.request_name
 
+        self.explicit_name = name
+
         # prepend url with hostname unless it's already an absolute URL
         complete_url = self._build_url(url)
 
@@ -234,6 +242,13 @@ class HttpSession(requests.Session):
             raise
         except RequestException as e:
             return ResponseContextManager(e)  # this is inconsistent, we should fix this some time
+
+    @override
+    def prepare_request(self, request) -> requests.PreparedRequest:
+        prep = super().prepare_request(request)
+        if self.explicit_name:
+            prep._explicit_name = self.explicit_name  # type: ignore
+        return prep
 
     def get(
         self, url: str | bytes, *, data: Any = None, json: Any = None, **kwargs: Unpack[RESTKwargs]
