@@ -1,5 +1,6 @@
 import logging
 import os
+from urllib.parse import urlparse
 
 from ._version import __version__
 
@@ -134,8 +135,11 @@ def _setup_auto_instrumentation():
         from opentelemetry.sdk.trace import Span
 
         def request_hook(span: Span, request: requests.PreparedRequest):
-            span.update_name(f"{request.method} {request.url}")
-            return
+            if name := getattr(request, "_explicit_name", None):
+                span.update_name(f"{request.method} {name}")
+            else:
+                parsed = urlparse(request.url)
+                span.update_name(f"{request.method} {str(parsed.path) or '/'}")
 
         RequestsInstrumentor().instrument(request_hook=request_hook)
     except ImportError:
