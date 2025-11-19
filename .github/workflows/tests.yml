@@ -2,11 +2,15 @@ name: Tests
 
 on:
   push:
+    branches:
+      - master
+    tags:
+      - "*"
     paths-ignore:
-      - '**.md'
+      - "**.md"
   pull_request:
     paths-ignore:
-      - '**.md'
+      - "**.md"
 
 permissions:
   contents: read
@@ -16,7 +20,6 @@ defaults:
     shell: bash
 
 jobs:
-
   #-------------------------
   #       Building
   #-------------------------
@@ -31,12 +34,12 @@ jobs:
       is_merge_commit: ${{ steps.set_is_merge_commit.outputs.is_merge_commit }}
       is_tag_build: ${{ steps.set_is_tag_build.outputs.is_tag_build }}
       python_version: ${{ steps.set_python_version.outputs.python_version }}
-    
+
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          fetch-tags: true 
+          fetch-tags: true
 
       - uses: actions/setup-python@v6
         with:
@@ -57,16 +60,16 @@ jobs:
 
       - name: Install the project
         run: uv sync
-  
+
       # any local changes would make hatch-vcs set a "local version" (+dev0...), so we ignore any uv.lock updates:
       - run: git update-index --assume-unchanged uv.lock
-  
-      # Install node and yarn in order to build the front end during packaging  
+
+      # Install node and yarn in order to build the front end during packaging
       - name: Set Node.js 22.x
         uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: 'yarn'
+          cache: "yarn"
           cache-dependency-path: locust/webui/yarn.lock
 
       # Build and upload the project artifacts only once
@@ -84,7 +87,7 @@ jobs:
         with:
           name: webui-dist
           path: locust/webui/dist/*
-  
+
       - name: Build UI library
         run: yarn webui:build:lib
 
@@ -93,7 +96,7 @@ jobs:
         with:
           name: webui-lib-dist
           path: locust/webui/lib
-      
+
       # Set workflow metadata in one place so we can pull it out later
       - id: set_tag
         run: echo "tag=$(uv run hatch version)" | tee -a "$GITHUB_OUTPUT"
@@ -113,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_package
     steps:
-       - run: |
+      - run: |
           echo "tag: ${{ needs.build_package.outputs.tag }}"
           echo "tag_short: ${{ needs.build_package.outputs.tag_short }}"
           echo "branch: ${{ needs.build_package.outputs.branch }}"
@@ -135,25 +138,91 @@ jobs:
       matrix:
         include:
           # Static analysis and utilities
-          - { name: "Ruff", python: "3.12", os: ubuntu-latest, group: "lint", env: "lint:format" }
-          - { name: "Mypy", python: "3.12", os: ubuntu-latest, group: "lint", env: "lint:types" }
+          - {
+              name: "Ruff",
+              python: "3.12",
+              os: ubuntu-latest,
+              group: "lint",
+              env: "lint:format",
+            }
+          - {
+              name: "Mypy",
+              python: "3.12",
+              os: ubuntu-latest,
+              group: "lint",
+              env: "lint:types",
+            }
 
-          # Verification of builds and other aspects          
-          - { name: "Docs Build", python: "3.12", os: ubuntu-latest, group: "docs", env: "docs:build" }
+          # Verification of builds and other aspects
+          - {
+              name: "Docs Build",
+              python: "3.12",
+              os: ubuntu-latest,
+              group: "docs",
+              env: "docs:build",
+            }
 
-          # OS Integration tests 
-          - { name: "Linux", python: "3.12", os: ubuntu-latest, group: "test", env: "integration_test_ci:fail_fast" }
-          - { name: "Windows", python: '3.12', os: windows-latest, group: "test", env: "integration_test_ci:fail_fast" }
-          - { name: "Linux_pytest_locustfile", python: "3.12", os: ubuntu-latest, group: "test", env: "integration_test_ci:test_pytest" }
+          # OS Integration tests
+          - {
+              name: "Linux",
+              python: "3.12",
+              os: ubuntu-latest,
+              group: "test",
+              env: "integration_test_ci:fail_fast",
+            }
+          - {
+              name: "Windows",
+              python: "3.12",
+              os: windows-latest,
+              group: "test",
+              env: "integration_test_ci:fail_fast",
+            }
+          - {
+              name: "Linux_pytest_locustfile",
+              python: "3.12",
+              os: ubuntu-latest,
+              group: "test",
+              env: "integration_test_ci:test_pytest",
+            }
           # MacOS behaves super badly on GH actions right now, so let's disable it for the time being
-          # - { name: "MacOS", python: '3.12', os: macos-latest, group: "test", env: "integration_test_ci:fail_fast" } 
-          
+          # - { name: "MacOS", python: '3.12', os: macos-latest, group: "test", env: "integration_test_ci:fail_fast" }
+
           # Unit tests on Python versions
-          - { name: "Python 3.14", python: "3.14", os: ubuntu-latest, group: "test", env: "test:all" }
-          - { name: "Python 3.13", python: "3.13", os: ubuntu-latest, group: "test", env: "test:all" }
-          - { name: "Python 3.12", python: "3.12", os: ubuntu-latest, group: "test", env: "test:all" }
-          - { name: "Python 3.11", python: "3.11", os: ubuntu-latest, group: "test", env: "test:all" }
-          - { name: "Python 3.10", python: "3.10", os: ubuntu-latest, group: "test", env: "test:all" }
+          - {
+              name: "Python 3.14",
+              python: "3.14",
+              os: ubuntu-latest,
+              group: "test",
+              env: "test:all",
+            }
+          - {
+              name: "Python 3.13",
+              python: "3.13",
+              os: ubuntu-latest,
+              group: "test",
+              env: "test:all",
+            }
+          - {
+              name: "Python 3.12",
+              python: "3.12",
+              os: ubuntu-latest,
+              group: "test",
+              env: "test:all",
+            }
+          - {
+              name: "Python 3.11",
+              python: "3.11",
+              os: ubuntu-latest,
+              group: "test",
+              env: "test:all",
+            }
+          - {
+              name: "Python 3.10",
+              python: "3.10",
+              os: ubuntu-latest,
+              group: "test",
+              env: "test:all",
+            }
 
     steps:
       - uses: actions/checkout@v5
@@ -184,7 +253,7 @@ jobs:
         with:
           name: python-dist
           path: dist
-    
+
       - name: Download WebUI dist
         uses: actions/download-artifact@v6
         with:
@@ -193,7 +262,7 @@ jobs:
 
       - name: Run tests
         run: uv run --group ${{ matrix.group }} hatch run +py=${{ matrix.python }} ${{ matrix.env }}
-      
+
   test_docker_image:
     name: Test Docker Image
     runs-on: ubuntu-latest
@@ -203,7 +272,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-  
+
       # Grab the built artifacts to ensure we're testing what we eventually publish
       - name: Download Python dist
         uses: actions/download-artifact@v6
@@ -239,7 +308,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22.x
-          cache: 'yarn'
+          cache: "yarn"
           cache-dependency-path: locust/webui/yarn.lock
       - name: yarn install
         uses: borales/actions-yarn@v5
@@ -281,7 +350,7 @@ jobs:
           fetch-depth: 0
 
       # Download Python dist artifact
-      - name: Download Python dist 
+      - name: Download Python dist
         uses: actions/download-artifact@v6
         with:
           name: python-dist
@@ -336,7 +405,7 @@ jobs:
           fetch-depth: 0
 
       # Download Python dist artifact
-      - name: Download Python dist 
+      - name: Download Python dist
         uses: actions/download-artifact@v6
         with:
           name: python-dist
@@ -369,7 +438,7 @@ jobs:
         with:
           cmd: version ${{ needs.build_package.outputs.tag_short }}-next-${{ github.run_id }}
           dir: locust/webui
-      
+
       # Set tag build version
       - name: yarn version
         uses: borales/actions-yarn@v5
@@ -389,9 +458,9 @@ jobs:
         name: Publish package on NPM
         if: github.ref == 'refs/heads/master'
         with:
-          cmd: npm publish --tag next 
+          cmd: npm publish --tag next
           dir: locust/webui
-      
+
       # On tag builds
       - uses: borales/actions-yarn@v5
         name: Publish package on NPM
