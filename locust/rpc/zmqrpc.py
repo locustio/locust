@@ -62,7 +62,9 @@ class BaseSocket:
     def close(self, linger=None):
         self.socket.close(linger=linger)
 
-    def ipv4_only(self, host, port) -> bool:
+    def ipv4_only(self, host, port, force=False) -> bool:
+        if force:
+            return True
         try:
             if host == "*":
                 return False
@@ -75,8 +77,8 @@ class BaseSocket:
 
 
 class Server(BaseSocket):
-    def __init__(self, host, port):
-        BaseSocket.__init__(self, zmq.ROUTER, self.ipv4_only(host, port))
+    def __init__(self, host, port, ipv4_only):
+        BaseSocket.__init__(self, zmq.ROUTER, self.ipv4_only(host, port, ipv4_only))
         if port == 0:
             self.port = self.socket.bind_to_random_port(f"tcp://{host}")
         else:
@@ -88,7 +90,7 @@ class Server(BaseSocket):
 
 
 class Client(BaseSocket):
-    def __init__(self, host, port, identity):
-        BaseSocket.__init__(self, zmq.DEALER, self.ipv4_only(host, port))
+    def __init__(self, host, port, identity, ipv4_only):
+        BaseSocket.__init__(self, zmq.DEALER, self.ipv4_only(host, port, ipv4_only))
         self.socket.setsockopt(zmq.IDENTITY, identity.encode())
         self.socket.connect("tcp://%s:%i" % (host, port))
