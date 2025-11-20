@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.42.4
+======
+* Update pytest dependency range by @jairhenrique in https://github.com/locustio/locust/pull/3263
+* Allow multiple dropdown in Web UI by @jFompe in https://github.com/locustio/locust/pull/3261
+* Add OpenTelemetry support by @amadeuppereira in https://github.com/locustio/locust/pull/3275, https://github.com/locustio/locust/pull/3276, https://github.com/locustio/locust/pull/3278, https://github.com/locustio/locust/pull/3279
+
 2.42.3
 ======
 * Fix single line .conf files incorrectly being treated as toml https://github.com/locustio/locust/pull/3257
