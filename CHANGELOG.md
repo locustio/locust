@@ -1,6 +1,60 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.42.5](https://github.com/locustio/locust/tree/2.42.5) (2025-11-20)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.42.4...2.42.5)
+
+**Merged pull requests:**
+
+- Log when otel is enabled [\#3284](https://github.com/locustio/locust/pull/3284) ([amadeuppereira](https://github.com/amadeuppereira))
+
+## [2.42.4](https://github.com/locustio/locust/tree/2.42.4) (2025-11-20)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.42.3...2.42.4)
+
+**Closed issues:**
+
+- bumb pytest to support 9.x [\#3262](https://github.com/locustio/locust/issues/3262)
+
+**Merged pull requests:**
+
+- Avoid duplicated action run on pull requests [\#3282](https://github.com/locustio/locust/pull/3282) ([jairhenrique](https://github.com/jairhenrique))
+- Forward explicitly set request name to OTEL span [\#3281](https://github.com/locustio/locust/pull/3281) ([amadeuppereira](https://github.com/amadeuppereira))
+- Verbose request span name [\#3279](https://github.com/locustio/locust/pull/3279) ([amadeuppereira](https://github.com/amadeuppereira))
+- Add OpenTelemetry flag [\#3278](https://github.com/locustio/locust/pull/3278) ([amadeuppereira](https://github.com/amadeuppereira))
+- Disable uv.lock check in GH action [\#3277](https://github.com/locustio/locust/pull/3277) ([cyberw](https://github.com/cyberw))
+- Add otlp http exporter dependency [\#3276](https://github.com/locustio/locust/pull/3276) ([amadeuppereira](https://github.com/amadeuppereira))
+- Add OpenTelemetry support [\#3275](https://github.com/locustio/locust/pull/3275) ([amadeuppereira](https://github.com/amadeuppereira))
+- Bump the eslint group in /locust/webui with 11 updates [\#3270](https://github.com/locustio/locust/pull/3270) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Includes npm and uv on dependabot file [\#3269](https://github.com/locustio/locust/pull/3269) ([jairhenrique](https://github.com/jairhenrique))
+- Enables FURB ruff lint [\#3265](https://github.com/locustio/locust/pull/3265) ([jairhenrique](https://github.com/jairhenrique))
+- Updates pytest dependency range [\#3263](https://github.com/locustio/locust/pull/3263) ([jairhenrique](https://github.com/jairhenrique))
+- Allow multiple dropdown in Web UI [\#3261](https://github.com/locustio/locust/pull/3261) ([jFompe](https://github.com/jFompe))
+
+## [2.42.3](https://github.com/locustio/locust/tree/2.42.3) (2025-11-15)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.42.2...2.42.3)
+
+**Merged pull requests:**
+
+- Bump the all\_dependencies group with 7 updates [\#3266](https://github.com/locustio/locust/pull/3266) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Creates dependabot file to keep gh actions updated [\#3264](https://github.com/locustio/locust/pull/3264) ([jairhenrique](https://github.com/jairhenrique))
+- GH Actions: update uv version, ensure uv.lock doesn't contain anything not in pyproject.toml [\#3259](https://github.com/locustio/locust/pull/3259) ([cyberw](https://github.com/cyberw))
+- Fix single line .conf files incorrectly being treated as toml [\#3257](https://github.com/locustio/locust/pull/3257) ([cyberw](https://github.com/cyberw))
+
+## [2.42.2](https://github.com/locustio/locust/tree/2.42.2) (2025-11-06)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.42.1...2.42.2)
+
+**Merged pull requests:**
+
+- Bump locust-cloud version, fixing an issue with .conf-files [\#3256](https://github.com/locustio/locust/pull/3256) ([cyberw](https://github.com/cyberw))
+- Revert "modified ui\_extra\_args\_dict function to pick arguments" [\#3255](https://github.com/locustio/locust/pull/3255) ([cyberw](https://github.com/cyberw))
+- Update uv.lock [\#3254](https://github.com/locustio/locust/pull/3254) ([cyberw](https://github.com/cyberw))
+- remove setuptools from dependencies [\#3253](https://github.com/locustio/locust/pull/3253) ([dotlambda](https://github.com/dotlambda))
+- fix: MQTT client\_id and protocol not passed down to Client [\#3252](https://github.com/locustio/locust/pull/3252) ([ionutab](https://github.com/ionutab))
+
 ## [2.42.1](https://github.com/locustio/locust/tree/2.42.1) (2025-10-27)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.42.0...2.42.1)
