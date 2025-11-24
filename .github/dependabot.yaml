@@ -13,12 +13,12 @@ updates:
   - package-ecosystem: uv
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
 
   - package-ecosystem: npm
     directory: /locust/webui
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
       eslint:
         patterns:
