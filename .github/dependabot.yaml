@@ -18,7 +18,7 @@ updates:
   - package-ecosystem: npm
     directory: /locust/webui
     schedule:
-      interval: monthly
+      interval: semiannually
     groups:
       eslint:
         patterns:
