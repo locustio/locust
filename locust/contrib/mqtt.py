@@ -332,8 +332,8 @@ class MqttClient(mqtt.Client):
     def _loop(self, timeout: float = 1.0) -> MQTTErrorCode:
         """Override the parent's _loop method to optionally use selectors.
 
-        When use_loop_selectors is True, this uses a selector-based implementation
-        for better performance. Otherwise, it falls back to the parent's implementation.
+        When use_loop_selectors is True, this uses a selector-based implementation that allows more than 340 connections.
+        Otherwise, it falls back to the parent's implementation.
         """
         if self._use_loop_selectors:
             return self._loop_selectors(timeout)
@@ -466,7 +466,7 @@ class MqttClient(mqtt.Client):
         qos: int = 0,
         options: SubscribeOptions | None = None,
         properties: Properties | None = None,
-    ) -> tuple[mqtt.MQTTErrorCode, int | None]:  # type: ignore
+    ) -> tuple[mqtt.MQTTErrorCode, int | None]:
         """Subscribe to a given topic.
 
         This method wraps the underlying paho-mqtt client's method in order to
