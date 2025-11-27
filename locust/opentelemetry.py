@@ -21,7 +21,7 @@ def setup_opentelemetry() -> bool:
     )
 
     if traces_exporters == {"none"} and metrics_exporters == {"none"}:
-        logger.debug("No OpenTelemetry exporters configured, opentelemetry not enabled")
+        logger.info("No OpenTelemetry exporters configured, opentelemetry not enabled")
         return False
 
     resource = Resource.create(
