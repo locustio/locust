@@ -22,6 +22,7 @@ class TestProcess:
         self,
         command: str,
         *,
+        env: dict[str, str] = {},
         expect_return_code: int | None = 0,
         sigint_on_exit: bool = True,
         expect_timeout: int = 5,
@@ -54,7 +55,7 @@ class TestProcess:
 
         self.proc = subprocess.Popen(
             shlex.split(command) if not IS_WINDOWS else command.split(" "),
-            env={"PYTHONUNBUFFERED": "1", **os.environ},
+            env={"PYTHONUNBUFFERED": "1", **os.environ, **env},
             stdin=self.stdin_s if self.use_pty else None,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
