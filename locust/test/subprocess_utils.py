@@ -128,7 +128,8 @@ class TestProcess:
                     return
             time.sleep(0.05)
 
-        self.on_fail(f"Timed out waiting for '{to_expect}' after {self.expect_timeout} seconds. Got {buffer[-5:]}")
+        output = "\n".join(buffer[-5:])
+        self.on_fail(f"Timed out waiting for '{to_expect}' after {self.expect_timeout} seconds. Got\n{output}")
 
     # Check all output logs (stateless)
     def expect_any(self, to_expect, *, stream="stderr"):
@@ -142,7 +143,8 @@ class TestProcess:
         if any(to_expect in line for line in buffer):
             return
 
-        self.on_fail(f"Did not see expected message: '{to_expect}'. Got {buffer[-5:]}")
+        output = "\n".join(buffer[-5:])
+        self.on_fail(f"Did not see expected message: '{to_expect}'. Got\n{output}")
 
     def not_expect_any(self, to_not_expect, *, stream="stderr"):
         __tracebackhide__ = True
