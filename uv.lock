@@ -1073,6 +1073,13 @@ milvus = [
 mqtt = [
     { name = "paho-mqtt" },
 ]
+otel = [
+    { name = "opentelemetry-exporter-otlp-proto-grpc" },
+    { name = "opentelemetry-exporter-otlp-proto-http" },
+    { name = "opentelemetry-instrumentation-requests" },
+    { name = "opentelemetry-instrumentation-urllib3" },
+    { name = "opentelemetry-sdk" },
+]
 release = [
     { name = "twine" },
 ]
@@ -1150,6 +1157,13 @@ lint = [
 ]
 milvus = [{ name = "pymilvus", specifier = ">=2.5.0" }]
 mqtt = [{ name = "paho-mqtt", specifier = ">=2.1.0" }]
+otel = [
+    { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.38.0" },
+    { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.38.0" },
+    { name = "opentelemetry-instrumentation-requests", specifier = ">=0.59b0" },
+    { name = "opentelemetry-instrumentation-urllib3", specifier = ">=0.59b0" },
+    { name = "opentelemetry-sdk", specifier = ">=1.38.0" },
+]
 release = [{ name = "twine", specifier = ">=5.1.1,<6.0.0" }]
 test = [
     { name = "cryptography", specifier = ">=43.0.1,<44.0.0" },
