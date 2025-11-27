@@ -1611,7 +1611,7 @@ class TelemetryTests(ProcessIntegrationTest):
     def test_httpuser(self):
         with mock_locustfile() as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --headless -u 1 --otel --run-time 1s",
+                f"locust -f {mocked.file_path} --headless -u 1 --otel --run-time 2s",
                 expect_return_code=None,
                 extra_env={
                     "OTEL_METRICS_EXPORTER": "console",
