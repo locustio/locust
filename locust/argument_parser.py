@@ -151,6 +151,14 @@ class LocustTomlConfigParser(configargparse.TomlConfigParser):
         return result
 
 
+class LocustConfigParser(configargparse.ConfigFileParser):
+    def parse(self, stream):
+        if stream.name.endswith(".toml"):
+            return LocustTomlConfigParser(["tool.locust"]).parse(stream)
+
+        return configargparse.DefaultConfigFileParser().parse(stream)
+
+
 def parse_locustfile_paths(paths: list[str]) -> list[str]:
     """
     Returns a list of relative file paths.
@@ -218,12 +226,7 @@ def download_locustfile_from_url(url: str) -> str:
 def get_empty_argument_parser(add_help=True, default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParser:
     parser = LocustArgumentParser(
         default_config_files=default_config_files,
-        config_file_parser_class=configargparse.CompositeConfigParser(
-            [
-                LocustTomlConfigParser(["tool.locust"]),
-                configargparse.DefaultConfigFileParser,
-            ]
-        ),
+        config_file_parser_class=LocustConfigParser,
         add_env_var_help=False,
         add_config_file_help=False,
         add_help=add_help,
