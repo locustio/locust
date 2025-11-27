@@ -205,8 +205,8 @@ def main():
     start_message = f"Starting Locust {version}{locust_exporter_version}"
 
     if options.otel:
-        setup_opentelemetry()
-        start_message += ", OpenTelemetry enabled"
+        if setup_opentelemetry():
+            start_message += ", OpenTelemetry enabled"
 
     children = []
     logger = logging.getLogger(__name__)
