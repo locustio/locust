@@ -6,7 +6,7 @@ from contextlib import contextmanager
 MOCK_LOCUSTFILE_CONTENT = '''
 """This is a mock locust file for unit testing"""
 
-from locust import HttpUser, TaskSet, task, between, LoadTestShape
+from locust import HttpUser, TaskSet, task, constant, LoadTestShape
 
 
 def index(l):
@@ -23,7 +23,7 @@ class UserTasks(TaskSet):
 
 class UserSubclass(HttpUser):
     host = "http://127.0.0.1:8089"
-    wait_time = between(2, 5)
+    wait_time = constant(1)
     tasks = [UserTasks]
 
 
