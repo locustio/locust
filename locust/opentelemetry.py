@@ -7,13 +7,13 @@ from ._version import __version__
 logger = logging.getLogger(__name__)
 
 
-def setup_opentelemetry():
+def setup_opentelemetry() -> bool:
     try:
         from opentelemetry import metrics, trace
         from opentelemetry.sdk.resources import Resource
     except ImportError:
-        logger.error("OpenTelemetry SDK is not installed, opentelemetry not enabled. Run 'pip install locust[otel]")
-        return
+        logger.error("OpenTelemetry SDK is not installed, opentelemetry not enabled. Run 'pip install locust[otel]'")
+        return False
 
     traces_exporters = set(e.strip().lower() for e in os.getenv("OTEL_TRACES_EXPORTER", "otlp").split(",") if e.strip())
     metrics_exporters = set(
@@ -22,7 +22,7 @@ def setup_opentelemetry():
 
     if traces_exporters == {"none"} and metrics_exporters == {"none"}:
         logger.debug("No OpenTelemetry exporters configured, opentelemetry not enabled")
-        return
+        return False
 
     resource = Resource.create(
         {
@@ -42,6 +42,7 @@ def setup_opentelemetry():
     _setup_auto_instrumentation()
 
     logger.debug("OpenTelemetry configured!")
+    return True
 
 
 def _setup_tracer_provider(resource, traces_exporters):
