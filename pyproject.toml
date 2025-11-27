@@ -114,6 +114,13 @@ docs = [
 milvus = ["pymilvus>=2.5.0"]
 mqtt = ["paho-mqtt>=2.1.0"]
 dns = ["dnspython>=2.8.0"]
+otel = [
+    "opentelemetry-sdk>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
+    "opentelemetry-instrumentation-requests>=0.59b0",
+    "opentelemetry-instrumentation-urllib3>=0.59b0",
+]
 
 [project.scripts]
 locust = "locust.main:main"
@@ -196,6 +203,11 @@ dependencies = [
     "pyquery>=2.0.0,<3.0.0",
     "pytest>=8.3.3,<10",
     "retry>=0.9.2,<1.0.0",
+    "opentelemetry-sdk>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
+    "opentelemetry-instrumentation-requests>=0.59b0",
+    "opentelemetry-instrumentation-urllib3>=0.59b0",
 ]
 
 [tool.hatch.envs.hatch-test.scripts]
