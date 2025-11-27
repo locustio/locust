@@ -1613,7 +1613,7 @@ class TelemetryTests(ProcessIntegrationTest):
             with TestProcess(
                 f"locust -f {mocked.file_path} --headless -u 1 --otel --run-time 1s",
                 expect_return_code=None,
-                env={
+                extra_env={
                     "OTEL_METRICS_EXPORTER": "console",
                     "OTEL_TRACES_EXPORTER": "console",
                 },
@@ -1641,7 +1641,7 @@ class TelemetryTests(ProcessIntegrationTest):
             with TestProcess(
                 f"locust -f {mocked.file_path} --headless -u 1 --otel --run-time 1s",
                 expect_return_code=None,
-                env={
+                extra_env={
                     "OTEL_METRICS_EXPORTER": "none",
                     "OTEL_TRACES_EXPORTER": "console",
                 },
