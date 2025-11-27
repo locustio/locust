@@ -253,7 +253,7 @@ See documentation for more details, including how to set options using a file or
         "--locustfile",
         metavar="<filename>",
         default="locustfile.py",
-        help="The Python file or module that contains your test, e.g. 'my_test.py'. Accepts multiple comma-separated .py files, a package name/directory or a url to a remote locustfile. Defaults to 'locustfile'.",
+        help="The Python file or module that contains your test, e.g. 'my_test.py'. Accepts multiple comma-separated .py files, a package name/directory or a url to a remote locustfile. Defaults to 'locustfile.py'.",
         env_var="LOCUST_LOCUSTFILE",
     )
 
