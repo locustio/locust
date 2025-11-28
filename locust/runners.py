@@ -1010,15 +1010,21 @@ class MasterRunner(DistributedRunner):
                         )
                 self.send_message("ack", client_id=client_id, data={"index": self.get_worker_index(client_id)})
                 self.environment.events.worker_connect.fire(client_id=msg.node_id)
+                client_already_connected = client_id in self.clients
                 self.clients[client_id] = WorkerNode(client_id, heartbeat_liveness=HEARTBEAT_LIVENESS)
                 if self._users_dispatcher is not None:
                     self._users_dispatcher.add_worker(worker_node=self.clients[client_id])
                     if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:
                         # TODO: Test this situation
                         self.start(self.target_user_count, self.spawn_rate)
-                logger.info(
-                    f"{client_id} (index {self.get_worker_index(client_id)}) reported as ready. {len(self.clients.ready + self.clients.running + self.clients.spawning)} workers connected."
-                )
+                if client_already_connected:
+                    logger.debug(
+                        f"{client_id} (index {self.get_worker_index(client_id)}) reported as ready (duplicate message). {len(self.clients.ready + self.clients.running + self.clients.spawning)} workers connected."
+                    )
+                else:
+                    logger.info(
+                        f"{client_id} (index {self.get_worker_index(client_id)}) reported as ready. {len(self.clients.ready + self.clients.running + self.clients.spawning)} workers connected."
+                    )
                 if self.rebalancing_enabled() and self.state == STATE_RUNNING and self.spawning_completed:
                     self.start(self.target_user_count, self.spawn_rate)
                 # emit a warning if the worker's clock seem to be out of sync with our clock
