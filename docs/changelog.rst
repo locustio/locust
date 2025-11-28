@@ -4,6 +4,12 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.42.6
+======
+* GH Actions: Bump actions/checkout from 5 to 6 https://github.com/locustio/locust/pull/3287
+* Fix Toml Parser Being Called on .conf Files https://github.com/locustio/locust/pull/3293
+* Log duplicate client_ready messages as debug instead of info level https://github.com/locustio/locust/pull/3296
+
 2.42.5
 ======
 * Log when otel is enabled https://github.com/locustio/locust/pull/3284
