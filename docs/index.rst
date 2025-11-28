@@ -63,6 +63,7 @@ Other functionalities
     extending-locust
     logging
     use-as-lib
+    telemetry
     extensions
     vscode-extension
 
