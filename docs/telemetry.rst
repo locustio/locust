@@ -20,18 +20,13 @@ To enable OpenTelemetry, you need to download ``locust`` with the OpenTelemetry 
 
    $ pip install locust[otel]
 
-Then, set the ``LOCUST_ENABLE_OPENTELEMETRY`` environment variable or pass the command line argument ``--otel`` to enable OpenTelemetry:
+Then, pass the command line argument ``--otel`` to enable OpenTelemetry:
 
 .. code-block:: console
 
-   // Via command line argument
    $ locust --otel
    ...
 
-   // Via environment variable
-   $ export LOCUST_ENABLE_OPENTELEMETRY=true
-   $ locust
-   ...
 
 Exporters
 ---------
