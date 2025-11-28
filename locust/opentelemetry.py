@@ -53,14 +53,20 @@ def _setup_tracer_provider(resource, traces_exporters):
 
     for exporter in traces_exporters:
         if exporter == "otlp":
-            protocol = os.getenv("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL", "grpc").lower().strip()
+            protocol = (
+                os.getenv("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL", os.getenv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc"))
+                .lower()
+                .strip()
+            )
             try:
                 if protocol == "grpc":
                     from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-                elif protocol == "http":
+                elif protocol == "http/protobuf" or protocol == "http":
                     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
                 else:
-                    logger.warning(f"Unknown OpenTelemetry otlp exporter protocol '{protocol}'. Use 'grpc' or 'http'")
+                    logger.warning(
+                        f"Unknown OpenTelemetry otlp exporter protocol '{protocol}'. Use 'grpc' or 'http/protobuf'"
+                    )
                     continue
             except ImportError:
                 logger.warning(
@@ -92,14 +98,20 @@ def _setup_meter_provider(resource, metrics_exporters):
 
     for exporter in metrics_exporters:
         if exporter == "otlp":
-            protocol = os.getenv("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL", "grpc").lower().strip()
+            protocol = (
+                os.getenv("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL", os.getenv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc"))
+                .lower()
+                .strip()
+            )
             try:
                 if protocol == "grpc":
                     from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
-                elif protocol == "http":
+                elif protocol == "http/protobuf" or protocol == "http":
                     from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
                 else:
-                    logger.warning(f"Unknown OpenTelemetry otlp exporter protocol '{protocol}'. Use 'grpc' or 'http'")
+                    logger.warning(
+                        f"Unknown OpenTelemetry otlp exporter protocol '{protocol}'. Use 'grpc' or 'http/protobuf'"
+                    )
                     continue
             except ImportError:
                 logger.warning(
