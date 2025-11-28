@@ -257,7 +257,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         """
             )
         ) as file_path:
-            with TestProcess(f"locust -f {file_path} --autostart", sigint_on_exit=False, expect_return_code=1) as tp:
+            with TestProcess(f"locust -f {file_path} --headless", sigint_on_exit=False, expect_return_code=1) as tp:
                 tp.expect("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95")
 
     def test_webserver_multiple_locustfiles(self):
@@ -582,7 +582,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 # for the webui to start and then finish gracefully
                 autoquit = 5 if sys.platform == "darwin" else 0
                 with TestProcess(
-                    f"locust -f {mocked1.file_path},{mocked2} --web-port {port} --autostart --autoquit {autoquit}",
+                    f"locust -f {mocked1.file_path},{mocked2} -u 5 -r 5 --web-port {port} --autostart --autoquit {autoquit}",
                     expect_timeout=6,
                     sigint_on_exit=False,
                 ) as tp:
@@ -615,6 +615,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     response = requests.get(f"http://127.0.0.2:{port}/")
                     self.assertEqual(200, response.status_code)
 
+        port = get_free_tcp_port()
         with mock_locustfile() as mocked:
             with TestProcess(f"locust -f {mocked.file_path} --web-host * --web-port {port}"):
                 wait_for_server(f"http://127.0.0.1:{port}/")
@@ -892,7 +893,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             )
             print(MOCK_LOCUSTFILE_CONTENT_C)
             with temporary_file(content=MOCK_LOCUSTFILE_CONTENT_C) as file2:
-                with TestProcess(f"locust -f {file1},{file2} --headless") as tp:
+                with TestProcess(f"locust -f {file1},{file2} -u 5 -r 5 --headless") as tp:
                     tp.expect("running my_task", stream="stdout")
 
     def test_error_when_duplicate_shape_class_names(self):
@@ -1077,7 +1078,7 @@ class MyUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             proc = TestProcess(
-                f"locust -f {mocked.file_path} --host http://google.com --headless -u 1 -t 1 --json",
+                f"locust -f {mocked.file_path} --host http://google.com --headless -u 5 -r 5 -t 1 --json",
                 sigint_on_exit=False,
                 join_timeout=2,
             )
@@ -1125,7 +1126,7 @@ class MyUser(HttpUser):
             os.remove(output_filepath)
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --host http://google.com --headless -u 1 -t 1 --json-file {output_base}",
+                f"locust -f {mocked.file_path} --host http://google.com --headless -u 5 -r 5 -t 1 --json-file {output_base}",
                 sigint_on_exit=False,
             ) as tp:
                 tp.proc.wait(3)
@@ -1363,7 +1364,7 @@ class SecondUser(HttpUser):
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess("locust -f - --worker", sigint_on_exit=False) as tp_worker:
                 with TestProcess(
-                    f"locust -f {mocked.file_path} --headless --master --expect-workers 1 -t 1",
+                    f"locust -f {mocked.file_path} --headless --master -u 5 -r 5 --expect-workers 1 -t 1",
                     sigint_on_exit=False,
                 ) as tp:
                     tp.expect('All users spawned: {"User1": ')
@@ -1611,7 +1612,7 @@ class TelemetryTests(ProcessIntegrationTest):
     def test_httpuser(self):
         with mock_locustfile() as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --headless -u 1 --otel --run-time 2s",
+                f"locust -f {mocked.file_path} --headless -u 5 -r 5 --otel --run-time 1s --stop-timeout 5s",
                 expect_return_code=None,
                 extra_env={
                     "OTEL_METRICS_EXPORTER": "console",
@@ -1639,7 +1640,7 @@ class TelemetryTests(ProcessIntegrationTest):
         )
         with mock_locustfile(content=locustfile) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --headless -u 1 --otel --run-time 1s",
+                f"locust -f {mocked.file_path} --headless -u 5 -r 5 --otel --run-time 1s",
                 expect_return_code=None,
                 extra_env={
                     "OTEL_METRICS_EXPORTER": "none",
