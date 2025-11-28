@@ -20,18 +20,13 @@ To enable OpenTelemetry, you need to download ``locust`` with the OpenTelemetry 
 
    $ pip install locust[otel]
 
-Then, set the ``LOCUST_ENABLE_OPENTELEMETRY`` environment variable or pass the command line argument ``--otel`` to enable OpenTelemetry:
+Then, pass the command line argument ``--otel`` to enable OpenTelemetry:
 
 .. code-block:: console
 
-   // Via command line argument
    $ locust --otel
    ...
 
-   // Via environment variable
-   $ export LOCUST_ENABLE_OPENTELEMETRY=true
-   $ locust
-   ...
 
 Exporters
 ---------
@@ -74,13 +69,10 @@ Example
 
 .. code-block:: console
 
-   $ export OTEL_EXPORTER_OTLP_HEADERS=X-XX-TOKEN=<xxxxxxxxxx>
-   $ export OTEL_METRICS_EXPORTER=none
-   $ export OTEL_TRACES_EXPORTER=otlp,console
-   $ export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://<xxxxxxxxxx>
-   $ export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http
+   $ export OTEL_TRACES_EXPORTER=otlp
+   $ export OTEL_EXPORTER_OTLP_ENDPOINT=https://...
+   $ export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
    $ locust --otel
    [2025-11-28 16:27:01,916] locust/INFO/locust.main: Starting Locust, OpenTelemetry enabled
    [2025-11-28 16:27:01,916] locust/INFO/locust.main: Starting web interface at http://0.0.0.0:8089, press enter to open your default browser.
    ...
-
