@@ -995,10 +995,14 @@ class MasterRunner(DistributedRunner):
                 logging.debug(
                     "Got KeyboardInterrupt in client_listener. Other greenlets should catch this and shut down."
                 )
-            if msg.type == "client_ready":
+            self.handle_message(client_id, msg)
+
+    def handle_message(self, client_id: str, msg: Message) -> None:
+        match msg.type:
+            case "client_ready":
                 if not msg.data:
                     logger.error(f"An old (pre 2.0) worker tried to connect ({client_id}). That's not going to work.")
-                    continue
+                    return
                 elif msg.data != __version__ and msg.data != -1:
                     if msg.data[0:4] == __version__[0:4]:
                         logger.debug(
@@ -1030,7 +1034,7 @@ class MasterRunner(DistributedRunner):
                 # emit a warning if the worker's clock seem to be out of sync with our clock
                 # if abs(time() - msg.data["time"]) > 5.0:
                 #    warnings.warn("The worker node's clock seem to be out of sync. For the statistics to be correct the different locust servers need to have synchronized clocks.")
-            elif msg.type == "locustfile":
+            case "locustfile":
                 if not msg.data["version"]:
                     logger.error("A very old worker version requested locustfile. This probably won't work.")
                 elif msg.data["version"][0:4] == __version__[0:4]:
@@ -1073,11 +1077,11 @@ class MasterRunner(DistributedRunner):
                         client_id=client_id,
                         data={"locustfiles": locustfiles},
                     )
-                continue
-            elif msg.type == "client_stopped":
+                return
+            case "client_stopped":
                 if msg.node_id not in self.clients:
                     logger.warning(f"Received {msg.type} message from an unknown worker: {msg.node_id}.")
-                    continue
+                    return
                 client = self.clients[msg.node_id]
                 del self.clients[msg.node_id]
                 if self._users_dispatcher is not None:
@@ -1086,7 +1090,7 @@ class MasterRunner(DistributedRunner):
                         # TODO: Test this situation
                         self.start(self.target_user_count, self.spawn_rate)
                 logger.info(f"{msg.node_id} (index {self.get_worker_index(client_id)}) reported that it has stopped")
-            elif msg.type == "heartbeat":
+            case "heartbeat":
                 if msg.node_id in self.clients:
                     c = self.clients[msg.node_id]
                     c.heartbeat = HEARTBEAT_LIVENESS
@@ -1112,21 +1116,21 @@ class MasterRunner(DistributedRunner):
                     self.server.send_to_client(Message("heartbeat", None, msg.node_id))
                 else:
                     logging.debug(f"Got heartbeat message from unknown worker {msg.node_id}")
-            elif msg.type == "stats":
+            case "stats":
                 self.environment.events.worker_report.fire(client_id=msg.node_id, data=msg.data)
-            elif msg.type == "spawning":
+            case "spawning":
                 try:
                     self.clients[msg.node_id].state = STATE_SPAWNING
                 except KeyError:
                     logger.warning(f"Got spawning message from unknown worker {msg.node_id}. Asking worker to quit.")
                     self.server.send_to_client(Message("quit", None, msg.node_id))
-            elif msg.type == "spawning_complete":
+            case "spawning_complete":
                 # a worker finished spawning (this happens multiple times during rampup)
                 self.clients[msg.node_id].state = STATE_RUNNING
                 self.clients[msg.node_id].user_classes_count = msg.data["user_classes_count"]
-            elif msg.type == "logs":
+            case "logs":
                 self.environment.update_worker_logs(msg.data)
-            elif msg.type == "quit":
+            case "quit":
                 if msg.node_id in self.clients:
                     client = self.clients[msg.node_id]
                     del self.clients[msg.node_id]
@@ -1143,27 +1147,27 @@ class MasterRunner(DistributedRunner):
                         self.stop()
                         if self.environment.parsed_options and self.environment.parsed_options.headless:
                             self.quit()
-            elif msg.type == "exception":
+            case "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
-            elif msg.type in self.custom_messages:
-                logger.debug(
-                    f"Received {msg.type} message from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)})"
-                )
-                try:
-                    listener, concurrent = self.custom_messages[msg.type]
-                    if not concurrent:
-                        listener(environment=self.environment, msg=msg)
-                    else:
-                        gevent.spawn(listener, environment=self.environment, msg=msg)
-                except Exception:
-                    logging.error(f"Uncaught exception in handler for {msg.type}\n{traceback.format_exc()}")
+            case _:
+                if lc := self.custom_messages.get(msg.type):
+                    listener, concurrent = lc
+                    logger.debug(
+                        f"Received {msg.type} message from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)})"
+                    )
+                    try:
+                        if not concurrent:
+                            listener(environment=self.environment, msg=msg)
+                        else:
+                            gevent.spawn(listener, environment=self.environment, msg=msg)
+                    except Exception:
+                        logging.error(f"Uncaught exception in handler for {msg.type}\n{traceback.format_exc()}")
+                else:
+                    logger.warning(
+                        f"Unknown message type received from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)}): {msg.type}"
+                    )
 
-            else:
-                logger.warning(
-                    f"Unknown message type received from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)}): {msg.type}"
-                )
-
-            self.check_stopped()
+        self.check_stopped()
 
     @property
     def worker_count(self) -> int:
@@ -1335,26 +1339,30 @@ class WorkerRunner(DistributedRunner):
             logger.error(f"Temporary failure when resetting connection: {e}, will retry later.")
 
     def worker(self) -> NoReturn:
-        last_received_spawn_timestamp = 0
+        self.last_received_spawn_timestamp = 0
         while True:
             try:
                 msg = self.client.recv()
             except RPCError as e:
                 logger.error(f"RPCError found when receiving from master: {e}")
-                continue
-            if msg.type == "ack":
+            else:
+                self.handle_message(msg)
+
+    def handle_message(self, msg: Message) -> None:
+        match msg.type:
+            case "ack":
                 # backward-compatible support of masters that do not send a worker index
                 if msg.data is not None and "index" in msg.data:
                     self.worker_index = msg.data["index"]
                 self.connection_event.set()
-            elif msg.type == "spawn":
+            case "spawn":
                 self.client.send(Message("spawning", None, self.client_id))
                 job = msg.data
-                if job["timestamp"] <= last_received_spawn_timestamp:
+                if job["timestamp"] <= self.last_received_spawn_timestamp:
                     logger.info(
                         "Discard spawn message with older or equal timestamp than timestamp of previous spawn message"
                     )
-                    continue
+                    return
                 self.environment.host = job["host"]
                 self.environment.stop_timeout = job["stop_timeout"] or 0.0
 
@@ -1387,8 +1395,8 @@ class WorkerRunner(DistributedRunner):
                     self.spawning_greenlet.kill(block=True)
                 self.spawning_greenlet = self.greenlet.spawn(lambda: self.start_worker(job["user_classes_count"]))
                 self.spawning_greenlet.link_exception(greenlet_exception_handler)
-                last_received_spawn_timestamp = job["timestamp"]
-            elif msg.type == "stop":
+                self.last_received_spawn_timestamp = job["timestamp"]
+            case "stop":
                 self.stop()
                 self.client.send(Message("client_stopped", None, self.client_id))
                 # +additional_wait is just a small buffer to account for the random network latencies and/or other
@@ -1397,33 +1405,34 @@ class WorkerRunner(DistributedRunner):
                 gevent.sleep(self.environment.stop_timeout + additional_wait)
                 self.client.send(Message("client_ready", __version__, self.client_id))
                 self.worker_state = STATE_INIT
-            elif msg.type == "quit":
+            case "quit":
                 logger.info("Got quit message from master, shutting down...")
                 self.stop()
                 self._send_stats()  # send a final report, in case there were any samples not yet reported
                 self.greenlet.kill(block=True)
-            elif msg.type == "reconnect":
+            case "reconnect":
                 logger.warning("Received reconnect message from master. Resetting RPC connection.")
                 self.reset_connection()
-            elif msg.type == "heartbeat":
+            case "heartbeat":
                 self.last_heartbeat_timestamp = time.time()
                 self.environment.events.heartbeat_received.fire(
                     client_id=msg.node_id, timestamp=self.last_heartbeat_timestamp
                 )
-            elif msg.type == "update_user_class":
+            case "update_user_class":
                 self.environment.update_user_class(msg.data)
-            elif msg.type == "spawning_complete":
+            case "spawning_complete":
                 # master says we have finished spawning (happens only once during a normal rampup)
                 self.environment.events.spawning_complete.fire(user_count=msg.data["user_count"])
-            elif msg.type in self.custom_messages:
-                logger.debug(f"Received {msg.type} message from master")
-                listener, concurrent = self.custom_messages[msg.type]
-                if not concurrent:
-                    listener(environment=self.environment, msg=msg)
+            case _:
+                if lc := self.custom_messages.get(msg.type):
+                    listener, concurrent = lc
+                    logger.debug(f"Received {msg.type} message from master")
+                    if not concurrent:
+                        listener(environment=self.environment, msg=msg)
+                    else:
+                        gevent.spawn(listener, self.environment, msg)
                 else:
-                    gevent.spawn(listener, self.environment, msg)
-            else:
-                logger.warning(f"Unknown message type received: {msg.type}")
+                    logger.warning(f"Unknown message type received: {msg.type}")
 
     def stats_reporter(self) -> NoReturn:
         while True:
