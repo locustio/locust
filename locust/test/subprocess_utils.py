@@ -86,6 +86,8 @@ class TestProcess:
         self.close()
 
     def close(self) -> None:
+        __tracebackhide__ = True
+
         if self.use_pty:
             os.close(self.stdin_m)
             os.close(self.stdin_s)
