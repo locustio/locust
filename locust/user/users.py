@@ -18,9 +18,8 @@ import sys
 import time
 import traceback
 from collections.abc import Callable
-from typing import final
+from typing import TYPE_CHECKING, final
 
-import pytest
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
 from geventhttpclient.useragent import ConnectionError
@@ -31,6 +30,9 @@ if sys.version_info >= (3, 12):
     from typing import override
 else:
     from typing_extensions import override
+
+if TYPE_CHECKING:
+    import pytest
 
 logger = logging.getLogger(__name__)
 
