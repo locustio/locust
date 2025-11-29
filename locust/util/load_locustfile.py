@@ -6,9 +6,6 @@ import inspect
 import os
 import sys
 
-import pytest
-from _pytest.config import Config
-
 from ..shape import LoadTestShape
 from ..user import User
 from ..user.users import PytestUser
@@ -99,6 +96,9 @@ def load_locustfile_pytest(path) -> dict[str, type[User]]:
 
     See `examples/test_pytest.py` and `locust/test/test_pytest_locustfile.py`
     """
+    import pytest
+    from _pytest.config import Config
+
     user_classes: dict[str, type[PytestUser]] = {}
     # collect tests and set up fixture manager
     config = Config.fromdictargs(
