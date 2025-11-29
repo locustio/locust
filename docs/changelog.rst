@@ -9,6 +9,8 @@ For full details of changes, please see https://github.com/locustio/locust/relea
 * GH Actions: Bump actions/checkout from 5 to 6 https://github.com/locustio/locust/pull/3287
 * Fix Toml Parser Being Called on .conf Files https://github.com/locustio/locust/pull/3293
 * Log duplicate client_ready messages as debug instead of info level https://github.com/locustio/locust/pull/3296
+* Various code improvements https://github.com/locustio/locust/pull/3299, https://github.com/locustio/locust/pull/3301
+* Don't import pytest unless it is really needed, to speed up startup https://github.com/locustio/locust/pull/3296
 
 2.42.5
 ======
