@@ -206,7 +206,7 @@ def validate_no_unreachable_tasks(tasks: list, class_dict: dict, classname: str)
                 dfs(dest)
 
     dfs(tasks[0].__name__)
-    unreachable = set([task.__name__ for task in tasks]) - visited
+    unreachable = {task.__name__ for task in tasks} - visited
 
     if len(unreachable) > 0:
         logging.warning(f"The following markov tasks are unreachable in class {classname}: {unreachable}")

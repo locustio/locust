@@ -15,10 +15,8 @@ def setup_opentelemetry() -> bool:
         logger.error("OpenTelemetry SDK is not installed, opentelemetry not enabled. Run 'pip install locust[otel]'")
         return False
 
-    traces_exporters = set(e.strip().lower() for e in os.getenv("OTEL_TRACES_EXPORTER", "otlp").split(",") if e.strip())
-    metrics_exporters = set(
-        e.strip().lower() for e in os.getenv("OTEL_METRICS_EXPORTER", "otlp").split(",") if e.strip()
-    )
+    traces_exporters = {e.strip().lower() for e in os.getenv("OTEL_TRACES_EXPORTER", "otlp").split(",") if e.strip()}
+    metrics_exporters = {e.strip().lower() for e in os.getenv("OTEL_METRICS_EXPORTER", "otlp").split(",") if e.strip()}
 
     if traces_exporters == {"none"} and metrics_exporters == {"none"}:
         logger.info("No OpenTelemetry exporters configured, opentelemetry not enabled")

@@ -1149,23 +1149,22 @@ class MasterRunner(DistributedRunner):
                             self.quit()
             case "exception":
                 self.log_exception(msg.node_id, msg.data["msg"], msg.data["traceback"])
+            case _ if lc := self.custom_messages.get(msg.type):
+                listener, concurrent = lc
+                logger.debug(
+                    f"Received {msg.type} message from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)})"
+                )
+                try:
+                    if not concurrent:
+                        listener(environment=self.environment, msg=msg)
+                    else:
+                        gevent.spawn(listener, environment=self.environment, msg=msg)
+                except Exception:
+                    logging.error(f"Uncaught exception in handler for {msg.type}\n{traceback.format_exc()}")
             case _:
-                if lc := self.custom_messages.get(msg.type):
-                    listener, concurrent = lc
-                    logger.debug(
-                        f"Received {msg.type} message from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)})"
-                    )
-                    try:
-                        if not concurrent:
-                            listener(environment=self.environment, msg=msg)
-                        else:
-                            gevent.spawn(listener, environment=self.environment, msg=msg)
-                    except Exception:
-                        logging.error(f"Uncaught exception in handler for {msg.type}\n{traceback.format_exc()}")
-                else:
-                    logger.warning(
-                        f"Unknown message type received from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)}): {msg.type}"
-                    )
+                logger.warning(
+                    f"Unknown message type received from worker {msg.node_id} (index {self.get_worker_index(msg.node_id)}): {msg.type}"
+                )
 
         self.check_stopped()
 
@@ -1423,16 +1422,15 @@ class WorkerRunner(DistributedRunner):
             case "spawning_complete":
                 # master says we have finished spawning (happens only once during a normal rampup)
                 self.environment.events.spawning_complete.fire(user_count=msg.data["user_count"])
-            case _:
-                if lc := self.custom_messages.get(msg.type):
-                    listener, concurrent = lc
-                    logger.debug(f"Received {msg.type} message from master")
-                    if not concurrent:
-                        listener(environment=self.environment, msg=msg)
-                    else:
-                        gevent.spawn(listener, self.environment, msg)
+            case _ if lc := self.custom_messages.get(msg.type):
+                listener, concurrent = lc
+                logger.debug(f"Received {msg.type} message from master")
+                if not concurrent:
+                    listener(environment=self.environment, msg=msg)
                 else:
-                    logger.warning(f"Unknown message type received: {msg.type}")
+                    gevent.spawn(listener, self.environment, msg)
+            case _:
+                logger.warning(f"Unknown message type received: {msg.type}")
 
     def stats_reporter(self) -> NoReturn:
         while True:

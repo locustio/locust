@@ -3366,7 +3366,11 @@ class TestMasterRunner(LocustRunnerTestCase):
             sleep(0.1)
             server.mocked_send(Message("stats", BAD_MESSAGE, "zeh_fake_client1"))
             messages = server.get_messages()
-            self.assertEqual(5, len(messages))
+            self.assertEqual(messages[0].type, "ack")
+            self.assertEqual(messages[1].type, "spawn")
+            self.assertEqual(messages[2].type, "spawning_complete")
+            self.assertEqual(messages[3].type, "reconnect")
+            self.assertEqual(messages[4].type, "ack")
 
             # Expected message order in outbox: ack, spawn, reconnect, ack
             self.assertEqual(
