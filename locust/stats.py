@@ -882,7 +882,7 @@ def print_error_report(stats: RequestStats) -> None:
 
 def get_error_report_summary(stats) -> list[str]:
     summary = ["Error report"]
-    summary.append("%-18s %-100s" % ("# occurrences", "Error"))
+    summary.append(f"{'# occurrences':18} {'Error':100}")
     separator = f"{'-' * 18}|{'-' * ((80 + STATS_NAME_WIDTH) - 19)}"
     summary.append(separator)
     for error in stats.errors.values():
