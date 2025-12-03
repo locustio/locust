@@ -23,13 +23,14 @@ from .util.rounding import proper_round
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
     from types import FrameType
-    from typing import Any, NoReturn
+    from typing import Any
 
     from .env import Environment
     from .event import Events
     from .runners import Runner
 
 console_logger = logging.getLogger("locust.stats_logger")
+logger = logging.getLogger(__name__)
 
 """Space in table for request name. Auto shrink it if terminal is small (<160 characters)"""
 try:
@@ -894,9 +895,12 @@ def get_error_report_summary(stats) -> list[str]:
 
 def stats_printer(stats: RequestStats) -> Callable[[], None]:
     def stats_printer_func() -> None:
-        while True:
-            print_stats(stats)
-            gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
+        try:
+            while True:
+                print_stats(stats)
+                gevent.sleep(CONSOLE_STATS_INTERVAL_SEC)
+        except KeyboardInterrupt as e:
+            logger.debug(e, exc_info=True)
 
     return stats_printer_func
 
@@ -929,14 +933,17 @@ def update_stats_history(runner: Runner, timestamp: str | None = None) -> None:
 
 def stats_history(runner: Runner) -> None:
     """Save current stats info to history for charts of report."""
-    while True:
-        if not runner.stats.total.use_response_times_cache:
-            break
+    try:
+        while True:
+            if not runner.stats.total.use_response_times_cache:
+                break
 
-        if runner.state != "ready" and runner.state != "stopped":
-            update_stats_history(runner)
+            if runner.state != "ready" and runner.state != "stopped":
+                update_stats_history(runner)
 
-        gevent.sleep(HISTORY_STATS_INTERVAL_SEC)
+            gevent.sleep(HISTORY_STATS_INTERVAL_SEC)
+    except KeyboardInterrupt as e:
+        logger.debug(e, exc_info=True)
 
 
 class StatsCSV:
@@ -1087,7 +1094,7 @@ class StatsCSVFileWriter(StatsCSV):
     def __call__(self) -> None:
         self.stats_writer()
 
-    def stats_writer(self) -> NoReturn:
+    def stats_writer(self) -> None:
         """Writes all the csv files for the locust run."""
 
         # Write header row for all files and save position for non-append files
@@ -1104,31 +1111,34 @@ class StatsCSVFileWriter(StatsCSV):
 
         # Continuously write date rows for all files
         last_flush_time: float = 0.0
-        while True:
-            now = time.time()
+        try:
+            while True:
+                now = time.time()
 
-            self.requests_csv_filehandle.seek(requests_csv_data_start)
-            self._requests_data_rows(self.requests_csv_writer)
-            self.requests_csv_filehandle.truncate()
+                self.requests_csv_filehandle.seek(requests_csv_data_start)
+                self._requests_data_rows(self.requests_csv_writer)
+                self.requests_csv_filehandle.truncate()
 
-            self._stats_history_data_rows(self.stats_history_csv_writer, now)
+                self._stats_history_data_rows(self.stats_history_csv_writer, now)
 
-            self.failures_csv_filehandle.seek(self.failures_csv_data_start)
-            self._failures_data_rows(self.failures_csv_writer)
-            self.failures_csv_filehandle.truncate()
+                self.failures_csv_filehandle.seek(self.failures_csv_data_start)
+                self._failures_data_rows(self.failures_csv_writer)
+                self.failures_csv_filehandle.truncate()
 
-            self.exceptions_csv_filehandle.seek(self.exceptions_csv_data_start)
-            self._exceptions_data_rows(self.exceptions_csv_writer)
-            self.exceptions_csv_filehandle.truncate()
+                self.exceptions_csv_filehandle.seek(self.exceptions_csv_data_start)
+                self._exceptions_data_rows(self.exceptions_csv_writer)
+                self.exceptions_csv_filehandle.truncate()
 
-            if now - last_flush_time > CSV_STATS_FLUSH_INTERVAL_SEC:
-                self.requests_flush()
-                self.stats_history_flush()
-                self.failures_flush()
-                self.exceptions_flush()
-                last_flush_time = now
+                if now - last_flush_time > CSV_STATS_FLUSH_INTERVAL_SEC:
+                    self.requests_flush()
+                    self.stats_history_flush()
+                    self.failures_flush()
+                    self.exceptions_flush()
+                    last_flush_time = now
 
-            gevent.sleep(CSV_STATS_INTERVAL_SEC)
+                gevent.sleep(CSV_STATS_INTERVAL_SEC)
+        except KeyboardInterrupt as e:
+            logger.debug(e, exc_info=True)
 
     def _stats_history_data_rows(self, csv_writer: CSVWriter, now: float) -> None:
         """
