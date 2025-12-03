@@ -1,7 +1,7 @@
 .. _increase-performance:
 
 ==============================================================
-Increase performance with a faster HTTP client
+Increase performance with a more efficient HTTP client
 ==============================================================
 
 Locust's default HTTP client uses `python-requests <https://requests.readthedocs.io/>`_.
