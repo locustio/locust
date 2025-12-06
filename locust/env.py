@@ -135,7 +135,9 @@ class Environment:
         """
         return self._create_runner(LocalRunner)
 
-    def create_master_runner(self, master_bind_host="*", master_bind_port=5557) -> MasterRunner:
+    def create_master_runner(
+        self, master_bind_host: str = "*", master_bind_port: int = 5557, master_ipv4_only: bool = False
+    ) -> MasterRunner:
         """
         Create a :class:`MasterRunner <locust.runners.MasterRunner>` instance for this Environment
 
@@ -147,14 +149,16 @@ class Environment:
             MasterRunner,
             master_bind_host=master_bind_host,
             master_bind_port=master_bind_port,
+            master_ipv4_only=master_ipv4_only,
         )
 
-    def create_worker_runner(self, master_host: str, master_port: int) -> WorkerRunner:
+    def create_worker_runner(self, master_host: str, master_port: int, master_ipv4_only: bool = False) -> WorkerRunner:
         """
         Create a :class:`WorkerRunner <locust.runners.WorkerRunner>` instance for this Environment
 
         :param master_host: Host/IP of a running master node
         :param master_port: Port on master node to connect to
+        :param master_ipv4_only: Only use ipv4 when connecting to master
         """
         # Create a new RequestStats with use_response_times_cache set to False to save some memory
         # and CPU cycles, since the response_times_cache is not needed for Worker nodes
@@ -163,6 +167,7 @@ class Environment:
             WorkerRunner,
             master_host=master_host,
             master_port=master_port,
+            master_ipv4_only=master_ipv4_only,
         )
 
     def create_web_ui(

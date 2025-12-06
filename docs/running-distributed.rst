@@ -76,6 +76,17 @@ to localhost)
 
 Optionally used together with ``--worker`` to set the port number of the master node (defaults to 5557).
 
+``--master-ipv4-only``
+----------------------
+
+Optionally used together with ``--worker`` or ``--master`` to force the use of IPv4 (defaults to preferring Ipv6)
+
+.. note::
+    If a hostname is provided in ``--msater-host`` and this can be resolved via getaddrinfo to an IPv6 address
+    this will be preferred by default. Some environments might have an IPv6 hosts file entry in place which
+    doesn't work but is difficult to remove so this allows you to pick.
+
+
 ``--master-bind-host <ip>``
 ---------------------------
 
