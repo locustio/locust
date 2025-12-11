@@ -260,6 +260,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with TestProcess(f"locust -f {file_path} --headless", sigint_on_exit=False, expect_return_code=1) as tp:
                 tp.expect("parameter need to be float and value between. 0 < percentile < 1 Eg 0.95")
 
+    def test_csv_full_history_requires_csv(self):
+        with mock_locustfile() as mocked:
+            with TestProcess(
+                f"locust -f {mocked.file_path} --csv-full-history", sigint_on_exit=False, expect_return_code=2
+            ) as tp:
+                tp.expect("locust: error: '--csv-full-history' requires '--csv'.")
+
     def test_webserver_multiple_locustfiles(self):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:

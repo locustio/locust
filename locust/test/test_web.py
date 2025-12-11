@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import locust
 from locust import LoadTestShape, constant, stats
-from locust.argument_parser import get_parser, parse_options
+from locust.argument_parser import get_parser
 from locust.env import Environment
 from locust.log import LogReader
 from locust.runners import Runner
@@ -89,7 +89,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         for html_name_to_test in html_to_option.keys():
             # Test that setting each spawn option individually populates the corresponding field in the html, and none of the others
-            self.environment.parsed_options = parse_options(html_to_option[html_name_to_test])
+            self.environment.parsed_options = get_parser().parse_args(html_to_option[html_name_to_test])
 
             response = requests.get("http://127.0.0.1:%i/" % self.web_port)
             self.assertEqual(200, response.status_code)
@@ -105,7 +105,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         }
 
         for html_name_to_test in html_to_option.keys():
-            self.environment.parsed_options = parse_options(html_to_option[html_name_to_test])
+            self.environment.parsed_options = get_parser().parse_args(html_to_option[html_name_to_test])
 
             response = requests.get("http://127.0.0.1:%i/" % self.web_port)
             self.assertEqual(200, response.status_code)
@@ -255,7 +255,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
                 pass
 
         self.environment.user_classes = [MyUser]
-        self.environment.web_ui.parsed_options = parse_options()
+        self.environment.web_ui.parsed_options = get_parser().parse_args()
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost"},
@@ -807,7 +807,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
                 is_multiple=True,
             )
 
-        parsed_options = parse_options()
+        parsed_options = get_parser().parse_args()
         self.environment.user_classes = [MyUser]
         self.environment.parsed_options = parsed_options
         self.environment.web_ui.parsed_options = parsed_options
@@ -849,7 +849,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         def _(parser):
             parser.add_argument("--my-argument", type=int, help="Give me a number")
 
-        parsed_options = parse_options(args=["--my-argument", "24"])
+        parsed_options = get_parser().parse_args(args=["--my-argument", "24"])
         self.environment.user_classes = [MyUser]
         self.environment.parsed_options = parsed_options
         self.environment.web_ui.parsed_options = parsed_options
@@ -869,7 +869,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
                 pass
 
         self.environment.user_classes = [MyUser]
-        self.environment.web_ui.parsed_options = parse_options()
+        self.environment.web_ui.parsed_options = get_parser().parse_args()
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"user_count": 5, "spawn_rate": 5},
@@ -887,7 +887,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
                 pass
 
         self.environment.user_classes = [MyUser]
-        self.environment.web_ui.parsed_options = parse_options()
+        self.environment.web_ui.parsed_options = get_parser().parse_args()
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": "1s"},
@@ -910,7 +910,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
                 pass
 
         self.environment.user_classes = [MyUser]
-        self.environment.web_ui.parsed_options = parse_options()
+        self.environment.web_ui.parsed_options = get_parser().parse_args()
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": "bad"},
@@ -935,7 +935,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
                 pass
 
         self.environment.user_classes = [MyUser]
-        self.environment.web_ui.parsed_options = parse_options()
+        self.environment.web_ui.parsed_options = get_parser().parse_args()
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
             data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": ""},

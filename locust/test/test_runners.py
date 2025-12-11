@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import locust
 from locust import LoadTestShape, __version__, constant, runners
-from locust.argument_parser import parse_options
+from locust.argument_parser import get_parser
 from locust.dispatch import UsersDispatcher
 from locust.env import Environment
 from locust.exception import RPCError, RPCReceiveError, StopUser
@@ -1014,7 +1014,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"),
         ):
             # start a Master runner
-            options = parse_options(["--enable-rebalancing"])
+            options = get_parser().parse_args(["--enable-rebalancing"])
             master_env = Environment(user_classes=[TestUser], parsed_options=options)
             master = master_env.create_master_runner("*", 0)
             sleep(0)
@@ -1122,7 +1122,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # start a Master runner
             master_env = Environment(user_classes=[TestUser])
             master = master_env.create_master_runner("*", 0)
-            master_env.parsed_options = parse_options(
+            master_env.parsed_options = get_parser().parse_args(
                 [
                     "--my-int-argument",
                     "42",

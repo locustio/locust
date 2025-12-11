@@ -2,7 +2,6 @@ import locust
 from locust.argument_parser import (
     get_parser,
     parse_locustfile_paths,
-    parse_options,
     ui_extra_args_dict,
 )
 
@@ -107,7 +106,7 @@ class TestArgumentParser(LocustTestCase):
         self.parent_dir.cleanup()
 
     def test_parse_options(self):
-        options = parse_options(
+        options = get_parser().parse_args(
             args=[
                 "-f",
                 "locustfile.py",
@@ -141,7 +140,7 @@ class TestArgumentParser(LocustTestCase):
         os.environ["LOCUST_RESET_STATS"] = "true"
         os.environ["LOCUST_STOP_TIMEOUT"] = "5"
         os.environ["LOCUST_USER_CLASSES"] = "MyUserClass"
-        options = parse_options(args=[])
+        options = get_parser().parse_args(args=[])
 
         self.assertEqual("locustfile.py", options.locustfile)
         self.assertEqual(100, options.num_users)
@@ -307,7 +306,7 @@ class TestArgumentParser(LocustTestCase):
         err = StringIO()
         with self.assertRaises(SystemExit):
             with mock.patch("sys.stderr", new=err):
-                parse_options(
+                get_parser().parse_args(
                     args=[
                         "-f",
                         "something.py",
@@ -337,7 +336,7 @@ class TestArgumentParser(LocustTestCase):
                 help="Custom string arg",
             )
 
-        options = parse_options(
+        options = get_parser().parse_args(
             args=[
                 "-u",
                 "666",
@@ -362,23 +361,12 @@ class TestArgumentParser(LocustTestCase):
         out = StringIO()
         with mock.patch("sys.stdout", new=out):
             with self.assertRaises(SystemExit):
-                parse_options(args=["--help"])
+                get_parser().parse_args(args=["--help"])
 
         out.seek(0)
         stdout = out.read()
         self.assertIn("Custom boolean flag", stdout)
         self.assertIn("Custom string arg", stdout)
-
-    def test_csv_full_history_requires_csv(self):
-        with mock.patch("sys.stderr", new=StringIO()):
-            with self.assertRaises(SystemExit):
-                parse_options(
-                    args=[
-                        "-f",
-                        "locustfile.py",
-                        "--csv-full-history",
-                    ]
-                )
 
     def test_custom_argument_included_in_web_ui(self):
         @locust.events.init_command_line_parser.add_listener
@@ -389,7 +377,7 @@ class TestArgumentParser(LocustTestCase):
             parser.add_argument("--a4", help="a3 help", is_required=True)
 
         args = ["-u", "666", "--a1", "v1", "--a2", "v2", "--a3", "v3"]
-        options = parse_options(args=args)
+        options = get_parser().parse_args(args=args)
         self.assertEqual(666, options.num_users)
         self.assertEqual("v1", options.a1)
         self.assertEqual("v2", options.a2)

@@ -23,8 +23,8 @@ import gevent
 from . import log, stats
 from .argument_parser import (
     get_locustfiles_locally,
+    get_parser,
     parse_locustfile_option,
-    parse_options,
 )
 from .env import Environment
 from .html import get_html_report, process_html_filename
@@ -184,7 +184,8 @@ def main():
     ) = merge_locustfiles_content(locustfiles)
 
     # parse all command line options
-    options = parse_options()
+    parser = get_parser()
+    options = parser.parse_args()
 
     if getattr(options, "cloud", None):
         sys.exit(locust_cloud.main(locustfiles=locustfiles))
@@ -599,6 +600,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     if options.csv_prefix:
         gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
+    if options.stats_history_enabled and (options.csv_prefix is None):
+        parser.error("'--csv-full-history' requires '--csv'.")
 
     if options.headless:
         start_automatic_run()
