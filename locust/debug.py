@@ -129,7 +129,7 @@ def run_single_user(
         locust.log.setup_logging(loglevel)
 
     if not _env:
-        options = argument_parser.parse_options()
+        options = argument_parser.get_parser().parse_args()
 
         # in case your test goes looking for the file name of your locustfile
         frame = inspect.stack()[1]

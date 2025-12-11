@@ -1,5 +1,5 @@
 from locust import main
-from locust.argument_parser import parse_options
+from locust.argument_parser import get_parser
 from locust.main import create_environment
 from locust.user import HttpUser, TaskSet, User
 from locust.user.users import PytestUser
@@ -142,7 +142,7 @@ class TestLoadLocustfile(LocustTestCase):
             self.assertEqual(shape_classes[0].__class__.__name__, "UserLoadTestShape")
 
     def test_create_environment(self):
-        options = parse_options(
+        options = get_parser().parse_args(
             args=[
                 "--host",
                 "https://custom-host",
@@ -153,7 +153,7 @@ class TestLoadLocustfile(LocustTestCase):
         self.assertEqual("https://custom-host", env.host)
         self.assertTrue(env.reset_stats)
 
-        options = parse_options(args=[])
+        options = get_parser().parse_args(args=[])
         env = create_environment([], options)
         self.assertEqual(None, env.host)
         self.assertFalse(env.reset_stats)
@@ -172,7 +172,7 @@ class TestLoadLocustfile(LocustTestCase):
             ),
             suffix=".conf",
         ) as conf_file_path:
-            options = parse_options(
+            options = get_parser().parse_args(
                 args=[
                     "--config",
                     conf_file_path,
@@ -186,7 +186,7 @@ class TestLoadLocustfile(LocustTestCase):
 
     def test_command_line_arguments_override_config_file(self):
         with temporary_file("host=from_file", suffix=".conf") as conf_file_path:
-            options = parse_options(
+            options = get_parser().parse_args(
                 args=[
                     "--config",
                     conf_file_path,
@@ -201,7 +201,7 @@ class TestLoadLocustfile(LocustTestCase):
             "locustfile my_locust_file.py",
             suffix=".conf",
         ) as conf_file_path:
-            options = parse_options(
+            options = get_parser().parse_args(
                 args=[
                     "--config",
                     conf_file_path,
@@ -225,19 +225,19 @@ class TestLoadLocustfile(LocustTestCase):
         )
 
     def test_profile_flag(self):
-        options = parse_options()
+        options = get_parser().parse_args()
         self.assertEqual(None, options.profile)
-        options = parse_options(args=["--profile", "test-profile"])
+        options = get_parser().parse_args(args=["--profile", "test-profile"])
         self.assertEqual("test-profile", options.profile)
         with temporary_file("profile=test-profile-from-file", suffix=".conf") as conf_file_path:
-            options = parse_options(
+            options = get_parser().parse_args(
                 args=[
                     "--config",
                     conf_file_path,
                 ]
             )
             self.assertEqual("test-profile-from-file", options.profile)
-            options = parse_options(
+            options = get_parser().parse_args(
                 args=[
                     "--config",
                     conf_file_path,
