@@ -317,15 +317,24 @@ class FastHttpSession:
         return self.request("GET", url, **kwargs)
 
     def iter_lines(self, url: str, method: str = "GET", **kwargs) -> Generator[str]:
-        """Sends a iter_lines request"""
+        """Sends a iter_lines request for streaming responses"""
         response = self.request(method, url, stream=True, **kwargs)
         response.raise_for_status()
+
         buffer = ""
         for chunk in response.iter_content(chunk_size=1024, decode_content=True):
-            buffer += chunk.decode("utf-8")
+            #  Ensure that chunk is a string.
+            if isinstance(chunk, bytes):
+                chunk = chunk.decode("utf-8", errors="replace")
+
+            buffer += chunk
             while "\n" in buffer:
                 line, buffer = buffer.split("\n", 1)
                 yield line
+
+        # Return to the last line that may be incomplete.
+        if buffer:
+            yield buffer
 
     def head(self, url: str, **kwargs: Unpack[RESTKwargs]) -> ResponseContextManager:
         """Sends a HEAD request"""
@@ -568,6 +577,38 @@ class FastResponse(CompatResponse):
         """Raise any connection errors that occurred during the request"""
         if error := getattr(self, "error", None):
             raise error
+
+    def iter_content(self, chunk_size=1024, decode_content=True):
+        """
+        Simulates the `requests.Response.iter_content` method
+
+        Used for streaming response content
+
+        :param `chunk_size`: The size of the chunk read each time
+
+        :param `decode_content`: Whether to decode the content (from bytes to string)
+
+        :return: A generator that produces one chunk at a time
+        """
+        if not self._response:
+            raise LocustError("Cannot iterate content on a response without _response attribute")
+
+        while True:
+            try:
+                chunk = self._response.read(chunk_size)
+                if not chunk:
+                    break
+
+                if decode_content and isinstance(chunk, bytes):
+                    try:
+                        chunk = chunk.decode("utf-8")
+                    except UnicodeDecodeError:
+                        # If decoding fails, preserve the data in byte format.
+                        pass
+
+                yield chunk
+            except (HTTPConnectionClosed, ConnectionError):
+                break
 
     @property
     def status_code(self) -> int:
