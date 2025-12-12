@@ -325,7 +325,7 @@ class FastHttpSession:
         for chunk in response.iter_content(chunk_size=1024, decode_content=True):
             #  Ensure that chunk is a string.
             if isinstance(chunk, bytes):
-                chunk = chunk.decode('utf-8', errors='replace')
+                chunk = chunk.decode("utf-8", errors="replace")
 
             buffer += chunk
             while "\n" in buffer:
@@ -601,7 +601,7 @@ class FastResponse(CompatResponse):
 
                 if decode_content and isinstance(chunk, bytes):
                     try:
-                        chunk = chunk.decode('utf-8')
+                        chunk = chunk.decode("utf-8")
                     except UnicodeDecodeError:
                         # If decoding fails, preserve the data in byte format.
                         pass
