@@ -27,9 +27,16 @@ FastHttpUser class
 .. autoclass:: locust.contrib.fasthttp.FastHttpUser
     :members: wait_time, tasks, client, abstract, rest
     :noindex:
+        
+FastHttpSession class
+=====================
+
+.. autoclass:: locust.contrib.fasthttp.FastHttpSession
+    :members: __init__, request, get, post, delete, put, head, options, patch, iter_lines
 
 MqttUser class
 ==================
+
 .. autoclass:: locust.contrib.mqtt.MqttUser
     :members: __init__, host, port, transport, ws_path, tls_context, client_cls, client_id, username, password, protocol 
 
@@ -41,12 +48,6 @@ SocketIOUser class
 .. autoclass:: locust.contrib.socketio.SocketIOUser
     :members: connect, call, emit, send, on_message, client, options
     :noindex:
-
-FastHttpSession class
-=====================
-
-.. autoclass:: locust.contrib.fasthttp.FastHttpSession
-    :members: __init__, request, get, post, delete, put, head, options, patch, iter_lines
 
 PostgresUser class
 ==================
