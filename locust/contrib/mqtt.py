@@ -4,10 +4,13 @@ from locust import User
 from locust.env import Environment
 
 import random
+import selectors
 import time
 import typing
+from contextlib import suppress
 
 import paho.mqtt.client as mqtt
+from paho.mqtt.enums import MQTTErrorCode
 
 if typing.TYPE_CHECKING:
     from paho.mqtt.client import MQTTMessageInfo
@@ -73,6 +76,7 @@ class MqttClient(mqtt.Client):
         environment: Environment,
         client_id: str | None = None,
         protocol: MQTTProtocolVersion = mqtt.MQTTv311,
+        use_loop_selectors: bool = False,
         **kwargs,
     ):
         """Initializes a paho.mqtt.Client for use in Locust swarms.
@@ -119,6 +123,8 @@ class MqttClient(mqtt.Client):
 
         self._publish_requests: dict[int, PublishedMessageContext] = {}
         self._subscribe_requests: dict[int, tuple[int, str, float]] = {}
+
+        self._use_loop_selectors = use_loop_selectors
 
     def _generate_event_name(self, event_type: str, qos: int, topic: str):
         return _generate_mqtt_event_name(event_type, qos, topic)
@@ -323,6 +329,93 @@ class MqttClient(mqtt.Client):
     ) -> None:
         self._on_connect_cb(client, userdata, {}, reasoncode)
 
+    def _loop(self, timeout: float = 1.0) -> MQTTErrorCode:
+        """Override the parent's _loop method to optionally use selectors.
+
+        When use_loop_selectors is True, this uses a selector-based implementation that allows more than 340 connections.
+        Otherwise, it falls back to the parent's implementation.
+        """
+        if self._use_loop_selectors:
+            return self._loop_selectors(timeout)
+        else:
+            return super()._loop(timeout)
+
+    def _loop_selectors(self, timeout: float = 1.0) -> MQTTErrorCode:
+        if timeout < 0.0:
+            raise ValueError("Invalid timeout.")
+
+        sel = selectors.DefaultSelector()
+
+        eventmask = selectors.EVENT_READ
+
+        with suppress(IndexError):
+            packet = self._out_packet.popleft()
+            self._out_packet.appendleft(packet)
+            eventmask = selectors.EVENT_WRITE | eventmask
+
+        # used to check if there are any bytes left in the (SSL) socket
+        pending_bytes = 0
+        if hasattr(self._sock, "pending"):
+            pending_bytes = self._sock.pending()  # type: ignore
+
+        # if bytes are pending do not wait in select
+        if pending_bytes > 0:
+            timeout = 0.0
+
+        try:
+            if self._sockpairR is None:
+                sel.register(self._sock, eventmask)  # type: ignore
+            else:
+                sel.register(self._sock, eventmask)  # type: ignore
+                sel.register(self._sockpairR, selectors.EVENT_READ)
+
+            events = sel.select(timeout)
+
+        except TypeError:
+            # Socket isn't correct type, in likelihood connection is lost
+            return mqtt.MQTT_ERR_CONN_LOST
+        except ValueError:
+            # Can occur if we just reconnected but rlist/wlist contain a -1 for
+            # some reason.
+            return mqtt.MQTT_ERR_CONN_LOST
+        except Exception:
+            # Note that KeyboardInterrupt, etc. can still terminate since they
+            # are not derived from Exception
+            return mqtt.MQTT_ERR_UNKNOWN
+
+        socklist: list[list] = [[], []]
+
+        for key, _event in events:
+            if key.events & selectors.EVENT_READ:
+                socklist[0].append(key.fileobj)
+
+            if key.events & selectors.EVENT_WRITE:
+                socklist[1].append(key.fileobj)
+
+        if self._sock in socklist[0] or pending_bytes > 0:
+            rc = self.loop_read()
+            if rc or self._sock is None:
+                return rc
+
+        if self._sockpairR and self._sockpairR in socklist[0]:
+            # Stimulate output write even though we didn't ask for it, because
+            # at that point the publish or other command wasn't present.
+            socklist[1].insert(0, self._sock)
+            # Clear sockpairR - only ever a single byte written.
+            with suppress(BlockingIOError):
+                # Read many bytes at once - this allows up to 10000 calls to
+                # publish() inbetween calls to loop().
+                self._sockpairR.recv(10000)
+
+        if self._sock in socklist[1]:
+            rc = self.loop_write()
+            if rc or self._sock is None:
+                return rc
+
+        sel.close()
+
+        return self.loop_misc()
+
     def publish(
         self,
         topic: str,
@@ -433,6 +526,7 @@ class MqttUser(User):
     username = None
     password = None
     protocol = mqtt.MQTTv311
+    use_loop_selectors: bool = False
 
     def __init__(self, environment: Environment):
         super().__init__(environment)
@@ -441,6 +535,7 @@ class MqttUser(User):
             transport=self.transport,
             client_id=self.client_id,
             protocol=self.protocol,
+            use_loop_selectors=self.use_loop_selectors,
         )
 
         if self.tls_context:
