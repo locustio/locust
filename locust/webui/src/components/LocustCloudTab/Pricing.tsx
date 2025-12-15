@@ -95,14 +95,14 @@ export default function Pricing() {
       <PricingCard
         ctaText='Join for Free'
         features={freeFeatures}
-        href='https://auth.locust.cloud/signup'
+        href='https://app.locust.cloud/signup'
         price='$0'
         tierName='Free'
       />
       <PricingCard
         ctaText='Get Started'
         features={premiumFeatures}
-        href='https://auth.locust.cloud/signup?plan=premium'
+        href='https://app.locust.cloud/signup?plan=premium'
         price='$399'
         recommended
         tierName='Premium'
