@@ -42,7 +42,7 @@ export default function LocustCloudTab() {
         <Box sx={{ display: 'flex', columnGap: 1 }}>
           <Button
             endIcon={<ArrowForwardIcon />}
-            href='https://auth.locust.cloud/signup'
+            href='https://app.locust.cloud/signup'
             sx={{
               textTransform: 'none',
               px: 12,
