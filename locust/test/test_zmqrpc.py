@@ -10,8 +10,8 @@ import zmq
 class ZMQRPC_tests(LocustTestCase):
     def setUp(self):
         super().setUp()
-        self.server = zmqrpc.Server("*", 0)
-        self.client = zmqrpc.Client("localhost", self.server.port, "identity")
+        self.server = zmqrpc.Server("*", 0, False)
+        self.client = zmqrpc.Client("localhost", self.server.port, "identity", False)
 
     def tearDown(self):
         self.server.close()
@@ -44,15 +44,15 @@ class ZMQRPC_tests(LocustTestCase):
         self.assertEqual(msg.node_id, "identity")
 
     def test_client_retry(self):
-        server = zmqrpc.Server("*", 0)
+        server = zmqrpc.Server("*", 0, False)
         server.socket.close()
         with self.assertRaises(RPCError):
             server.recv_from_client()
 
     def test_rpc_error(self):
-        server = zmqrpc.Server("*", 0)
+        server = zmqrpc.Server("*", 0, False)
         with self.assertRaises(RPCError):
-            server = zmqrpc.Server("*", server.port)
+            server = zmqrpc.Server("*", server.port, False)
         server.close()
         with self.assertRaises(RPCSendError):
             server.send_to_client(Message("test", "message", "identity"))
