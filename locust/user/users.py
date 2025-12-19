@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from locust.clients import HttpSession
-from locust.exception import CatchResponseError, LocustError, StopUser
+from locust.exception import CatchResponseError, LocustError, LocustStopTest, StopUser
 from locust.user.task import (
     LOCUST_STATE_RUNNING,
     LOCUST_STATE_STOPPING,
@@ -164,7 +164,7 @@ class User(metaclass=UserMeta):
                 raise
 
             self._taskset_instance.run()
-        except (GreenletExit, StopUser):
+        except (GreenletExit, StopUser, LocustStopTest):
             # run the on_stop method, if it has one
             self.on_stop()
 

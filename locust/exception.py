@@ -27,6 +27,12 @@ class InterruptTaskSet(Exception):
         self.reschedule = reschedule
 
 
+class LocustStopTest(Exception):
+    """
+    When raised, Locust will stop the entire test run.
+    """
+
+
 class StopUser(Exception):
     """
     This is only intended to be used internally in task.py.

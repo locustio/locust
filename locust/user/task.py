@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from locust.exception import InterruptTaskSet, MissingWaitTimeError, RescheduleTask, RescheduleTaskImmediately, StopUser
+from locust.exception import (
+    InterruptTaskSet,
+    LocustStopTest,
+    MissingWaitTimeError,
+    RescheduleTask,
+    RescheduleTaskImmediately,
+    StopUser,
+)
 
 import logging
 import random
@@ -362,7 +369,7 @@ class TaskSet(metaclass=TaskSetMeta):
             except InterruptTaskSet as e:
                 try:
                     self.on_stop()
-                except (StopUser, GreenletExit):
+                except (StopUser, LocustStopTest, GreenletExit):
                     raise
                 except Exception:
                     logging.error("Uncaught exception in on_stop: \n%s", traceback.format_exc())
@@ -370,7 +377,7 @@ class TaskSet(metaclass=TaskSetMeta):
                     raise RescheduleTaskImmediately(e.reschedule) from e
                 else:
                     raise RescheduleTask(e.reschedule) from e
-            except (StopUser, GreenletExit):
+            except (StopUser, LocustStopTest, GreenletExit):
                 try:
                     self.on_stop()
                 except Exception:

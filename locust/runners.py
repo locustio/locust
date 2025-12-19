@@ -28,7 +28,7 @@ from gevent.pool import Group
 
 from . import argument_parser
 from .dispatch import UsersDispatcher
-from .exception import RPCError, RPCReceiveError, RPCSendError
+from .exception import LocustStopTest, RPCError, RPCReceiveError, RPCSendError
 from .log import get_logs, greenlet_exception_logger
 from .rpc import Message, rpc
 from .stats import RequestStats, StatsError, setup_distributed_stats_event_listeners
@@ -63,6 +63,16 @@ CONNECT_TIMEOUT = 5
 CONNECT_RETRY_COUNT = 60
 
 greenlet_exception_handler = greenlet_exception_logger(logger)
+
+
+def locust_exception_handler(environment: Environment):
+    def handler(greenlet):
+        if greenlet.exc_info[0] is LocustStopTest:
+            logger.error(greenlet.exc_info[1])
+            logger.warning("Stopping Locust...")
+            environment.runner.quit()
+
+    return handler
 
 
 class ExceptionDict(TypedDict):
@@ -544,6 +554,7 @@ class LocalRunner(Runner):
             lambda: self._start(user_count, spawn_rate, wait=wait, user_classes=user_classes)
         )
         self.spawning_greenlet.link_exception(greenlet_exception_handler)
+        self.spawning_greenlet.link_exception(locust_exception_handler(self.environment))
 
     def stop(self) -> None:
         if self.state == STATE_STOPPED:
