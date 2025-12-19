@@ -70,7 +70,7 @@ def locust_exception_handler(environment: Environment):
         if greenlet.exc_info[0] is StopTest:
             logger.error(greenlet.exc_info[1])
             logger.warning("Stopping Locust...")
-            environment.runner.quit()
+            environment.runner.stop()
 
     return handler
 
