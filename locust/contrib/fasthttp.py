@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from locust.exception import CatchResponseError, LocustError, ResponseError
+from locust.exception import CatchResponseError, LocustError, LocustStopTest, ResponseError
 from locust.user import User
 from locust.util.deprecation import DeprecatedFastHttpLocustClass as FastHttpLocust  # noqa: F401
 
@@ -422,7 +422,7 @@ class FastHttpUser(User):
     def __init__(self, environment) -> None:
         super().__init__(environment)
         if self.host is None:
-            raise LocustError(
+            raise LocustStopTest(
                 "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
             )
 
