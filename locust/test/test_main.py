@@ -1185,6 +1185,64 @@ def test_xxcrash(session):
                 tp.not_expect_any("Traceback")
                 assert tp.proc.wait(3) == 0
 
+    def test_no_host_should_quit_test(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import HttpUser, task, constant
+
+            class QuickstartUser(HttpUser):
+                wait_time = constant(1)
+
+                @task
+                def hello_world(self):
+                    self.client.get("/")
+
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            with TestProcess(
+                f"locust -f {mocked.file_path} --headless",
+                sigint_on_exit=False,
+            ) as tp:
+                tp.expect("Starting Locust")
+                tp.expect(
+                    "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
+                )
+                tp.expect("Stopping Locust...")
+                tp.expect("Shutting down")
+
+    def test_no_host_should_stop_test(self):
+        port = get_free_tcp_port()
+
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import HttpUser, task, constant
+
+            class QuickstartUser(HttpUser):
+                wait_time = constant(1)
+
+                @task
+                def hello_world(self):
+                    self.client.get("/")
+
+            """
+        )
+
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            with TestProcess(
+                f"locust -f {mocked.file_path} --autostart --web-port {port} --run-time 1s --autoquit 0",
+                sigint_on_exit=False,
+            ) as tp:
+                tp.expect("Starting Locust")
+                tp.expect("Starting web interface")
+                tp.expect(
+                    "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
+                )
+                tp.expect("Stopping Locust...")
+                tp.not_expect_any("Shutting down")
+                tp.expect("--run-time limit reached")
+                tp.expect("Shutting down")
+
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
     failed_port_check = False

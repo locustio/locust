@@ -28,7 +28,7 @@ from gevent.pool import Group
 
 from . import argument_parser
 from .dispatch import UsersDispatcher
-from .exception import RPCError, RPCReceiveError, RPCSendError
+from .exception import RPCError, RPCReceiveError, RPCSendError, StopTest
 from .log import get_logs, greenlet_exception_logger
 from .rpc import Message, rpc
 from .stats import RequestStats, StatsError, setup_distributed_stats_event_listeners
@@ -62,7 +62,22 @@ FALLBACK_INTERVAL = 5
 CONNECT_TIMEOUT = 5
 CONNECT_RETRY_COUNT = 60
 
-greenlet_exception_handler = greenlet_exception_logger(logger)
+
+def locust_exception_handler(environment: Environment):
+    exception_logger = greenlet_exception_logger(logger)
+
+    def handler(greenlet):
+        if greenlet.exc_info[0] is StopTest:
+            logger.error(greenlet.exc_info[1])
+            logger.warning("Stopping Locust...")
+            if environment.parsed_options.headless:
+                environment.runner.quit()
+            else:
+                environment.runner.stop()
+        else:
+            exception_logger(greenlet)
+
+    return handler
 
 
 class ExceptionDict(TypedDict):
@@ -95,7 +110,7 @@ class Runner:
         self.cpu_warning_emitted: bool = False
         self.worker_cpu_warning_emitted: bool = False
         self.current_memory_usage: int = 0
-        self.greenlet.spawn(self.monitor_cpu_and_memory).link_exception(greenlet_exception_handler)
+        self.greenlet.spawn(self.monitor_cpu_and_memory).link_exception(locust_exception_handler(self.environment))
         self.exceptions: dict[int, ExceptionDict] = {}
         # Because of the way the ramp-up/ramp-down is implemented, target_user_classes_count
         # is only updated at the end of the ramp-up/ramp-down.
@@ -317,7 +332,7 @@ class Runner:
         logger.info("Shape test starting.")
         self.update_state(STATE_INIT)
         self.shape_greenlet = self.greenlet.spawn(self.shape_worker)
-        self.shape_greenlet.link_exception(greenlet_exception_handler)
+        self.shape_greenlet.link_exception(locust_exception_handler(self.environment))
         if self.environment.shape_class is not None:
             self.environment.shape_class.reset_time()
 
@@ -543,7 +558,7 @@ class LocalRunner(Runner):
         self.spawning_greenlet = self.greenlet.spawn(
             lambda: self._start(user_count, spawn_rate, wait=wait, user_classes=user_classes)
         )
-        self.spawning_greenlet.link_exception(greenlet_exception_handler)
+        self.spawning_greenlet.link_exception(locust_exception_handler(self.environment))
 
     def stop(self) -> None:
         if self.state == STATE_STOPPED:
@@ -673,8 +688,8 @@ class MasterRunner(DistributedRunner):
 
         self._users_dispatcher: UsersDispatcher | None = None
 
-        self.greenlet.spawn(self.heartbeat_worker).link_exception(greenlet_exception_handler)
-        self.greenlet.spawn(self.client_listener).link_exception(greenlet_exception_handler)
+        self.greenlet.spawn(self.heartbeat_worker).link_exception(locust_exception_handler(self.environment))
+        self.greenlet.spawn(self.client_listener).link_exception(locust_exception_handler(self.environment))
 
         # listener that gathers info on how many users the worker has spawned
         def on_worker_report(client_id: str, data: dict[str, Any]) -> None:
@@ -1230,12 +1245,12 @@ class WorkerRunner(DistributedRunner):
         self.worker_cpu_warning_emitted = False
         self._users_dispatcher: UsersDispatcher | None = None
         self.client = rpc.Client(master_host, master_port, self.client_id)
-        self.greenlet.spawn(self.worker).link_exception(greenlet_exception_handler)
+        self.greenlet.spawn(self.worker).link_exception(locust_exception_handler(self.environment))
         self.connect_to_master()
-        self.greenlet.spawn(self.heartbeat).link_exception(greenlet_exception_handler)
-        self.greenlet.spawn(self.heartbeat_timeout_checker).link_exception(greenlet_exception_handler)
-        self.greenlet.spawn(self.stats_reporter).link_exception(greenlet_exception_handler)
-        self.greenlet.spawn(self.logs_reporter).link_exception(greenlet_exception_handler)
+        self.greenlet.spawn(self.heartbeat).link_exception(locust_exception_handler(self.environment))
+        self.greenlet.spawn(self.heartbeat_timeout_checker).link_exception(locust_exception_handler(self.environment))
+        self.greenlet.spawn(self.stats_reporter).link_exception(locust_exception_handler(self.environment))
+        self.greenlet.spawn(self.logs_reporter).link_exception(locust_exception_handler(self.environment))
 
         # register listener that adds the current number of spawned users to the report that is sent to the master node
         def on_report_to_master(client_id: str, data: dict[str, Any]):
@@ -1393,7 +1408,7 @@ class WorkerRunner(DistributedRunner):
                     # kill existing spawning greenlet before we launch new one
                     self.spawning_greenlet.kill(block=True)
                 self.spawning_greenlet = self.greenlet.spawn(lambda: self.start_worker(job["user_classes_count"]))
-                self.spawning_greenlet.link_exception(greenlet_exception_handler)
+                self.spawning_greenlet.link_exception(locust_exception_handler(self.environment))
                 self.last_received_spawn_timestamp = job["timestamp"]
             case "stop":
                 self.stop()
