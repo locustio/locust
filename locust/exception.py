@@ -27,7 +27,7 @@ class InterruptTaskSet(Exception):
         self.reschedule = reschedule
 
 
-class LocustStopTest(Exception):
+class StopTest(Exception):
     """
     When raised, Locust will stop the entire test run.
     """

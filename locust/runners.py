@@ -28,7 +28,7 @@ from gevent.pool import Group
 
 from . import argument_parser
 from .dispatch import UsersDispatcher
-from .exception import LocustStopTest, RPCError, RPCReceiveError, RPCSendError
+from .exception import RPCError, RPCReceiveError, RPCSendError, StopTest
 from .log import get_logs, greenlet_exception_logger
 from .rpc import Message, rpc
 from .stats import RequestStats, StatsError, setup_distributed_stats_event_listeners
@@ -67,7 +67,7 @@ greenlet_exception_handler = greenlet_exception_logger(logger)
 
 def locust_exception_handler(environment: Environment):
     def handler(greenlet):
-        if greenlet.exc_info[0] is LocustStopTest:
+        if greenlet.exc_info[0] is StopTest:
             logger.error(greenlet.exc_info[1])
             logger.warning("Stopping Locust...")
             environment.runner.quit()

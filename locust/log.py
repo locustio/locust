@@ -1,4 +1,4 @@
-from locust.exception import LocustStopTest
+from locust.exception import StopTest
 
 import logging
 import logging.config
@@ -100,7 +100,7 @@ def greenlet_exception_logger(logger, level=logging.CRITICAL):
                 f"sys.exit({greenlet.exc_info[1]}) called (use log level DEBUG for callstack)",
             )
             logger.log(logging.DEBUG, "Unhandled exception in greenlet: %s", greenlet, exc_info=greenlet.exc_info)
-        elif greenlet.exc_info[0] is LocustStopTest:
+        elif greenlet.exc_info[0] is StopTest:
             pass
         else:
             logger.log(level, "Unhandled exception in greenlet: %s", greenlet, exc_info=greenlet.exc_info)

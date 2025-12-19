@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from locust.clients import HttpSession
-from locust.exception import CatchResponseError, LocustStopTest, StopUser
+from locust.exception import CatchResponseError, StopTest, StopUser
 from locust.user.task import (
     LOCUST_STATE_RUNNING,
     LOCUST_STATE_STOPPING,
@@ -164,7 +164,7 @@ class User(metaclass=UserMeta):
                 raise
 
             self._taskset_instance.run()
-        except (GreenletExit, StopUser, LocustStopTest):
+        except (GreenletExit, StopUser, StopTest):
             # run the on_stop method, if it has one
             self.on_stop()
 
@@ -270,7 +270,7 @@ class HttpUser(User):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.host is None:
-            raise LocustStopTest(
+            raise StopTest(
                 "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
             )
 
