@@ -1174,7 +1174,7 @@ def test_xxcrash(session):
             os.remove(output_filepath)
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} -H https://www.locust.cloud --headless -u 2 -r 10 -t 3 --exit-code-on-error 0",
+                f"locust -f {mocked.file_path} -H https://www.locust.io --headless -u 2 -r 10 -t 3 --exit-code-on-error 0",
             ) as tp:
                 tp.expect(
                     "/                                                                                  2     0(0.00%)",
@@ -1694,7 +1694,7 @@ class TelemetryTests(ProcessIntegrationTest):
             from locust import HttpUser, task, constant
 
             class TestUser(HttpUser):
-                host = "http://www.locust.cloud"
+                host = "http://www.locust.io"
                 wait_time = constant(1)
 
                 @task
