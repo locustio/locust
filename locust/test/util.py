@@ -95,7 +95,7 @@ def clear_all_functools_lru_cache() -> None:
 
 
 def get_locustfiles_from_args(*args, **kwargs):
-    options, _ = parse_locustfile_option(*args, **kwargs)
+    options = parse_locustfile_option(*args, **kwargs)
     return get_locustfiles_locally(options)
 
 
