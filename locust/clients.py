@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from locust.event import EventHook
 
+import os
 import re
 import sys
 import time
@@ -13,8 +14,11 @@ import requests
 from requests import Response
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
+from requests.compat import basestring
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
+from requests.utils import DEFAULT_CA_BUNDLE_PATH, extract_zipped_paths
 from urllib3 import PoolManager
+from urllib3.util import create_urllib3_context
 
 from .exception import CatchResponseError, LocustError, ResponseError
 
@@ -59,6 +63,9 @@ if TYPE_CHECKING:
 
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.IGNORECASE)
+
+_preloaded_ssl_context = create_urllib3_context()
+_preloaded_ssl_context.load_verify_locations(extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH))
 
 
 class HttpSession(requests.Session):
@@ -481,6 +488,45 @@ class LocustHttpAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
         if self.poolmanager is None:
             super().init_poolmanager(*args, **kwargs)
+
+    def cert_verify(self, conn, url, verify, cert):
+        if url.lower().startswith("https") and verify:
+            conn.cert_reqs = "CERT_REQUIRED"
+
+            if verify is not True:
+                cert_loc = verify
+
+                if not os.path.exists(cert_loc):
+                    raise OSError(f"Could not find a suitable TLS CA certificate bundle, invalid path: {cert_loc}")
+
+                if not os.path.isdir(cert_loc):
+                    conn.ca_certs = cert_loc
+                else:
+                    conn.ca_cert_dir = cert_loc
+        else:
+            conn.cert_reqs = "CERT_NONE"
+            conn.ca_certs = None
+            conn.ca_cert_dir = None
+
+        if cert:
+            if not isinstance(cert, basestring):
+                conn.cert_file = cert[0]
+                conn.key_file = cert[1]
+            else:
+                conn.cert_file = cert
+                conn.key_file = None
+            if conn.cert_file and not os.path.exists(conn.cert_file):
+                raise OSError(f"Could not find the TLS certificate file, invalid path: {conn.cert_file}")
+            if conn.key_file and not os.path.exists(conn.key_file):
+                raise OSError(f"Could not find the TLS key file, invalid path: {conn.key_file}")
+
+    def build_connection_pool_key_attributes(self, request, verify, cert=None):
+        host_params, pool_kwargs = super().build_connection_pool_key_attributes(request, verify, cert)
+
+        if verify is True:
+            pool_kwargs["ssl_context"] = _preloaded_ssl_context
+
+        return host_params, pool_kwargs
 
 
 # Monkey patch Response class to give some guidance
