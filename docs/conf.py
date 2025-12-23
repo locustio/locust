@@ -10,10 +10,7 @@
 from locust.argument_parser import get_parser
 
 import os
-import shutil
 import subprocess
-
-import locust_cloud
 
 # Add fixes for RTD deprecation
 # https://about.readthedocs.com/blog/2024/07/addons-by-default/
@@ -39,16 +36,6 @@ def save_locust_help_output():
 
 save_locust_help_output()
 
-
-def get_locust_cloud_docs():
-    locust_cloud_docs = os.path.join(locust_cloud.__path__[0], "docs/")
-    print("Copying `locust-cloud` docs/")
-    shutil.copytree(
-        locust_cloud_docs, os.path.join(os.path.abspath(os.path.dirname(__file__)), "locust-cloud/"), dirs_exist_ok=True
-    )
-
-
-get_locust_cloud_docs()
 
 # Generate RST table with help/descriptions for all available environment variables
 
