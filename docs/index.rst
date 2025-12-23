@@ -53,6 +53,7 @@ Other functionalities
     use-as-lib
     telemetry
     extensions
+    kubernetes-operator
     vscode-extension
 
 
