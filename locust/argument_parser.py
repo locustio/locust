@@ -38,13 +38,6 @@ version = locust.__version__
 
 DEFAULT_CONFIG_FILES = ("~/.locust.conf", "locust.conf", "pyproject.toml")
 
-try:
-    from locust_cloud.args import add_locust_cloud_argparse
-except ModuleNotFoundError as e:
-    add_locust_cloud_argparse = lambda _: None
-    if e.msg != "No module named 'locust_cloud'":
-        raise
-
 
 # Clean up downloaded locustfile on exit
 def exit_handler(filename) -> None:
@@ -356,13 +349,13 @@ def parse_locustfile_option(args=None) -> tuple[argparse.Namespace, list[str]]:
         env_var="LOCUST_MASTER_NODE_PORT",
     )
 
-    options, unknown = parser.parse_known_args(args=args)
+    options, _ = parser.parse_known_args(args=args)
 
     if options.help or options.version:
         # if --help or --version is specified we'll call parse_args which will print the help/version message
         get_parser().parse_args(args=args)
 
-    return (options, unknown)
+    return options
 
 
 def get_locustfiles_locally(options):
@@ -901,7 +894,6 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParse
     parser = get_empty_argument_parser(add_help=True, default_config_files=default_config_files)
     # add all the other supported arguments
     setup_parser_arguments(parser)
-    add_locust_cloud_argparse(parser)
     # fire event to provide a hook for locustscripts and plugins to add command line arguments
     locust.events.init_command_line_parser.fire(parser=parser)
     return parser
