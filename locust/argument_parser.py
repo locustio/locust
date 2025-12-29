@@ -432,6 +432,16 @@ def positive_integer(string) -> int:
     return value
 
 
+def gt_zero(t):
+    def checker(value):
+        v = t(value)
+        if v <= 0:
+            raise argparse.ArgumentTypeError("must be > 0")
+        return v
+
+    return checker
+
+
 def json_user_config(string):
     try:
         if string.endswith(".json"):
@@ -483,7 +493,7 @@ def setup_parser_arguments(parser):
     parser.add_argument(
         "-r",
         "--spawn-rate",
-        type=float,
+        type=gt_zero(float),
         metavar="<float>",
         help="Rate to spawn users at (users per second). Primarily used together with --headless or --autostart",
         env_var="LOCUST_SPAWN_RATE",
