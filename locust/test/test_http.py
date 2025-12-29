@@ -4,9 +4,13 @@ from locust.user.users import HttpUser
 
 import time
 
+import urllib3
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
+from urllib3.exceptions import SSLError
 
 from .testcases import WebserverTestCase
+
+urllib3.disable_warnings()
 
 
 class TestHttpSession(WebserverTestCase):
@@ -315,3 +319,14 @@ class TestHttpSession(WebserverTestCase):
         self.assertEqual("GET", kwargs["response"].text)
         user.client.request("get", "/request_method", context={"user": "bar"})  # override User context
         self.assertDictEqual({"user": "bar"}, kwargs["context"])
+
+    def test_verify_true_fails_with_bad_cert(self):
+        s = self.get_client("https://expired.badssl.com")
+        r = s.get("/", verify=True)
+        self.assertTrue("exception" in r.request_meta)
+        self.assertIsInstance(r.request_meta["exception"], SSLError)
+
+    def test_verify_false_succeeds_with_bad_cert(self):
+        s = self.get_client("https://expired.badssl.com")
+        r = s.get("/", verify=False)
+        self.assertEqual(r.status_code, 200)
