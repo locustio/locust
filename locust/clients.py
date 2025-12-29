@@ -492,6 +492,10 @@ class LocustHttpAdapter(HTTPAdapter):
         if self.poolmanager is None:
             super().init_poolmanager(*args, **kwargs)
 
+    # In python requests version 2.32.5 they reverted
+    # https://github.com/psf/requests/pull/6667
+    # Without this change the root CA certificates are loaded on every request
+    # We re-implement this change to increase the performance
     def cert_verify(self, conn, url, verify, cert):
         if requests_version < (2, 32, 5):
             return super().cert_verify(conn, url, verify, cert)
