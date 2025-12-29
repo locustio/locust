@@ -1212,7 +1212,7 @@ requires-dist = [
     { name = "python-socketio", extras = ["client"], specifier = ">=5.13.0" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
     { name = "pyzmq", specifier = ">=25.0.0" },
-    { name = "requests", specifier = ">=2.32.5" },
+    { name = "requests", specifier = ">=2.32.2" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=1.1.0" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'", specifier = ">=4.6.0" },
     { name = "werkzeug", specifier = ">=2.0.0" },
