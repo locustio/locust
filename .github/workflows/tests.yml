@@ -77,13 +77,13 @@ jobs:
         run: uv build
 
       - name: Upload Python dist as Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: python-dist
           path: dist/*
 
       - name: Upload Web UI as Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: webui-dist
           path: locust/webui/dist/*
@@ -92,7 +92,7 @@ jobs:
         run: yarn webui:build:lib
 
       - name: Upload web UI library as Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: webui-lib-dist
           path: locust/webui/lib
@@ -249,13 +249,13 @@ jobs:
 
       # Grab the built artifacts to ensure we're testing what we eventually publish
       - name: Download Python dist
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: python-dist
           path: dist
 
       - name: Download WebUI dist
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: webui-dist
           path: locust/webui/dist
@@ -275,7 +275,7 @@ jobs:
 
       # Grab the built artifacts to ensure we're testing what we eventually publish
       - name: Download Python dist
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: python-dist
           path: dist
@@ -351,14 +351,14 @@ jobs:
 
       # Download Python dist artifact
       - name: Download Python dist
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: python-dist
           path: dist
 
       # Download Web UI lib artifact
       - name: Download UI lib
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: webui-lib-dist
           path: locust/webui/lib
@@ -406,14 +406,14 @@ jobs:
 
       # Download Python dist artifact
       - name: Download Python dist
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: python-dist
           path: dist
 
       # Download Web UI lib artifact
       - name: Download UI lib
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: webui-lib-dist
           path: locust/webui/lib
