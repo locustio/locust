@@ -171,7 +171,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with TestProcess(f"locust -f {file_path} --headless", expect_return_code=42) as tp:
                 tp.expect("Starting Locust")
                 # if terminate happens too soon it might happen to be ignored, so wait for the first report:
-                tp.expect("failures/s")
+                tp.expect("Ramping to 1 users at a rate of 1.00 per second")
+                tp.expect("Aggregated")
                 tp.terminate()
                 tp.expect("Shutting down (exit code 42)")
                 tp.expect("Exit code in quit event 42", stream="stdout")
@@ -558,7 +559,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
             from locust import User, task, between
             class TestUser2(User):
-                wait_time = between(2, 4)
+                wait_time = between(0.5, 1.5)
                 @task
                 def my_task(self):
                     print("running my_task() again")
@@ -572,13 +573,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 class LoadTestShape(LoadTestShape):
                     def tick(self):
                         run_time = self.get_run_time()
-                        if run_time < 1:
+                        if run_time < 2:
                             return (10, 1)
 
                         return None
 
                 class TestUser(User):
-                    wait_time = between(2, 4)
+                    wait_time = between(0.5, 1.5)
                     @task
                     def my_task(self):
                         print("running my_task()")
@@ -1025,7 +1026,7 @@ class MyUser(HttpUser):
                 class LoadTestShape(LoadTestShape):
                     def tick(self):
                         run_time = self.get_run_time()
-                        if run_time < 2:
+                        if run_time < 3:
                             return (10, 1)
 
                         return None
@@ -1040,6 +1041,7 @@ class MyUser(HttpUser):
         ) as mocked:
             with TestProcess(f"locust -f {mocked} --headless") as tp:
                 tp.expect("Shape test starting")
+                tp.expect("Ramping to 10 users at a rate of 1.00 per second")
                 tp.terminate()
                 tp.expect("Exiting due to CTRL+C interruption")
                 tp.expect("Test Stopped", stream="stdout")
@@ -1133,7 +1135,7 @@ class MyUser(HttpUser):
             os.remove(output_filepath)
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --host http://google.com --headless -u 5 -r 5 -t 1 --json-file {output_base}",
+                f"locust -f {mocked.file_path} --host http://google.com --headless -u 5 -r 5 -t 2 --json-file {output_base}",
                 sigint_on_exit=False,
             ) as tp:
                 tp.proc.wait(3)
