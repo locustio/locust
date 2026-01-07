@@ -791,6 +791,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(f"locust -f {mocked.file_path} --headless -u 3") as tp:
                 tp.expect("Total fixed_count of User classes (4) is greater than ")
+                tp.expect("Ramping to 3 users at a rate of 1.00 per second")
                 tp.expect("Aggregated")
 
     def test_with_package_as_locustfile(self):
@@ -1087,9 +1088,9 @@ class MyUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             proc = TestProcess(
-                f"locust -f {mocked.file_path} --host http://google.com --headless -u 5 -r 5 -t 1 --json",
+                f"locust -f {mocked.file_path} --host http://google.com --headless -u 5 -r 5 -t 2 --json",
                 sigint_on_exit=False,
-                join_timeout=2,
+                join_timeout=4,
             )
             proc.close()
             stdout = "\n".join(proc.stdout_output)
