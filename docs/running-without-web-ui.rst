@@ -95,3 +95,28 @@ Below is an example that'll set the exit code to non zero if any of the followin
             environment.process_exit_code = 0
 
 Note that this code could go into the locustfile.py or in any other file that is imported in the locustfile.
+
+
+Running in CI/CD
+----------------
+
+You can easily run a single instance of Locust in headless mode as part of a CI/CD pipeline.
+
+Here's an example using GitHub Actions. Use it in combination with the above snippet to pass/fail the test.
+
+.. code-block:: yaml
+
+    env:
+        PYTHONUNBUFFERED: 1 # ensure we see output right away
+
+    jobs:
+        loadtest:
+            runs-on: ubuntu-latest
+            timeout-minutes: 15 # just in case something goes wrong
+        steps:
+            - uses: actions/checkout@v6
+            - uses: actions/setup-python@v6
+              with:
+                python-version: '3.11' 
+            - run: pip install locust
+            - run: locust --headless --run-time 5m
