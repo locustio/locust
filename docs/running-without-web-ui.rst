@@ -102,7 +102,7 @@ Running in CI/CD
 
 You can easily run a single instance of Locust in headless mode as part of a CI/CD pipeline.
 
-Here's an example using GitHub Actions. Use it in combination with the above snippet to pass/fail the test.
+Here's an example using GitHub Actions. Use it in combination with the above snippet to fail the run based on metrics.
 
 .. code-block:: yaml
 
