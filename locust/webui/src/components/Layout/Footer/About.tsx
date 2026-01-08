@@ -37,16 +37,6 @@ export default function About() {
 
         <div>
           <Typography component='h2' mb={1} variant='h4'>
-            Need help getting started?
-          </Typography>
-          <Link href='https://locust.cloud'>Locust Cloud</Link> gives you access to hosted, easily
-          scalable, and distributed load generation, as well as advanced reporting — all while
-          preserving the flexible “it’s just Python” approach to load test scripting that Locust
-          provides
-        </div>
-
-        <div>
-          <Typography component='h2' mb={1} variant='h4'>
             Version
           </Typography>
           <Link href={`https://github.com/locustio/locust/releases/tag/${version}`}>{version}</Link>

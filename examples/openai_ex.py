@@ -1,8 +1,7 @@
 # You need to install the openai package and set OPENAI_API_KEY env var to run this
 
 # OpenAIUser tracks the number of output tokens in the response_length field,
-# because it is more useful than the actual payload size. This field is available to event handlers,
-# but only graphed in Locust Cloud.
+# because it is more useful than the actual payload size. This field is available to event handlers.
 
 from locust import run_single_user, task
 from locust.contrib.oai import OpenAIUser

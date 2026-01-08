@@ -95,7 +95,7 @@ Context from a value in the response, using :ref:`catch_response <catch-response
 
 .. note::
 
-    Request context doesn't change how Locust's regular statistics are calculated. Logging/reporting solutions like `locust.cloud <https://locust.cloud/>`_ use the above mechanic to save the context to a database.
+    Request context doesn't change how Locust's regular statistics are calculated.
 
 Adding Web Routes
 ==================

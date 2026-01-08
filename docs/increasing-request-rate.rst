@@ -9,7 +9,7 @@ If you're not getting the desired/expected throughput there are a number of thin
 Concurrency
 -----------
 
-Increase the number of Users. To fully utilize your target system you may need a lot of concurrent requests. Note that spawn rate/ramp up does not change peak load, it only changes how fast you get there. High `wait times <writing-a-locustfile.html#wait-time>`_ and sleeps *do* impact throughput, so that may make it necessary to launch even more Users. You can find a whole blog post on this topic `here <https://www.locust.cloud/blog/closed-vs-open-workload-models>`__.
+Increase the number of Users. To fully utilize your target system you may need a lot of concurrent requests. Note that spawn rate/ramp up does not change peak load, it only changes how fast you get there. High `wait times <writing-a-locustfile.html#wait-time>`_ and sleeps *do* impact throughput, so that may make it necessary to launch even more Users. You can find a whole blog post on this topic `here <https://medium.com/locust-cloud/locusts-and-honey-badgers-closed-vs-open-workload-models-in-load-testing-9f59abfc6d9f>`__.
 
 Load generation performance
 ---------------------------
@@ -24,7 +24,6 @@ Also, if you are using a custom client (not HttpUser or FastHttpUser), make sure
 
 If you're doing really high throughput or using a lot of bandwidth, you may also want to check out your network utilization and other OS level metrics.
 
-If you prefer to have someone else worry about load generator performance, you should check out :ref:`Locust Cloud <locust-cloud>`.
 
 Actual issues with the system under test
 ----------------------------------------

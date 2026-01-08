@@ -4,6 +4,14 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.43.0
+======
+* Capture stacktrace on KeyboardInterrupt on greenlets https://github.com/locustio/locust/pull/3306
+* Solving iter_lines problem https://github.com/locustio/locust/pull/3311
+* Allow users to stop test run by raising StopTest, use it on missing host https://github.com/locustio/locust/pull/3313
+* Remove references to locust.cloud now that it is shutting down https://github.com/locustio/locust/pull/3314
+* Support requests>=2.32.5, reimplement the fix previously there for only loading ssl certificates once https://github.com/locustio/locust/pull/3316
+
 2.42.6
 ======
 * GH Actions: Bump actions/checkout from 5 to 6 https://github.com/locustio/locust/pull/3287

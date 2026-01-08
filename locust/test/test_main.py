@@ -171,7 +171,8 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             with TestProcess(f"locust -f {file_path} --headless", expect_return_code=42) as tp:
                 tp.expect("Starting Locust")
                 # if terminate happens too soon it might happen to be ignored, so wait for the first report:
-                tp.expect("failures/s")
+                tp.expect("Ramping to 1 users at a rate of 1.00 per second")
+                tp.expect("Aggregated")
                 tp.terminate()
                 tp.expect("Shutting down (exit code 42)")
                 tp.expect("Exit code in quit event 42", stream="stdout")
@@ -558,7 +559,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             """
             from locust import User, task, between
             class TestUser2(User):
-                wait_time = between(2, 4)
+                wait_time = between(0.5, 1.5)
                 @task
                 def my_task(self):
                     print("running my_task() again")
@@ -572,13 +573,13 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 class LoadTestShape(LoadTestShape):
                     def tick(self):
                         run_time = self.get_run_time()
-                        if run_time < 1:
+                        if run_time < 2:
                             return (10, 1)
 
                         return None
 
                 class TestUser(User):
-                    wait_time = between(2, 4)
+                    wait_time = between(0.5, 1.5)
                     @task
                     def my_task(self):
                         print("running my_task()")
@@ -790,6 +791,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(f"locust -f {mocked.file_path} --headless -u 3") as tp:
                 tp.expect("Total fixed_count of User classes (4) is greater than ")
+                tp.expect("Ramping to 3 users at a rate of 1.00 per second")
                 tp.expect("Aggregated")
 
     def test_with_package_as_locustfile(self):
@@ -1025,7 +1027,7 @@ class MyUser(HttpUser):
                 class LoadTestShape(LoadTestShape):
                     def tick(self):
                         run_time = self.get_run_time()
-                        if run_time < 2:
+                        if run_time < 3:
                             return (10, 1)
 
                         return None
@@ -1040,6 +1042,7 @@ class MyUser(HttpUser):
         ) as mocked:
             with TestProcess(f"locust -f {mocked} --headless") as tp:
                 tp.expect("Shape test starting")
+                tp.expect("Ramping to 10 users at a rate of 1.00 per second")
                 tp.terminate()
                 tp.expect("Exiting due to CTRL+C interruption")
                 tp.expect("Test Stopped", stream="stdout")
@@ -1085,9 +1088,9 @@ class MyUser(HttpUser):
         )
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             proc = TestProcess(
-                f"locust -f {mocked.file_path} --host http://google.com --headless -u 5 -r 5 -t 1 --json",
+                f"locust -f {mocked.file_path} --host http://google.com --headless -u 5 -r 5 -t 2 --json",
                 sigint_on_exit=False,
-                join_timeout=2,
+                join_timeout=4,
             )
             proc.close()
             stdout = "\n".join(proc.stdout_output)
@@ -1133,7 +1136,7 @@ class MyUser(HttpUser):
             os.remove(output_filepath)
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --host http://google.com --headless -u 5 -r 5 -t 1 --json-file {output_base}",
+                f"locust -f {mocked.file_path} --host http://google.com --headless -u 5 -r 5 -t 2 --json-file {output_base}",
                 sigint_on_exit=False,
             ) as tp:
                 tp.proc.wait(3)
@@ -1174,7 +1177,7 @@ def test_xxcrash(session):
             os.remove(output_filepath)
         with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} -H https://www.locust.cloud --headless -u 2 -r 10 -t 3 --exit-code-on-error 0",
+                f"locust -f {mocked.file_path} -H https://www.locust.io --headless -u 2 -r 10 -t 3 --exit-code-on-error 0",
             ) as tp:
                 tp.expect(
                     "/                                                                                  2     0(0.00%)",
@@ -1184,6 +1187,64 @@ def test_xxcrash(session):
                 )
                 tp.not_expect_any("Traceback")
                 assert tp.proc.wait(3) == 0
+
+    def test_no_host_should_quit_test(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import HttpUser, task, constant
+
+            class QuickstartUser(HttpUser):
+                wait_time = constant(1)
+
+                @task
+                def hello_world(self):
+                    self.client.get("/")
+
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            with TestProcess(
+                f"locust -f {mocked.file_path} --headless",
+                sigint_on_exit=False,
+            ) as tp:
+                tp.expect("Starting Locust")
+                tp.expect(
+                    "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
+                )
+                tp.expect("Stopping Locust...")
+                tp.expect("Shutting down")
+
+    def test_no_host_should_stop_test(self):
+        port = get_free_tcp_port()
+
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import HttpUser, task, constant
+
+            class QuickstartUser(HttpUser):
+                wait_time = constant(1)
+
+                @task
+                def hello_world(self):
+                    self.client.get("/")
+
+            """
+        )
+
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            with TestProcess(
+                f"locust -f {mocked.file_path} --autostart --web-port {port} --run-time 1s --autoquit 0",
+                sigint_on_exit=False,
+            ) as tp:
+                tp.expect("Starting Locust")
+                tp.expect("Starting web interface")
+                tp.expect(
+                    "You must specify the base host. Either in the host attribute in the User class, or on the command line using the --host option."
+                )
+                tp.expect("Stopping Locust...")
+                tp.not_expect_any("Shutting down")
+                tp.expect("--run-time limit reached")
+                tp.expect("Shutting down")
 
 
 class DistributedIntegrationTests(ProcessIntegrationTest):
@@ -1636,7 +1697,7 @@ class TelemetryTests(ProcessIntegrationTest):
             from locust import HttpUser, task, constant
 
             class TestUser(HttpUser):
-                host = "http://www.locust.cloud"
+                host = "http://www.locust.io"
                 wait_time = constant(1)
 
                 @task
