@@ -21,7 +21,7 @@ from .util.date import format_utc_timestamp
 from .util.rounding import proper_round
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Callable, Iterable, Mapping, Sequence
     from types import FrameType
     from typing import Any
 
@@ -43,7 +43,7 @@ STATS_AUTORESIZE = True  # overwrite this if you dont want auto resize while run
 
 class CSVWriter(Protocol):
     @abstractmethod
-    def writerow(self, columns: Iterable[str | int | float]) -> None: ...
+    def writerow(self, row: Iterable[str | int | float | None]) -> Any: ...
 
 
 class StatsBaseDict(TypedDict):
@@ -73,7 +73,7 @@ class StatsErrorDict(StatsBaseDict):
 
 class StatsHolder(Protocol):
     name: str
-    method: str
+    method: str | None
 
 
 S = TypeVar("S", bound=StatsHolder)
@@ -197,7 +197,7 @@ class RequestStats:
         self.use_response_times_cache = use_response_times_cache
         self.entries: dict[tuple[str, str], StatsEntry] = EntriesDict(self)
         self.errors: dict[str, StatsError] = {}
-        self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
+        self.total = StatsEntry(self, "Aggregated", "", use_response_times_cache=self.use_response_times_cache)
         self.history = []
 
     @property
@@ -275,7 +275,9 @@ class StatsEntry:
     Represents a single stats entry (name and method)
     """
 
-    def __init__(self, stats: RequestStats | None, name: str, method: str, use_response_times_cache: bool = False):
+    def __init__(
+        self, stats: RequestStats | None, name: str, method: str | None, use_response_times_cache: bool = False
+    ):
         self.stats = stats
         self.name = name
         """ Name (URL) of this stats entry """
@@ -527,9 +529,9 @@ class StatsEntry:
         return cast(StatsEntryDict, {key: getattr(self, key, None) for key in StatsEntryDict.__annotations__.keys()})
 
     @classmethod
-    def unserialize(cls, data: StatsEntryDict) -> StatsEntry:
+    def unserialize(cls, data: StatsEntryDict, use_response_times_cache: bool = False) -> StatsEntry:
         """Return the unserialzed version of the specified dict"""
-        obj = cls(None, data["name"], data["method"])
+        obj = cls(None, data["name"], data["method"], use_response_times_cache=use_response_times_cache)
         valid_keys = StatsEntryDict.__annotations__.keys()
 
         for key, value in data.items():
@@ -764,7 +766,7 @@ class StatsError:
         }
 
 
-def avg(values: list[float | int]) -> float:
+def avg(values: Sequence[float | int]) -> float:
     return sum(values, 0.0) / max(len(values), 1)
 
 
@@ -774,12 +776,13 @@ def median_from_dict(total: int, count: dict[int, int]) -> int:
     count is a dict {response_time: count}
     """
     pos = (total - 1) / 2
+    k: int | None = None
     for k in sorted(count.keys()):
         if pos < count[k]:
             return k
         pos -= count[k]
 
-    return k
+    return k if k is not None else 0
 
 
 def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats) -> None:
@@ -791,10 +794,12 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
 
     def on_worker_report(client_id: str, data: dict[str, Any]) -> None:
         for stats_data in data["stats"]:
-            entry = StatsEntry.unserialize(stats_data)
-            request_key = (entry.name, entry.method)
+            entry = StatsEntry.unserialize(stats_data, use_response_times_cache=True)
+            request_key = (entry.name, entry.method or "")
             if request_key not in stats.entries:
-                stats.entries[request_key] = StatsEntry(stats, entry.name, entry.method, use_response_times_cache=True)
+                stats.entries[request_key] = StatsEntry(
+                    stats, entry.name, entry.method or "", use_response_times_cache=True
+                )
             stats.entries[request_key].extend(entry)
 
         for error_key, error in data["errors"].items():
@@ -803,7 +808,7 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
             else:
                 stats.errors[error_key].occurrences += error["occurrences"]
 
-        stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
+        stats.total.extend(StatsEntry.unserialize(data["stats_total"], use_response_times_cache=True))
 
     events.report_to_master.add_listener(on_report_to_master)
     events.worker_report.add_listener(on_worker_report)
@@ -905,7 +910,7 @@ def stats_printer(stats: RequestStats) -> Callable[[], None]:
     return stats_printer_func
 
 
-def sort_stats(stats: dict[Any, S]) -> list[S]:
+def sort_stats(stats: Mapping[Any, S]) -> list[S]:
     return [stats[key] for key in sorted(stats.keys())]
 
 
@@ -1024,7 +1029,8 @@ class StatsCSV:
         self._failures_data_rows(csv_writer)
 
     def _failures_data_rows(self, csv_writer: CSVWriter) -> None:
-        for stats_error in sort_stats(self.environment.stats.errors):
+        for error_key in sorted(self.environment.stats.errors.keys()):
+            stats_error = self.environment.stats.errors[error_key]
             csv_writer.writerow(
                 [
                     stats_error.method,
