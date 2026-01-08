@@ -1,6 +1,5 @@
 import ExceptionsTab from 'components/ExceptionsTab/ExceptionsTab';
 import FailuresTable from 'components/FailuresTable/FailuresTableContainer';
-import LocustCloudTab from 'components/LocustCloudTab/LocustCloudTab';
 import LogViewer from 'components/LogViewer/LogViewer';
 import Reports from 'components/Reports/Reports';
 import StatsTable from 'components/StatsTable/StatsTableContainer';
@@ -53,11 +52,6 @@ export const tabConfig = {
     title: 'Workers',
     shouldDisplayTab: (state: IRootState) => state.swarm.isDistributed,
   },
-  locustCloud: {
-    component: LocustCloudTab,
-    key: 'locustcloud',
-    title: 'Locust Cloud',
-  },
 };
 
 export const baseTabs: ITab[] = [
@@ -69,5 +63,4 @@ export const baseTabs: ITab[] = [
   tabConfig.reports,
   tabConfig.logs,
   tabConfig.workers,
-  tabConfig.locustCloud,
 ];

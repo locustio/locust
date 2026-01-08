@@ -35,7 +35,7 @@ classifiers = [
 dependencies = [
     "flask>=2.0.0",
     "Werkzeug>=2.0.0",
-    "requests>=2.32.2,<2.32.5",
+    "requests>=2.32.2",
     "msgpack>=1.0.0",
     "pyzmq>=25.0.0",
     "geventhttpclient>=2.3.1",
@@ -46,7 +46,6 @@ dependencies = [
     "Flask-Login>=0.6.3",
     "Flask-Cors>=3.0.10",
     "pywin32; sys_platform == 'win32'",
-    "locust-cloud>=1.29.5",
     "gevent>=24.10.1,<26.0.0,!=25.8.1",
     "python-socketio[client]>=5.13.0",
     "python-engineio>=4.12.2",
@@ -244,7 +243,7 @@ all = [
 fail_fast = "pytest -x {args:locust/test/test_main.py}"
 
 # Run pytest-style example locustfile in pytest
-test_pytest = "pytest -H https://www.locust.cloud examples/test_pytest.py"
+test_pytest = "pytest -H https://www.locust.io examples/test_pytest.py"
 
 ## CI integration testing
 

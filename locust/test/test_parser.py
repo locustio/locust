@@ -319,13 +319,13 @@ class TestArgumentParser(LocustTestCase):
                         "--reset-stats",
                         "--stop-timeout",
                         "5",
-                        "--unknown-flag-extra-files",
+                        "--unknown-flag-print-stats",
                         "MyUserClass",
                     ]
                 )
         err.seek(0)
         stderr = err.read()
-        self.assertIn("Did you mean '--extra-files'", stderr)
+        self.assertIn("Did you mean '--print-stats'", stderr)
 
     def test_custom_argument(self):
         @locust.events.init_command_line_parser.add_listener

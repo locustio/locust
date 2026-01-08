@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from typing import Any
 
 from . import log
-from .exception import InterruptTaskSet, RescheduleTask, RescheduleTaskImmediately, StopUser
+from .exception import InterruptTaskSet, RescheduleTask, RescheduleTaskImmediately, StopTest, StopUser
 
 
 class EventHook:
@@ -45,7 +45,7 @@ class EventHook:
         for handler in handlers:
             try:
                 handler(**kwargs)
-            except (StopUser, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet):
+            except (StopUser, StopTest, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet):
                 # These exceptions could be thrown by, for example, a request handler,
                 # in which case they are entirely appropriate and should not be caught
                 raise

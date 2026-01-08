@@ -5,7 +5,6 @@ locustio.egg-info/**
 locust/_version.py
 locust/test/mock_*.py
 docs/_build/**
-docs/locust-cloud/**
 docs/cli-help-output.txt
 docs/config-options.rst
 mock.*.egg

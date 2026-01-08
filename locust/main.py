@@ -6,7 +6,6 @@ from locust.opentelemetry import setup_opentelemetry
 import atexit
 import errno
 import gc
-import importlib.metadata
 import inspect
 import itertools
 import logging
@@ -38,25 +37,6 @@ try:
     import locust_plugins  # pyright: ignore[reportMissingImports] # noqa: F401
 except ModuleNotFoundError as e:
     if e.msg != "No module named 'locust_plugins'":
-        raise
-try:
-    # remove in future release
-    import locust_cloud  # pyright: ignore[reportMissingImports] # noqa: F401
-
-    locust_cloud_version = f" (locust-cloud {importlib.metadata.version('locust-cloud')})"
-except ModuleNotFoundError as e:
-    locust_cloud_version = ""
-    locust_cloud = None
-    if e.msg != "No module named 'locust_cloud'":
-        raise
-try:
-    import locust_exporter  # pyright: ignore[reportMissingImports] # noqa: F401
-
-    locust_exporter_version = f" (locust_exporter {importlib.metadata.version('locust-exporter')})"
-except ModuleNotFoundError as e:
-    locust_exporter_version = ""
-    locust_exporter = None
-    if e.msg != "No module named 'locust_exporter'":
         raise
 
 if TYPE_CHECKING:
@@ -168,10 +148,7 @@ def merge_locustfiles_content(
 def main():
     # find specified locustfile(s) and make sure it exists, using a very simplified
     # command line parser that is only used to parse the -f option.
-    options, unknown = parse_locustfile_option()
-
-    if any([flag for flag in ["--login", "--logout", "--delete"] if flag in unknown]):
-        sys.exit(locust_cloud.main())
+    options = parse_locustfile_option()
 
     locustfiles = get_locustfiles_locally(options)
 
@@ -187,9 +164,6 @@ def main():
     parser = get_parser()
     options = parser.parse_args()
 
-    if getattr(options, "cloud", None):
-        sys.exit(locust_cloud.main(locustfiles=locustfiles))
-
     stats.validate_stats_configuration()
 
     if options.headful:
@@ -203,7 +177,7 @@ def main():
     if not options.skip_log_setup:
         setup_logging(options.loglevel, options.logfile)
 
-    start_message = f"Starting Locust {version}{locust_exporter_version}"
+    start_message = f"Starting Locust {version}"
 
     if options.otel:
         if setup_opentelemetry():

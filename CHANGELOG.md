@@ -1,6 +1,51 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.43.0](https://github.com/locustio/locust/tree/2.43.0) (2025-12-30)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.42.6...2.43.0)
+
+**Closed issues:**
+
+- Support for requests \>=2.32.5 \(compatibility with LangChain/AI ecosystem\) [\#3307](https://github.com/locustio/locust/issues/3307)
+- Multiple select in web UI for custom arguments [\#3260](https://github.com/locustio/locust/issues/3260)
+- Suggestion to Add  "iter\_lines"  Support for  "FastHttpUser"  in Locust [\#3018](https://github.com/locustio/locust/issues/3018)
+
+**Merged pull requests:**
+
+- Provide a better error message when spawn rate is set to zero [\#3317](https://github.com/locustio/locust/pull/3317) ([amadeuppereira](https://github.com/amadeuppereira))
+- Support requests\>=2.32.5, reimplement the fix previously there for only loading ssl certificates once [\#3316](https://github.com/locustio/locust/pull/3316) ([amadeuppereira](https://github.com/amadeuppereira))
+- Remove references to locust.cloud now that it is shutting down [\#3314](https://github.com/locustio/locust/pull/3314) ([amadeuppereira](https://github.com/amadeuppereira))
+- Allow users to stop test run by raising StopTest, use it on missing host in locustfile \(and no --host param\) [\#3313](https://github.com/locustio/locust/pull/3313) ([amadeuppereira](https://github.com/amadeuppereira))
+- Locust Cloud demo tab: update domain from auth.locust.cloud to app.locust.cloud [\#3312](https://github.com/locustio/locust/pull/3312) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Solving the iter\_lines problem [\#3311](https://github.com/locustio/locust/pull/3311) ([MasterKey-Pro](https://github.com/MasterKey-Pro))
+- Refactor parse\_options [\#3310](https://github.com/locustio/locust/pull/3310) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Capture stacktrace on KeyboardInterrupt on greenlets [\#3306](https://github.com/locustio/locust/pull/3306) ([amadeuppereira](https://github.com/amadeuppereira))
+- Bump js-yaml from 4.1.0 to 4.1.1 in /locust/webui [\#3305](https://github.com/locustio/locust/pull/3305) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump glob from 10.4.5 to 10.5.0 in /locust/webui [\#3304](https://github.com/locustio/locust/pull/3304) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [2.42.6](https://github.com/locustio/locust/tree/2.42.6) (2025-11-29)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.42.5...2.42.6)
+
+**Fixed bugs:**
+
+- After Locust upgrade, parameter 'headless = true' in conf file does not work as expected. [\#3225](https://github.com/locustio/locust/issues/3225)
+
+**Merged pull requests:**
+
+- Don't import pytest unless it is really needed, to speed up startup [\#3302](https://github.com/locustio/locust/pull/3302) ([cyberw](https://github.com/cyberw))
+- refactor case statements and update to use 3.10 set syntax [\#3301](https://github.com/locustio/locust/pull/3301) ([cyberw](https://github.com/cyberw))
+- Update OTel setup [\#3300](https://github.com/locustio/locust/pull/3300) ([amadeuppereira](https://github.com/amadeuppereira))
+- Use match-case instead of gigantic if-elif statement when handling zmq messages in master-worker communication [\#3299](https://github.com/locustio/locust/pull/3299) ([cyberw](https://github.com/cyberw))
+- Add OTel documentation [\#3298](https://github.com/locustio/locust/pull/3298) ([amadeuppereira](https://github.com/amadeuppereira))
+- Improve tests [\#3297](https://github.com/locustio/locust/pull/3297) ([amadeuppereira](https://github.com/amadeuppereira))
+- Log duplicate client\_ready messages as debug instead of info level [\#3296](https://github.com/locustio/locust/pull/3296) ([cyberw](https://github.com/cyberw))
+- Add otel unit tests [\#3295](https://github.com/locustio/locust/pull/3295) ([amadeuppereira](https://github.com/amadeuppereira))
+- Only log "OpenTelemetry enabled" message when success [\#3294](https://github.com/locustio/locust/pull/3294) ([amadeuppereira](https://github.com/amadeuppereira))
+- Fix Toml Parser Being Called on Conf Files [\#3293](https://github.com/locustio/locust/pull/3293) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- GH Actions: Bump actions/checkout from 5 to 6 in the all\_dependencies group [\#3287](https://github.com/locustio/locust/pull/3287) ([dependabot[bot]](https://github.com/apps/dependabot))
+
 ## [2.42.5](https://github.com/locustio/locust/tree/2.42.5) (2025-11-20)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.42.4...2.42.5)

@@ -1,7 +1,6 @@
 import { Container } from '@mui/material';
 
 import About from 'components/Layout/Footer/About';
-import FeedbackForm from 'components/Layout/Footer/FeedbackForm';
 
 export default function Footer() {
   return (
@@ -15,7 +14,6 @@ export default function Footer() {
       }}
     >
       <About />
-      <FeedbackForm />
     </Container>
   );
 }
