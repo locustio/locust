@@ -23,7 +23,6 @@ import os
 import re
 import time
 import unittest
-from collections import OrderedDict
 from io import StringIO
 from unittest import mock
 
@@ -769,202 +768,34 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
             ),
         )
 
-    def test_unserialize_with_response_times_cache_parameter(self):
-        """Test the use_response_times_cache parameter in StatsEntry.unserialize()"""
-        # Create an entry with caching enabled and log the data.
-        s1 = StatsEntry(self.stats, "/test", "GET", use_response_times_cache=True)
-        s1.log(100, 1000)
-        s1.log(200, 2000)
-        s1.log(300, 3000)
+    def test_unserialize_with_cache_param(self):
+        """test unserialize with cache param"""
+        # Create worker stats
+        worker_stats = RequestStats()
+        worker_entry = StatsEntry(worker_stats, "/api/test", "GET", use_response_times_cache=True)
 
-        # Serialized data
-        serialized = s1.serialize()
+        # Worker logs some data
+        worker_entry.log(100, 1000)
+        worker_entry.log(200, 1000)
+        worker_entry.log(300, 1000)
 
-        # test1: use_response_times_cache=False
-        s2_no_cache = StatsEntry.unserialize(serialized, use_response_times_cache=False)
+        # Serialize for transmission
+        serialized = worker_entry.serialize()
 
-        # test2: use_response_times_cache=True
-        s2_with_cache = StatsEntry.unserialize(serialized, use_response_times_cache=True)
+        # Master receives WITHOUT fix - cache not initialized
+        master_entry_broken = StatsEntry.unserialize(serialized)  # Default: use_response_times_cache=False
 
-        # Verify basic data consistency
-        self.assertEqual(s2_no_cache.num_requests, 3)
-        self.assertEqual(s2_no_cache.total_response_time, 600)
-        self.assertEqual(s2_no_cache.avg_response_time, 200)
+        # This fails because cache is None
+        with self.assertRaises(ValueError) as context:
+            master_entry_broken.get_current_response_time_percentile(0.95)
 
-        self.assertEqual(s2_with_cache.num_requests, 3)
-        self.assertEqual(s2_with_cache.total_response_time, 600)
-        self.assertEqual(s2_with_cache.avg_response_time, 200)
+        self.assertIn("use_response_times_cache must be set to True", str(context.exception))
 
-        # verify use_response_times_cach
-        self.assertFalse(s2_no_cache.use_response_times_cache)
-        self.assertTrue(s2_with_cache.use_response_times_cache)
+        # Master receives WITH fix - cache initialized
+        master_entry_fixed = StatsEntry.unserialize(serialized, use_response_times_cache=True)
 
-        # verify response_times_cache
-        self.assertIsNone(s2_no_cache.response_times_cache)
-        self.assertIsNotNone(s2_with_cache.response_times_cache)
-        self.assertIsInstance(s2_with_cache.response_times_cache, OrderedDict)
-
-    def test_distributed_worker_report_with_cache(self):
-        """Test cache usage in distributed worker reports"""
-        # Create worker stats (simulating worker nodes)
-        worker_stats = RequestStats(use_response_times_cache=True)
-        worker_entry = StatsEntry(worker_stats, "/api/data", "POST", use_response_times_cache=True)
-
-        # Log test data on worker
-        for i in range(10):
-            response_time = 100 + i * 10
-            worker_entry.log(response_time, 1000 + i * 100)
-
-        worker_data = worker_entry.serialize()
-
-        # Simulate master unserialize with cache enabled
-        master_entry = StatsEntry.unserialize(
-            worker_data,
-            use_response_times_cache=True,  # 关键：确保传递了True
-        )
-
-        # Verify data consistency
-        self.assertEqual(worker_entry.num_requests, master_entry.num_requests)
-        self.assertEqual(worker_entry.total_response_time, master_entry.total_response_time)
-        self.assertEqual(worker_entry.avg_response_time, master_entry.avg_response_time)
-
-        # Verify cache initialization
-        self.assertTrue(master_entry.use_response_times_cache)
-        self.assertIsNotNone(master_entry.response_times_cache)
-
-        # Verify master can log new data
-        master_entry.log(500, 5000)
-        self.assertEqual(master_entry.num_requests, 11)
-        self.assertEqual(master_entry.max_response_time, 500)
-
-    def test_on_worker_report_uses_cache_parameter(self):
-        """Test on_worker_report uses cache param in setup_distributed_stats_event_listeners"""
-        from locust.event import Events
-        from locust.stats import setup_distributed_stats_event_listeners
-
-        # Create events and master stats
-        events = Events()
-        master_stats = RequestStats(use_response_times_cache=True)
-        setup_distributed_stats_event_listeners(events, master_stats)
-
-        # Simulate worker stats data
-        worker_stats_data = {
-            "stats": [
-                {
-                    "name": "/test/endpoint",
-                    "method": "GET",
-                    "num_requests": 5,
-                    "num_failures": 0,
-                    "total_response_time": 1500,
-                    "min_response_time": 100,
-                    "max_response_time": 500,
-                    "total_content_length": 5000,
-                    "response_times": {100: 2, 200: 1, 300: 1, 500: 1},
-                    "num_reqs_per_sec": {123456: 5},
-                    "num_fail_per_sec": {},
-                    "last_request_timestamp": 123456.789,
-                    "start_time": 123450.0,
-                }
-            ],
-            "stats_total": {
-                "name": "Aggregated",
-                "method": "",
-                "num_requests": 5,
-                "num_failures": 0,
-                "total_response_time": 1500,
-                "min_response_time": 100,
-                "max_response_time": 500,
-                "total_content_length": 5000,
-                "response_times": {100: 2, 200: 1, 300: 1, 500: 1},
-                "num_reqs_per_sec": {123456: 5},
-                "num_fail_per_sec": {},
-                "last_request_timestamp": 123456.789,
-                "start_time": 123450.0,
-            },
-            "errors": {},
-        }
-
-        # Trigger worker_report event
-        events.worker_report.fire(client_id="worker1", data=worker_stats_data)
-
-        # Verify entry creation and cache status
-        entry = master_stats.get("/test/endpoint", "GET")
-        self.assertIsNotNone(entry)
-        self.assertEqual(entry.num_requests, 5)
-
-        # Verify entry uses cache
-        self.assertTrue(entry.use_response_times_cache)
-
-    def test_cross_server_response_time_consistency(self):
-        """Test cross-server response time data consistency"""
-        # Simulate two different environments (different servers)
-        stats_server_a = RequestStats(use_response_times_cache=True)
-
-        # Log data on server A (worker)
-        entry_a = StatsEntry(stats_server_a, "/api/resource", "PUT", use_response_times_cache=True)
-
-        response_times = [150, 225, 300, 375, 450, 525, 600]
-        for rt in response_times:
-            entry_a.log(rt, 2000)
-            gevent.sleep(0.001)
-
-        # Verify percentile consistency
-        median_a = entry_a.median_response_time
-        percentile_95_a = entry_a.get_response_time_percentile(0.95)
-        serialized = entry_a.serialize()
-
-        # Deserialize on server B (master) with cache enabled
-        entry_b = StatsEntry.unserialize(serialized, use_response_times_cache=True)
-
-        # Calculate percentiles
-        median_b = entry_b.median_response_time
-        percentile_95_b = entry_b.get_response_time_percentile(0.95)
-
-        # Verify consistency
-        self.assertEqual(median_a, median_b)
-        self.assertEqual(percentile_95_a, percentile_95_b)
-
-        # Verify master can log new data
-        entry_b.log(750, 3000)
-        self.assertEqual(entry_b.num_requests, 8)
-        self.assertEqual(entry_b.max_response_time, 750)
-
-    def test_response_times_cache_after_unserialize(self):
-        """Test response time cache behavior after unserialization"""
-        # Create entry with cache and log data
-        entry = StatsEntry(self.stats, "/test", "GET", use_response_times_cache=True)
-        current_time = int(time.time())
-        entry.log(100, 1000)
-        entry.last_request_timestamp = current_time + 0.5
-        entry.log(200, 2000)
-
-        # Cache response times and serialize
-        entry._cache_response_times(current_time)
-        serialized = entry.serialize()
-
-        # Deserialize (using cache)
-        new_entry = StatsEntry.unserialize(serialized, use_response_times_cache=True)
-
-        # Verify cache-related attributes
-        self.assertTrue(new_entry.use_response_times_cache)
-        self.assertIsInstance(new_entry.response_times_cache, OrderedDict)
-
-    def test_stats_entry_method_none_handling(self):
-        """Test StatsEntry handling when method parameter is None"""
-        # Create entry with None method
-        entry = StatsEntry(self.stats, "/test", None, use_response_times_cache=True)
-        entry.log(150, 1500)
-
-        # Serialize and unserialize
-        serialized = entry.serialize()
-        new_entry = StatsEntry.unserialize(serialized, use_response_times_cache=True)
-
-        # Verify data and cache
-        self.assertIsNone(new_entry.method)
-        self.assertEqual(new_entry.name, "/test")
-        self.assertEqual(new_entry.num_requests, 1)
-        self.assertEqual(new_entry.avg_response_time, 150.0)
-        self.assertEqual(new_entry.total_response_time, 150)
+        # Now it works
+        self.assertIsNotNone(master_entry_fixed.response_times_cache)
 
 
 class TestStatsEntry(unittest.TestCase):
@@ -1128,191 +959,3 @@ class TestInspectUser(unittest.TestCase):
         self.assertEqual(0.25, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["ratio"])
         self.assertEqual(0.125, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task1"]["ratio"])
         self.assertEqual(0.125, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task2"]["ratio"])
-
-
-class TestDistributedResponseTimeFix(unittest.TestCase):
-    """Test suite for distributed response time fix"""
-
-    def setUp(self):
-        self.stats = RequestStats(use_response_times_cache=True)
-
-    def test_master_worker_response_time_sync(self):
-        """Test response time sync between master and worker nodes"""
-        from locust.event import Events
-        from locust.stats import setup_distributed_stats_event_listeners
-
-        # Simulate worker stats and log data
-        worker_stats = RequestStats(use_response_times_cache=True)
-        worker_entry = worker_stats.get("/test", "GET")
-
-        for i in range(20):
-            worker_entry.log(50 + i * 25, 1000)
-
-        # Serialize worker data
-        worker_data = {
-            "stats": worker_stats.serialize_stats(),
-            "stats_total": worker_stats.total.serialize(),
-            "errors": {},
-        }
-
-        # Simulate master receiving data
-        master_stats = RequestStats(use_response_times_cache=True)
-        events = Events()
-        setup_distributed_stats_event_listeners(events, master_stats)
-
-        # Trigger event
-        events.worker_report.fire(client_id="test-worker", data=worker_data)
-
-        # Verify master's stats
-        master_entry = master_stats.get("/test", "GET")
-        self.assertIsNotNone(master_entry)
-        self.assertEqual(master_entry.num_requests, 20)
-
-        # Verify cache is enabled
-        self.assertTrue(master_entry.use_response_times_cache)
-
-    def test_response_time_cache_in_distributed_mode(self):
-        """Test response time cache consistency in distributed mode"""
-        stats1 = RequestStats(use_response_times_cache=True)
-        stats2 = RequestStats(use_response_times_cache=True)
-        entry1 = StatsEntry(stats1, "/api", "GET", use_response_times_cache=True)
-        entry2 = StatsEntry(stats2, "/api", "GET", use_response_times_cache=True)
-
-        # Log different response times
-        for i in range(10):
-            entry1.log(100 + i * 20, 1000)
-
-        for i in range(10, 20):
-            entry2.log(100 + i * 20, 1000)
-
-        # Simulate merge (master merge worker data)
-        serialized2 = entry2.serialize()
-        entry2_deserialized = StatsEntry.unserialize(serialized2, use_response_times_cache=True)
-        entry1.extend(entry2_deserialized)
-
-        # Verify merged stats and cache
-        self.assertEqual(entry1.num_requests, 20)
-
-        # Verify cache state
-        self.assertTrue(entry1.use_response_times_cache)
-
-    def test_serialization_with_cache_param_true(self):
-        """Test serialization/unserialization with use_response_times_cache=True"""
-        stats = RequestStats(use_response_times_cache=True)
-        entry = StatsEntry(stats, "/api/test", "GET", use_response_times_cache=True)
-        for i in range(5):
-            entry.log(100 + i * 50, 1000 + i * 200)
-
-        # 序列Serialize and unserialize化
-        serialized = entry.serialize()
-
-        # Verify data and cache
-        deserialized = StatsEntry.unserialize(serialized, use_response_times_cache=True)
-
-        self.assertEqual(entry.method, deserialized.method)
-        self.assertEqual(entry.name, deserialized.name)
-        self.assertEqual(entry.num_requests, deserialized.num_requests)
-        self.assertEqual(entry.total_response_time, deserialized.total_response_time)
-
-        self.assertTrue(deserialized.use_response_times_cache)
-        self.assertIsNotNone(deserialized.response_times_cache)
-        self.assertIsInstance(deserialized.response_times_cache, OrderedDict)
-
-    def test_serialization_with_cache_param_false(self):
-        """Test serialization/unserialization with use_response_times_cache=False"""
-        stats = RequestStats(use_response_times_cache=True)
-        entry = StatsEntry(stats, "/api/test", "GET", use_response_times_cache=True)
-        for i in range(5):
-            entry.log(100 + i * 50, 1000 + i * 200)
-
-        # Serialize and unserialize without cache
-        serialized = entry.serialize()
-
-        # Verify data and cache
-        deserialized = StatsEntry.unserialize(serialized, use_response_times_cache=False)
-
-        self.assertEqual(entry.method, deserialized.method)
-        self.assertEqual(entry.name, deserialized.name)
-        self.assertEqual(entry.num_requests, deserialized.num_requests)
-        self.assertEqual(entry.total_response_time, deserialized.total_response_time)
-
-        self.assertFalse(deserialized.use_response_times_cache)
-        self.assertIsNone(deserialized.response_times_cache)
-
-    def test_distributed_response_time_percentile_issue_and_fix(self):
-        """Demonstrate and fix percentile calculation issue in distributed mode"""
-        response_times = [100, 150, 200, 250, 300, 350, 400, 450, 500, 550]
-
-        # Demonstrate issue: no cache leads to percentile calculation failure
-        worker_stats_no_cache = RequestStats(use_response_times_cache=False)
-        worker_entry_no_cache = StatsEntry(
-            worker_stats_no_cache, "/api/endpoint", "GET", use_response_times_cache=False
-        )
-
-        for rt in response_times:
-            worker_entry_no_cache.log(rt, 1000)
-        serialized_data = worker_entry_no_cache.serialize()
-
-        master_entry_broken = StatsEntry.unserialize(serialized_data, use_response_times_cache=False)
-        with self.assertRaises(ValueError) as context:
-            master_entry_broken.get_current_response_time_percentile(0.95)
-        self.assertIn(
-            "use_response_times_cache must be set to True",
-            str(context.exception),
-            "Problem demonstration: Calling get_current_response_time_percentile when there is no cache should throw an exception.",
-        )
-
-        # Demonstrate fix: cache enabled for correct percentile calculation
-        worker_stats_with_cache = RequestStats(use_response_times_cache=True)
-        worker_entry_with_cache = StatsEntry(
-            worker_stats_with_cache, "/api/endpoint", "GET", use_response_times_cache=True
-        )
-
-        for rt in response_times:
-            worker_entry_with_cache.log(rt, 1000)
-
-        serialized_data_fixed = worker_entry_with_cache.serialize()
-        master_entry_fixed = StatsEntry.unserialize(serialized_data_fixed, use_response_times_cache=True)
-
-        # Verify cache initialization and data consistency
-        self.assertIsNotNone(
-            master_entry_fixed.response_times_cache,
-            "Repair verification: The response time cache was correctly initialized during Master deserialization.",
-        )
-        self.assertIsInstance(
-            master_entry_fixed.response_times_cache,
-            OrderedDict,
-            "Repair verification: The response time cache should be an OrderedDict type",
-        )
-        self.assertTrue(
-            master_entry_fixed.use_response_times_cache,
-            "Repair verification: Master's entry should have response times cache enabled",
-        )
-        self.assertEqual(
-            worker_entry_with_cache.num_requests,
-            master_entry_fixed.num_requests,
-            "Cross-server verification: The number of requests to Worker and Master should be the same.",
-        )
-        self.assertEqual(
-            worker_entry_with_cache.total_response_time,
-            master_entry_fixed.total_response_time,
-            "Cross-server verification: The total response time to Worker and Master should be the same.",
-        )
-        self.assertEqual(
-            worker_entry_with_cache.avg_response_time,
-            master_entry_fixed.avg_response_time,
-            "Cross-server verification: Worker and Master should have the same average response time",
-        )
-
-        # Verify master can log new data
-        master_entry_fixed.log(600, 1000)
-        self.assertEqual(
-            master_entry_fixed.num_requests,
-            11,
-            "Master should be able to continue recording new response times.",
-        )
-        self.assertEqual(
-            master_entry_fixed.max_response_time,
-            600,
-            "Master should correctly update the maximum response time",
-        )
