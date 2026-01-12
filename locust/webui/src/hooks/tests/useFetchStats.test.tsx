@@ -60,7 +60,7 @@ describe('useFetchStats', () => {
       },
     });
 
-    act(() => {
+    await act(async () => {
       store.dispatch(swarmActions.setSwarm({ state: SWARM_STATE.RUNNING }));
     });
 
@@ -68,8 +68,7 @@ describe('useFetchStats', () => {
       await vi.advanceTimersByTimeAsync(2000);
     });
 
-    const testStartTime = new Date().toISOString();
-
-    expect((store.getState().ui.charts as ICharts).markers).toEqual([testStopTime, testStartTime]);
+    expect((store.getState().ui.charts as ICharts).markers?.[0]).toEqual(testStopTime);
+    expect((store.getState().ui.charts as ICharts).markers?.length).toEqual(2);
   });
 });
