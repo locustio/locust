@@ -1,6 +1,19 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.43.1](https://github.com/locustio/locust/tree/2.43.1) (2026-01-12)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.43.0...2.43.1)
+
+**Merged pull requests:**
+
+- Bump packages [\#3331](https://github.com/locustio/locust/pull/3331) ([andrewbaldwin44](https://github.com/andrewbaldwin44))
+- Stabilize tests [\#3326](https://github.com/locustio/locust/pull/3326) ([amadeuppereira](https://github.com/amadeuppereira))
+- Stabilize tests [\#3325](https://github.com/locustio/locust/pull/3325) ([amadeuppereira](https://github.com/amadeuppereira))
+- Bump @emotion/styled from 11.14.0 to 11.14.1 in /locust/webui in the emotion group [\#3322](https://github.com/locustio/locust/pull/3322) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump the eslint group in /locust/webui with 5 updates [\#3319](https://github.com/locustio/locust/pull/3319) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump the all\_dependencies group with 2 updates [\#3318](https://github.com/locustio/locust/pull/3318) ([dependabot[bot]](https://github.com/apps/dependabot))
+
 ## [2.43.0](https://github.com/locustio/locust/tree/2.43.0) (2025-12-30)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.42.6...2.43.0)
