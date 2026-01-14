@@ -21,7 +21,7 @@ Helm Charts
 
 .. code-block:: bash
 
-    $ helm repo add locust-operator https://locustcloud.github.io/k8s-operator
+    $ helm repo add locust-operator https://locustio.github.io/k8s-operator
     "locust-operator" has been added to your repositories
 
     $ helm repo update
@@ -46,7 +46,7 @@ Helm Charts
 
     $ kubectl get crd                                                                                                                                                                        [none 🚀]
     NAME                       CREATED AT
-    locusttests.locust.cloud   ...
+    locusttests.locust.io      ...
 
 Manifest Files
 ~~~~~~~~~~~~~~
@@ -56,7 +56,7 @@ To generate the raw resources, you can use the Helm chart and output the manifes
 
 .. code-block:: bash
 
-    $ helm repo add locust-operator https://locustcloud.github.io/k8s-operator
+    $ helm repo add locust-operator https://locustio.github.io/k8s-operator
     $ helm repo update
     $ helm template locust-operator locust-operator/locust-operator \
       --namespace locust-operator > locust-operator.yaml
@@ -75,7 +75,7 @@ Quickstart
 
 .. code-block:: yaml
 
-    apiVersion: locust.cloud/v1
+    apiVersion: locust.io/v1
     kind: LocustTest
     metadata:
       name: load-test
@@ -96,16 +96,15 @@ Quickstart
 .. code-block:: bash
 
     $ kubectl apply -f locust-test.yaml
-    locusttest.locust.cloud/load-test created
+    locusttest.locust.io/load-test created
 
     $ kubectl get locusttests
     NAME                 STATE   WORKERS   FAIL_RATIO   RPS   USERS   AGE
     load-test            READY   2/2       0%           0     0       30s
 
-    $ kubectl get pods -l locust.cloud/test-run=load-test
+    $ kubectl get pods -l locust.io/test-run=load-test
     NAME                       READY   STATUS    RESTARTS   AGE
     load-test-master-xxxxx     1/1     Running   0          35s
-    load-test-worker-xxxxx     1/1     Running   0          35s
     load-test-worker-xxxxx     1/1     Running   0          35s
     load-test-worker-xxxxx     1/1     Running   0          35s
 
@@ -125,7 +124,13 @@ Quickstart
   $ kubectl logs -f pod/load-test-master-xxxxx
 
   # Using a selector to follow the master pod by labels
-  $ kubectl logs -f -l locust.cloud/test-run=load-test,locust.cloud/component=master
+  $ kubectl logs -f -l locust.io/test-run=load-test,locust.io/component=master
+
+6. Cleanup by deleting the ``LocustTest`` resource (this will also delete all managed resources):
+
+.. code-block:: bash
+
+  $ kubectl delete loadtest load-test
 
 
 LocustTest CRD Configuration
@@ -220,7 +225,7 @@ Inline locustfile
 
 .. code-block:: yaml
 
-    apiVersion: locust.cloud/v1
+    apiVersion: locust.io/v1
     kind: LocustTest
     metadata:
       name: load-test-v1
@@ -260,7 +265,7 @@ External ConfigMap locustfile
             def ping(self):
                 self.client.get("/ping")
     ---
-    apiVersion: locust.cloud/v1
+    apiVersion: locust.io/v1
     kind: LocustTest
     metadata:
       name: load-test-v2
@@ -281,7 +286,7 @@ Custom Master/Worker pod configuration
 
 .. code-block:: yaml
 
-    apiVersion: locust.cloud/v1
+    apiVersion: locust.io/v1
     kind: LocustTest
     metadata:
       name: locust-test
@@ -327,14 +332,14 @@ Headless run
 
 .. code-block:: yaml
 
-    apiVersion: locust.cloud/v1
+    apiVersion: locust.io/v1
     kind: LocustTest
     metadata:
       name: headless-test
     spec:
       workers: 2
       args:
-        --host http://locust.cloud/
+        --host http://locust.io/
         --headless
         --run-time=5m
         --users=300
@@ -365,7 +370,7 @@ You may need to update the CRD manually when upgrading the operator.
 
 .. code-block:: bash
 
-   $ kubectl apply -f https://raw.githubusercontent.com/locustcloud/k8s-operator/refs/heads/master/charts/locust-operator/crds/locusttest.yaml
+   $ kubectl apply -f https://raw.githubusercontent.com/locustio/k8s-operator/refs/tags/helm-chart-<version>/charts/locust-operator/crds/locusttest.yaml
 
 Uninstall
 ---------
@@ -385,7 +390,7 @@ Helm
    # Uninstall the Helm release
    $ helm uninstall locust-operator --namespace locust-operator
    # Remove the LocustTest CRD
-   $ kubectl delete crd locusttests.locust.cloud
+   $ kubectl delete crd locusttests.locust.io
 
 Manifest Files
 ~~~~~~~~~~~~~~
