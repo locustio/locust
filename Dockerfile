@@ -14,9 +14,9 @@ RUN yarn webui:build
 FROM python:3.13-slim AS base
 
 FROM base AS builder
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git
-# there are no wheels for some packages (geventhttpclient?) for arm64/aarch64, so we need some build dependencies there
-RUN if [ -n "$(arch | grep 'arm64\|aarch64')" ]; then apt install -y --no-install-recommends gcc python3-dev; fi
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git \
+    gcc g++ make \
+    python3-dev
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 ENV SKIP_PRE_BUILD="true"
