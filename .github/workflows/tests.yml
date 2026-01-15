@@ -50,8 +50,8 @@ jobs:
           version: "0.9.7"
           enable-cache: true
           cache-dependency-glob: |
-            "pyproject.toml"
-            "uv.lock"
+            pyproject.toml
+            uv.lock
 
       - run: uv venv
 
@@ -238,8 +238,8 @@ jobs:
           version: "0.9.7"
           enable-cache: true
           cache-dependency-glob: |
-            "pyproject.toml"
-            "uv.lock"
+            pyproject.toml
+            uv.lock
 
       - run: uv venv --python ${{ matrix.python }}
 
