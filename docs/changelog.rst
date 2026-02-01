@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.43.2
+======
+* Upgrade various dependencies, no functional changes https://github.com/locustio/locust/pull/3339, https://github.com/locustio/locust/pull/3343,  https://github.com/locustio/locust/pull/3342, https://github.com/locustio/locust/pull/3341, https://github.com/locustio/locust/pull/3340
+
 2.43.1
 ======
 * Upgrade various Web UI dependencies, no other changes
