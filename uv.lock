@@ -1244,6 +1244,7 @@ build = [
     { name = "hatch", specifier = ">=1.14.0" },
     { name = "hatch-vcs", specifier = ">=0.4.0" },
 ]
+dev = []
 dns = [{ name = "dnspython", specifier = ">=2.8.0" }]
 docs = [
     { name = "alabaster", specifier = "==0.7.16" },
