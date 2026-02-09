@@ -159,6 +159,8 @@ class Events:
     """
     Fired on master when a new worker connects. Note that is fired immediately after the connection is established, so init event may not yet have finished on worker.
 
+    Event arguments:
+
     :param client_id: Client id of the connected worker
     """
 
@@ -213,16 +215,28 @@ class Events:
     """
     Fired on each node when a new load test is started. It's not fired again if the number of
     users change during a test.
+
+    Event arguments:
+
+    :param environment: Environment instance
     """
 
     test_stopping: EventHook
     """
     Fired on each node when a load test is about to stop - before stopping users.
+
+    Event arguments:
+
+    :param environment: Environment instance
     """
 
     test_stop: EventHook
     """
     Fired on each node when a load test is stopped.
+
+    Event arguments:
+
+    :param environment: Environment instance
     """
 
     reset_stats: EventHook
@@ -233,6 +247,11 @@ class Events:
     cpu_warning: EventHook
     """
     Fired when the CPU usage exceeds runners.CPU_WARNING_THRESHOLD (90% by default)
+
+    Event arguments:
+
+    :param environment: Environment instance
+    :param cpu_usage: Current CPU usage in percent
     """
 
     heartbeat_sent: EventHook
