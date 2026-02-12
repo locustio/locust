@@ -75,7 +75,7 @@ default-groups = ["build", "test", "lint"]
 [dependency-groups]
 build = ["hatch>=1.14.0", "hatch-vcs>=0.4.0"]
 test = [
-    "cryptography>=43.0.1,<44.0.0",
+    "cryptography>=43.0.1,<47.0.0",
     "pyquery>=2.0.0,<3.0.0",
     "retry>=0.9.2,<1.0.0",
 ]
@@ -198,7 +198,7 @@ reportOptionalMemberAccess = "none"
 [tool.hatch.envs.hatch-test]
 default-args = ["locust/test"]
 dependencies = [
-    "cryptography>=43.0.1,<44.0.0",
+    "cryptography>=43.0.1,<47.0.0",
     "pyquery>=2.0.0,<3.0.0",
     "pytest>=8.3.3,<10",
     "retry>=0.9.2,<1.0.0",
