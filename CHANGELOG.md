@@ -1,6 +1,36 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.43.3](https://github.com/locustio/locust/tree/2.43.3) (2026-02-12)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.43.2...2.43.3)
+
+**Closed issues:**
+
+- Documentation Improvement - Event hooks [\#3338](https://github.com/locustio/locust/issues/3338)
+
+**Merged pull requests:**
+
+- Bump diff from 8.0.2 to 8.0.3 in /locust/webui [\#3349](https://github.com/locustio/locust/pull/3349) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump lodash from 4.17.21 to 4.17.23 in /locust/webui [\#3348](https://github.com/locustio/locust/pull/3348) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump cryptography from 43.0.3 to 46.0.5 [\#3347](https://github.com/locustio/locust/pull/3347) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump tar from 7.4.3 to 7.5.7 in /locust/webui [\#3346](https://github.com/locustio/locust/pull/3346) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump @isaacs/brace-expansion from 5.0.0 to 5.0.1 in /locust/webui [\#3345](https://github.com/locustio/locust/pull/3345) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Add missing event hook parameter documentation [\#3344](https://github.com/locustio/locust/pull/3344) ([veeceey](https://github.com/veeceey))
+
+## [2.43.2](https://github.com/locustio/locust/tree/2.43.2) (2026-02-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.43.1...2.43.2)
+
+**Merged pull requests:**
+
+- Bump flask-cors from 6.0.1 to 6.0.2 [\#3343](https://github.com/locustio/locust/pull/3343) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump hatch from 1.16.2 to 1.16.3 [\#3342](https://github.com/locustio/locust/pull/3342) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump werkzeug from 3.1.4 to 3.1.5 [\#3341](https://github.com/locustio/locust/pull/3341) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump opentelemetry-exporter-otlp-proto-grpc from 1.39.0 to 1.39.1 [\#3340](https://github.com/locustio/locust/pull/3340) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump sphinx-rtd-theme from 3.0.2 to 3.1.0 [\#3339](https://github.com/locustio/locust/pull/3339) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Update operator docs [\#3333](https://github.com/locustio/locust/pull/3333) ([amadeuppereira](https://github.com/amadeuppereira))
+
 ## [2.43.1](https://github.com/locustio/locust/tree/2.43.1) (2026-01-12)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.43.0...2.43.1)
