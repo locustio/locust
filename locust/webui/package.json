@@ -61,7 +61,7 @@
     "vite-plugin-checker": "^0.12.0",
     "vite-plugin-dts": "^4.5.4",
     "vite-plugin-singlefile": "^2.3.0",
-    "vite-tsconfig-paths": "^6.0.4"
+    "vite-tsconfig-paths": "^6.1.1"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.0",
@@ -83,7 +83,7 @@
     "prettier": "^3.0.3",
     "rollup": "^4.55.1",
     "typescript": "^5.7.2",
-    "vitest": "^4.0.16",
+    "vitest": "^4.0.18",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "packageManager": "yarn@4.12.0",
