@@ -1350,7 +1350,7 @@ docs = [
     { name = "sphinxcontrib-htmlhelp", specifier = "==2.1.0" },
     { name = "sphinxcontrib-jsmath", specifier = "==1.0.1" },
     { name = "sphinxcontrib-qthelp", specifier = "==1.0.3" },
-    { name = "sphinxcontrib-serializinghtml", specifier = "==1.1.10" },
+    { name = "sphinxcontrib-serializinghtml", specifier = "==2.0.0" },
 ]
 lint = [
     { name = "mypy", specifier = ">=1.13.0,<1.15.0" },
@@ -3384,11 +3384,11 @@ wheels = [
 
 [[package]]
 name = "sphinxcontrib-serializinghtml"
-version = "1.1.10"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/54/13/8dd7a7ed9c58e16e20c7f4ce8e4cb6943eb580955236d0c0d00079a73c49/sphinxcontrib_serializinghtml-1.1.10.tar.gz", hash = "sha256:93f3f5dc458b91b192fe10c397e324f262cf163d79f3282c158e8436a2c4511f", size = 15592, upload-time = "2024-01-13T02:51:36.827Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3b/44/6716b257b0aa6bfd51a1b31665d1c205fb12cb5ad56de752dfa15657de2f/sphinxcontrib_serializinghtml-2.0.0.tar.gz", hash = "sha256:e9d912827f872c029017a53f0ef2180b327c3f7fd23c87229f7a8e8b70031d4d", size = 16080, upload-time = "2024-07-29T01:10:09.332Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/24/228bb903ea87b9e08ab33470e6102402a644127108c7117ac9c00d849f82/sphinxcontrib_serializinghtml-1.1.10-py3-none-any.whl", hash = "sha256:326369b8df80a7d2d8d7f99aa5ac577f51ea51556ed974e7716cfd4fca3f6cb7", size = 92725, upload-time = "2024-01-13T02:51:34.898Z" },
+    { url = "https://files.pythonhosted.org/packages/52/a7/d2782e4e3f77c8450f727ba74a8f12756d5ba823d81b941f1b04da9d033a/sphinxcontrib_serializinghtml-2.0.0-py3-none-any.whl", hash = "sha256:6e2cb0eef194e10c27ec0023bfeb25badbbb5868244cf5bc5bdc04e4464bf331", size = 92072, upload-time = "2024-07-29T01:10:08.203Z" },
 ]
 
 [[package]]

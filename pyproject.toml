@@ -104,7 +104,7 @@ docs = [
     "sphinxcontrib-htmlhelp==2.1.0",
     "sphinxcontrib-jsmath==1.0.1",
     "sphinxcontrib-qthelp==1.0.3",
-    "sphinxcontrib-serializinghtml==1.1.10",
+    "sphinxcontrib-serializinghtml==2.0.0",
     "sphinxcontrib-googleanalytics>=0.4",
     # these optional dependencies are needed to build the some contrib modules
     "pymilvus>=2.5.0",
