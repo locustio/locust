@@ -119,6 +119,27 @@ PERCENTILES_TO_STATISTICS = [0.95, 0.99]
 PERCENTILES_TO_CHART = [0.5, 0.95]
 
 
+def bucket_response_time(response_time: int | float) -> int:
+    """Round response time to reduce unique histogram keys.
+
+    Rounds to ~2 significant digits, so that 147 becomes 150, 3432 becomes 3400
+    and 58760 becomes 59000. This limits the dict to ~310 unique keys, which is
+    important for bandwidth in distributed mode.
+
+    This is a module-level function so it can be replaced at runtime for custom
+    bucketing, e.g. rounding to 3 significant figures or using fixed-width bins.
+    See :ref:`customizing-response-time-bucketing` in the docs.
+    """
+    if response_time < 100:
+        return round(response_time)
+    elif response_time < 1000:
+        return int(round(response_time, -1))
+    elif response_time < 10000:
+        return int(round(response_time, -2))
+    else:
+        return int(round(response_time, -3))
+
+
 class RequestStatsAdditionError(Exception):
     pass
 
@@ -381,14 +402,7 @@ class StatsEntry:
         # to avoid to much data that has to be transferred to the master node when
         # running in distributed mode, we save the response time rounded in a dict
         # so that 147 becomes 150, 3432 becomes 3400 and 58760 becomes 59000
-        if response_time < 100:
-            rounded_response_time = round(response_time)
-        elif response_time < 1000:
-            rounded_response_time = round(response_time, -1)
-        elif response_time < 10000:
-            rounded_response_time = round(response_time, -2)
-        else:
-            rounded_response_time = round(response_time, -3)
+        rounded_response_time = bucket_response_time(response_time)
 
         # increase request count for the rounded key in response time dict
         self.response_times[rounded_response_time] += 1
