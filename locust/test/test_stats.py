@@ -934,7 +934,6 @@ class TestInspectUser(unittest.TestCase):
 
 
 class TestBucketResponseTime(unittest.TestCase):
-
     def test_default_bucketing(self):
         cases = [
             # (input, expected)
@@ -960,7 +959,7 @@ class TestBucketResponseTime(unittest.TestCase):
         original = locust.stats.bucket_response_time
         try:
             # Replace with a function that returns response times as-is (no rounding)
-            locust.stats.bucket_response_time = lambda rt: rt
+            locust.stats.bucket_response_time = lambda rt: int(rt)
 
             stats = RequestStats()
             s = StatsEntry(stats, "custom_bucket_test", "GET")
@@ -974,4 +973,3 @@ class TestBucketResponseTime(unittest.TestCase):
             self.assertNotIn(150, s.response_times)
         finally:
             locust.stats.bucket_response_time = original
-
