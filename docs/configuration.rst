@@ -295,6 +295,35 @@ The list of statistics parameters that can be modified is:
 | PERCENTILES_TO_CHART                    | List of response time percentiles in the screen of chart for UI                  | [0.5, 0.95]                                                          |
 +-----------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------------------------+
 
+.. _customizing-response-time-bucketing:
+
+Customizing response time bucketing
+====================================
+
+Response times are grouped into histogram buckets before being stored in the
+``response_times`` dict. By default, Locust rounds to approximately 2 significant
+digits (e.g. 147 becomes 150, 3432 becomes 3400). This keeps the dict small,
+which matters in distributed mode where the dict is serialized from workers to master.
+
+You can replace the bucketing function to change this behaviour:
+
+.. code-block:: python
+
+    import locust.stats
+    from math import floor, log10
+
+    def my_bucket_function(response_time: int | float) -> int:
+        """Example: bucket to 3 significant figures."""
+        if response_time == 0:
+            return 0
+        return int(round(response_time, -int(floor(log10(abs(response_time)))) + 2))
+
+    locust.stats.bucket_response_time = my_bucket_function
+
+The replacement function receives a single numeric argument (the response time in
+milliseconds) and must return a numeric value to use as the dict key. Keep in mind
+that more unique keys means more data transferred in distributed mode.
+
 Customization of additional static variables
 ============================================
 

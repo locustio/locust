@@ -10,6 +10,7 @@ from locust.stats import (
     RequestStats,
     StatsCSVFileWriter,
     StatsEntry,
+    bucket_response_time,
     diff_response_time_dicts,
     stats_history,
 )
@@ -930,3 +931,45 @@ class TestInspectUser(unittest.TestCase):
         self.assertEqual(0.25, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["ratio"])
         self.assertEqual(0.125, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task1"]["ratio"])
         self.assertEqual(0.125, ratio["MyTaskSet"]["tasks"]["MySubTaskSet"]["tasks"]["task2"]["ratio"])
+
+
+class TestBucketResponseTime(unittest.TestCase):
+    def test_default_bucketing(self):
+        cases = [
+            # (input, expected)
+            (0, 0),
+            (45, 45),
+            (99, 99),
+            (1.4, 1),
+            (1.5, 2),
+            (99.9, 100),
+            (100, 100),
+            (147, 150),
+            (999, 1000),
+            (1000, 1000),
+            (3432, 3400),
+            (9999, 10000),
+            (10000, 10000),
+            (58760, 59000),
+        ]
+        for response_time, expected in cases:
+            self.assertEqual(bucket_response_time(response_time), expected, f"response_time={response_time}")
+
+    def test_custom_bucket_function_override(self):
+        original = locust.stats.bucket_response_time
+        try:
+            # Replace with a function that returns response times as-is (no rounding)
+            locust.stats.bucket_response_time = lambda rt: int(rt)
+
+            stats = RequestStats()
+            s = StatsEntry(stats, "custom_bucket_test", "GET")
+            s.log(147, 0)
+            s.log(3432, 0)
+
+            # With the identity function, keys should be the exact values
+            self.assertIn(147, s.response_times)
+            self.assertIn(3432, s.response_times)
+            # The default would have rounded 147 -> 150, so 150 should NOT be present
+            self.assertNotIn(150, s.response_times)
+        finally:
+            locust.stats.bucket_response_time = original
