@@ -1,8 +1,10 @@
-from locust.user.users import User
-
 import random
 from collections.abc import Callable
 from time import time
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from locust.user.users import User
 
 
 def between(min_wait: float, max_wait: float) -> Callable[[User], float]:
