@@ -4,10 +4,10 @@ from time import time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from locust.user.users import User
+    from locust import User
 
 
-def between(min_wait: float, max_wait: float) -> Callable[[User], float]:
+def between(min_wait: float, max_wait: float) -> Callable[["User"], float]:
     """
     Returns a function that will return a random number between min_wait and max_wait.
 
@@ -20,7 +20,7 @@ def between(min_wait: float, max_wait: float) -> Callable[[User], float]:
     return lambda instance: min_wait + random.random() * (max_wait - min_wait)
 
 
-def constant(wait_time: int) -> Callable[[User], int]:
+def constant(wait_time: float) -> Callable[["User"], float]:
     """
     Returns a function that just returns the number specified by the wait_time argument
 
@@ -32,7 +32,7 @@ def constant(wait_time: int) -> Callable[[User], int]:
     return lambda instance: wait_time
 
 
-def constant_pacing(wait_time: float) -> Callable[[User], float]:
+def constant_pacing(wait_time: float) -> Callable[["User"], float]:
     """
     Returns a function that will track the run time of the tasks, and for each time it's
     called it will return a wait time that will try to make the total time between task
@@ -51,7 +51,7 @@ def constant_pacing(wait_time: float) -> Callable[[User], float]:
     the next task.
     """
 
-    def wait_time_func(self: User) -> float:
+    def wait_time_func(self: "User") -> float:
         if not hasattr(self, "_cp_last_wait_time"):
             self._cp_last_wait_time: float = 0
         run_time: float = time() - self._cp_last_run - self._cp_last_wait_time
@@ -62,7 +62,7 @@ def constant_pacing(wait_time: float) -> Callable[[User], float]:
     return wait_time_func
 
 
-def constant_throughput(task_runs_per_second: float) -> Callable[[User], float]:
+def constant_throughput(task_runs_per_second: float) -> Callable[["User"], float]:
     """
     Returns a function that will track the run time of the tasks, and for each time it's
     called it will return a wait time that will try to make the number of task runs per second
