@@ -137,6 +137,7 @@ class User(metaclass=UserMeta):
         self._group: Group
         self._taskset_instance: TaskSet | None = None
         self._cp_last_run: float = time.time()  # used by constant_pacing wait_time
+        self._cp_last_wait_time: float = 0  # used by constant_pacing wait_time
 
     def on_start(self) -> None:
         """

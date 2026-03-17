@@ -52,8 +52,6 @@ def constant_pacing(wait_time: float) -> Callable[["User"], float]:
     """
 
     def wait_time_func(self: "User") -> float:
-        if not hasattr(self, "_cp_last_wait_time"):
-            self._cp_last_wait_time: float = 0
         run_time: float = time() - self._cp_last_run - self._cp_last_wait_time
         self._cp_last_wait_time = max(0, wait_time - run_time)
         self._cp_last_run = time()
