@@ -112,7 +112,7 @@ Performance/load testing AI services is a little different. While you could call
 MQTT
 ====
 
-Locust uses to `paho-mqtt https://github.com/eclipse-paho/paho.mqtt.python`_ to provide Mqtt connection capabilities.
+Locust uses to `paho-mqtt <https://github.com/eclipse-paho/paho.mqtt.python>`_ to provide Mqtt connection capabilities.
 
 .. literalinclude:: ../examples/mqtt/locustfile.py
 
