@@ -57,10 +57,10 @@
     "react-redux": "^9.2.0",
     "rimraf": "^6.0.1",
     "terser": "^5.43.1",
-    "vite": "^7.3.1",
+    "vite": "^8.0.1",
     "vite-plugin-checker": "^0.12.0",
     "vite-plugin-dts": "^4.5.4",
-    "vite-plugin-singlefile": "^2.3.0",
+    "vite-plugin-singlefile": "^2.3.2",
     "vite-tsconfig-paths": "^6.1.1"
   },
   "devDependencies": {
@@ -83,7 +83,7 @@
     "prettier": "^3.0.3",
     "rollup": "^4.55.1",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.18",
+    "vitest": "^4.1.0",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
   "packageManager": "yarn@4.12.0",
