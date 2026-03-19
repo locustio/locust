@@ -680,7 +680,7 @@ class StatsEntry:
             for _ in range(len(self.response_times_cache) - cache_size):
                 self.response_times_cache.popitem(last=False)
 
-    def to_dict(self, escape_string_values=False):
+    def to_dict(self, escape_string_values=False, current=True):
         response_time_percentiles = {
             f"response_time_percentile_{percentile}": self.get_response_time_percentile(percentile)
             for percentile in PERCENTILES_TO_STATISTICS
@@ -693,8 +693,8 @@ class StatsEntry:
             "num_failures": self.num_failures,
             "min_response_time": 0 if self.min_response_time is None else proper_round(self.min_response_time),
             "max_response_time": proper_round(self.max_response_time),
-            "current_rps": self.current_rps,
-            "current_fail_per_sec": self.current_fail_per_sec,
+            "current_rps": self.total_rps if not current else self.current_rps,
+            "current_fail_per_sec": self.total_fail_per_sec if not current else self.current_fail_per_sec,
             "avg_response_time": self.avg_response_time,
             "median_response_time": self.median_response_time,
             "total_rps": self.total_rps,

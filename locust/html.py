@@ -80,8 +80,8 @@ def get_html_report(
         "report.html",
         template_args={
             "is_report": True,
-            "requests_statistics": [stat.to_dict() for stat in requests_statistics],
-            "failures_statistics": [stat.to_dict() for stat in failures_statistics],
+            "requests_statistics": [stat.to_dict(current=False) for stat in requests_statistics],
+            "failures_statistics": [stat.to_dict(current=False) for stat in failures_statistics],
             "exceptions_statistics": [stat for stat in exceptions_statistics],
             "response_time_statistics": [
                 {
