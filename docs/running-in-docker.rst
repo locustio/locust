@@ -33,4 +33,5 @@ It's very common to have test scripts that rely on third party python packages. 
 official Locust docker image as a base image::
 
     FROM locustio/locust
-    RUN pip3 install some-python-package
+    RUN pip install some-package # some dependency you need
+    RUN pip install locust[otel] # for OpenTelemetry support
