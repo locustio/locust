@@ -27,6 +27,7 @@ Then, pass the command line argument ``--otel`` to enable OpenTelemetry:
    $ locust --otel
    ...
 
+If you're using the official locust Docker image, you need to install it in a custom Dockerfile, see :ref:`running-in-docker`.
 
 Exporters
 ---------
