@@ -82,7 +82,7 @@
     "msw": "^2.6.6",
     "prettier": "^3.0.3",
     "rollup": "^4.55.1",
-    "typescript": "^5.7.2",
+    "typescript": "^5.9.3",
     "vitest": "^4.0.18",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
