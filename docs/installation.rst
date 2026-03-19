@@ -13,7 +13,7 @@ Installation
 
 .. code-block:: console
 
-    $ pip3 install locust
+    $ pip install locust
 
 2. Validate your installation
 
@@ -80,7 +80,7 @@ ERROR: Failed building wheel for xxx
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 While Locust itself is a pure Python package, it has some dependencies
-(e.g. gevent and geventhttpclient) that are compiled from C code. Pretty
+(e.g. gevent and geventhttpclient) that are compiled from C code. Pretty
 much all common platforms have binary packages on PyPi, but sometimes
 there is a new release that doesn't, or you are running on some exotic
 platform. You have two options:
