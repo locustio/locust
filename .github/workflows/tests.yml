@@ -322,7 +322,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push
+      - name: Build base locust image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.ci
+          platforms: linux/amd64
+          load: true
+          tags: locustio/locust:${{ github.sha }}-test
+
+      - name: Build OTel image (chained from base)
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -330,6 +339,8 @@ jobs:
           platforms: linux/amd64
           load: true
           tags: locustio/locust-otel:${{ github.sha }}-test
+          build-args: |
+            BASE_IMAGE=locustio/locust:${{ github.sha }}-test
 
       - name: Test docker image
         run: |
@@ -433,7 +444,7 @@ jobs:
           tags: ${{ steps.docker_meta.outputs.tags }}
 
   publish-docker-otel:
-    needs: [tests, test_webui, test_docker_image, test_docker_image_otel, build_package]
+    needs: [publish-docker, build_package]
     if: github.repository_owner == 'locustio' && ( github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags') )
     runs-on: ubuntu-latest
     steps:
@@ -474,6 +485,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.docker_meta.outputs.tags }}
+          build-args: |
+            BASE_IMAGE=locustio/locust:${{ needs.build_package.outputs.tag }}
 
   publish-pypi:
     needs: [tests, test_webui, test_docker_image, test_docker_image_otel, build_package]
