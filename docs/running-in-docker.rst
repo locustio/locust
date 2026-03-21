@@ -26,6 +26,14 @@ The above compose configuration could be used to start a master node and 4 worke
 
     docker-compose up --scale worker=4
 
+OpenTelemetry image
+===================
+
+If you need OpenTelemetry support, use the ``locustio/locust-otel`` image which has the ``locust[otel]`` extras
+pre-installed::
+
+    docker run -p 8089:8089 -v $PWD:/mnt/locust locustio/locust-otel -f /mnt/locust/locustfile.py --otel
+
 Use docker image as a base image
 ================================
 
