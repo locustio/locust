@@ -1,0 +1,10 @@
+# OpenTelemetry-enabled Docker image, published as locustio/locust-otel
+# Chains from the base locust image and adds the [otel] extras
+
+ARG BASE_IMAGE=locustio/locust
+FROM ${BASE_IMAGE}
+
+USER root
+COPY ./dist dist
+RUN pip install "$(echo dist/*.whl)[otel]" && rm -rf dist
+USER locust
