@@ -332,15 +332,11 @@ jobs:
           tags: locustio/locust:${{ github.sha }}-test
 
       - name: Build OTel image (chained from base)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile.otel
-          platforms: linux/amd64
-          load: true
-          tags: locustio/locust-otel:${{ github.sha }}-test
-          build-args: |
-            BASE_IMAGE=locustio/locust:${{ github.sha }}-test
+        run: |
+          docker build \
+            --build-arg BASE_IMAGE=locustio/locust:${{ github.sha }}-test \
+            -f ./Dockerfile.otel \
+            -t locustio/locust-otel:${{ github.sha }}-test .
 
       - name: Test docker image
         run: |
