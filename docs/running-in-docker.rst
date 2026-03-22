@@ -42,4 +42,3 @@ official Locust docker image as a base image::
 
     FROM locustio/locust
     RUN pip install some-package # some dependency you need
-    RUN pip install locust[otel] # for OpenTelemetry support
