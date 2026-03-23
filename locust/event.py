@@ -261,7 +261,7 @@ class Events:
     Event arguments:
 
     :param client_id: worker client id
-    :param timestamp: time in seconds since the epoch (float) when the event occured
+    :param timestamp: time in seconds since the epoch (float) when the event occurred
     """
 
     heartbeat_received: EventHook
@@ -271,7 +271,7 @@ class Events:
     Event arguments:
 
     :param client_id: worker client id
-    :param timestamp: time in seconds since the epoch (float) when the event occured
+    :param timestamp: time in seconds since the epoch (float) when the event occurred
     """
 
     usage_monitor: EventHook
