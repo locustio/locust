@@ -31,9 +31,9 @@ Control headers or other things about my HTTP requests
 
 Basic auth (Authorization header) does not work after redirection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   `requests <https://requests.readthedocs.io/en/master/>`__ has a security mecanism that
-   drops the authorization header on domain change. It could occure when testing a SSO,
-   which is typically on a different domain and use mulitple redirections (30x).
+   `requests <https://requests.readthedocs.io/en/master/>`__ has a security mechanism that
+   drops the authorization header on domain change. It could occur when testing a SSO,
+   which is typically on a different domain and use multiple redirections (30x).
 
    Since ``allow_redirects=True`` is the default ``request`` behavior you'll have to turn it off,
    handle manually the redirections and inject again the authorization header, ex:
@@ -78,7 +78,7 @@ How to run a Docker container of Locust in Windows Subsystem for Linux (Windows 
 How to run locust on custom endpoint
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   Prefix the the endpoint to all ``@app.route`` definitions in
+   Prefix the endpoint to all ``@app.route`` definitions in
    ``locust/web.py`` file & also change as follows (where ``/locust`` is
    new endpoint)
 

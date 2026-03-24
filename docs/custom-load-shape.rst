@@ -93,7 +93,7 @@ Adding the element ``user_classes`` to the return value gives you more detailed 
 
             return None
 
-This shape would create create in the first 10 seconds 10 User of ``UserA``. In the next twenty seconds 40 of type ``UserA / UserB`` and this continues until the stages end.
+This shape would create in the first 10 seconds 10 User of ``UserA``. In the next twenty seconds 40 of type ``UserA / UserB`` and this continues until the stages end.
 
 
 .. _use-common-options:
@@ -101,7 +101,7 @@ This shape would create create in the first 10 seconds 10 User of ``UserA``. In 
 Reusing common options in custom shapes
 ---------------------------------------
 
-When using shapes, the the *Users*, *Spawn Rate* and *Run Time* options will be hidden from the UI, and if you specify them on command line Locust will log a warning. This is because those options dont directly apply to shapes, and specifying them might be a mistake.
+When using shapes, the *Users*, *Spawn Rate* and *Run Time* options will be hidden from the UI, and if you specify them on command line Locust will log a warning. This is because those options don't directly apply to shapes, and specifying them might be a mistake.
 
 If you really want to combine a shape with these options, set the ``use_common_options`` attribute and access them from ``self.runner.environment.parsed_options``:
 

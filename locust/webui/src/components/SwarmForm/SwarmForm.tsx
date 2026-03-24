@@ -154,7 +154,7 @@ function SwarmForm({
         profile: inputData.profile,
       });
     } else {
-      setErrorMessage(data ? data.message : 'An unknown error occured.');
+      setErrorMessage(data ? data.message : 'An unknown error occurred.');
     }
 
     if (onFormSubmit) {
