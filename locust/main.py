@@ -493,9 +493,9 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         web_ui.start()
         main_greenlet = web_ui.greenlet
 
-    def stop_and_optionally_quit():
+    def stop_and_optionally_quit(reason="--run-time limit reached"):
         if options.autostart and not options.headless:
-            logger.info("--run-time limit reached, stopping test")
+            logger.info(f"{reason}, stopping test")
             runner.stop()
             if options.autoquit != -1:
                 logger.debug(f"Autoquit time limit set to {options.autoquit} seconds")
@@ -507,7 +507,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             else:
                 logger.info("--autoquit not specified, leaving web ui running indefinitely")
         else:  # --headless run
-            logger.info("--run-time limit reached, shutting down")
+            logger.info(f"{reason}, shutting down")
             runner.quit()
 
     def spawn_run_time_quit_greenlet():
@@ -562,7 +562,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                 except KeyboardInterrupt:
                     logging.info("Exiting due to CTRL+C interruption")
                 finally:
-                    stop_and_optionally_quit()
+                    stop_and_optionally_quit(reason="Shape test completed")
             else:
                 headless_master_greenlet = gevent.spawn(runner.start, options.num_users, options.spawn_rate)
                 headless_master_greenlet.link_exception(greenlet_exception_handler)
