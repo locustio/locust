@@ -550,7 +550,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 self.assertEqual(200, response.status_code)
 
                 tp.expect("Shape test starting")
-                tp.expect("--run-time limit reached")
+                tp.expect("Shape test completed")
 
     @unittest.skipIf(sys.platform == "darwin", reason="Disable on macOS for now because it has issues on GH")
     def test_autostart_multiple_locustfiles_with_shape(self):
@@ -604,7 +604,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     tp.expect("Shape test starting")
                     tp.expect("Shape test stopping")
 
-                    tp.expect("--run-time limit reached")
+                    tp.expect("Shape test completed")
                     tp.expect("--autoquit time reached")
                     tp.expect("Shutting down")
 
