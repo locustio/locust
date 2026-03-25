@@ -1,13 +1,13 @@
 # This is a local-use Docker image which illustrates the end-to-end build process for Locust
 
 # Stage 1: Build web front end
-FROM node:22.0.0-alpine AS webui-builder
+FROM node:22.13.0-alpine AS webui-builder
 
 ADD locust/webui locust/webui
 ADD package.json .
 
 # long yarn timeout necessary in certain network environments
-RUN yarn webui:install --production --network-timeout 60000
+RUN yarn webui:install --production --network-timeout 600000
 RUN yarn webui:build
 
 # Stage 2: Build Locust package (make sure any changes here are also reflected in Dockerfile.ci)

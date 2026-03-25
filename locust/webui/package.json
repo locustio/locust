@@ -86,8 +86,8 @@
     "vitest": "^4.1.0",
     "vitest-webgl-canvas-mock": "^1.1.0"
   },
-  "packageManager": "yarn@4.12.0",
+  "packageManager": "yarn@1.22.22",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.13.0"
   }
 }

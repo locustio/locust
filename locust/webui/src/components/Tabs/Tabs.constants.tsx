@@ -5,6 +5,7 @@ import Reports from 'components/Reports/Reports';
 import StatsTable from 'components/StatsTable/StatsTableContainer';
 import SwarmCharts from 'components/SwarmCharts/SwarmChartsContainer';
 import SwarmRatiosTab from 'components/SwarmRatiosTab/SwarmRatiosTab';
+import TestTab from 'components/TestTab/TestTab';
 import WorkersTable from 'components/WorkersTable/WorkersTable';
 import { LOG_VIEWER_KEY } from 'constants/logs';
 import { IRootState } from 'redux/store';
@@ -25,6 +26,11 @@ export const tabConfig = {
     component: FailuresTable,
     key: 'failures',
     title: 'Failures',
+  },
+  users: {
+    component: TestTab,
+    key: 'test',
+    title: 'Test',
   },
   exceptions: {
     component: ExceptionsTab,
@@ -58,6 +64,7 @@ export const baseTabs: ITab[] = [
   tabConfig.stats,
   tabConfig.charts,
   tabConfig.failures,
+  tabConfig.users,
   tabConfig.exceptions,
   tabConfig.ratios,
   tabConfig.reports,
