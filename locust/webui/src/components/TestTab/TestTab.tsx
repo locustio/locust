@@ -46,6 +46,7 @@ export default function TestTab() {
     const [randomize, setRandomize] = useState<boolean>(true);
     const [runTime, setRunTime] = useState<number>(90);
     const [authorization, setAuthorization] = useState<string>('');
+    const [authorizationError, setAuthorizationError] = useState(false);
 
     // Keep these as separate fields so you can see/edit each payload property directly.
     const [truthCol, setTruthCol] = useState('');
@@ -155,6 +156,13 @@ export default function TestTab() {
     };
 
     const onSubmit = async () => {
+        const isAuthorizationEmpty = authorization.trim().length === 0;
+        if (isAuthorizationEmpty) {
+            setAuthorizationError(true);
+            return;
+        }
+
+        setAuthorizationError(false);
         setErrorMessage(null);
         setResponse(null);
         setIsSubmitting(true);
@@ -208,7 +216,7 @@ export default function TestTab() {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2, p: 2 }}>
             <Typography variant='h6' sx={{ fontWeight: 600 }}>
-                Test
+                Run Test
             </Typography>
 
             <Paper variant='outlined' sx={{ p: 2 }}>
@@ -262,9 +270,17 @@ export default function TestTab() {
                     <TextField
                         label='headers.Authorization'
                         value={authorization}
-                        onChange={e => setAuthorization(e.target.value)}
+                        onChange={e => {
+                            setAuthorization(e.target.value);
+                            if (authorizationError && e.target.value.trim().length > 0) {
+                                setAuthorizationError(false);
+                            }
+                        }}
+                        error={authorizationError}
+                        helperText={authorizationError ? 'Authorization is required' : ''}
                         fullWidth
                         sx={{ gridColumn: { xs: '1 / -1', md: 'span 2' } }}
+                        required
                     />
 
                     <TextField

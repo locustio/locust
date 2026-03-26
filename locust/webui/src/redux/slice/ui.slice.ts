@@ -18,6 +18,7 @@ export interface IUiState {
   totalRps: number;
   failRatio: number;
   startTime: string;
+  showTestTab: boolean;
   stats: ISwarmStat[];
   errors: ISwarmError[];
   workers?: ISwarmWorker[];
@@ -33,6 +34,7 @@ const initialState = {
   totalRps: 0,
   failRatio: 0,
   startTime: '',
+  showTestTab: false,
   stats: [] as ISwarmStat[],
   errors: [] as ISwarmError[],
   exceptions: [] as ISwarmException[],

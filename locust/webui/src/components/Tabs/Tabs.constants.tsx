@@ -64,7 +64,6 @@ export const baseTabs: ITab[] = [
   tabConfig.stats,
   tabConfig.charts,
   tabConfig.failures,
-  tabConfig.users,
   tabConfig.exceptions,
   tabConfig.ratios,
   tabConfig.reports,

@@ -1,14 +1,17 @@
-import { Box, Divider, Tooltip, Typography } from '@mui/material';
+import { Box, Divider, Link, Tooltip, Typography } from '@mui/material';
 import { connect } from 'react-redux';
 
 import { SWARM_STATE } from 'constants/swarm';
-import { IUiState } from 'redux/slice/ui.slice';
+import { IUiState, uiActions } from 'redux/slice/ui.slice';
 import { IRootState } from 'redux/store';
 import { ISwarmState } from 'types/swarm.types';
 
 interface ISwarmMonitor
   extends Pick<ISwarmState, 'isDistributed' | 'host' | 'state' | 'workerCount'>,
-    Pick<IUiState, 'totalRps' | 'failRatio' | 'userCount'> {}
+  Pick<IUiState, 'totalRps' | 'failRatio' | 'userCount'> { }
+interface IActionProps {
+  setUi: (payload: Partial<IUiState>) => void;
+}
 
 function SwarmMonitor({
   isDistributed,
@@ -18,7 +21,13 @@ function SwarmMonitor({
   failRatio,
   userCount,
   workerCount,
-}: ISwarmMonitor) {
+  setUi,
+}: ISwarmMonitor & IActionProps) {
+  const onTestClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    setUi({ showTestTab: true });
+  };
+
   return (
     <Box
       sx={{ display: 'flex', columnGap: 2, rowGap: 1, flexDirection: { xs: 'column', md: 'row' } }}
@@ -43,6 +52,17 @@ function SwarmMonitor({
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <Typography sx={{ fontWeight: 'bold' }}>Status</Typography>
         <Typography variant='button'>{state}</Typography>
+      </Box>
+      <Divider flexItem orientation='vertical' />
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { md: 'center' } }}>
+        <Link
+          component='button'
+          type='button'
+          onClick={onTestClick}
+          sx={{ color: 'inherit', fontWeight: 'bold', textDecoration: 'none', backgroundColor: '#e68508', padding: '4px 8px', borderRadius: '4px' }}
+        >
+          Run Test
+        </Link>
       </Box>
       {(state === SWARM_STATE.RUNNING || state === SWARM_STATE.SPAWNING) && (
         <>
@@ -95,4 +115,8 @@ const storeConnector = ({
   workerCount,
 });
 
-export default connect(storeConnector)(SwarmMonitor);
+const actionCreator = {
+  setUi: uiActions.setUi,
+};
+
+export default connect(storeConnector, actionCreator)(SwarmMonitor);
