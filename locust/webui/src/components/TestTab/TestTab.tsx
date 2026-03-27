@@ -45,7 +45,7 @@ export default function TestTab() {
     const [spawnRate, setSpawnRate] = useState<number>(5);
     const [randomize, setRandomize] = useState<boolean>(true);
     const [runTime, setRunTime] = useState<number>(90);
-    const [authorization, setAuthorization] = useState<string>('');
+    const [authorization, setAuthorization] = useState<string>('Bearer {Paste the Token}');
     const [authorizationError, setAuthorizationError] = useState(false);
 
     // Keep these as separate fields so you can see/edit each payload property directly.

@@ -17,11 +17,12 @@ import { SwarmState } from 'types/ui.types';
 interface IDashboard {
   isModalOpen?: boolean;
   swarmState: SwarmState;
+  showTestTab: boolean;
   extendedTabs?: ITab[];
   tabs?: ITab[];
 }
 
-function Dashboard({ swarmState, tabs, extendedTabs }: IDashboard) {
+function Dashboard({ swarmState, showTestTab, tabs, extendedTabs }: IDashboard) {
   useFetchStats();
   useFetchWorkerCount();
   useLogViewer();
@@ -32,7 +33,7 @@ function Dashboard({ swarmState, tabs, extendedTabs }: IDashboard) {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Layout>
-        {swarmState === SWARM_STATE.READY ? (
+        {swarmState === SWARM_STATE.READY && !showTestTab ? (
           <SwarmForm />
         ) : (
           <Tabs extendedTabs={extendedTabs} tabs={tabs} />
@@ -42,8 +43,9 @@ function Dashboard({ swarmState, tabs, extendedTabs }: IDashboard) {
   );
 }
 
-const storeConnector = ({ swarm: { state } }: IRootState) => ({
+const storeConnector = ({ swarm: { state }, ui: { showTestTab } }: IRootState) => ({
   swarmState: state,
+  showTestTab,
 });
 
 export default connect(storeConnector)(Dashboard);
