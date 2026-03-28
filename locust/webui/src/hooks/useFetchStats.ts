@@ -18,7 +18,6 @@ export default function useFetchStats() {
   const swarm = useSelector(({ swarm }) => swarm);
   const previousSwarmState = useRef(swarm.state);
   const [shouldAddMarker, setShouldAddMarker] = useState(false);
-
   const { data: statsData, refetch: refetchStats } = useGetStatsQuery();
 
   const shouldRunRefetchInterval =

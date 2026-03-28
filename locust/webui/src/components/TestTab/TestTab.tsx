@@ -12,9 +12,13 @@ import {
     Typography,
 } from '@mui/material';
 import { useMemo, useState } from 'react';
+import { SWARM_STATE } from 'constants/swarm';
+import { useAction } from 'redux/hooks';
+import { uiActions } from 'redux/slice/ui.slice';
+import { swarmActions } from 'redux/slice/swarm.slice';
 
-const API_URL = 'http://34.71.3.151/start-test';
-const STATUS_API_URL = 'http://34.71.3.151/test-status';
+const API_URL = 'http://172.20.10.2/start-test';
+const STATUS_API_URL = 'http://172.20.10.2/test-status';
 
 type StartTestResponse = {
     success: boolean;
@@ -45,6 +49,7 @@ export default function TestTab() {
     const [spawnRate, setSpawnRate] = useState<number>(5);
     const [randomize, setRandomize] = useState<boolean>(true);
     const [runTime, setRunTime] = useState<number>(90);
+    const [batchSize, setBatchSize] = useState<number>(1);
     const [authorization, setAuthorization] = useState<string>('Bearer {Paste the Token}');
     const [authorizationError, setAuthorizationError] = useState(false);
 
@@ -69,8 +74,11 @@ export default function TestTab() {
     );
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isPollingStarted, setIsPollingStarted] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [response, setResponse] = useState<StartTestResponse | null>(null);
+    const setSwarm = useAction(swarmActions.setSwarm);
+    const setUi = useAction(uiActions.setUi);
 
     type TestStatusResponse = {
         status?: string;
@@ -107,7 +115,7 @@ export default function TestTab() {
         }
     }, []);
 
-    const submitDisabled = isSubmitting || !testId || !host || !path;
+    const submitDisabled = isSubmitting || isPollingStarted || !testId || !host || !path;
 
     const buildPayload = () => {
         let qualityTests: unknown[] = [];
@@ -125,6 +133,7 @@ export default function TestTab() {
             spawn_rate: spawnRate,
             randomize,
             run_time: runTime,
+            batch_size: batchSize,
             headers: {
                 Authorization: authorization,
                 'Content-Type': 'application/json',
@@ -179,11 +188,58 @@ export default function TestTab() {
 
             if (!data?.success) {
                 setErrorMessage(data?.message || 'Request failed');
+                return;
             }
+
+            // Poll until backend reports `swarm_started: true`, then flip redux state.
+            setIsPollingStarted(true);
+            const startedAt = Date.now();
+            const maxWaitMs = 60_000;
+            const pollEveryMs = 5_000;
+
+            const pollOnce = async () => {
+                const statusRes = await fetch(
+                    `${STATUS_API_URL}/${encodeURIComponent(testId)}`,
+                    {
+                        method: 'GET',
+                        headers: { accept: 'application/json' },
+                    },
+                );
+                return (await statusRes.json()) as TestStatusResponse;
+            };
+
+            while (Date.now() - startedAt < maxWaitMs) {
+                const statusData = await pollOnce();
+                // Show live status in UI while we wait.
+                setStatusResponse(statusData);
+
+                if (statusData?.swarm_started) {
+                    // `swarm.state` drives the top navigation (RUNNING/STOPPED) and which
+                    // action buttons are visible.
+                    setSwarm({
+                        state: SWARM_STATE.SPAWNING,
+                        host: host,
+                        spawnRate: spawnRate,
+                        runTime: runTime,
+                        userCount: data?.config?.users ?? users,
+                    });
+                    setUi({
+                        // The header "Users" field is based on `ui.userCount`.
+                        userCount: data?.config?.users ?? users,
+                    });
+                    return;
+                }
+
+                // Wait before the next poll.
+                await new Promise(resolve => setTimeout(resolve, pollEveryMs));
+            }
+
+            setErrorMessage('Timed out waiting for swarm to start');
         } catch (err) {
             setErrorMessage(err instanceof Error ? err.message : 'Request failed');
         } finally {
             setIsSubmitting(false);
+            setIsPollingStarted(false);
         }
     };
 
@@ -265,6 +321,12 @@ export default function TestTab() {
                         type='number'
                         value={runTime}
                         onChange={e => setRunTime(Number(e.target.value))}
+                    />
+                    <TextField
+                        label='batch_size'
+                        type='number'
+                        value={batchSize}
+                        onChange={e => setBatchSize(Number(e.target.value))}
                     />
 
                     <TextField
