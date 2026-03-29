@@ -844,14 +844,10 @@ export default function TestTab() {
                     Test results
                 </Typography>
                 <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                    GET{' '}
-                    <Box component='span' sx={{ fontFamily: 'monospace', fontSize: '0.85em' }}>
-                        {TEST_RESULTS_BASE}/{testId || '…'}
-                    </Box>
-                    . When the swarm is {SWARM_STATE.STOPPED}, results are polled every {TEST_RESULTS_POLL_MS / 1000}s
+                    When the test is {SWARM_STATE.STOPPED}, results are polled every {TEST_RESULTS_POLL_MS / 1000}s
                     while <Box component='span' sx={{ fontFamily: 'monospace' }}>status</Box> is{' '}
                     <Box component='span' sx={{ fontFamily: 'monospace' }}>&quot;running&quot;</Box>, then quality
-                    metrics HTML loads automatically.
+                    metrics table loads automatically.
                 </Typography>
 
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2, alignItems: 'center' }}>
@@ -867,7 +863,7 @@ export default function TestTab() {
                         onClick={onGetQualityMetricsHtml}
                         disabled={!testId || qualityMetricsLoading}
                     >
-                        {qualityMetricsLoading ? 'Loading…' : 'Get Quality Metrics HTML'}
+                        {qualityMetricsLoading ? 'Loading…' : 'Get Quality Metrics Table'}
                     </Button>
                 </Box>
 
@@ -921,12 +917,8 @@ export default function TestTab() {
                     Quality metrics (HTML preview)
                 </Typography>
                 <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                    Loaded from{' '}
-                    <Box component='span' sx={{ fontFamily: 'monospace', fontSize: '0.85em' }}>
-                        {QUALITY_METRICS_HTML_BASE}/{testId || '…'}
-                    </Box>
-                    . Fetches automatically after test results finish (when not &quot;running&quot;), or use{' '}
-                    <Box component='span' sx={{ fontWeight: 600 }}>Get Quality Metrics HTML</Box> above.
+                    Fetches automatically after test results finish (when not &quot;running&quot;), or use{' '}
+                    <Box component='span' sx={{ fontWeight: 600 }}>Get Quality Metrics Table</Box> above.
                 </Typography>
 
                 {qualityMetricsLoading && (
