@@ -1,3 +1,4 @@
+import RefreshIcon from '@mui/icons-material/Refresh';
 import {
     Alert,
     Accordion,
@@ -7,18 +8,75 @@ import {
     Button,
     CircularProgress,
     Divider,
+    IconButton,
     Paper,
     TextField,
+    Tooltip,
     Typography,
 } from '@mui/material';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SWARM_STATE } from 'constants/swarm';
-import { useAction } from 'redux/hooks';
+import { useAction, useSelector } from 'redux/hooks';
 import { uiActions } from 'redux/slice/ui.slice';
 import { swarmActions } from 'redux/slice/swarm.slice';
 
-const API_URL = 'http://172.20.10.2/start-test';
-const STATUS_API_URL = 'http://172.20.10.2/test-status';
+const API_URL = 'http://34.71.3.151/start-test';
+const STATUS_API_URL = 'http://34.71.3.151/test-status';
+const QUALITY_METRICS_HTML_BASE = 'http://34.71.3.151/quality-metrics-html';
+const TEST_RESULTS_BASE = 'http://34.71.3.151/test-results';
+
+const TEST_RESULTS_POLL_MS = 5_000;
+
+const DEFAULT_DATASET_JSON = JSON.stringify(
+    {
+        id: '1',
+        event: false,
+        inputs: [
+            {
+                pred_colname: 'TEXT',
+                datatype: 'BYTES',
+                shape: [1, 1],
+                data: [
+                    '{"window_title": "Google search", "org_type": "Primary", "capture": "Where can I buy ice cream?", "capture_id": "123"}',
+                ],
+            },
+        ],
+    },
+    null,
+    2,
+);
+
+function parseDatasetJson(text: string): { ok: true; dataset: unknown[] } | { ok: false; message: string } {
+    const trimmed = text.trim();
+    if (!trimmed) {
+        return { ok: false, message: 'Dataset JSON is required' };
+    }
+    try {
+        const parsed = JSON.parse(trimmed) as unknown;
+        if (Array.isArray(parsed)) {
+            return { ok: true, dataset: parsed };
+        }
+        if (parsed && typeof parsed === 'object') {
+            return { ok: true, dataset: [parsed] };
+        }
+        return { ok: false, message: 'Dataset JSON must be an object or array' };
+    } catch {
+        return { ok: false, message: 'Invalid dataset JSON' };
+    }
+}
+
+type TestResultsResponse = {
+    test_id?: string;
+    status?: string;
+    message?: string;
+    progress?: number;
+    summary?: unknown[];
+    locust_stats?: Record<string, unknown>;
+    telemetry_data?: unknown[];
+    duration_seconds?: number;
+    reports?: { csv?: string };
+    config?: Record<string, unknown>;
+};
 
 type StartTestResponse = {
     success: boolean;
@@ -54,24 +112,17 @@ export default function TestTab() {
     const [authorizationError, setAuthorizationError] = useState(false);
 
     // Keep these as separate fields so you can see/edit each payload property directly.
-    const [truthCol, setTruthCol] = useState('');
-    const [predCol, setPredCol] = useState('');
+    const [truthCol, setTruthCol] = useState('event');
+    const [predCol, setPredCol] = useState('predicted_label');
     const [severityCol, setSeverityCol] = useState('');
     const [nonEventValue, setNonEventValue] = useState('');
     const [nonAlertValue, setNonAlertValue] = useState('');
     const [alertValue, setAlertValue] = useState('');
     const [criticalLevel, setCriticalLevel] = useState('');
 
-    const [qualityTestsJson, setQualityTestsJson] = useState('[]');
+    const [qualityTestsJson, setQualityTestsJson] = useState('["accuracy"]');
 
-    const [datasetId, setDatasetId] = useState('1');
-    const [inputName, setInputName] = useState('TEXT');
-    const [inputDatatype, setInputDatatype] = useState('BYTES');
-    const [shape0, setShape0] = useState<number>(1);
-    const [shape1, setShape1] = useState<number>(1);
-    const [inputDataJsonString, setInputDataJsonString] = useState(
-        '{"window_title": "Google search", "org_type": "Primary", "capture": "Where can I buy ice cream?", "capture_id": "123"}',
-    );
+    const [datasetJson, setDatasetJson] = useState(DEFAULT_DATASET_JSON);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isPollingStarted, setIsPollingStarted] = useState(false);
@@ -107,6 +158,176 @@ export default function TestTab() {
     const [statusErrorMessage, setStatusErrorMessage] = useState<string | null>(null);
     const [statusResponse, setStatusResponse] = useState<TestStatusResponse | null>(null);
 
+    const swarmState = useSelector(({ swarm }) => swarm.state);
+    const [testResults, setTestResults] = useState<TestResultsResponse | null>(null);
+    const [testResultsLoading, setTestResultsLoading] = useState(false);
+    const [testResultsError, setTestResultsError] = useState<string | null>(null);
+    const [testResultsPolling, setTestResultsPolling] = useState(false);
+
+    const [qualityMetricsHtml, setQualityMetricsHtml] = useState<string | null>(null);
+    const [qualityMetricsLoading, setQualityMetricsLoading] = useState(false);
+    const [qualityMetricsError, setQualityMetricsError] = useState<string | null>(null);
+
+    const fetchTestResultsJson = async (): Promise<TestResultsResponse> => {
+        const res = await fetch(`${TEST_RESULTS_BASE}/${encodeURIComponent(testId)}`, {
+            method: 'GET',
+            headers: { accept: 'application/json' },
+        });
+        if (!res.ok) {
+            throw new Error(`Test results failed (${res.status})`);
+        }
+        return (await res.json()) as TestResultsResponse;
+    };
+
+    const fetchQualityMetricsHtml = async () => {
+        setQualityMetricsLoading(true);
+        setQualityMetricsError(null);
+        try {
+            const res = await fetch(`${QUALITY_METRICS_HTML_BASE}/${encodeURIComponent(testId)}`, {
+                method: 'GET',
+                headers: { accept: 'text/html' },
+            });
+            if (!res.ok) {
+                throw new Error(`Request failed (${res.status})`);
+            }
+            const html = await res.text();
+            setQualityMetricsHtml(html);
+        } catch (err) {
+            setQualityMetricsError(err instanceof Error ? err.message : 'Failed to load HTML');
+        } finally {
+            setQualityMetricsLoading(false);
+        }
+    };
+
+    const onGetTestResult = async () => {
+        if (!testId) return;
+        setTestResultsError(null);
+        setTestResultsLoading(true);
+        try {
+            const data = await fetchTestResultsJson();
+            setTestResults(data);
+        } catch (err) {
+            setTestResultsError(err instanceof Error ? err.message : 'Request failed');
+        } finally {
+            setTestResultsLoading(false);
+        }
+    };
+
+    const onGetQualityMetricsHtml = async () => {
+        if (!testId) return;
+        await fetchQualityMetricsHtml();
+    };
+
+    useEffect(() => {
+        if (swarmState !== SWARM_STATE.STOPPED) {
+            setTestResultsPolling(false);
+            setTestResultsLoading(false);
+            return;
+        }
+
+        if (!testId) return;
+
+        let cancelled = false;
+        let intervalId: ReturnType<typeof setInterval> | null = null;
+
+        const pollOnce = async (): Promise<boolean> => {
+            const res = await fetch(`${TEST_RESULTS_BASE}/${encodeURIComponent(testId)}`, {
+                method: 'GET',
+                headers: { accept: 'application/json' },
+            });
+            if (!res.ok) {
+                throw new Error(`Test results failed (${res.status})`);
+            }
+            const data = (await res.json()) as TestResultsResponse;
+            if (!cancelled) {
+                setTestResults(data);
+            }
+            return data.status === 'running';
+        };
+
+        const runQualityAfterResults = async () => {
+            if (cancelled) return;
+            setQualityMetricsLoading(true);
+            setQualityMetricsError(null);
+            try {
+                const res = await fetch(`${QUALITY_METRICS_HTML_BASE}/${encodeURIComponent(testId)}`, {
+                    method: 'GET',
+                    headers: { accept: 'text/html' },
+                });
+                if (!res.ok) {
+                    throw new Error(`Request failed (${res.status})`);
+                }
+                const html = await res.text();
+                if (!cancelled) {
+                    setQualityMetricsHtml(html);
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    setQualityMetricsError(err instanceof Error ? err.message : 'Failed to load HTML');
+                }
+            } finally {
+                if (!cancelled) {
+                    setQualityMetricsLoading(false);
+                }
+            }
+        };
+
+        void (async () => {
+            setTestResultsError(null);
+            setTestResultsLoading(true);
+            setTestResultsPolling(false);
+            try {
+                const stillRunning = await pollOnce();
+                if (cancelled) return;
+                setTestResultsLoading(false);
+
+                if (!stillRunning) {
+                    await runQualityAfterResults();
+                    return;
+                }
+
+                setTestResultsPolling(true);
+                intervalId = setInterval(() => {
+                    void (async () => {
+                        try {
+                            const running = await pollOnce();
+                            if (cancelled) return;
+                            if (!running) {
+                                if (intervalId !== null) {
+                                    clearInterval(intervalId);
+                                    intervalId = null;
+                                }
+                                setTestResultsPolling(false);
+                                await runQualityAfterResults();
+                            }
+                        } catch (err) {
+                            if (!cancelled) {
+                                setTestResultsError(err instanceof Error ? err.message : 'Poll failed');
+                            }
+                            if (intervalId !== null) {
+                                clearInterval(intervalId);
+                                intervalId = null;
+                            }
+                            setTestResultsPolling(false);
+                        }
+                    })();
+                }, TEST_RESULTS_POLL_MS);
+            } catch (err) {
+                if (!cancelled) {
+                    setTestResultsError(err instanceof Error ? err.message : 'Failed to load test results');
+                }
+                setTestResultsLoading(false);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+            if (intervalId !== null) {
+                clearInterval(intervalId);
+            }
+        };
+    }, [swarmState, testId]);
+
     const apiOrigin = useMemo(() => {
         try {
             return new URL(API_URL).origin;
@@ -117,7 +338,7 @@ export default function TestTab() {
 
     const submitDisabled = isSubmitting || isPollingStarted || !testId || !host || !path;
 
-    const buildPayload = () => {
+    const buildPayload = (dataset: unknown[]) => {
         let qualityTests: unknown[] = [];
         try {
             qualityTests = JSON.parse(qualityTestsJson) as unknown[];
@@ -148,19 +369,7 @@ export default function TestTab() {
                 alert_value: alertValue,
                 critical_level: criticalLevel,
             },
-            dataset: [
-                {
-                    id: datasetId,
-                    inputs: [
-                        {
-                            name: inputName,
-                            datatype: inputDatatype,
-                            shape: [shape0, shape1],
-                            data: [inputDataJsonString],
-                        },
-                    ],
-                },
-            ],
+            dataset,
         };
     };
 
@@ -174,9 +383,16 @@ export default function TestTab() {
         setAuthorizationError(false);
         setErrorMessage(null);
         setResponse(null);
+
+        const datasetParsed = parseDatasetJson(datasetJson);
+        if (!datasetParsed.ok) {
+            setErrorMessage(datasetParsed.message);
+            return;
+        }
+
         setIsSubmitting(true);
         try {
-            const payload = buildPayload();
+            const payload = buildPayload(datasetParsed.dataset);
             const res = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
@@ -247,7 +463,6 @@ export default function TestTab() {
         if (!testId) return;
 
         setStatusErrorMessage(null);
-        setStatusResponse(null);
         setIsFetchingStatus(true);
 
         try {
@@ -327,6 +542,8 @@ export default function TestTab() {
                         type='number'
                         value={batchSize}
                         onChange={e => setBatchSize(Number(e.target.value))}
+                        fullWidth
+                        sx={{ gridColumn: { xs: '1 / -1', md: 'span 2' } }}
                     />
 
                     <TextField
@@ -393,36 +610,16 @@ export default function TestTab() {
                 <Typography variant='subtitle1' sx={{ fontWeight: 700, mb: 1 }}>
                     Dataset
                 </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-                    <TextField label='dataset[0].id' value={datasetId} onChange={e => setDatasetId(e.target.value)} />
-                    <TextField label='inputs[0].name' value={inputName} onChange={e => setInputName(e.target.value)} />
-                    <TextField
-                        label='inputs[0].datatype'
-                        value={inputDatatype}
-                        onChange={e => setInputDatatype(e.target.value)}
-                    />
-                    <TextField
-                        label='inputs[0].shape[0]'
-                        type='number'
-                        value={shape0}
-                        onChange={e => setShape0(Number(e.target.value))}
-                    />
-                    <TextField
-                        label='inputs[0].shape[1]'
-                        type='number'
-                        value={shape1}
-                        onChange={e => setShape1(Number(e.target.value))}
-                    />
-                    <TextField
-                        label='inputs[0].data[0] (JSON string)'
-                        value={inputDataJsonString}
-                        onChange={e => setInputDataJsonString(e.target.value)}
-                        multiline
-                        minRows={3}
-                        fullWidth
-                        sx={{ gridColumn: { xs: '1 / -1', md: 'span 2' } }}
-                    />
-                </Box>
+                <TextField
+                    label='dataset (JSON)'
+                    value={datasetJson}
+                    onChange={e => setDatasetJson(e.target.value)}
+                    multiline
+                    minRows={14}
+                    fullWidth
+                    helperText='Sent as the request payload dataset property. Use one JSON object or an array of objects.'
+                    inputProps={{ spellCheck: false, style: { fontFamily: 'monospace', fontSize: 13 } }}
+                />
 
                 <Box sx={{ display: 'flex', gap: 2, mt: 2, alignItems: 'center' }}>
                     <Button variant='contained' color='primary' onClick={onSubmit} disabled={submitDisabled}>
@@ -504,7 +701,7 @@ export default function TestTab() {
                     Test Status
                 </Typography>
 
-                <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                     <Button
                         variant='contained'
                         color='secondary'
@@ -513,6 +710,19 @@ export default function TestTab() {
                     >
                         {isFetchingStatus ? 'Fetching...' : 'Get Status'}
                     </Button>
+                    <Tooltip title='Refresh status'>
+                        <span>
+                            <IconButton
+                                color='secondary'
+                                onClick={onGetStatus}
+                                disabled={isFetchingStatus || !testId}
+                                aria-label='Refresh status'
+                                size='medium'
+                            >
+                                <RefreshIcon />
+                            </IconButton>
+                        </span>
+                    </Tooltip>
                     {isFetchingStatus && <CircularProgress size={24} />}
                 </Box>
 
@@ -626,6 +836,131 @@ export default function TestTab() {
                             </Accordion>
                         </Box>
                     </Box>
+                )}
+            </Paper>
+
+            <Paper variant='outlined' sx={{ p: 2 }}>
+                <Typography variant='subtitle1' sx={{ fontWeight: 700, mb: 1 }}>
+                    Test results
+                </Typography>
+                <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                    GET{' '}
+                    <Box component='span' sx={{ fontFamily: 'monospace', fontSize: '0.85em' }}>
+                        {TEST_RESULTS_BASE}/{testId || '…'}
+                    </Box>
+                    . When the swarm is {SWARM_STATE.STOPPED}, results are polled every {TEST_RESULTS_POLL_MS / 1000}s
+                    while <Box component='span' sx={{ fontFamily: 'monospace' }}>status</Box> is{' '}
+                    <Box component='span' sx={{ fontFamily: 'monospace' }}>&quot;running&quot;</Box>, then quality
+                    metrics HTML loads automatically.
+                </Typography>
+
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2, alignItems: 'center' }}>
+                    <Button
+                        variant='outlined'
+                        onClick={onGetTestResult}
+                        disabled={!testId || testResultsLoading}
+                    >
+                        {testResultsLoading && !testResultsPolling ? 'Loading…' : 'Get Test Result'}
+                    </Button>
+                    <Button
+                        variant='outlined'
+                        onClick={onGetQualityMetricsHtml}
+                        disabled={!testId || qualityMetricsLoading}
+                    >
+                        {qualityMetricsLoading ? 'Loading…' : 'Get Quality Metrics HTML'}
+                    </Button>
+                </Box>
+
+                {testResultsPolling && (
+                    <Alert severity='info' sx={{ mb: 2 }}>
+                        Waiting for test results: <Box component='span' sx={{ fontFamily: 'monospace' }}>status</Box>{' '}
+                        is still &quot;running&quot; (checking every {TEST_RESULTS_POLL_MS / 1000}s).
+                    </Alert>
+                )}
+
+                {testResultsError && <Alert severity='error' sx={{ mb: 2 }}>{testResultsError}</Alert>}
+
+                {testResults && (
+                    <Box sx={{ mt: 1 }}>
+                        <Typography sx={{ fontWeight: 700, mb: 1 }}>
+                            Result status:{' '}
+                            <Box component='span' sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
+                                {testResults.status ?? '—'}
+                            </Box>
+                        </Typography>
+                        <Accordion>
+                            <AccordionSummary>
+                                <Typography sx={{ fontWeight: 700 }}>Raw test results JSON</Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                                <Box
+                                    component='pre'
+                                    sx={{
+                                        m: 0,
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-word',
+                                        fontFamily: 'monospace',
+                                        fontSize: '12px',
+                                        maxHeight: 280,
+                                        overflow: 'auto',
+                                        backgroundColor: 'rgba(0,0,0,0.03)',
+                                        borderRadius: 1,
+                                        p: 1,
+                                    }}
+                                >
+                                    {JSON.stringify(testResults, null, 2)}
+                                </Box>
+                            </AccordionDetails>
+                        </Accordion>
+                    </Box>
+                )}
+            </Paper>
+
+            <Paper variant='outlined' sx={{ p: 2 }}>
+                <Typography variant='subtitle1' sx={{ fontWeight: 700, mb: 1 }}>
+                    Quality metrics (HTML preview)
+                </Typography>
+                <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                    Loaded from{' '}
+                    <Box component='span' sx={{ fontFamily: 'monospace', fontSize: '0.85em' }}>
+                        {QUALITY_METRICS_HTML_BASE}/{testId || '…'}
+                    </Box>
+                    . Fetches automatically after test results finish (when not &quot;running&quot;), or use{' '}
+                    <Box component='span' sx={{ fontWeight: 600 }}>Get Quality Metrics HTML</Box> above.
+                </Typography>
+
+                {qualityMetricsLoading && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <CircularProgress size={24} />
+                        <Typography variant='body2'>Loading HTML…</Typography>
+                    </Box>
+                )}
+
+                {qualityMetricsError && (
+                    <Alert severity='error' sx={{ mb: 2 }}>
+                        {qualityMetricsError}
+                    </Alert>
+                )}
+
+                {!qualityMetricsLoading && !qualityMetricsHtml && (
+                    <Alert severity='info'>No HTML loaded yet. Stop the swarm or use Get Quality Metrics HTML.</Alert>
+                )}
+
+                {!qualityMetricsLoading && qualityMetricsHtml && (
+                    <Box
+                        component='iframe'
+                        title='Quality metrics HTML'
+                        srcDoc={qualityMetricsHtml}
+                        sandbox='allow-same-origin'
+                        sx={{
+                            width: '100%',
+                            minHeight: 320,
+                            border: 1,
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                            bgcolor: 'background.paper',
+                        }}
+                    />
                 )}
             </Paper>
         </Box>
