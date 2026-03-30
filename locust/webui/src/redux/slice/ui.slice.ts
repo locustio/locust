@@ -19,6 +19,8 @@ export interface IUiState {
   failRatio: number;
   startTime: string;
   showTestTab: boolean;
+  /** Incremented when navbar Reset is clicked so TestTab can clear session-scoped UI. */
+  testTabResetNonce?: number;
   stats: ISwarmStat[];
   errors: ISwarmError[];
   workers?: ISwarmWorker[];

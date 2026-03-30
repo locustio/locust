@@ -14,18 +14,27 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SWARM_STATE } from 'constants/swarm';
 import { useAction, useSelector } from 'redux/hooks';
 import { uiActions } from 'redux/slice/ui.slice';
 import { swarmActions } from 'redux/slice/swarm.slice';
 
-const API_URL = 'http://34.71.3.151/start-test';
-const STATUS_API_URL = 'http://34.71.3.151/test-status';
-const QUALITY_METRICS_HTML_BASE = 'http://34.71.3.151/quality-metrics-html';
-const TEST_RESULTS_BASE = 'http://34.71.3.151/test-results';
-
 const TEST_RESULTS_POLL_MS = 5_000;
+
+/** Default IP/host for external test APIs (start-test, test-status, quality metrics, test-results). */
+const DEFAULT_EXTERNAL_API_HOST = '34.71.3.151';
+
+function normalizeExternalApiBase(input: string): string {
+    const trimmed = input.trim().replace(/\/+$/, '');
+    if (!trimmed) {
+        return `http://${DEFAULT_EXTERNAL_API_HOST}`;
+    }
+    if (/^https?:\/\//i.test(trimmed)) {
+        return trimmed;
+    }
+    return `http://${trimmed}`;
+}
 
 const DEFAULT_DATASET_JSON = JSON.stringify(
     {
@@ -99,6 +108,8 @@ type StartTestResponse = {
 
 export default function TestTab() {
     const [testId, setTestId] = useState('test_1');
+    /** IP or hostname (or full http URL) for external test service endpoints. */
+    const [externalApiHost, setExternalApiHost] = useState(DEFAULT_EXTERNAL_API_HOST);
     const [host, setHost] = useState('https://us-central1-aiplatform.googleapis.com');
     const [path, setPath] = useState(
         '/v1/projects/fzo-edu-ds/locations/us-central1/endpoints/8045470177820672000:rawPredict',
@@ -126,6 +137,8 @@ export default function TestTab() {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isPollingStarted, setIsPollingStarted] = useState(false);
+    /** After a successful Submit, allow test-results / quality-metrics fetches (avoids stale data on load). */
+    const [resultsFetchAllowed, setResultsFetchAllowed] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [response, setResponse] = useState<StartTestResponse | null>(null);
     const setSwarm = useAction(swarmActions.setSwarm);
@@ -159,6 +172,9 @@ export default function TestTab() {
     const [statusResponse, setStatusResponse] = useState<TestStatusResponse | null>(null);
 
     const swarmState = useSelector(({ swarm }) => swarm.state);
+    const testTabResetNonce = useSelector(({ ui }) => ui.testTabResetNonce);
+    const testTabMountedRef = useRef(false);
+    const testTabPrevResetNonceRef = useRef<number | undefined>(undefined);
     const [testResults, setTestResults] = useState<TestResultsResponse | null>(null);
     const [testResultsLoading, setTestResultsLoading] = useState(false);
     const [testResultsError, setTestResultsError] = useState<string | null>(null);
@@ -168,8 +184,19 @@ export default function TestTab() {
     const [qualityMetricsLoading, setQualityMetricsLoading] = useState(false);
     const [qualityMetricsError, setQualityMetricsError] = useState<string | null>(null);
 
+    const externalApiUrls = useMemo(() => {
+        const base = normalizeExternalApiBase(externalApiHost);
+        return {
+            base,
+            startTest: `${base}/start-test`,
+            testStatus: `${base}/test-status`,
+            qualityMetricsHtml: `${base}/quality-metrics-html`,
+            testResults: `${base}/test-results`,
+        };
+    }, [externalApiHost]);
+
     const fetchTestResultsJson = async (): Promise<TestResultsResponse> => {
-        const res = await fetch(`${TEST_RESULTS_BASE}/${encodeURIComponent(testId)}`, {
+        const res = await fetch(`${externalApiUrls.testResults}/${encodeURIComponent(testId)}`, {
             method: 'GET',
             headers: { accept: 'application/json' },
         });
@@ -183,10 +210,13 @@ export default function TestTab() {
         setQualityMetricsLoading(true);
         setQualityMetricsError(null);
         try {
-            const res = await fetch(`${QUALITY_METRICS_HTML_BASE}/${encodeURIComponent(testId)}`, {
-                method: 'GET',
-                headers: { accept: 'text/html' },
-            });
+            const res = await fetch(
+                `${externalApiUrls.qualityMetricsHtml}/${encodeURIComponent(testId)}`,
+                {
+                    method: 'GET',
+                    headers: { accept: 'text/html' },
+                },
+            );
             if (!res.ok) {
                 throw new Error(`Request failed (${res.status})`);
             }
@@ -200,7 +230,7 @@ export default function TestTab() {
     };
 
     const onGetTestResult = async () => {
-        if (!testId) return;
+        if (!testId || !resultsFetchAllowed) return;
         setTestResultsError(null);
         setTestResultsLoading(true);
         try {
@@ -214,12 +244,47 @@ export default function TestTab() {
     };
 
     const onGetQualityMetricsHtml = async () => {
-        if (!testId) return;
+        if (!testId || !resultsFetchAllowed) return;
         await fetchQualityMetricsHtml();
     };
 
     useEffect(() => {
+        if (!testTabMountedRef.current) {
+            testTabMountedRef.current = true;
+            testTabPrevResetNonceRef.current = testTabResetNonce;
+            return;
+        }
+        if (testTabResetNonce === undefined) {
+            return;
+        }
+        if (testTabPrevResetNonceRef.current === testTabResetNonce) {
+            return;
+        }
+        testTabPrevResetNonceRef.current = testTabResetNonce;
+
+        setResultsFetchAllowed(false);
+        setTestResults(null);
+        setTestResultsError(null);
+        setTestResultsLoading(false);
+        setTestResultsPolling(false);
+        setQualityMetricsHtml(null);
+        setQualityMetricsError(null);
+        setQualityMetricsLoading(false);
+        setResponse(null);
+        setStatusResponse(null);
+        setStatusErrorMessage(null);
+        setErrorMessage(null);
+        setIsFetchingStatus(false);
+    }, [testTabResetNonce]);
+
+    useEffect(() => {
         if (swarmState !== SWARM_STATE.STOPPED) {
+            setTestResultsPolling(false);
+            setTestResultsLoading(false);
+            return;
+        }
+
+        if (!resultsFetchAllowed) {
             setTestResultsPolling(false);
             setTestResultsLoading(false);
             return;
@@ -231,7 +296,7 @@ export default function TestTab() {
         let intervalId: ReturnType<typeof setInterval> | null = null;
 
         const pollOnce = async (): Promise<boolean> => {
-            const res = await fetch(`${TEST_RESULTS_BASE}/${encodeURIComponent(testId)}`, {
+            const res = await fetch(`${externalApiUrls.testResults}/${encodeURIComponent(testId)}`, {
                 method: 'GET',
                 headers: { accept: 'application/json' },
             });
@@ -250,10 +315,13 @@ export default function TestTab() {
             setQualityMetricsLoading(true);
             setQualityMetricsError(null);
             try {
-                const res = await fetch(`${QUALITY_METRICS_HTML_BASE}/${encodeURIComponent(testId)}`, {
-                    method: 'GET',
-                    headers: { accept: 'text/html' },
-                });
+                const res = await fetch(
+                    `${externalApiUrls.qualityMetricsHtml}/${encodeURIComponent(testId)}`,
+                    {
+                        method: 'GET',
+                        headers: { accept: 'text/html' },
+                    },
+                );
                 if (!res.ok) {
                     throw new Error(`Request failed (${res.status})`);
                 }
@@ -326,17 +394,18 @@ export default function TestTab() {
                 clearInterval(intervalId);
             }
         };
-    }, [swarmState, testId]);
+    }, [swarmState, testId, resultsFetchAllowed, externalApiUrls]);
 
     const apiOrigin = useMemo(() => {
         try {
-            return new URL(API_URL).origin;
+            return new URL(externalApiUrls.startTest).origin;
         } catch {
             return '';
         }
-    }, []);
+    }, [externalApiUrls.startTest]);
 
-    const submitDisabled = isSubmitting || isPollingStarted || !testId || !host || !path;
+    const submitDisabled =
+        isSubmitting || isPollingStarted || !testId || !host || !path || !externalApiHost.trim();
 
     const buildPayload = (dataset: unknown[]) => {
         let qualityTests: unknown[] = [];
@@ -393,7 +462,7 @@ export default function TestTab() {
         setIsSubmitting(true);
         try {
             const payload = buildPayload(datasetParsed.dataset);
-            const res = await fetch(API_URL, {
+            const res = await fetch(externalApiUrls.startTest, {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -407,6 +476,8 @@ export default function TestTab() {
                 return;
             }
 
+            setResultsFetchAllowed(true);
+
             // Poll until backend reports `swarm_started: true`, then flip redux state.
             setIsPollingStarted(true);
             const startedAt = Date.now();
@@ -415,7 +486,7 @@ export default function TestTab() {
 
             const pollOnce = async () => {
                 const statusRes = await fetch(
-                    `${STATUS_API_URL}/${encodeURIComponent(testId)}`,
+                    `${externalApiUrls.testStatus}/${encodeURIComponent(testId)}`,
                     {
                         method: 'GET',
                         headers: { accept: 'application/json' },
@@ -466,7 +537,7 @@ export default function TestTab() {
         setIsFetchingStatus(true);
 
         try {
-            const res = await fetch(`${STATUS_API_URL}/${encodeURIComponent(testId)}`, {
+            const res = await fetch(`${externalApiUrls.testStatus}/${encodeURIComponent(testId)}`, {
                 method: 'GET',
                 headers: { accept: 'application/json' },
             });
@@ -496,6 +567,15 @@ export default function TestTab() {
                 </Typography>
 
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+                    <TextField
+                        label='External API host'
+                        value={externalApiHost}
+                        onChange={e => setExternalApiHost(e.target.value)}
+                        fullWidth
+                        placeholder={DEFAULT_EXTERNAL_API_HOST}
+                        helperText='IP or hostname for test service (start-test, test-status, results, metrics). Default: 34.71.3.151'
+                        sx={{ gridColumn: { xs: '1 / -1', md: 'span 2' } }}
+                    />
                     <TextField
                         label='test_id'
                         value={testId}
@@ -841,27 +921,34 @@ export default function TestTab() {
 
             <Paper variant='outlined' sx={{ p: 2 }}>
                 <Typography variant='subtitle1' sx={{ fontWeight: 700, mb: 1 }}>
-                    Test results
+                    Test results Status
                 </Typography>
                 <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                    When the test is {SWARM_STATE.STOPPED}, results are polled every {TEST_RESULTS_POLL_MS / 1000}s
-                    while <Box component='span' sx={{ fontFamily: 'monospace' }}>status</Box> is{' '}
-                    <Box component='span' sx={{ fontFamily: 'monospace' }}>&quot;running&quot;</Box>, then quality
+                    After you click <Box component='span' sx={{ fontWeight: 600 }}>Submit</Box> successfully, when the
+                    test is {SWARM_STATE.STOPPED}, results are polled every {TEST_RESULTS_POLL_MS / 1000}s while{' '}
+                    <Box component='span' sx={{ fontFamily: 'monospace' }}>status</Box> is{' '}
+                    <Box component='span' sx={{ fontFamily: 'monospace' }}>&quot;running&quot;</Box>, then the quality
                     metrics table loads automatically.
                 </Typography>
+
+                {!resultsFetchAllowed && (
+                    <Alert severity='info' sx={{ mb: 2 }}>
+                        Submit a test run first to load test results and quality metrics for this session.
+                    </Alert>
+                )}
 
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2, alignItems: 'center' }}>
                     <Button
                         variant='outlined'
                         onClick={onGetTestResult}
-                        disabled={!testId || testResultsLoading}
+                        disabled={!testId || !resultsFetchAllowed || testResultsLoading}
                     >
-                        {testResultsLoading && !testResultsPolling ? 'Loading…' : 'Get Test Result'}
+                        {testResultsLoading && !testResultsPolling ? 'Loading…' : 'Get Test Result Status'}
                     </Button>
                     <Button
                         variant='outlined'
                         onClick={onGetQualityMetricsHtml}
-                        disabled={!testId || qualityMetricsLoading}
+                        disabled={!testId || !resultsFetchAllowed || qualityMetricsLoading}
                     >
                         {qualityMetricsLoading ? 'Loading…' : 'Get Quality Metrics Table'}
                     </Button>

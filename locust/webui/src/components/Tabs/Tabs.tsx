@@ -52,6 +52,14 @@ function Tabs({
   tabs,
 }: ITabs) {
   const [currentTabIndex, setCurrentTabIndex] = useState(currentTabIndexFromQuery);
+  /** Once Run Test is opened, keep TestTab mounted so form/results state survives tab switches. */
+  const [keepTestTabMounted, setKeepTestTabMounted] = useState(false);
+
+  useEffect(() => {
+    if (showTestTab) {
+      setKeepTestTabMounted(true);
+    }
+  }, [showTestTab]);
 
   const onTabChange = (_: React.SyntheticEvent, index: number) => {
     const tab = tabs[index].key;
@@ -87,14 +95,16 @@ function Tabs({
           ))}
         </MuiTabs>
       </Box>
-      {showTestTab ? (
-        <TestTab />
-      ) : (
+      {keepTestTabMounted && (
+        <Box sx={{ display: showTestTab ? 'block' : 'none' }}>
+          <TestTab />
+        </Box>
+      )}
+      {!showTestTab &&
         tabs.map(
           ({ component: Component = DataTable }, index) =>
             currentTabIndex === index && <Component key={`tabpabel-${index}`} />,
-        )
-      )}
+        )}
     </Container>
   );
 }

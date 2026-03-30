@@ -24,7 +24,7 @@ describe('ResetButton', () => {
   afterAll(() => server.close());
 
   test('should call resetStats on ResetButton click', async () => {
-    const { getByText } = renderWithProvider(<ResetButton />);
+    const { getByText, store } = renderWithProvider(<ResetButton />);
 
     act(() => {
       fireEvent.click(getByText('Reset'));
@@ -32,6 +32,7 @@ describe('ResetButton', () => {
 
     await waitFor(async () => {
       expect(resetStats).toHaveBeenCalled();
+      expect(typeof store.getState().ui.testTabResetNonce).toBe('number');
     })
   });
 });
