@@ -1,4 +1,4 @@
-# Locust
+# Locust #
 
 [![PyPI](https://img.shields.io/pypi/v/locust.svg)](https://pypi.org/project/locust/)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/locust?color=brightgreen)](https://pypi.org/project/locust/)
