@@ -483,11 +483,6 @@ class WebUI:
             total_stats = _stats[-1]
 
             if _stats:
-                # Use total_rps (total requests / elapsed time) instead of
-                # current_rps (a ~10-second sliding-window average) so that the
-                # HTML report and the navbar RPS figure reflect the entire test
-                # run, not just the last few seconds.  Consistent with the
-                # behaviour of the final console summary since #1152.
                 report["total_rps"] = total_stats["total_rps"]
                 report["total_fail_per_sec"] = total_stats["total_fail_per_sec"]
                 report["fail_ratio"] = environment.runner.stats.total.fail_ratio
