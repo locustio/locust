@@ -262,6 +262,31 @@ export default function TestTab() {
         }
         testTabPrevResetNonceRef.current = testTabResetNonce;
 
+        setTestId('test_1');
+        setExternalApiHost(DEFAULT_EXTERNAL_API_HOST);
+        setHost('https://us-central1-aiplatform.googleapis.com');
+        setPath(
+            '/v1/projects/fzo-edu-ds/locations/us-central1/endpoints/8045470177820672000:rawPredict',
+        );
+        setUsers(200);
+        setSpawnRate(5);
+        setRandomize(true);
+        setRunTime(90);
+        setBatchSize(1);
+        setAuthorization('Bearer {Paste the Token}');
+        setAuthorizationError(false);
+        setTruthCol('event');
+        setPredCol('predicted_label');
+        setSeverityCol('');
+        setNonEventValue('');
+        setNonAlertValue('');
+        setAlertValue('');
+        setCriticalLevel('');
+        setQualityTestsJson('["accuracy"]');
+        setDatasetJson(DEFAULT_DATASET_JSON);
+        setIsSubmitting(false);
+        setIsPollingStarted(false);
+
         setResultsFetchAllowed(false);
         setTestResults(null);
         setTestResultsError(null);
