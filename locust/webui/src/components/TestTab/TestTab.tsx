@@ -112,7 +112,7 @@ export default function TestTab() {
     const [externalApiHost, setExternalApiHost] = useState(DEFAULT_EXTERNAL_API_HOST);
     const [host, setHost] = useState('https://us-central1-aiplatform.googleapis.com');
     const [path, setPath] = useState(
-        '/v1/projects/fzo-edu-ds/locations/us-central1/endpoints/8045470177820672000:rawPredict',
+        '/v1/projects/fzo-edu-ds/locations/us-central1/endpoints/3634121225288024064:rawPredict',
     );
     const [users, setUsers] = useState<number>(200);
     const [spawnRate, setSpawnRate] = useState<number>(5);
@@ -266,7 +266,7 @@ export default function TestTab() {
         setExternalApiHost(DEFAULT_EXTERNAL_API_HOST);
         setHost('https://us-central1-aiplatform.googleapis.com');
         setPath(
-            '/v1/projects/fzo-edu-ds/locations/us-central1/endpoints/8045470177820672000:rawPredict',
+            '/v1/projects/fzo-edu-ds/locations/us-central1/endpoints/3634121225288024064:rawPredict',
         );
         setUsers(200);
         setSpawnRate(5);
