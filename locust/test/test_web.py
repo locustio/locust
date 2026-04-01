@@ -130,6 +130,20 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual("Aggregated", data["stats"][1]["name"])
         self.assertEqual(1, data["stats"][1]["num_requests"])
 
+    def test_html_report_uses_total_rps_not_current_rps(self):
+        self.stats.log_request("GET", "/test", 100, 1000)
+        self.stats.log_request("GET", "/test", 120, 1200)
+        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        self.assertEqual(200, response.status_code)
+
+        data = json.loads(response.text)
+        self.assertIn("total_rps", data)
+        self.assertIn("total_fail_per_sec", data)
+
+        total_entry = data["stats"][-1]
+        self.assertEqual(total_entry["total_rps"], data["total_rps"])
+        self.assertEqual(total_entry["total_fail_per_sec"], data["total_fail_per_sec"])
+
     def test_stats_cache(self):
         self.stats.log_request("GET", "/test", 120, 5612)
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
