@@ -1,6 +1,37 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.43.4](https://github.com/locustio/locust/tree/2.43.4) (2026-04-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.43.3...2.43.4)
+
+**Fixed bugs:**
+
+- HTML report uses current\_rps instead of total\_rps for req/s column [\#3355](https://github.com/locustio/locust/issues/3355)
+- Using --processes with --print-stats causes all workers to print stats [\#3352](https://github.com/locustio/locust/issues/3352)
+- Docker image does not have OTEL libraries installed [\#3309](https://github.com/locustio/locust/issues/3309)
+
+**Merged pull requests:**
+
+- fix: use total\_rps instead of current\_rps in HTML report and navbar stats [\#3384](https://github.com/locustio/locust/pull/3384) ([juliosuas](https://github.com/juliosuas))
+- Fix false "--run-time limit reached" log message when shape test completes [\#3382](https://github.com/locustio/locust/pull/3382) ([Krishnachaitanyakc](https://github.com/Krishnachaitanyakc))
+- Fix typos in docs, docstrings, and UI string [\#3381](https://github.com/locustio/locust/pull/3381) ([r266-tech](https://github.com/r266-tech))
+- Add locust-otel Docker image with OpenTelemetry dependencies [\#3379](https://github.com/locustio/locust/pull/3379) ([eyupcanakman](https://github.com/eyupcanakman))
+- Bump the vite group across 1 directory with 3 updates [\#3375](https://github.com/locustio/locust/pull/3375) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Improve Type Hinting for Wait Time Functions [\#3374](https://github.com/locustio/locust/pull/3374) ([abstract-333](https://github.com/abstract-333))
+- Extract response time bucketing into an overridable function [\#3373](https://github.com/locustio/locust/pull/3373) ([thessem](https://github.com/thessem))
+- Bump typescript from 5.7.2 to 5.9.3 in /locust/webui [\#3367](https://github.com/locustio/locust/pull/3367) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump the vite group in /locust/webui with 2 updates [\#3364](https://github.com/locustio/locust/pull/3364) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump the eslint group in /locust/webui with 8 updates [\#3363](https://github.com/locustio/locust/pull/3363) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump qdrant-client from 1.16.2 to 1.17.0 [\#3362](https://github.com/locustio/locust/pull/3362) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump sphinxcontrib-serializinghtml from 1.1.10 to 2.0.0 [\#3361](https://github.com/locustio/locust/pull/3361) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump sphinxcontrib-htmlhelp from 2.0.1 to 2.1.0 [\#3359](https://github.com/locustio/locust/pull/3359) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump snowballstemmer from 2.2.0 to 3.0.1 [\#3358](https://github.com/locustio/locust/pull/3358) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump the all\_dependencies group with 2 updates [\#3356](https://github.com/locustio/locust/pull/3356) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Add Qdrant support [\#3354](https://github.com/locustio/locust/pull/3354) ([Anush008](https://github.com/Anush008))
+- Unset print\_stats on workers created by --processes option [\#3353](https://github.com/locustio/locust/pull/3353) ([markogle](https://github.com/markogle))
+- adding mqtt user feature that works around the paho mqtt 340 connections limit issue [\#3268](https://github.com/locustio/locust/pull/3268) ([ionutab](https://github.com/ionutab))
+
 ## [2.43.3](https://github.com/locustio/locust/tree/2.43.3) (2026-02-12)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.43.2...2.43.3)
