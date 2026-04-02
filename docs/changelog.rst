@@ -9,10 +9,10 @@ For full details of changes, please see https://github.com/locustio/locust/relea
 * MqttUser: Work around the paho mqtt 340 connections limit https://github.com/locustio/locust/pull/3268
 * Add Qdrant support https://github.com/locustio/locust/pull/3354
 * Extract response time bucketing into an overridable function https://github.com/locustio/locust/pull/3373
-* Bump various dependencies
 * Add locust-otel Docker image with OpenTelemetry dependencies https://github.com/locustio/locust/pull/3379
 * Fix false "--run-time limit reached" log message when shape test completes https://github.com/locustio/locust/pull/3382
 * fix: use total_rps instead of current_rps in HTML report and navbar stats https://github.com/locustio/locust/pull/3384
+* Bump various dependencies
 
 2.43.3
 ======
