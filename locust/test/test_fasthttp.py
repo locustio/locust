@@ -806,6 +806,20 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.assertEqual(0, self.num_success)
 
 
+    def test_response_context_manager_does_not_share_dict(self):
+        """Test that ResponseContextManager copies response.__dict__ instead of sharing it.
+        Sharing the dict creates a reference cycle that Python 3.13+ GC can collect
+        mid-request, clearing request_meta and causing TypeError (fixes #3388).
+        """
+        response = self.user.client.get("/ultra_fast")
+        from locust.contrib.fasthttp import ResponseContextManager
+        request_meta = {"request_type": "GET", "name": "/test", "context": {}, "response": response,
+                        "exception": None, "start_time": 0, "url": "/test", "response_time": 0, "response_length": 0}
+        rcm = ResponseContextManager(response, self.environment.events.request, request_meta, True)
+        # After construction, rcm.__dict__ must NOT be the same object as response.__dict__
+        self.assertIsNot(rcm.__dict__, response.__dict__,
+                         "ResponseContextManager should copy, not share, response.__dict__")
+
 class TestFastHttpSsl(LocustTestCase):
     def setUp(self):
         super().setUp()

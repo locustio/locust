@@ -710,7 +710,7 @@ class ResponseContextManager(FastResponse):
         # copy data from response to this object
         # I wanted to change this to the approach from the HttpUser's ResponseContentManager.from_request,
         # but it was such a mess
-        self.__dict__ = response.__dict__
+        self.__dict__.update(response.__dict__)
         try:
             self._cached_content = response._cached_content
         except AttributeError:
