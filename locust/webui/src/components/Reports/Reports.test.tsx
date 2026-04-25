@@ -1,6 +1,7 @@
 import { test, describe, expect } from 'vitest';
 
 import Reports from 'components/Reports/Reports';
+import { statsResponseTransformed } from 'test/mocks/statsRequest.mock';
 import { renderWithProvider } from 'test/testUtils';
 
 describe('Reports', () => {
@@ -72,6 +73,23 @@ describe('Reports', () => {
 
     expect(link).toBeTruthy();
     expect(link.getAttribute('href')).toBe('./stats/report?theme=light');
+  });
+
+  test('renders a client-side charts PNG download when chart data is available', () => {
+    const { getByText } = renderWithProvider(<Reports />, {
+      ui: { charts: statsResponseTransformed.charts },
+    });
+
+    const link = getByText('Download charts PNG');
+
+    expect(link).toBeTruthy();
+    expect(link.getAttribute('href')).toBeNull();
+  });
+
+  test('does not render a client-side charts PNG download when chart data is unavailable', () => {
+    const { queryByText } = renderWithProvider(<Reports />);
+
+    expect(queryByText('Download charts PNG')).toBeNull();
   });
 
   test('renders links to download extended CSV files', () => {
