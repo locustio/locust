@@ -1,6 +1,8 @@
-import { test, describe, expect } from 'vitest';
+import { fireEvent, waitFor } from '@testing-library/react';
+import { test, describe, expect, vi } from 'vitest';
 
 import Reports from 'components/Reports/Reports';
+import { SWARM_CHART_COUNT } from 'components/SwarmCharts/SwarmCharts';
 import { statsResponseTransformed } from 'test/mocks/statsRequest.mock';
 import { renderWithProvider } from 'test/testUtils';
 
@@ -84,6 +86,42 @@ describe('Reports', () => {
 
     expect(link).toBeTruthy();
     expect(link.getAttribute('href')).toBeNull();
+  });
+
+  test('downloads a client-side charts PNG from rendered chart data', async () => {
+    const { container, getByText } = renderWithProvider(<Reports />, {
+      ui: { charts: statsResponseTransformed.charts },
+    });
+
+    await waitFor(() =>
+      expect(container.querySelectorAll('canvas').length).toBe(SWARM_CHART_COUNT),
+    );
+
+    const downloadedAnchor = { current: null as HTMLAnchorElement | null };
+    const appendChild = document.body.appendChild.bind(document.body);
+    const appendChildSpy = vi
+      .spyOn(document.body, 'appendChild')
+      .mockImplementation(<T extends Node>(node: T) => {
+        if (node instanceof HTMLAnchorElement) {
+          downloadedAnchor.current = node;
+        }
+
+        return appendChild(node) as T;
+      });
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    try {
+      await waitFor(() => {
+        fireEvent.click(getByText('Download charts PNG'));
+        expect(downloadedAnchor.current).toBeTruthy();
+      });
+
+      expect(downloadedAnchor.current?.download).toMatch(/^Locust_charts_.*\.png$/);
+      expect(downloadedAnchor.current?.href).toMatch(/^data:image\/png/);
+    } finally {
+      appendChildSpy.mockRestore();
+      clickSpy.mockRestore();
+    }
   });
 
   test('does not render a client-side charts PNG download when chart data is unavailable', () => {
