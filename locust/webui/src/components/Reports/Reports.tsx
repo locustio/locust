@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { MouseEvent } from 'react';
 import { Box, Link, List, ListItem } from '@mui/material';
 import type { ECharts } from 'echarts';
 import { connect } from 'react-redux';
@@ -13,13 +14,15 @@ import { ICharts } from 'types/ui.types';
 const CHART_EXPORT_WIDTH = 1200;
 const CHART_EXPORT_PIXEL_RATIO = 3;
 const CHART_EXPORT_GROUP = 'swarmReportCharts';
+const REPORT_DOWNLOAD_FALLBACK_FILENAME = 'Locust_report.html';
+const REPORT_MODULE_SCRIPT_MARKER = '<script type="module" src=';
 
 type ExportableChart = ECharts & {
   getConnectedDataURL?: (options: Record<string, unknown>) => string;
   getDataURL: (options: Record<string, unknown>) => string;
 };
 
-const hasClientChartData = (charts: ICharts) =>
+export const hasClientChartData = (charts: ICharts) =>
   Boolean(
     charts &&
       [
@@ -30,47 +33,87 @@ const hasClientChartData = (charts: ICharts) =>
       ].some(series => Array.isArray(series) && series.length > 0),
   );
 
-const constructChartsPngFilename = () =>
-  `Locust_charts_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+const constructReportUrl = (isDarkMode: boolean, shouldDownload = false) =>
+  `./stats/report?${shouldDownload ? 'download=1&' : ''}theme=${
+    isDarkMode ? THEME_MODE.DARK : THEME_MODE.LIGHT
+  }`;
 
-const downloadDataUrl = (dataUrl: string, filename: string) => {
+export const filenameFromContentDisposition = (contentDisposition: string | null) => {
+  if (!contentDisposition) {
+    return REPORT_DOWNLOAD_FALLBACK_FILENAME;
+  }
+
+  const filenameMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+
+  return filenameMatch?.[1] || REPORT_DOWNLOAD_FALLBACK_FILENAME;
+};
+
+export const injectChartsPngIntoReportHtml = (reportHtml: string, chartsPng: string) => {
+  const script = `<script>window.templateArgs = Object.assign({}, window.templateArgs, ${JSON.stringify(
+    { charts_png: chartsPng },
+  )})</script>`;
+
+  if (reportHtml.includes(REPORT_MODULE_SCRIPT_MARKER)) {
+    return reportHtml.replace(
+      REPORT_MODULE_SCRIPT_MARKER,
+      `${script}\n    ${REPORT_MODULE_SCRIPT_MARKER}`,
+    );
+  }
+
+  if (reportHtml.includes('</body>')) {
+    return reportHtml.replace('</body>', `${script}\n  </body>`);
+  }
+
+  return `${reportHtml}\n${script}`;
+};
+
+const downloadHtml = (html: string, filename: string) => {
+  const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
   const link = document.createElement('a');
-  link.href = dataUrl;
+  link.href = url;
   link.download = filename;
   document.body.appendChild(link);
   link.click();
   link.remove();
+  URL.revokeObjectURL(url);
+};
+
+const downloadReportWithChartsPng = async (reportDownloadUrl: string, chartsPng: string) => {
+  const response = await fetch(reportDownloadUrl);
+
+  if (!response.ok) {
+    throw new Error('Unable to download report');
+  }
+
+  const reportHtml = await response.text();
+  const filename = filenameFromContentDisposition(response.headers.get('Content-Disposition'));
+
+  downloadHtml(injectChartsPngIntoReportHtml(reportHtml, chartsPng), filename);
 };
 
 const chartBackgroundColor = (isDarkMode: boolean) => (isDarkMode ? '#121212' : '#ffffff');
 
-function ChartsPngDownload({ charts, isDarkMode }: { charts: ICharts; isDarkMode: boolean }) {
+function ReportDownload({ charts, isDarkMode }: { charts: ICharts; isDarkMode: boolean }) {
   const chartRefs = useRef<(ECharts | null)[]>([]);
+  const isDownloadingReport = useRef(false);
+  const [isPreparingReport, setIsPreparingReport] = useState(false);
   const [readyChartCount, setReadyChartCount] = useState(0);
   const hasData = hasClientChartData(charts);
+  const reportHref = constructReportUrl(isDarkMode);
+  const reportDownloadHref = constructReportUrl(isDarkMode, true);
 
-  if (!hasData) {
-    return null;
-  }
-
-  const onChartReady = (chart: ECharts, index: number) => {
-    if (chartRefs.current[index] === chart) {
-      return;
-    }
-
-    chartRefs.current[index] = chart;
-    setReadyChartCount(chartRefs.current.filter(Boolean).length);
-  };
-
-  const onDownloadChartsPng = (event: React.MouseEvent<HTMLElement>) => {
-    event.preventDefault();
-
-    if (readyChartCount < SWARM_CHART_COUNT) {
+  useEffect(() => {
+    if (
+      !isPreparingReport ||
+      isDownloadingReport.current ||
+      readyChartCount < SWARM_CHART_COUNT
+    ) {
       return;
     }
 
     const chart = chartRefs.current.find(Boolean) as ExportableChart | undefined;
     if (!chart) {
+      setIsPreparingReport(false);
       return;
     }
 
@@ -84,34 +127,70 @@ function ChartsPngDownload({ charts, isDarkMode }: { charts: ICharts; isDarkMode
       ? chart.getConnectedDataURL(exportOptions)
       : chart.getDataURL(exportOptions);
 
-    downloadDataUrl(dataUrl, constructChartsPngFilename());
+    isDownloadingReport.current = true;
+
+    void downloadReportWithChartsPng(reportDownloadHref, dataUrl)
+      .catch(() => {
+        window.open(reportHref, '_blank');
+      })
+      .finally(() => {
+        isDownloadingReport.current = false;
+        setIsPreparingReport(false);
+      });
+  }, [isDarkMode, isPreparingReport, readyChartCount, reportDownloadHref, reportHref]);
+
+  const onChartReady = (chart: ECharts, index: number) => {
+    if (chartRefs.current[index] === chart) {
+      return;
+    }
+
+    chartRefs.current[index] = chart;
+    setReadyChartCount(chartRefs.current.filter(Boolean).length);
+  };
+
+  const onDownloadReport = (event: MouseEvent<HTMLElement>) => {
+    if (!hasData) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (isPreparingReport) {
+      return;
+    }
+
+    chartRefs.current = [];
+    setReadyChartCount(0);
+    setIsPreparingReport(true);
   };
 
   return (
     <>
-      <Link component='button' onClick={onDownloadChartsPng} type='button'>
-        Download charts PNG
+      <Link href={reportHref} onClick={onDownloadReport} target='_blank'>
+        Download Report
       </Link>
-      <Box
-        aria-hidden
-        sx={{
-          height: SWARM_CHART_COUNT * 300,
-          left: -10000,
-          opacity: 0,
-          overflow: 'hidden',
-          pointerEvents: 'none',
-          position: 'fixed',
-          top: 0,
-          width: CHART_EXPORT_WIDTH,
-        }}
-      >
-        <SwarmCharts
-          chartGroup={CHART_EXPORT_GROUP}
-          charts={charts}
-          isDarkMode={isDarkMode}
-          onChartReady={onChartReady}
-        />
-      </Box>
+      {isPreparingReport && (
+        <Box
+          aria-hidden
+          sx={{
+            height: SWARM_CHART_COUNT * 300,
+            left: -10000,
+            opacity: 0,
+            overflow: 'hidden',
+            pointerEvents: 'none',
+            position: 'fixed',
+            top: 0,
+            width: CHART_EXPORT_WIDTH,
+          }}
+        >
+          <SwarmCharts
+            chartGroup={CHART_EXPORT_GROUP}
+            charts={charts}
+            isDarkMode={isDarkMode}
+            onChartReady={onChartReady}
+          />
+        </Box>
+      )}
     </>
   );
 }
@@ -142,18 +221,8 @@ function Reports({
         <Link href='./exceptions/csv'>Download exceptions CSV</Link>
       </ListItem>
       <ListItem>
-        <Link
-          href={`./stats/report?theme=${isDarkMode ? THEME_MODE.DARK : THEME_MODE.LIGHT}`}
-          target='_blank'
-        >
-          Download Report
-        </Link>
+        <ReportDownload charts={charts} isDarkMode={isDarkMode} />
       </ListItem>
-      {hasClientChartData(charts) && (
-        <ListItem>
-          <ChartsPngDownload charts={charts} isDarkMode={isDarkMode} />
-        </ListItem>
-      )}
       {extendedCsvFiles &&
         extendedCsvFiles.map(({ href, title }, index) => (
           <ListItem key={`extended-csv-${index}`}>

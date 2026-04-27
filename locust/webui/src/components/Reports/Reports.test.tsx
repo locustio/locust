@@ -1,8 +1,10 @@
 import { fireEvent, waitFor } from '@testing-library/react';
 import { test, describe, expect, vi } from 'vitest';
 
-import Reports from 'components/Reports/Reports';
-import { SWARM_CHART_COUNT } from 'components/SwarmCharts/SwarmCharts';
+import Reports, {
+  filenameFromContentDisposition,
+  injectChartsPngIntoReportHtml,
+} from 'components/Reports/Reports';
 import { statsResponseTransformed } from 'test/mocks/statsRequest.mock';
 import { renderWithProvider } from 'test/testUtils';
 
@@ -77,27 +79,28 @@ describe('Reports', () => {
     expect(link.getAttribute('href')).toBe('./stats/report?theme=light');
   });
 
-  test('renders a client-side charts PNG download when chart data is available', () => {
-    const { getByText } = renderWithProvider(<Reports />, {
+  test('does not render a duplicate client-side charts PNG download', () => {
+    const { queryByText } = renderWithProvider(<Reports />, {
       ui: { charts: statsResponseTransformed.charts },
     });
 
-    const link = getByText('Download charts PNG');
-
-    expect(link).toBeTruthy();
-    expect(link.getAttribute('href')).toBeNull();
+    expect(queryByText('Download charts PNG')).toBeNull();
   });
 
-  test('downloads a client-side charts PNG from rendered chart data', async () => {
-    const { container, getByText } = renderWithProvider(<Reports />, {
-      ui: { charts: statsResponseTransformed.charts },
+  test('injects a client-side charts PNG when downloading the report from chart data', async () => {
+    const reportHtml =
+      '<html><body><script>window.templateArgs = {"is_report":true}</script><script type="module" src="/assets/report.js"></script></body></html>';
+    const fetchMock = vi.fn().mockResolvedValue({
+      headers: {
+        get: vi.fn().mockReturnValue('attachment; filename="Locust_report_with_charts.html"'),
+      },
+      ok: true,
+      text: vi.fn().mockResolvedValue(reportHtml),
     });
-
-    await waitFor(() =>
-      expect(container.querySelectorAll('canvas').length).toBe(SWARM_CHART_COUNT),
-    );
+    type DownloadedBlob = { parts: BlobPart[]; type: string };
 
     const downloadedAnchor = { current: null as HTMLAnchorElement | null };
+    const downloadedBlob = { current: null as DownloadedBlob | null };
     const appendChild = document.body.appendChild.bind(document.body);
     const appendChildSpy = vi
       .spyOn(document.body, 'appendChild')
@@ -109,25 +112,112 @@ describe('Reports', () => {
         return appendChild(node) as T;
       });
     const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const createObjectURL = vi.fn().mockImplementation((blob: DownloadedBlob) => {
+      downloadedBlob.current = blob;
+      return 'blob:locust-report';
+    });
+    const revokeObjectURL = vi.fn();
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+
+    vi.stubGlobal(
+      'Blob',
+      class {
+        parts: BlobPart[];
+        type: string;
+
+        constructor(parts: BlobPart[], options?: BlobPropertyBag) {
+          this.parts = parts;
+          this.type = options?.type || '';
+        }
+      },
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: createObjectURL,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: revokeObjectURL,
+    });
 
     try {
-      await waitFor(() => {
-        fireEvent.click(getByText('Download charts PNG'));
-        expect(downloadedAnchor.current).toBeTruthy();
+      const { getByText } = renderWithProvider(<Reports />, {
+        ui: { charts: statsResponseTransformed.charts },
       });
 
-      expect(downloadedAnchor.current?.download).toMatch(/^Locust_charts_.*\.png$/);
-      expect(downloadedAnchor.current?.href).toMatch(/^data:image\/png/);
+      fireEvent.click(getByText('Download Report'));
+
+      await waitFor(() =>
+        expect(fetchMock).toHaveBeenCalledWith('./stats/report?download=1&theme=light'),
+      );
+      await waitFor(() => expect(downloadedBlob.current).toBeTruthy());
+
+      expect(downloadedAnchor.current?.download).toBe('Locust_report_with_charts.html');
+      expect(downloadedAnchor.current?.href).toBe('blob:locust-report');
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:locust-report');
+
+      const downloadedHtml = downloadedBlob.current?.parts.join('');
+
+      expect(downloadedHtml).toBeTruthy();
+      if (!downloadedHtml) {
+        return;
+      }
+
+      expect(downloadedHtml).toContain('charts_png');
+      expect(downloadedHtml).toContain('data:image/png');
+      expect(downloadedHtml.indexOf('charts_png')).toBeLessThan(
+        downloadedHtml.indexOf('<script type="module"'),
+      );
     } finally {
+      vi.unstubAllGlobals();
       appendChildSpy.mockRestore();
       clickSpy.mockRestore();
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        value: originalCreateObjectURL,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        value: originalRevokeObjectURL,
+      });
     }
   });
 
-  test('does not render a client-side charts PNG download when chart data is unavailable', () => {
-    const { queryByText } = renderWithProvider(<Reports />);
+  test('keeps the normal report link when chart data is unavailable', () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
 
-    expect(queryByText('Download charts PNG')).toBeNull();
+    const { getByText } = renderWithProvider(<Reports />);
+
+    fireEvent.click(getByText('Download Report'));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
+  test('injects the chart PNG before the report module script', () => {
+    const reportHtml =
+      '<html><body><script>window.templateArgs = {"is_report":true}</script><script type="module" src="/assets/report.js"></script></body></html>';
+
+    const injectedHtml = injectChartsPngIntoReportHtml(reportHtml, 'data:image/png;base64,test');
+
+    expect(injectedHtml).toContain('"charts_png":"data:image/png;base64,test"');
+    expect(injectedHtml.indexOf('charts_png')).toBeLessThan(
+      injectedHtml.indexOf('<script type="module"'),
+    );
+  });
+
+  test('uses the report fallback filename when the report response has no filename header', () => {
+    expect(filenameFromContentDisposition(null)).toBe('Locust_report.html');
+    expect(filenameFromContentDisposition('attachment')).toBe('Locust_report.html');
+  });
+
+  test('uses the report filename from the content disposition header', () => {
+    expect(filenameFromContentDisposition('attachment; filename="Locust_2026.html"')).toBe(
+      'Locust_2026.html',
+    );
   });
 
   test('renders links to download extended CSV files', () => {
