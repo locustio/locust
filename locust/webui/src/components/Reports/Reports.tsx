@@ -16,6 +16,8 @@ const CHART_EXPORT_PIXEL_RATIO = 3;
 const CHART_EXPORT_GROUP = 'swarmReportCharts';
 const REPORT_DOWNLOAD_FALLBACK_FILENAME = 'Locust_report.html';
 const REPORT_MODULE_SCRIPT_MARKER = '<script type="module" src=';
+const REPORT_TEMPLATE_ARGS_ASSIGNMENT = 'window.templateArgs = ';
+const REPORT_THEME_ASSIGNMENT_PATTERN = /\n\s*window\.theme\s*=/;
 
 type ExportableChart = ECharts & {
   getConnectedDataURL?: (options: Record<string, unknown>) => string;
@@ -49,6 +51,35 @@ export const filenameFromContentDisposition = (contentDisposition: string | null
 };
 
 export const injectChartsPngIntoReportHtml = (reportHtml: string, chartsPng: string) => {
+  const templateArgsAssignmentStart = reportHtml.indexOf(REPORT_TEMPLATE_ARGS_ASSIGNMENT);
+  const templateArgsValueStart =
+    templateArgsAssignmentStart === -1
+      ? -1
+      : templateArgsAssignmentStart + REPORT_TEMPLATE_ARGS_ASSIGNMENT.length;
+  const templateArgsRemainder =
+    templateArgsValueStart === -1 ? '' : reportHtml.slice(templateArgsValueStart);
+  const templateArgsEndMatch = templateArgsRemainder.match(REPORT_THEME_ASSIGNMENT_PATTERN);
+
+  if (templateArgsValueStart !== -1 && templateArgsEndMatch?.index !== undefined) {
+    try {
+      const templateArgsValueEnd = templateArgsValueStart + templateArgsEndMatch.index;
+      const templateArgs = JSON.parse(
+        reportHtml.slice(templateArgsValueStart, templateArgsValueEnd).trim(),
+      );
+      const updatedTemplateArgs = JSON.stringify({
+        ...templateArgs,
+        charts_png: chartsPng,
+        history: [],
+      });
+
+      return `${reportHtml.slice(0, templateArgsValueStart)}${updatedTemplateArgs}${reportHtml.slice(
+        templateArgsValueEnd,
+      )}`;
+    } catch {
+      // Fall back to adding a small pre-module script if the report template changes.
+    }
+  }
+
   const script = `<script>window.templateArgs = Object.assign({}, window.templateArgs, ${JSON.stringify(
     { charts_png: chartsPng },
   )})</script>`;

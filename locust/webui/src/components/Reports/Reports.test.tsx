@@ -89,7 +89,7 @@ describe('Reports', () => {
 
   test('injects a client-side charts PNG when downloading the report from chart data', async () => {
     const reportHtml =
-      '<html><body><script>window.templateArgs = {"is_report":true}</script><script type="module" src="/assets/report.js"></script></body></html>';
+      '<html><body><script>\n      window.templateArgs = {"is_report":true,"history":[{"time":"2026-04-27T12:00:00Z"}]}\n      window.theme = "light"\n    </script><script type="module" src="/assets/report.js"></script></body></html>';
     const fetchMock = vi.fn().mockResolvedValue({
       headers: {
         get: vi.fn().mockReturnValue('attachment; filename="Locust_report_with_charts.html"'),
@@ -167,6 +167,8 @@ describe('Reports', () => {
 
       expect(downloadedHtml).toContain('charts_png');
       expect(downloadedHtml).toContain('data:image/png');
+      expect(downloadedHtml).toContain('"history":[]');
+      expect(downloadedHtml).not.toContain('2026-04-27T12:00:00Z');
       expect(downloadedHtml.indexOf('charts_png')).toBeLessThan(
         downloadedHtml.indexOf('<script type="module"'),
       );
@@ -197,13 +199,15 @@ describe('Reports', () => {
     vi.unstubAllGlobals();
   });
 
-  test('injects the chart PNG before the report module script', () => {
+  test('adds the chart PNG to report template args and omits chart history', () => {
     const reportHtml =
-      '<html><body><script>window.templateArgs = {"is_report":true}</script><script type="module" src="/assets/report.js"></script></body></html>';
+      '<html><body><script>\n      window.templateArgs = {"is_report":true,"history":[{"time":"2026-04-27T12:00:00Z"}]}\n      window.theme = "light"\n    </script><script type="module" src="/assets/report.js"></script></body></html>';
 
     const injectedHtml = injectChartsPngIntoReportHtml(reportHtml, 'data:image/png;base64,test');
 
     expect(injectedHtml).toContain('"charts_png":"data:image/png;base64,test"');
+    expect(injectedHtml).toContain('"history":[]');
+    expect(injectedHtml).not.toContain('2026-04-27T12:00:00Z');
     expect(injectedHtml.indexOf('charts_png')).toBeLessThan(
       injectedHtml.indexOf('<script type="module"'),
     );
