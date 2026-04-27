@@ -10,8 +10,8 @@
 from locust.argument_parser import get_parser
 
 import os
-import sys
 import subprocess
+import sys
 
 # Add local extensions directory to path
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), "_ext"))
