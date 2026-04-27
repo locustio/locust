@@ -1666,6 +1666,7 @@ class TelemetryTests(ProcessIntegrationTest):
             with TestProcess(
                 f"locust -f {mocked.file_path}",
                 expect_return_code=None,
+                join_timeout=5,
             ) as tp:
                 tp.expect("Starting Locust")
                 tp.not_expect_any("OpenTelemetry enabled")
@@ -1673,6 +1674,7 @@ class TelemetryTests(ProcessIntegrationTest):
             with TestProcess(
                 f"locust -f {mocked.file_path} --otel",
                 expect_return_code=None,
+                join_timeout=5,
             ) as tp:
                 tp.expect("Starting Locust")
                 tp.expect_any("OpenTelemetry enabled")
