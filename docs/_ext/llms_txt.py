@@ -1,7 +1,12 @@
 """Sphinx extension that generates llms.txt and llms-full.txt for AI consumption.
 
 Generates an index file (llms.txt) and a full concatenated markdown file (llms-full.txt)
-from the existing RST documentation during the HTML build, following the llmstxt.org standard.
+from the existing RST documentation during the HTML build, following the llmstxt.org
+standard.
+
+This extension uses ``sphinx_markdown_builder.translator.MarkdownTranslator``
+(MIT License, Copyright (c) 2023-2026 Liran Funaro) via a minimal builder proxy
+to render doctrees as Markdown. See THIRD-PARTY-NOTICES.md at the repository root.
 """
 
 from __future__ import annotations
