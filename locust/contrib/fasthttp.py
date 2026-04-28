@@ -282,7 +282,7 @@ class FastHttpSession:
         else:
             try:
                 request_meta["response_length"] = len(response.content) if response.content else 0
-            except HTTPParseError as e:
+            except (HTTPParseError, *FAILURE_EXCEPTIONS) as e:
                 request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
                 request_meta["exception"] = e
                 if catch_response:
