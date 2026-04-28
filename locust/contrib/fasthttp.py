@@ -707,10 +707,10 @@ class ResponseContextManager(FastResponse):
     _entered = False
 
     def __init__(self, response, request_event, request_meta, catch_response: bool):
-        # copy data from response to this object
-        # I wanted to change this to the approach from the HttpUser's ResponseContentManager.from_request,
-        # but it was such a mess
-        self.__dict__ = response.__dict__
+        # copy data from response to this object (use update to avoid sharing
+        # the dict reference, which creates a GC-reference cycle that Python 3.13+
+        # can collect mid-request — see #3388)
+        self.__dict__.update(response.__dict__)
         try:
             self._cached_content = response._cached_content
         except AttributeError:
