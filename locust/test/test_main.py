@@ -1661,7 +1661,6 @@ class AnyUser(User):
 
 
 class TelemetryTests(ProcessIntegrationTest):
-    @unittest.skip("export has started timing out the shutdown. further investigation needed")
     def test_otel_flag(self):
         with mock_locustfile() as mocked:
             with TestProcess(
@@ -1671,12 +1670,13 @@ class TelemetryTests(ProcessIntegrationTest):
                 tp.expect("Starting Locust")
                 tp.not_expect_any("OpenTelemetry enabled")
 
-            with TestProcess(
-                f"locust -f {mocked.file_path} --otel",
-                expect_return_code=None,
-            ) as tp:
-                tp.expect("Starting Locust")
-                tp.expect_any("OpenTelemetry enabled")
+            # This second run started timing out the shutdown. We should investigate it later...
+            # with TestProcess(
+            #     f"locust -f {mocked.file_path} --otel",
+            #     expect_return_code=None,
+            # ) as tp:
+            #     tp.expect("Starting Locust")
+            #     tp.expect_any("OpenTelemetry enabled")
 
     def test_httpuser(self):
         with mock_locustfile() as mocked:
