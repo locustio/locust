@@ -34,6 +34,8 @@ interface ILineChartProps<ChartType extends IBaseChartType> extends ILineChart<C
   xAxis?: XAXisComponentOption;
   grid?: GridComponentOption;
   isDarkMode?: boolean;
+  onChartReady?: (chart: ECharts) => void;
+  chartGroup?: string;
 }
 
 echartsUse([
@@ -60,10 +62,17 @@ export default function LineChart<ChartType extends IBaseChartType>({
   scatterplot,
   shouldReplaceMergeLines = false,
   isDarkMode = false,
+  onChartReady,
+  chartGroup = 'swarmCharts',
 }: ILineChartProps<ChartType>) {
   const [chart, setChart] = useState<ECharts | null>(null);
 
   const chartContainer = useRef<HTMLDivElement | null>(null);
+  const onChartReadyRef = useRef(onChartReady);
+
+  useEffect(() => {
+    onChartReadyRef.current = onChartReady;
+  }, [onChartReady]);
 
   useEffect(() => {
     if (!chartContainer.current) {
@@ -94,10 +103,11 @@ export default function LineChart<ChartType extends IBaseChartType>({
     };
     window.addEventListener('resize', handleChartResize);
 
-    initChart.group = 'swarmCharts';
-    connect('swarmCharts');
+    initChart.group = chartGroup;
+    connect(chartGroup);
 
     setChart(initChart);
+    onChartReadyRef.current?.(initChart);
 
     return () => {
       dispose(initChart);
