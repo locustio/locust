@@ -69,6 +69,8 @@ class StatsEntryDict(StatsBaseDict):
 class StatsErrorDict(StatsBaseDict):
     error: str
     occurrences: int
+    first_seen: float | None
+    last_seen: float | None
 
 
 class StatsHolder(Protocol):
@@ -705,11 +707,21 @@ class StatsEntry:
 
 
 class StatsError:
-    def __init__(self, method: str, name: str, error: Exception | str | None, occurrences: int = 0):
+    def __init__(
+        self,
+        method: str,
+        name: str,
+        error: Exception | str | None,
+        occurrences: int = 0,
+        first_seen: float | None = None,
+        last_seen: float | None = None,
+    ):
         self.method = method
         self.name = name
         self.error = error
         self.occurrences = occurrences
+        self.first_seen = first_seen
+        self.last_seen = last_seen
 
     @classmethod
     def parse_error(cls, error: Exception | str | None) -> str:
@@ -735,6 +747,10 @@ class StatsError:
 
     def occurred(self) -> None:
         self.occurrences += 1
+        now = time.time()
+        if self.first_seen is None:
+            self.first_seen = now
+        self.last_seen = now
 
     def to_name(self) -> str:
         error = self.error
@@ -767,7 +783,14 @@ class StatsError:
 
     @classmethod
     def unserialize(cls, data: StatsErrorDict) -> StatsError:
-        return cls(data["method"], data["name"], data["error"], data["occurrences"])
+        return cls(
+            data["method"],
+            data["name"],
+            data["error"],
+            data["occurrences"],
+            data.get("first_seen"),
+            data.get("last_seen"),
+        )
 
     def to_dict(self):
         return {
@@ -775,6 +798,8 @@ class StatsError:
             "name": self.name,
             "error": self.parse_error(self.error),
             "occurrences": self.occurrences,
+            "first_seen": self.first_seen,
+            "last_seen": self.last_seen,
         }
 
 
@@ -815,7 +840,18 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
             if error_key not in stats.errors:
                 stats.errors[error_key] = StatsError.unserialize(error)
             else:
-                stats.errors[error_key].occurrences += error["occurrences"]
+                existing = stats.errors[error_key]
+                existing.occurrences += error["occurrences"]
+                incoming_first = error.get("first_seen")
+                incoming_last = error.get("last_seen")
+                if incoming_first is not None:
+                    existing.first_seen = (
+                        incoming_first if existing.first_seen is None else min(existing.first_seen, incoming_first)
+                    )
+                if incoming_last is not None:
+                    existing.last_seen = (
+                        incoming_last if existing.last_seen is None else max(existing.last_seen, incoming_last)
+                    )
 
         stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
 
@@ -988,6 +1024,8 @@ class StatsCSV:
             "Name",
             "Error",
             "Occurrences",
+            "First Seen",
+            "Last Seen",
         ]
 
         self.exceptions_columns = [
@@ -1045,6 +1083,8 @@ class StatsCSV:
                     stats_error.name,
                     StatsError.parse_error(stats_error.error),
                     stats_error.occurrences,
+                    format_utc_timestamp(stats_error.first_seen) if stats_error.first_seen is not None else "",
+                    format_utc_timestamp(stats_error.last_seen) if stats_error.last_seen is not None else "",
                 ]
             )
 
