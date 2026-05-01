@@ -10,6 +10,7 @@ import re
 import socket
 import time
 import traceback
+import zlib
 from base64 import b64encode
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
@@ -282,7 +283,7 @@ class FastHttpSession:
         else:
             try:
                 request_meta["response_length"] = len(response.content) if response.content else 0
-            except (HTTPParseError, *FAILURE_EXCEPTIONS) as e:
+            except (HTTPParseError, zlib.error, *FAILURE_EXCEPTIONS) as e:
                 request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
                 request_meta["exception"] = e  # type: ignore
                 if catch_response:
