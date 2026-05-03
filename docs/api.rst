@@ -214,3 +214,9 @@ Other
 .. autoclass:: locust.stats.StatsEntry
 
 .. autofunction:: locust.debug.run_single_user
+
+CsvRequestLogger class
+======================
+
+.. autoclass:: locust.contrib.csv_request_logger.CsvRequestLogger
+    :members: register, close
