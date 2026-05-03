@@ -842,13 +842,11 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
             else:
                 existing = stats.errors[error_key]
                 existing.occurrences += error["occurrences"]
-                incoming_first = error.get("first_seen")
-                incoming_last = error.get("last_seen")
-                if incoming_first is not None:
+                if incoming_first := error.get("first_seen"):
                     existing.first_seen = (
                         incoming_first if existing.first_seen is None else min(existing.first_seen, incoming_first)
                     )
-                if incoming_last is not None:
+                if incoming_last := error.get("last_seen"):
                     existing.last_seen = (
                         incoming_last if existing.last_seen is None else max(existing.last_seen, incoming_last)
                     )
