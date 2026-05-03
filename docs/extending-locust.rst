@@ -252,6 +252,30 @@ Test data management
 There are a number of ways to get test data into your tests (after all, your test is just a Python program and it can do whatever Python can). Locust's events give you fine-grained control over *when* to fetch/release test data. You can find a `detailed example here <https://github.com/locustio/locust/tree/master/examples/test_data_management.py>`_.
 
 
+Per-request CSV logging
+=======================
+
+The built-in ``--csv`` flag exports only **aggregated** statistics. For post-run analysis that requires individual data-points (outlier detection, per-endpoint latency histograms, failure forensics, Pandas/BI pipelines), use :class:`~locust.contrib.csv_request_logger.CsvRequestLogger`:
+
+.. code-block:: python
+
+    from locust import HttpUser, task, events
+    from locust.contrib.csv_request_logger import CsvRequestLogger
+
+    logger = CsvRequestLogger("results/requests.csv")
+
+    @events.init.add_listener
+    def on_locust_init(environment, **kwargs):
+        logger.register(environment)
+
+    class MyUser(HttpUser):
+        @task
+        def index(self):
+            self.client.get("/")
+
+This writes one CSV row per completed request with columns: ``timestamp``, ``request_type``, ``name``, ``response_time_ms``, ``response_length``, ``status_code``, and ``exception``. The logger works with any protocol (HTTP, WebSocket, gRPC, custom) and closes automatically on shutdown. See :mod:`locust.contrib.csv_request_logger` for full API documentation.
+
+
 More examples
 =============
 

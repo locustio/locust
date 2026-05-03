@@ -52,6 +52,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from locust.env import Environment
+    from locust.stats import CSVWriter
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +102,7 @@ class CsvRequestLogger:
         self.flush_interval = max(1, flush_interval)
 
         self._filehandle: io.TextIOWrapper | None = None
-        self._writer: csv.writer | None = None
+        self._writer: CSVWriter | None = None
         self._pending: int = 0
 
     # ------------------------------------------------------------------

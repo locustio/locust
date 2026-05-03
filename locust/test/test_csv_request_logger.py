@@ -1,13 +1,13 @@
 """Tests for locust.contrib.csv_request_logger."""
 
+from locust.contrib.csv_request_logger import CSV_COLUMNS, CsvRequestLogger, _status_code
+from locust.env import Environment
+
 import csv
 import os
 import tempfile
 import unittest
 from unittest.mock import MagicMock
-
-from locust.contrib.csv_request_logger import CSV_COLUMNS, CsvRequestLogger, _status_code
-from locust.env import Environment
 
 
 def _make_environment() -> Environment:
