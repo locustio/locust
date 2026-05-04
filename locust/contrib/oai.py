@@ -1,5 +1,7 @@
 # Note: this User is experimental and may change without notice.
 # The filename is oai.py so it doesnt clash with the openai package.
+from locust.env import Environment
+from locust.event import EventHook
 from locust.user import User
 
 import os
@@ -15,7 +17,7 @@ if not "OPENAI_API_KEY" in os.environ:
 
 
 class OpenAIClient(OpenAI):
-    def __init__(self, request_event, user, *args, **kwargs):
+    def __init__(self, request_event: EventHook, user, *args, **kwargs):
         self.request_name = None  # used to override url-based request names
         self.user = user  # currently unused, but could be useful later
 
@@ -64,6 +66,8 @@ class OpenAIClient(OpenAI):
 class OpenAIUser(User):
     abstract = True
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.client = OpenAIClient(self.environment.events.request, user=self)
+    def __init__(self, environment: Environment, *args, **kwargs):
+        super().__init__(environment)
+        if self.host and "base_url" not in kwargs:
+            kwargs["base_url"] = self.host
+        self.client = OpenAIClient(request_event=self.environment.events.request, user=self, *args, **kwargs)
