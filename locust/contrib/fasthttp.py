@@ -10,6 +10,7 @@ import re
 import socket
 import time
 import traceback
+import zlib
 from base64 import b64encode
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
@@ -84,6 +85,7 @@ FAILURE_EXCEPTIONS = (
     SSLError,
     Timeout,
     HTTPConnectionClosed,
+    zlib.error,
 )
 
 
