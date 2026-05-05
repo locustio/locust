@@ -65,6 +65,7 @@ Further reading / knowledgebase
 
     developing-locust
     further-reading
+    ai-docs
     faq
 
 
