@@ -78,6 +78,7 @@ export interface IReport {
   duration: string;
   host: string;
   charts: ICharts;
+  chartsPng?: string;
   requestsStatistics: ISwarmStat[];
   failuresStatistics: ISwarmError[];
   responseTimeStatistics: IResponseTime[];
