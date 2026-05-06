@@ -43,6 +43,19 @@ describe('useFetchStats', () => {
     });
 
     expect(store.getState().ui.stats).toEqual(statsResponseTransformed.stats);
+    expect(store.getState().ui.totalRps).toEqual(statsResponseTransformed.totalRps);
+    expect((store.getState().ui.charts as ICharts).currentRps.at(-1)).toEqual([
+      expect.any(String),
+      statsResponseTransformed.stats.at(-1)?.currentRps,
+    ]);
+    expect((store.getState().ui.charts as ICharts).currentFailPerSec.at(-1)).toEqual([
+      expect.any(String),
+      statsResponseTransformed.stats.at(-1)?.currentFailPerSec,
+    ]);
+    expect((store.getState().ui.charts as ICharts).totalAvgResponseTime.at(-1)).toEqual([
+      expect.any(String),
+      0.41,
+    ]);
   });
 
   test('should add markers to charts between tests', async () => {

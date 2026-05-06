@@ -47,9 +47,9 @@ export const statsResponseMock = {
       num_requests: 12652,
     },
   ],
-  total_avg_response_time: 0.41064205516736735,
-  total_fail_per_sec: 1932.5,
-  total_rps: 1932.5,
+  total_avg_response_time: 99.99,
+  total_fail_per_sec: 11.11,
+  total_rps: 22.22,
   user_count: 1,
 };
 
@@ -100,7 +100,7 @@ export const exceptionsResponseMock = {
 export const mockDate = new Date(1971, 1);
 
 export const statsResponseTransformed = {
-  totalRps: 1932.5,
+  totalRps: 22.22,
   failRatio: 100,
   stats: [
     {
