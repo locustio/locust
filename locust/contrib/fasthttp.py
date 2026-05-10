@@ -10,6 +10,7 @@ import re
 import socket
 import time
 import traceback
+import zlib
 from base64 import b64encode
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
@@ -84,6 +85,7 @@ FAILURE_EXCEPTIONS = (
     SSLError,
     Timeout,
     HTTPConnectionClosed,
+    zlib.error,
 )
 
 
@@ -254,7 +256,7 @@ class FastHttpSession:
 
         if not allow_redirects:
             old_redirect_response_codes = self.client.redirect_resonse_codes
-            self.client.redirect_resonse_codes = []
+            self.client.redirect_resonse_codes = frozenset()
 
         start_perf_counter = time.perf_counter()
         # send request, and catch any exceptions
@@ -672,6 +674,7 @@ class LocustUserAgent(UserAgent):
     response_type = FastResponse
     request_type = FastRequest
     valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 304, 307, 308])
+    redirect_resonse_codes = frozenset([301, 302, 303, 307, 308])
 
     def __init__(self, client_pool: HTTPClientPool | None = None, **kwargs):
         super().__init__(**kwargs)

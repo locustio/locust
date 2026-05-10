@@ -10,8 +10,10 @@ from locust.stats import (
     RequestStats,
     StatsCSVFileWriter,
     StatsEntry,
+    StatsError,
     bucket_response_time,
     diff_response_time_dicts,
+    setup_distributed_stats_event_listeners,
     stats_history,
 )
 from locust.test.test_runners import mocked_rpc
@@ -356,6 +358,47 @@ class TestRequestStats(unittest.TestCase):
 
         self.stats.log_error("GET", "/", Exception(f"Error caused by {Dummy()!r}"))
         self.assertEqual(1, len(self.stats.errors))
+
+    def test_error_first_seen_and_last_seen(self):
+        self.stats = RequestStats()
+
+        before = time.time()
+        self.stats.log_error("GET", "/some-path", Exception("Exception!"))
+        error = list(self.stats.errors.values())[0]
+        first_seen = error.first_seen
+        self.assertIsNotNone(first_seen)
+        self.assertIsNotNone(error.last_seen)
+        self.assertGreaterEqual(first_seen, before)
+        self.assertEqual(first_seen, error.last_seen)
+
+        # last_seen advances on subsequent occurrences while first_seen stays
+        time.sleep(0.01)
+        self.stats.log_error("GET", "/some-path", Exception("Exception!"))
+        self.assertEqual(first_seen, error.first_seen)
+        self.assertGreater(error.last_seen, first_seen)
+
+    def test_error_master_merge_extends_first_and_last_seen(self):
+        master_stats = RequestStats()
+        env = Environment()
+        setup_distributed_stats_event_listeners(env.events, master_stats)
+
+        error = Exception("boom")
+        key = StatsError.create_key("GET", "/x", error)
+        worker_a = StatsError("GET", "/x", error, occurrences=2, first_seen=100.0, last_seen=110.0).serialize()
+        worker_b = StatsError("GET", "/x", error, occurrences=3, first_seen=90.0, last_seen=120.0).serialize()
+        empty_total = StatsEntry(master_stats, "", "").serialize()
+
+        env.events.worker_report.fire(
+            client_id="a", data={"stats": [], "stats_total": empty_total, "errors": {key: worker_a}}
+        )
+        env.events.worker_report.fire(
+            client_id="b", data={"stats": [], "stats_total": empty_total, "errors": {key: worker_b}}
+        )
+
+        merged = master_stats.errors[key]
+        self.assertEqual(merged.occurrences, 5)
+        self.assertEqual(merged.first_seen, 90.0)
+        self.assertEqual(merged.last_seen, 120.0)
 
     def test_serialize_through_message(self):
         """

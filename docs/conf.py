@@ -11,6 +11,10 @@ from locust.argument_parser import get_parser
 
 import os
 import subprocess
+import sys
+
+# Add local extensions directory to path
+sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), "_ext"))
 
 # Add fixes for RTD deprecation
 # https://about.readthedocs.com/blog/2024/07/addons-by-default/
@@ -98,6 +102,7 @@ extensions = [
     "sphinx_rtd_theme",
     "sphinxcontrib.googleanalytics",
     "sphinx.ext.extlinks",
+    "llms_txt",
 ]
 
 extlinks = {

@@ -542,18 +542,18 @@ jobs:
           cmd: config set npmAuthToken ${{ secrets.NPM_AUTH_TOKEN }}
           dir: locust/webui
 
-      # Publish UI lib
-      - uses: borales/actions-yarn@v5
-        name: Publish package on NPM
-        if: github.ref == 'refs/heads/master'
-        with:
-          cmd: npm publish --tag next
-          dir: locust/webui
+    #   # Publish UI lib
+    #   - uses: borales/actions-yarn@v5
+    #     name: Publish package on NPM
+    #     if: github.ref == 'refs/heads/master'
+    #     with:
+    #       cmd: npm publish --tag next
+    #       dir: locust/webui
 
-      # On tag builds
-      - uses: borales/actions-yarn@v5
-        name: Publish package on NPM
-        if: startsWith(github.event.ref, 'refs/tags')
-        with:
-          cmd: npm publish
-          dir: locust/webui
+    #   # On tag builds
+    #   - uses: borales/actions-yarn@v5
+    #     name: Publish package on NPM
+    #     if: startsWith(github.event.ref, 'refs/tags')
+    #     with:
+    #       cmd: npm publish
+    #       dir: locust/webui

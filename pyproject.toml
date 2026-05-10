@@ -106,6 +106,7 @@ docs = [
     "sphinxcontrib-qthelp==1.0.3",
     "sphinxcontrib-serializinghtml==2.0.0",
     "sphinxcontrib-googleanalytics>=0.4",
+    "sphinx-markdown-builder>=0.6.0",
     # these optional dependencies are needed to build the some contrib modules
     "pymilvus>=2.5.0",
     "psycopg[binary]>=3.2.1",

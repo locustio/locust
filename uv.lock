@@ -1249,6 +1249,7 @@ docs = [
     { name = "readthedocs-sphinx-search" },
     { name = "snowballstemmer" },
     { name = "sphinx" },
+    { name = "sphinx-markdown-builder" },
     { name = "sphinx-prompt" },
     { name = "sphinx-rtd-theme" },
     { name = "sphinx-substitution-extensions" },
@@ -1341,6 +1342,7 @@ docs = [
     { name = "readthedocs-sphinx-search", specifier = "==0.3.2" },
     { name = "snowballstemmer", specifier = "==3.0.1" },
     { name = "sphinx", specifier = "==7.4.7" },
+    { name = "sphinx-markdown-builder", specifier = ">=0.6.0" },
     { name = "sphinx-prompt", specifier = "==1.5.0" },
     { name = "sphinx-rtd-theme", specifier = "==3.1.0" },
     { name = "sphinx-substitution-extensions", specifier = "==2020.9.30.0" },
@@ -3275,6 +3277,20 @@ wheels = [
 ]
 
 [[package]]
+name = "sphinx-markdown-builder"
+version = "0.6.10"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "docutils" },
+    { name = "sphinx" },
+    { name = "tabulate" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a0/58/0b7b9a7d071140b3705885d51932e8b62f520388c2772e4952189971727b/sphinx_markdown_builder-0.6.10.tar.gz", hash = "sha256:cd5acf88d52ea0146a712fd557404f10326dff3428a78ba928e59b1727fd4a86", size = 22688, upload-time = "2026-03-11T10:56:57.639Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c2/8f/9fecf3d081d5cd49eff83a17b9fef50ed741e6223ab3bb906de4ab0068f9/sphinx_markdown_builder-0.6.10-py3-none-any.whl", hash = "sha256:16d86738b9ac69fcbc86e373c31c6402c30af1fa8d98d0f62cc5f38bfe5fc26e", size = 16700, upload-time = "2026-03-11T10:56:56.135Z" },
+]
+
+[[package]]
 name = "sphinx-prompt"
 version = "1.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3389,6 +3405,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/3b/44/6716b257b0aa6bfd51a1b31665d1c205fb12cb5ad56de752dfa15657de2f/sphinxcontrib_serializinghtml-2.0.0.tar.gz", hash = "sha256:e9d912827f872c029017a53f0ef2180b327c3f7fd23c87229f7a8e8b70031d4d", size = 16080, upload-time = "2024-07-29T01:10:09.332Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/52/a7/d2782e4e3f77c8450f727ba74a8f12756d5ba823d81b941f1b04da9d033a/sphinxcontrib_serializinghtml-2.0.0-py3-none-any.whl", hash = "sha256:6e2cb0eef194e10c27ec0023bfeb25badbbb5868244cf5bc5bdc04e4464bf331", size = 92072, upload-time = "2024-07-29T01:10:08.203Z" },
+]
+
+[[package]]
+name = "tabulate"
+version = "0.10.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/46/58/8c37dea7bbf769b20d58e7ace7e5edfe65b849442b00ffcdd56be88697c6/tabulate-0.10.0.tar.gz", hash = "sha256:e2cfde8f79420f6deeffdeda9aaec3b6bc5abce947655d17ac662b126e48a60d", size = 91754, upload-time = "2026-03-04T18:55:34.402Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/99/55/db07de81b5c630da5cbf5c7df646580ca26dfaefa593667fc6f2fe016d2e/tabulate-0.10.0-py3-none-any.whl", hash = "sha256:f0b0622e567335c8fabaaa659f1b33bcb6ddfe2e496071b743aa113f8774f2d3", size = 39814, upload-time = "2026-03-04T18:55:31.284Z" },
 ]
 
 [[package]]

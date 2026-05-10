@@ -22,6 +22,8 @@ export interface ISwarmError {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   name: string;
   occurrences: number;
+  firstSeen: number | null;
+  lastSeen: number | null;
 }
 
 export interface ISwarmException {
