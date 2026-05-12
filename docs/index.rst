@@ -22,6 +22,7 @@ Writing Locust tests
     :maxdepth: 2
 
     writing-a-locustfile
+    common-patterns
 
 
 Running your Locust tests
@@ -48,6 +49,7 @@ Other functionalities
     retrieving-stats
     testing-other-systems
     increase-performance
+    memory-optimization
     extending-locust
     logging
     use-as-lib
@@ -67,6 +69,7 @@ Further reading / knowledgebase
     further-reading
     ai-docs
     faq
+    troubleshooting
 
 
 API
