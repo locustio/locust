@@ -44,8 +44,6 @@ Other functionalities
 .. toctree ::
     :maxdepth: 2
 
-    custom-load-shape
-    retrieving-stats
     testing-other-systems
     increase-performance
     extending-locust
