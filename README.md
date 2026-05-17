@@ -98,7 +98,6 @@ Azure offers [a managed load-testing service](https://marketplace.visualstudio.c
 
 * Documentation: [docs.locust.io](https://docs.locust.io)
 * Support/Questions: [StackOverflow](https://stackoverflow.com/questions/tagged/locust)
-* Github Discussions: [Github Discussions](https://github.com/orgs/locustio/discussions)
 * Chat/discussion: [Discord](https://discord.gg/faeXQY82Zs)
 
 ## Authors
