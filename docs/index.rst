@@ -53,6 +53,7 @@ Other functionalities
     extensions
     kubernetes-operator
     vscode-extension
+    asyncio
 
 
 Further reading / knowledgebase
