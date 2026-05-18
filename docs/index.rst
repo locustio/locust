@@ -36,6 +36,7 @@ Running your Locust tests
     running-in-debugger
     running-in-docker
     running-without-web-ui
+    azure-load-testing
 
 
 Other functionalities
@@ -44,8 +45,6 @@ Other functionalities
 .. toctree ::
     :maxdepth: 2
 
-    custom-load-shape
-    retrieving-stats
     testing-other-systems
     increase-performance
     extending-locust
@@ -55,6 +54,7 @@ Other functionalities
     extensions
     kubernetes-operator
     vscode-extension
+    asyncio
 
 
 Further reading / knowledgebase

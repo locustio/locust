@@ -3,10 +3,13 @@
 VS Code Extension
 =================
 
-Locust has an official extension for Visual Studio Code that helps you set up your Python environment, create and run tests and even use Copilot to generate/adjust Locust test code.
+Microsoft maintains an excellent `VS Code extension <https://marketplace.visualstudio.com/items?itemName=ms-azure-load-testing.microsoft-testing>`__ based on Copilot that helps you create and run Locust tests. 
 
-Check it out at:
+.. image:: images/vscode-extension.png
 
-* `VS Code Marketplace <https://marketplace.visualstudio.com/items?itemName=locust.locust-vscode-extension>`__
-* `Open VSX Registry <https://open-vsx.org/extension/locust/locust-vscode-extension>`__ 
-* `Git Repo <https://github.com/locustcloud/extension>`__
+Among other things, it can:
+
+* Create locustfiles from .http files, Postman collections or Insomnia collections
+* Run tests locally or scale up using `Azure Load Testing <https://learn.microsoft.com/sv-se/azure/app-testing/load-testing/overview-what-is-azure-load-testing>`_
+* Fetch insights and help implement performance suggestions based on test results
+

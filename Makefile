@@ -28,7 +28,7 @@ setup_docs_dependencies:
 	uv sync --all-groups
 
 build_docs: setup_docs_dependencies
-	sphinx-build -b html docs/ docs/_build/
+	uv run sphinx-build -b html docs/ docs/_build/
 
 # This command can be used to serve the built documentation at http://localhost for
 # easier offline viewing
@@ -36,7 +36,7 @@ build_docs: setup_docs_dependencies
 .PHONY: serve_docs
 serve_docs:
 	echo "Serving docs at http://localhost:80"
-	python -m http.server 80 -d docs/_build
+	uv run python -m http.server 80 -d docs/_build
 
 changelog:
 	@echo "Not supported any more. Run ./generate_changelog.py <version_number> instead!"
