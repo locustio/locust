@@ -3,7 +3,7 @@
 Azure Load Testing
 ==================
 
-`Azure Load Testing <https://learn.microsoft.com/sv-se/azure/app-testing/load-testing/overview-what-is-azure-load-testing>` is a managed load-testing service that lets you execute Locust tests in the cloud.
+`Azure Load Testing <https://learn.microsoft.com/sv-se/azure/app-testing/load-testing/overview-what-is-azure-load-testing>`_ is a managed load-testing service that lets you execute Locust tests in the cloud.
 
 It is the easiest way to get started with large-scale tests and adds a lot of benefits.
 

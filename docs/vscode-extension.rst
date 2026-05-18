@@ -3,7 +3,7 @@
 VS Code Extension
 =================
 
-Microsoft maintains an excellent `VS Code extension <https://marketplace.visualstudio.com/items?itemName=ms-azure-load-testing.microsoft-testing>`__ based on Copilot that helps you create and run Locust tests. 
+Microsoft maintains an excellent `VS Code extension <https://marketplace.visualstudio.com/items?itemName=ms-azure-load-testing.microsoft-testing>`_ based on Copilot that helps you create and run Locust tests. 
 
 .. image:: images/vscode-extension.png
 
