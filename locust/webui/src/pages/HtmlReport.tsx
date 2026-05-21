@@ -37,6 +37,7 @@ export default function HtmlReport({
   endTime,
   duration,
   charts,
+  chartsPng,
   host,
   exceptionsStatistics,
   requestsStatistics,
@@ -129,7 +130,16 @@ export default function HtmlReport({
             <Typography component='h2' mb={1} noWrap variant='h4'>
               Charts
             </Typography>
-            <SwarmCharts charts={charts} isDarkMode={isDarkMode} />
+            {chartsPng ? (
+              <Box
+                alt='Charts'
+                component='img'
+                src={chartsPng}
+                sx={{ display: 'block', maxWidth: '100%', width: '100%' }}
+              />
+            ) : (
+              <SwarmCharts charts={charts} isDarkMode={isDarkMode} />
+            )}
           </Box>
           <Box>
             <Typography component='h2' mb={1} noWrap variant='h4'>

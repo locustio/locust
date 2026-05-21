@@ -62,6 +62,15 @@ describe('HtmlReport', () => {
     expect(queryByRole('link', { name: 'Download the Report' })).toBeNull();
   });
 
+  test('renders an injected charts PNG when present', () => {
+    const chartsPng = 'data:image/png;base64,test';
+    const { getByAltText } = renderWithProvider(
+      <HtmlReport {...swarmReportMock} chartsPng={chartsPng} />,
+    );
+
+    expect(getByAltText('Charts').getAttribute('src')).toBe(chartsPng);
+  });
+
   test('renders the exceptions table when exceptions are present', () => {
     const exception = {
       count: 1,

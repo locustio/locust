@@ -36,12 +36,10 @@ export default function useFetchStats() {
       stats,
       errors,
       totalRps,
-      totalFailPerSec,
       failRatio,
       workers,
       workerCount,
       userCount,
-      totalAvgResponseTime,
     } = statsData;
 
     const time = new Date().toISOString();
@@ -52,8 +50,11 @@ export default function useFetchStats() {
     }
 
     const totalRpsRounded = roundToDecimalPlaces(totalRps, 2);
-    const totalFailPerSecRounded = roundToDecimalPlaces(totalFailPerSec, 2);
     const totalFailureRatioRounded = roundToDecimalPlaces(failRatio * 100);
+    const totalStats = stats.at(-1);
+    const currentRpsRounded = roundToDecimalPlaces(totalStats?.currentRps ?? 0, 2);
+    const currentFailPerSecRounded = roundToDecimalPlaces(totalStats?.currentFailPerSec ?? 0, 2);
+    const totalAvgResponseTimeRounded = roundToDecimalPlaces(totalStats?.avgResponseTime ?? 0, 2);
 
     const percentilesWithTime = Object.entries(currentResponseTimePercentiles).reduce(
       (percentiles, [key, value]) => ({
@@ -65,9 +66,9 @@ export default function useFetchStats() {
 
     const newChartEntry = {
       ...percentilesWithTime,
-      currentRps: [time, totalRpsRounded],
-      currentFailPerSec: [time, totalFailPerSecRounded],
-      totalAvgResponseTime: [time, roundToDecimalPlaces(totalAvgResponseTime, 2)],
+      currentRps: [time, currentRpsRounded],
+      currentFailPerSec: [time, currentFailPerSecRounded],
+      totalAvgResponseTime: [time, totalAvgResponseTimeRounded],
       userCount: [time, userCount],
       time,
     };

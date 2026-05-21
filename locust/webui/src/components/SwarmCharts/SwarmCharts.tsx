@@ -1,3 +1,5 @@
+import type { ECharts } from 'echarts';
+
 import LineChart from 'components/LineChart/LineChart';
 import { ILineChart } from 'components/LineChart/LineChart.types';
 import { swarmTemplateArgs } from 'constants/swarm';
@@ -20,7 +22,7 @@ const percentileColors = [
   '#E6E6FA',
 ];
 
-const availableSwarmCharts: Omit<ILineChart<ICharts>, 'charts'>[] = [
+export const availableSwarmCharts: Omit<ILineChart<ICharts>, 'charts'>[] = [
   {
     title: 'Total Requests per Second',
     lines: [
@@ -41,19 +43,27 @@ const availableSwarmCharts: Omit<ILineChart<ICharts>, 'charts'>[] = [
   },
 ];
 
+export const SWARM_CHART_COUNT = availableSwarmCharts.length;
+
 export default function SwarmCharts({
   charts,
   isDarkMode,
+  onChartReady,
+  chartGroup,
 }: {
   charts: ICharts;
   isDarkMode?: boolean;
+  onChartReady?: (chart: ECharts, index: number) => void;
+  chartGroup?: string;
 }) {
   return availableSwarmCharts.map((lineChartProps, index) => (
     <LineChart<ICharts>
       key={`swarm-chart-${index}`}
       {...lineChartProps}
+      chartGroup={chartGroup}
       charts={charts}
       isDarkMode={isDarkMode}
+      onChartReady={chart => onChartReady?.(chart, index)}
     />
   ));
 }
