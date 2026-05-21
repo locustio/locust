@@ -108,11 +108,14 @@ to the Flask app instance and use that to set up a new route::
 
     @events.init.add_listener
     def on_locust_init(environment, **kw):
-        @environment.web_ui.app.route("/added_page")
-        def my_added_page():
-            return "Another page"
+        if environment.web_ui:
+            @environment.web_ui.app.route("/added_page")
+            def my_added_page():
+                return "Another page"
 
 You should now be able to start locust and browse to http://127.0.0.1:8089/added_page. Note that it doesn't get automatically added as a new tab - you'll need to enter the URL directly.
+The ``if environment.web_ui`` guard is needed when running workers, headless mode, or ``--processes``,
+where the Web UI only exists in the master process.
 
 Extending Web UI
 ================

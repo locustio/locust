@@ -1510,6 +1510,48 @@ class AnyUser(HttpUser):
                 tp.not_expect_any("Traceback")
 
     @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
+    def test_processes_custom_web_route(self):
+        web_port = get_free_tcp_port()
+        master_port = get_free_tcp_port()
+        with mock_locustfile(
+            content=textwrap.dedent(
+                """
+                from locust import HttpUser, events, task
+
+                @events.init.add_listener
+                def on_locust_init(environment, **kw):
+                    if environment.web_ui:
+                        @environment.web_ui.app.route("/added_page")
+                        def my_added_page():
+                            return "Another page"
+
+                class ExampleUser(HttpUser):
+                    host = "http://127.0.0.1:8089"
+
+                    @task
+                    def example_task(self):
+                        pass
+                """
+            )
+        ) as mocked:
+            with TestProcess(
+                f"locust -f {mocked.file_path} --processes 2 --web-port {web_port} --master-bind-port {master_port} --master-port {master_port}",
+                join_timeout=2,
+            ) as tp:
+                tp.expect("(index 1) reported as ready")
+                wait_for_server(f"http://127.0.0.1:{web_port}/added_page")
+                resp = requests.get(f"http://127.0.0.1:{web_port}/added_page", timeout=5)
+                self.assertEqual("Another page", resp.text)
+                requests.post(
+                    f"http://127.0.0.1:{web_port}/swarm",
+                    data={"user_count": 1, "spawn_rate": 1, "host": "http://127.0.0.1:8089"},
+                    timeout=5,
+                )
+                tp.expect("All users spawned")
+                tp.not_expect_any("Uncaught exception in event handler")
+                tp.not_expect_any("Traceback")
+
+    @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
     def test_processes_autodetect(self):
         with mock_locustfile() as mocked:
             with TestProcess(
