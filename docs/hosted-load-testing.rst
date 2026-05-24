@@ -1,7 +1,7 @@
-.. _azure-load-testing:
+.. _hosted-load-testing:
 
-Azure Load Testing
-==================
+Hosted load testing
+===================
 
 Microsoft's `Azure Load Testing <https://learn.microsoft.com/azure/app-testing/load-testing/overview-what-is-azure-load-testing>`_ is a managed load testing service that lets you execute Locust tests in the cloud.
 
