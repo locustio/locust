@@ -36,7 +36,7 @@ Running your Locust tests
     running-in-debugger
     running-in-docker
     running-without-web-ui
-    azure-load-testing
+    hosted-load-testing
 
 
 Other functionalities
