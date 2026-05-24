@@ -995,7 +995,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
     def test_error_when_locustfiles_directory_is_empty(self):
         with TemporaryDirectory() as temp_dir:
-            with TestProcess(f"locust -f {temp_dir}", expect_return_code=1) as tp:
+            with TestProcess(f"locust -f {temp_dir}", expect_return_code=1, sigint_on_exit=False) as tp:
                 tp.expect(f"Could not find any locustfiles in directory '{temp_dir}'")
 
     def test_error_when_no_tasks_match_tags(self):
