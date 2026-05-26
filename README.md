@@ -84,7 +84,9 @@ Locust's code base is intentionally kept small and doesn't solve everything out 
 
 ## VS Code extension
 
-Microsoft has built an excellent [VS Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azure-load-testing.microsoft-testing) that uses [Copilot](https://github.com/features/copilot) to help you create and run Locust tests.
+Microsoft has built an excellent [VS Code extension](https://learn.microsoft.com/azure/app-testing/load-testing/quickstart-create-run-load-tests-from-visual-studio-code) that uses [Copilot](https://github.com/features/copilot) to help you create and run Locust tests. Here's a video to get you started:
+
+[![Youtube video](https://img.youtube.com/vi/J4pIBwocmvE/maxresdefault.jpg)](https://youtu.be/J4pIBwocmvE)
 
 ## Azure Load Testing
 
