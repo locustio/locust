@@ -123,7 +123,19 @@ class Runner:
         self._users_dispatcher: UsersDispatcher | None = None
 
         # set up event listeners for recording requests
+        # Optional request sampling: only every Nth request is recorded in stats
+        # to reduce memory/processing overhead at very high RPS.
+        sample_rate = 1
+        if self.environment.parsed_options is not None:
+            sample_rate = max(1, int(getattr(self.environment.parsed_options, "stats_sample_rate", 1) or 1))
+        self.stats_sample_rate = sample_rate
+        self._stats_sample_counter = 0
+
         def on_request(request_type, name, response_time, response_length, exception=None, **_kwargs):
+            if self.stats_sample_rate > 1:
+                self._stats_sample_counter += 1
+                if self._stats_sample_counter % self.stats_sample_rate != 0:
+                    return
             self.stats.log_request(request_type, name, response_time, response_length)
             if exception:
                 self.stats.log_error(request_type, name, exception)

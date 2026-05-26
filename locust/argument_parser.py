@@ -787,6 +787,14 @@ Typically ONLY these options (and --locustfile) need to be specified on workers,
         env_var="LOCUST_RESET_STATS",
     )
     stats_group.add_argument(
+        "--stats-sample-rate",
+        type=int,
+        default=1,
+        dest="stats_sample_rate",
+        help="Sample only 1 out of every N requests for statistics. Useful at very high RPS to reduce memory and processing overhead. All traffic is still sent; only statistics recording is sampled. Default 1 (no sampling).",
+        env_var="LOCUST_STATS_SAMPLE_RATE",
+    )
+    stats_group.add_argument(
         "--html",
         metavar="<filename>",
         dest="html_file",

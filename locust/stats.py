@@ -981,7 +981,7 @@ class StatsCSV:
             "Average Content Size",
             "Requests/s",
             "Failures/s",
-        ] + get_readable_percentiles(self.percentiles_to_report)
+        ] + get_readable_percentiles(self.percentiles_to_report) + ["Sample Rate"]
 
         self.failures_columns = [
             "Method",
@@ -1013,6 +1013,7 @@ class StatsCSV:
     def _requests_data_rows(self, csv_writer: CSVWriter) -> None:
         """Write requests csv data row, excluding header."""
         stats = self.environment.stats
+        sample_rate = self._get_sample_rate()
         for stats_entry in chain(sort_stats(stats.entries), [stats.total]):
             csv_writer.writerow(
                 chain(
@@ -1030,8 +1031,18 @@ class StatsCSV:
                         stats_entry.total_fail_per_sec,
                     ],
                     self._percentile_fields(stats_entry),
+                    [sample_rate],
                 )
             )
+
+    def _get_sample_rate(self) -> int:
+        runner = getattr(self.environment, "runner", None)
+        if runner is not None:
+            return int(getattr(runner, "stats_sample_rate", 1) or 1)
+        opts = getattr(self.environment, "parsed_options", None)
+        if opts is not None:
+            return int(getattr(opts, "stats_sample_rate", 1) or 1)
+        return 1
 
     def failures_csv(self, csv_writer: CSVWriter) -> None:
         csv_writer.writerow(self.failures_columns)
