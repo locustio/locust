@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import random
 import logging
 import os
 import signal
@@ -64,6 +65,7 @@ class StatsEntryDict(StatsBaseDict):
     response_times: dict[int, int]
     num_reqs_per_sec: dict[int, int]
     num_fail_per_sec: dict[int, int]
+    sampled_requests: int
 
 
 class StatsErrorDict(StatsBaseDict):
@@ -208,14 +210,17 @@ class RequestStats:
     Class that holds the request statistics. Accessible in a User from self.environment.stats
     """
 
-    def __init__(self, use_response_times_cache=True):
+    def __init__(self, use_response_times_cache=True, sampling_rate: float = 1.0):
         """
         :param use_response_times_cache: The value of use_response_times_cache will be set for each StatsEntry()
                                          when they are created. Settings it to False saves some memory and CPU
                                          cycles which we can do on Worker nodes where the response_times_cache
                                          is not needed.
+        :param sampling_rate: Fraction of requests to record for statistics (0.0-1.0).
+                              Default is 1.0 (record all requests).
         """
         self.use_response_times_cache = use_response_times_cache
+        self.sampling_rate = max(0.0, min(1.0, sampling_rate))
         self.entries: dict[tuple[str, str], StatsEntry] = EntriesDict(self)
         self.errors: dict[str, StatsError] = {}
         self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
@@ -242,8 +247,12 @@ class RequestStats:
         return self.total.start_time
 
     def log_request(self, method: str, name: str, response_time: int, content_length: int) -> None:
-        self.total.log(response_time, content_length)
-        self.entries[(name, method)].log(response_time, content_length)
+        if random.random() <= self.sampling_rate:
+            self.total.log(response_time, content_length, sampled=True)
+            self.entries[(name, method)].log(response_time, content_length, sampled=True)
+        else:
+            self.total.log(response_time, content_length, sampled=False)
+            self.entries[(name, method)].log(response_time, content_length, sampled=False)
 
     def log_error(self, method: str, name: str, error: Exception | str | None) -> None:
         self.total.log_error(error)
@@ -315,6 +324,8 @@ class StatsEntry:
         """ The number of requests made with a None response time (typically async requests) """
         self.num_failures: int = 0
         """ Number of failed request """
+        self.sampled_requests: int = 0
+        """ Number of requests recorded for statistics """
         self.total_response_time: int = 0
         """ Total sum of the response times """
         self.min_response_time: int | None = None
@@ -353,6 +364,7 @@ class StatsEntry:
         self.num_requests = 0
         self.num_none_requests = 0
         self.num_failures = 0
+        self.sampled_requests = 0
         self.total_response_time = 0
         self.response_times = defaultdict(int)
         self.min_response_time = None
@@ -365,7 +377,7 @@ class StatsEntry:
             self.response_times_cache = OrderedDict()
             self._cache_response_times(int(time.time()))
 
-    def log(self, response_time: int, content_length: int) -> None:
+    def log(self, response_time: int, content_length: int, sampled: bool = True) -> None:
         # get the time
         current_time = time.time()
         t = int(current_time)
@@ -375,11 +387,15 @@ class StatsEntry:
             self._cache_response_times(t - 1)
 
         self.num_requests += 1
-        self._log_time_of_request(current_time)
-        self._log_response_time(response_time)
+        if sampled:
+            self.sampled_requests += 1
+            self._log_time_of_request(current_time)
+            self._log_response_time(response_time)
 
-        # increase total content-length
-        self.total_content_length += content_length
+            # increase total content-length
+            self.total_content_length += content_length
+        else:
+            self._log_time_of_request(current_time)
 
     def _log_time_of_request(self, current_time: float) -> None:
         t = int(current_time)
@@ -510,6 +526,7 @@ class StatsEntry:
         self.num_requests += other.num_requests
         self.num_none_requests += other.num_none_requests
         self.num_failures += other.num_failures
+        self.sampled_requests += other.sampled_requests
         self.total_response_time += other.total_response_time
         self.max_response_time = max(self.max_response_time, other.max_response_time)
         if self.min_response_time is not None and other.min_response_time is not None:
@@ -981,6 +998,7 @@ class StatsCSV:
             "Average Content Size",
             "Requests/s",
             "Failures/s",
+            "Sampled Requests",
         ] + get_readable_percentiles(self.percentiles_to_report)
 
         self.failures_columns = [
@@ -1028,6 +1046,7 @@ class StatsCSV:
                         stats_entry.avg_content_length,
                         stats_entry.total_rps,
                         stats_entry.total_fail_per_sec,
+                        stats_entry.sampled_requests,
                     ],
                     self._percentile_fields(stats_entry),
                 )

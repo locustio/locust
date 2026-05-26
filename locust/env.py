@@ -31,6 +31,7 @@ class Environment:
         events: Events | None = None,
         host: str | None = None,
         reset_stats=False,
+        sampling_rate: float | None = None,
         stop_timeout: float | None = None,
         catch_exceptions=True,
         parsed_options: Namespace | None = None,
@@ -71,7 +72,14 @@ class Environment:
         """If set, only tasks that are tagged by tags in this list will be executed. Leave this as None to use the one from parsed_options"""
         self.exclude_tags = exclude_tags
         """If set, only tasks that aren't tagged by tags in this list will be executed. Leave this as None to use the one from parsed_options"""
-        self.stats = RequestStats()
+        if sampling_rate is not None:
+            self.sampling_rate = sampling_rate
+        elif parsed_options:
+            self.sampling_rate = float(getattr(parsed_options, "sampling_rate", 1.0))
+        else:
+            self.sampling_rate = 1.0
+        """Fraction of requests to record for statistics (0.0-1.0). Default is 1.0 (record all requests)"""
+        self.stats = RequestStats(sampling_rate=self.sampling_rate)
         """Reference to RequestStats instance"""
         self.host = host
         """Base URL of the target system"""
