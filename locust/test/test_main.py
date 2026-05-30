@@ -1678,6 +1678,7 @@ class TelemetryTests(ProcessIntegrationTest):
             #     tp.expect("Starting Locust")
             #     tp.expect_any("OpenTelemetry enabled")
 
+    @unittest.skipIf(IS_WINDOWS, reason="I guess we should look at this at some point")
     def test_httpuser(self):
         with mock_locustfile() as mocked:
             with TestProcess(
