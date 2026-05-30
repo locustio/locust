@@ -1691,6 +1691,7 @@ class TelemetryTests(ProcessIntegrationTest):
                 tp.expect("OpenTelemetry enabled")
                 tp.expect("trace_id", stream="stdout")
                 tp.expect("resource_metrics", stream="stdout")
+                tp.expect(mocked.file_path, stream="stdout")
 
     def test_request_name(self):
         locustfile = textwrap.dedent(

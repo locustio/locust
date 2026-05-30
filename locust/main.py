@@ -180,7 +180,7 @@ def main():
     start_message = f"Starting Locust {version}"
 
     if options.otel:
-        if setup_opentelemetry():
+        if setup_opentelemetry(options.locustfile, options.profile):
             start_message += ", OpenTelemetry enabled"
 
     children = []
