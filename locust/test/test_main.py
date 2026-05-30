@@ -1686,10 +1686,12 @@ class TelemetryTests(ProcessIntegrationTest):
                 expect_return_code=None,
                 extra_env={
                     "OTEL_METRICS_EXPORTER": "console",
+                    "OTEL_LOGS_EXPORTER": "console",
                     "OTEL_TRACES_EXPORTER": "console",
                 },
             ) as tp:
                 tp.expect("OpenTelemetry enabled")
+                tp.expect('"body": "Starting Locust', stream="stdout")
                 tp.expect("trace_id", stream="stdout")
                 tp.expect("resource_metrics", stream="stdout")
                 tp.expect(mocked.file_path, stream="stdout")
