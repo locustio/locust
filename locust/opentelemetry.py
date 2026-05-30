@@ -1,5 +1,6 @@
 import logging
 import os
+import socket
 from urllib.parse import urlparse
 
 from ._version import __version__
@@ -7,7 +8,7 @@ from ._version import __version__
 logger = logging.getLogger(__name__)
 
 
-def setup_opentelemetry() -> bool:
+def setup_opentelemetry(locustfile: str, profile: str | None) -> bool:
     try:
         from opentelemetry import metrics, trace
         from opentelemetry.sdk.resources import Resource
@@ -26,6 +27,9 @@ def setup_opentelemetry() -> bool:
         {
             "service.name": os.getenv("OTEL_SERVICE_NAME", "locust"),
             "service.version": __version__,
+            "host.name": socket.gethostname(),
+            "filename": locustfile,
+            "profile": profile or "",
         }
     )
 
