@@ -1685,8 +1685,8 @@ class TelemetryTests(ProcessIntegrationTest):
                 f"locust -f {mocked.file_path} --headless -u 5 -r 5 --otel --run-time 1s --stop-timeout 5s",
                 expect_return_code=None,
                 extra_env={
-                    "OTEL_METRICS_EXPORTER": "console",
                     "OTEL_LOGS_EXPORTER": "console",
+                    "OTEL_METRICS_EXPORTER": "console",
                     "OTEL_TRACES_EXPORTER": "console",
                 },
             ) as tp:
@@ -1716,6 +1716,7 @@ class TelemetryTests(ProcessIntegrationTest):
                 f"locust -f {mocked.file_path} --headless -u 5 -r 5 --otel --run-time 1s",
                 expect_return_code=None,
                 extra_env={
+                    "OTEL_LOGS_EXPORTER": "none",
                     "OTEL_METRICS_EXPORTER": "none",
                     "OTEL_TRACES_EXPORTER": "console",
                 },
