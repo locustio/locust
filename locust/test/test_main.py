@@ -1666,6 +1666,9 @@ class TelemetryTests(ProcessIntegrationTest):
             with TestProcess(
                 f"locust -f {mocked.file_path}",
                 expect_return_code=None,
+                extra_env={
+                    "OTEL_TRACES_EXPORTER": "console",
+                },
             ) as tp:
                 tp.expect("Starting Locust")
                 tp.not_expect_any("OpenTelemetry enabled")
