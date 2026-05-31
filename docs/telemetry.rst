@@ -4,8 +4,8 @@
 OpenTelemetry Integration
 =========================
 
-Locust now optionally integrates with OpenTelemetry (OTel), enabling you to automatically export traces
-and metrics from your load tests to any OTel-compatible backend (OTLP, Prometheus, Jaeger, Tempo, etc.).
+Locust now optionally integrates with OpenTelemetry (OTel), enabling you to automatically export traces,
+metrics, and logs from your load tests to any OTel-compatible backend (OTLP, Prometheus, Jaeger, Tempo, etc.).
 This makes it easy to correlate load-test activity with application and infrastructure telemetry in your observability stack.
 
 The configuration is done via environment variables. See the `OpenTelemetry documentation <https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/>`_
@@ -33,7 +33,7 @@ See :ref:`running-in-docker` for details.
 Exporters
 ---------
 
-Locust supports the following OpenTelemetry exporters, for both traces and metrics, out of the box:
+Locust supports the following OpenTelemetry exporters, for traces, metrics, and logs, out of the box:
 
 - OTLP (gRPC and HTTP) - this is the default exporter using gRPC protocol
 - Console (useful for debugging)
@@ -41,6 +41,9 @@ Locust supports the following OpenTelemetry exporters, for both traces and metri
 For traces, ``BatchSpanProcessor`` is used and can be configured with these `variables <https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/#batch-span-processor>`_.
 
 For metrics, ``PeriodicExportingMetricReader`` is used and is configurable with the corresponding `variables <https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/#periodic-exporting-metricreader>`_.
+
+For logs, ``BatchLogRecordProcessor`` is used for OTLP and ``SimpleLogRecordProcessor`` for console export.
+Set ``OTEL_LOGS_EXPORTER`` to configure log export (default is ``otlp``).
 
 
 Auto Instrumentation

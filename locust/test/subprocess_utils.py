@@ -55,7 +55,14 @@ class TestProcess:
 
         self.proc = subprocess.Popen(
             shlex.split(command) if not IS_WINDOWS else command.split(" "),
-            env={"PYTHONUNBUFFERED": "1", **os.environ, **extra_env},
+            env={
+                "PYTHONUNBUFFERED": "1",
+                **os.environ,
+                "OTEL_LOGS_EXPORTER": "none",
+                "OTEL_METRICS_EXPORTER": "none",
+                "OTEL_TRACES_EXPORTER": "none",
+                **extra_env,
+            },
             stdin=self.stdin_s if self.use_pty else None,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

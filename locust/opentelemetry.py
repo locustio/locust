@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def setup_opentelemetry(locustfile: str, profile: str | None) -> bool:
     try:
-        from opentelemetry import metrics, trace
+        from opentelemetry import _logs, metrics, trace
         from opentelemetry.sdk.resources import Resource
     except ImportError:
         logger.error("OpenTelemetry SDK is not installed, opentelemetry not enabled. Run 'pip install locust[otel]'")
@@ -18,8 +18,9 @@ def setup_opentelemetry(locustfile: str, profile: str | None) -> bool:
 
     traces_exporters = {e.strip().lower() for e in os.getenv("OTEL_TRACES_EXPORTER", "otlp").split(",") if e.strip()}
     metrics_exporters = {e.strip().lower() for e in os.getenv("OTEL_METRICS_EXPORTER", "otlp").split(",") if e.strip()}
+    logs_exporters = {e.strip().lower() for e in os.getenv("OTEL_LOGS_EXPORTER", "otlp").split(",") if e.strip()}
 
-    if traces_exporters == {"none"} and metrics_exporters == {"none"}:
+    if traces_exporters == {"none"} and metrics_exporters == {"none"} and logs_exporters == {"none"}:
         logger.info("No OpenTelemetry exporters configured, opentelemetry not enabled")
         return False
 
@@ -40,6 +41,10 @@ def setup_opentelemetry(locustfile: str, profile: str | None) -> bool:
     if metrics_exporters:
         meter_provider = _setup_meter_provider(resource, metrics_exporters)
         metrics.set_meter_provider(meter_provider)
+
+    if logs_exporters:
+        logger_provider = _setup_logger_provider(resource, logs_exporters)
+        _logs.set_logger_provider(logger_provider)
 
     _setup_auto_instrumentation()
 
@@ -141,6 +146,63 @@ def _setup_meter_provider(resource, metrics_exporters):
             logger.warning(f"Unknown metrics exporter '{exporter}'. Ignored")
 
     return MeterProvider(resource=resource, metric_readers=metric_readers)
+
+
+def _setup_logger_provider(resource, logs_exporters):
+    from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+    from opentelemetry.sdk._logs.export import (
+        BatchLogRecordProcessor,
+        ConsoleLogRecordExporter,
+        SimpleLogRecordProcessor,
+    )
+
+    logger_provider = LoggerProvider(resource=resource)
+
+    for exporter in logs_exporters:
+        if exporter == "otlp":
+            protocol = (
+                os.getenv("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL", os.getenv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc"))
+                .lower()
+                .strip()
+            )
+            try:
+                if protocol == "grpc":
+                    from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
+                elif protocol == "http/protobuf" or protocol == "http":
+                    from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+                else:
+                    logger.warning(
+                        f"Unknown OpenTelemetry otlp exporter protocol '{protocol}'. Use 'grpc' or 'http/protobuf'"
+                    )
+                    continue
+            except ImportError:
+                logger.warning(
+                    f"OpenTelemetry otlp exporter for '{protocol}' is not available. Please install the required package: opentelemetry-exporter-otlp-proto-{'grpc' if protocol == 'grpc' else 'http'}"
+                )
+                continue
+
+            logger_provider.add_log_record_processor(BatchLogRecordProcessor(OTLPLogExporter()))
+            logger.debug("Configured logs exporter: otlp")
+
+        elif exporter == "console":
+            logger_provider.add_log_record_processor(SimpleLogRecordProcessor(ConsoleLogRecordExporter()))
+            logger.debug("Configured logs exporter: console")
+
+        elif exporter == "none":
+            continue
+
+        else:
+            logger.warning(f"Unknown logs exporter '{exporter}'. Ignored")
+
+    # set up logging bridge
+    otel_handler = LoggingHandler(logger_provider=logger_provider)
+    otel_handler.name = "opentelemetry"
+    logging.getLogger().addHandler(otel_handler)
+    # locust loggers are configured with propagate=False, so they need this handler explicitly.
+    logging.getLogger("locust").addHandler(otel_handler)
+    logging.getLogger("locust.stats_logger").addHandler(otel_handler)
+
+    return logger_provider
 
 
 def _setup_auto_instrumentation():
