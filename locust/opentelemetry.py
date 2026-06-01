@@ -200,7 +200,8 @@ def _setup_logger_provider(resource, logs_exporters):
     logging.getLogger().addHandler(otel_handler)
     # locust loggers are configured with propagate=False, so they need this handler explicitly.
     logging.getLogger("locust").addHandler(otel_handler)
-    logging.getLogger("locust.stats_logger").addHandler(otel_handler)
+    # stats loggings is a little too verbose for otel
+    # logging.getLogger("locust.stats_logger").addHandler(otel_handler)
 
     return logger_provider
 
