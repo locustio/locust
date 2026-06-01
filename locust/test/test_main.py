@@ -849,7 +849,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
             output_html_report_file_path = os.path.join(temp_dir, expected_filename)
 
             with TestProcess(
-                f"locust -f {mocked.file_path} --host https://test.com/ -u 11 -r 5 -t 1s --headless --exit-code-on-error 0 --html {html_report_file_path}",
+                f"locust -f {mocked.file_path} --host https://test.com/ -u 11 -r 5 -t 1s --headless --exit-code-on-error 0 --html {html_report_file_path} --loglevel DEBUG",
                 sigint_on_exit=False,
             ) as tp:
                 # make sure correct name is generated based on filename arguments
