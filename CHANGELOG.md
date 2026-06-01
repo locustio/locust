@@ -1,6 +1,18 @@
 # Detailed changelog
 The most important changes can also be found in [the documentation](https://docs.locust.io/en/latest/changelog.html).
 
+## [2.44.1](https://github.com/locustio/locust/tree/2.44.1) (2026-06-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.44.0...2.44.1)
+
+**Merged pull requests:**
+
+- Add logging support to for OTEL [\#3421](https://github.com/locustio/locust/pull/3421) ([cyberw](https://github.com/cyberw))
+- Add hostname, locustfile and profile to otel Resource [\#3420](https://github.com/locustio/locust/pull/3420) ([cyberw](https://github.com/cyberw))
+- docs: guard custom web routes without web UI [\#3416](https://github.com/locustio/locust/pull/3416) ([puneetdixit200](https://github.com/puneetdixit200))
+- Add aiolocust and azure load testing to docs [\#3414](https://github.com/locustio/locust/pull/3414) ([cyberw](https://github.com/cyberw))
+- up pre-commit 3.xx to 4.xxx [\#3412](https://github.com/locustio/locust/pull/3412) ([even-even](https://github.com/even-even))
+
 ## [2.44.0](https://github.com/locustio/locust/tree/2.44.0) (2026-05-11)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.43.4...2.44.0)
@@ -21,7 +33,6 @@ The most important changes can also be found in [the documentation](https://docs
 - Disable UI lib npm package publication [\#3408](https://github.com/locustio/locust/pull/3408) ([cyberw](https://github.com/cyberw))
 - fix\(fasthttp\): add 308 to redirect\_resonse\_codes in LocustUserAgent [\#3406](https://github.com/locustio/locust/pull/3406) ([jorgetamayo21](https://github.com/jorgetamayo21))
 - fix\(fasthttp\): handle zlib.error for truncated gzip streams under high load [\#3405](https://github.com/locustio/locust/pull/3405) ([jorgetamayo21](https://github.com/jorgetamayo21))
-- feat\(contrib\): add CsvRequestLogger for per-request CSV logging [\#3404](https://github.com/locustio/locust/pull/3404) ([AKIB473](https://github.com/AKIB473))
 - Add first seen / last seen timestamps to failure stats [\#3403](https://github.com/locustio/locust/pull/3403) ([tugkanboz](https://github.com/tugkanboz))
 - Add AI-optimized documentation \(llms.txt\) [\#3399](https://github.com/locustio/locust/pull/3399) ([nk-tedo-001](https://github.com/nk-tedo-001))
 - Fix FastHttpUser crash on Python 3.13+ due to GC collecting \_\_dict\_\_ reference cycle [\#3398](https://github.com/locustio/locust/pull/3398) ([armorbreak001](https://github.com/armorbreak001))
