@@ -4,6 +4,11 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.44.1
+======
+* Docs updates: Mention aiolocust and azure load testing, https://github.com/locustio/locust/pull/3414, guard custom web routes without web UI https://github.com/locustio/locust/pull/3416
+* Add logging support to for OTEL, update OTEL resource https://github.com/locustio/locust/pull/3421, https://github.com/locustio/locust/pull/3420
+
 2.44.0
 ======
 * Add first seen / last seen timestamps to failure stats https://github.com/locustio/locust/pull/3403
