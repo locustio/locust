@@ -15,3 +15,5 @@ It is the easiest way to get started with large-scale tests and adds a lot of be
 .. image:: images/azure-test-run-aggregated-by-percentile.png
 
 Microsoft contributes to and sponsors the maintenance of Locust ❤️
+
+If you're using VS Code, you can use the `Azure Load Testing extension <https://github.com/microsoft/azureloadtesting-extension/blob/main/README.md>`_ to create and run tests in Azure Load Testing directly from your editor.

@@ -3,7 +3,7 @@
 VS Code Extension
 =================
 
-Microsoft maintains an excellent `VS Code extension <https://learn.microsoft.com/azure/app-testing/load-testing/quickstart-create-run-load-tests-from-visual-studio-code>`_ based on Copilot that helps you create and run Locust tests. 
+Microsoft maintains an excellent `VS Code extension <https://github.com/microsoft/azureloadtesting-extension/blob/main/README.md>`_ based on Copilot that helps you create and run Locust tests. 
 
 .. image:: images/vscode-extension.png
 
@@ -19,4 +19,4 @@ Among other things, it can:
         <iframe src="https://www.youtube.com/embed/J4pIBwocmvE;" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
     </div><br/>
 
-`See also Visual Studio Marketplace <https://marketplace.visualstudio.com/items?itemName=ms-azure-load-testing.microsoft-testing>`_ 
+See also `Visual Studio Marketplace <https://marketplace.visualstudio.com/items?itemName=ms-azure-load-testing.microsoft-testing>`_ and `Quickstart: Create and run a load test with Visual Studio Code and GitHub Copilot <https://learn.microsoft.com/azure/app-testing/load-testing/quickstart-create-run-load-tests-from-visual-studio-code>`_. 
