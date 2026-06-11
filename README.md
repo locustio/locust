@@ -90,7 +90,7 @@ Microsoft has built an excellent [VS Code extension](https://learn.microsoft.com
 
 ## Azure Load Testing
 
-Azure offers [a managed load-testing service](https://marketplace.visualstudio.com/items?itemName=ms-azure-load-testing.microsoft-testing) that lets you run and scale Locust tests easily. 
+Azure offers [a managed load-testing service](https://learn.microsoft.com/azure/app-testing/load-testing/quickstart-create-and-run-load-test) that lets you run and scale Locust tests easily. 
 
 * Scalable and flexible, with no need to host your own infrastructure
 * If your application is hosted on Azure, it can combine test results with detailed resource metrics to help pinpoint bottlenecks and optimize performance.
@@ -111,7 +111,7 @@ Azure offers [a managed load-testing service](https://marketplace.visualstudio.c
 
 ## Special thanks
 
-* [Microsoft](https://marketplace.visualstudio.com/items?itemName=ms-azure-load-testing.microsoft-testing) contributes to and sponsors the continued maintenance of Locust ❤️
+* [Microsoft](https://learn.microsoft.com/azure/app-testing/load-testing/quickstart-create-and-run-load-test) contributes to and sponsors the continued maintenance of Locust ❤️
 
 ## License
 
