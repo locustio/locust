@@ -7,18 +7,6 @@
     max-width: 100%;
     overflow: visible;
 }
-.wy-menu-vertical a[href*="hosted-load-testing.html"]::after {
-    content: "";
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    margin-left: 8px;
-    vertical-align: middle;
-    
-    background-image: url('azure.svg');
-    background-size: contain;
-    background-repeat: no-repeat;
-}
 /* Azure Load Testing callout banner (docs/hosted-load-testing.rst) */
 .azure-banner {
     display: flex;
