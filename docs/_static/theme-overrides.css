@@ -7,15 +7,27 @@
     max-width: 100%;
     overflow: visible;
 }
-.wy-menu-vertical a[href*="hosted-load-testing.html"]::after {
-    content: "";
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    margin-left: 8px;
-    vertical-align: middle;
-    
-    background-image: url('azure.svg');
-    background-size: contain;
-    background-repeat: no-repeat;
+/* Azure Load Testing callout banner (docs/hosted-load-testing.rst) */
+.azure-banner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid #2980b9;
+    border-radius: 8px;
+    background: rgba(41, 128, 185, 0.04);
+}
+.azure-banner .azure-banner-logo {
+    height: 24px;
+    width: auto;
+    display: block;
+    margin: 0;
+}
+.azure-banner p {
+    margin: 0;
+    color: #404040;
+    font-size: 16px;
+    line-height: 25px;
 }
