@@ -17,7 +17,7 @@ It is the easiest way to get started with large-scale tests and adds a lot of be
 * Built in reporting and analysis tools, with `Azure Application Insights <https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview>`_ integration.
 * CI/CD support, with Azure DevOps and GitHub Actions.
 
-.. image:: images/azure-test-run-aggregated-by-percentile.png
+.. image:: images/azure-load-testing-results.png
 
 Microsoft contributes to and sponsors the maintenance of Locust ❤️
 
