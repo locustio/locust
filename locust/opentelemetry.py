@@ -50,9 +50,7 @@ def setup_opentelemetry(locustfile: str, profile: str | None) -> bool:
         )
 
         @events.request.add_listener
-        def request_handler(
-            request_type, name, response_time, response_length, response, context, exception, start_time, url, **kwargs
-        ):
+        def on_request(name, response_time, exception, **kwargs):
             if len(request_names) < MAX_REQUEST_NAMES:
                 request_names.add(name)
                 attributes = {"name": name}
