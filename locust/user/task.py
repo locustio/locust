@@ -503,11 +503,3 @@ class DefaultTaskSet(TaskSet):
                 f"No tasks defined on {self.user.__class__.__name__}{extra_message} Use the @task decorator or set the 'tasks' attribute of the User (or mark it as abstract = True if you only intend to subclass it)"
             )
         return random.choice(self.user.tasks)
-
-    def execute_task(self, task):
-        if hasattr(task, "tasks") and issubclass(task, TaskSet):
-            # task is  (nested) TaskSet class
-            task(self.user).run()
-        else:
-            # task is a function
-            task(self.user)
