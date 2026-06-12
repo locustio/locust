@@ -1,3 +1,5 @@
+from locust import events
+
 import logging
 import os
 import socket
@@ -6,6 +8,8 @@ from urllib.parse import urlparse
 from ._version import __version__
 
 logger = logging.getLogger(__name__)
+MAX_REQUEST_NAMES = 20
+request_names = set()
 
 
 def setup_opentelemetry(locustfile: str, profile: str | None) -> bool:
@@ -41,6 +45,24 @@ def setup_opentelemetry(locustfile: str, profile: str | None) -> bool:
     if metrics_exporters:
         meter_provider = _setup_meter_provider(resource, metrics_exporters)
         metrics.set_meter_provider(meter_provider)
+        ttlb_histogram = metrics.get_meter("locust").create_histogram(
+            "locust.client.duration", unit="s", description="Time to last byte for requests"
+        )
+
+        @events.request.add_listener
+        def request_handler(
+            request_type, name, response_time, response_length, response, context, exception, start_time, url, **kwargs
+        ):
+            if len(request_names) < MAX_REQUEST_NAMES:
+                request_names.add(name)
+                attributes = {"name": name}
+            else:
+                attributes = {"name": "Too many unique request names"}
+
+            if exception:
+                attributes["error.type"] = exception.__class__.__name__
+
+            ttlb_histogram.record(response_time / 1000.0, attributes=attributes)
 
     if logs_exporters:
         logger_provider = _setup_logger_provider(resource, logs_exporters)
