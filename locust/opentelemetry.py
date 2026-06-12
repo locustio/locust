@@ -9,7 +9,7 @@ from ._version import __version__
 
 logger = logging.getLogger(__name__)
 MAX_REQUEST_NAMES = 20
-request_names = set()
+request_names: set[str] = set()
 
 
 def setup_opentelemetry(locustfile: str, profile: str | None) -> bool:
