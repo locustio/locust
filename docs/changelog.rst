@@ -4,6 +4,10 @@ Changelog Highlights
 
 For full details of changes, please see https://github.com/locustio/locust/releases or https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+2.44.2 and onwards
+==================
+* This file will no longer be updated for each release. Check the github releases page instead!
+
 2.44.1
 ======
 * Docs updates: Mention aiolocust and azure load testing, https://github.com/locustio/locust/pull/3414, guard custom web routes without web UI https://github.com/locustio/locust/pull/3416
