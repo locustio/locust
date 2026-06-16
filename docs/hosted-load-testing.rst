@@ -22,3 +22,8 @@ It is the easiest way to get started with large-scale tests and adds a lot of be
 Microsoft contributes to and sponsors the maintenance of Locust ❤️
 
 If you're using VS Code, you can use the `Azure Load Testing extension <https://github.com/microsoft/azureloadtesting-extension/blob/main/README.md>`_ to create and run tests in Azure Load Testing directly from your editor.
+
+Quickstart guide
+----------------
+
+`Create and run a load test using a Locust script and Azure Load Testing <https://learn.microsoft.com/azure/app-testing/load-testing/quickstart-create-run-load-test-with-locust>`_
