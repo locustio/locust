@@ -111,7 +111,7 @@ Azure offers [a managed load-testing service](https://learn.microsoft.com/azure/
 
 ## Special thanks
 
-* [Microsoft](https://learn.microsoft.com/azure/app-testing/load-testing/quickstart-create-and-run-load-test) contributes to and sponsors the continued maintenance of Locust ❤️
+<img src="docs/images/microsoft_logo.svg" height="15px"> [Microsoft](https://learn.microsoft.com/azure/app-testing/load-testing/quickstart-create-and-run-load-test) contributes to and sponsors the continued maintenance of Locust ❤️
 
 ## License
 
