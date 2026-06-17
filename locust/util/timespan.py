@@ -16,7 +16,7 @@ def parse_timespan(time_str) -> int:
 
     timespan_regex = re.compile(r"((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?")
     parts = timespan_regex.match(time_str)
-    if not parts:
+    if not parts or parts.group(0) != time_str:
         raise ValueError("Invalid time span format. Valid formats: 20, 20s, 3m, 2h, 1h20m, 3h30m10s, etc.")
     time_params = {name: int(value) for name, value in parts.groupdict().items() if value}
     if not time_params:

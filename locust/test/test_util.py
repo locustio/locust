@@ -17,6 +17,14 @@ class TestParseTimespan(unittest.TestCase):
         self.assertEqual(7200, parse_timespan("2h"))
         self.assertEqual(3787, parse_timespan("1h3m7s"))
 
+    def test_parse_timespan_rejects_trailing_junk(self):
+        # Strings with digits after a valid pattern but missing a unit suffix
+        # must raise ValueError; before the fix they were silently accepted.
+        self.assertRaises(ValueError, parse_timespan, "1h2m3")   # trailing '3' has no unit
+        self.assertRaises(ValueError, parse_timespan, "2h3m5s6")  # trailing '6' has no unit
+        self.assertRaises(ValueError, parse_timespan, "1h30")    # '30' has no unit
+        self.assertRaises(ValueError, parse_timespan, "30m45")   # '45' has no unit
+
 
 class TestRounding(unittest.TestCase):
     def test_rounding_down(self):
