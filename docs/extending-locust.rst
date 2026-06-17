@@ -152,7 +152,7 @@ Simply provide a list of desired ``auth_providers``. You may specify the ``label
 The ``callback_url`` will be the url that the button directs to. You will be responsible for defining the callback route as
 well as the authentication with the 3rd party.
 
-Whether you are using username / password authentication, an auth provider, or both, a ``user_loader`` needs to be proivded
+Whether you are using username / password authentication, an auth provider, or both, a ``user_loader`` needs to be provided
 to the ``login_manager``. The ``user_loader`` should return ``None`` to deny authentication or return a User object when
 authentication to the app should be granted.
 
