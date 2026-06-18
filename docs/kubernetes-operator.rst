@@ -3,7 +3,7 @@
 Kubernetes Operator
 ===================
 
-The Locust Operator for Kubernetes is an operator that manages the lifecyle of :ref:`running-distributed` inside a Kubernetes cluster.
+The Locust Operator for Kubernetes is an operator that manages the lifecycle of :ref:`running-distributed` inside a Kubernetes cluster.
 
 It is a Custom Resource Definition (CRD) and a Controller that run on your Kubernetes cluster and allow you to create and manage your Locust tests as Kubernetes resources.
 Automatically creates master/worker jobs, mounts locustfiles, exposes the web UI, collects metrics, and handles restarts when the spec changes.
