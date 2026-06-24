@@ -220,6 +220,7 @@ def main():
                 options.run_time = None
                 options.autostart = None
                 options.csv_prefix = None
+                options.stats_history_enabled = False
                 options.html_file = None
                 options.print_stats = None
                 break
