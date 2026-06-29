@@ -2956,9 +2956,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             master.start(USERS_COUNT, USERS_COUNT)
             self.assertEqual(USERS_COUNT * 3, len(server.outbox))
 
-            indexes = []
-            for msg in server.get_messages("ack"):
-                indexes.append(msg.data["index"])
+            indexes = [msg.data["index"] for msg in server.get_messages("ack")]
             self.assertEqual(USERS_COUNT, len(indexes), "Total number of locusts/workers is not 5")
 
             indexes.sort()
