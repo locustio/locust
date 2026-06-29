@@ -2,10 +2,12 @@ import locust
 from locust.argument_parser import (
     get_parser,
     parse_locustfile_paths,
+    parse_options,
     ui_extra_args_dict,
 )
 
 import os
+import warnings
 import unittest
 from io import StringIO
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -91,6 +93,20 @@ class TestParser(unittest.TestCase):
         self.assertTrue(options.headless)
         self.assertEqual(["Critical", "Normal"], options.tags)
         self.assertEqual("https://example.com", options.host)
+
+    def test_parse_options_emits_deprecation_warning(self):
+        """parse_options() must signal its deprecation via warnings.warn(DeprecationWarning).
+
+        Using print() instead of warnings.warn() breaks -W flag suppression and
+        prevents callers from catching the warning with catch_warnings().
+        """
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            parse_options(args=["-f", "locustfile.py"])
+
+        deprecations = [w for w in caught if issubclass(w.category, DeprecationWarning)]
+        self.assertEqual(len(deprecations), 1, "parse_options() must emit exactly one DeprecationWarning")
+        self.assertIn("deprecated", str(deprecations[0].message).lower())
 
 
 class TestArgumentParser(LocustTestCase):
