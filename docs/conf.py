@@ -48,17 +48,16 @@ def save_locust_env_variables():
     env_options_output_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "config-options.rst")
     print(f"Generating RST table for Locust environment variables and storing in {env_options_output_file}")
     parser = get_parser()
-    table_data = []
-    for action in parser._actions:
-        if action.env_var and action.help != "==SUPPRESS==":
-            table_data.append(
-                (
-                    ", ".join([f"``{c}``" for c in action.option_strings]),
-                    f"``{action.env_var}``",
-                    ", ".join([f"``{c}``" for c in parser.get_possible_config_keys(action) if not c.startswith("--")]),
-                    action.help.replace("\n", " "),
-                )
-            )
+    table_data = [
+        (
+            ", ".join([f"``{c}``" for c in action.option_strings]),
+            f"``{action.env_var}``",
+            ", ".join([f"``{c}``" for c in parser.get_possible_config_keys(action) if not c.startswith("--")]),
+            action.help.replace("\n", " "),
+        )
+        for action in parser._actions
+        if action.env_var and action.help != "==SUPPRESS=="
+    ]
     colsizes = [max(len(r[i]) for r in table_data) for i in range(len(table_data[0]))]
     formatter = " ".join("{:<%d}" % c for c in colsizes)
     rows = [formatter.format(*row) for row in table_data]

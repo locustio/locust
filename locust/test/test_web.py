@@ -252,9 +252,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self._check_csv_headers(response.headers, "exceptions")
 
         reader = csv.reader(StringIO(response.text))
-        rows = []
-        for row in reader:
-            rows.append(row)
+        rows = list(reader)
 
         self.assertEqual(2, len(rows))
         self.assertEqual("Test exception", rows[1][1])

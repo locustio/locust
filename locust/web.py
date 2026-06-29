@@ -224,10 +224,11 @@ class WebUI:
 
                 # Updating UserClasses
                 if form_data_user_class_names:
-                    user_classes = {}
-                    for user_class_name, user_class_object in self.environment.available_user_classes.items():
-                        if user_class_name in form_data_user_class_names:
-                            user_classes[user_class_name] = user_class_object
+                    user_classes = {
+                        user_class_name: user_class_object
+                        for user_class_name, user_class_object in self.environment.available_user_classes.items()
+                        if user_class_name in form_data_user_class_names
+                    }
 
                 else:
                     if self.environment.runner and self.environment.runner.state == STATE_RUNNING:
@@ -494,17 +495,16 @@ class WebUI:
                 }
 
             if isinstance(environment.runner, MasterRunner):
-                workers = []
-                for worker in environment.runner.clients.values():
-                    workers.append(
-                        {
-                            "id": worker.id,
-                            "state": worker.state,
-                            "user_count": worker.user_count,
-                            "cpu_usage": worker.cpu_usage,
-                            "memory_usage": worker.memory_usage,
-                        }
-                    )
+                workers = [
+                    {
+                        "id": worker.id,
+                        "state": worker.state,
+                        "user_count": worker.user_count,
+                        "cpu_usage": worker.cpu_usage,
+                        "memory_usage": worker.memory_usage,
+                    }
+                    for worker in environment.runner.clients.values()
+                ]
 
                 report["workers"] = workers
                 report["worker_count"] = environment.runner.worker_count

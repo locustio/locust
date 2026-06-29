@@ -139,9 +139,7 @@ def _get_section_groups(env, master_doc: str, exclude: list[str]) -> list[tuple[
             if node.tagname == "toctree":
                 toctree_nodes.append(node)
             elif isinstance(node, nodes.compound):
-                for subnode in node.children:
-                    if subnode.tagname == "toctree":
-                        toctree_nodes.append(subnode)
+                toctree_nodes.extend(subnode for subnode in node.children if subnode.tagname == "toctree")
 
         if not toctree_nodes:
             continue
