@@ -934,7 +934,8 @@ def get_error_report_summary(stats) -> list[str]:
     summary.append(f"{'# occurrences':18} {'Error':100}")
     separator = f"{'-' * 18}|{'-' * ((80 + STATS_NAME_WIDTH) - 19)}"
     summary.append(separator)
-    summary.extend("%-18i %-100s" % (error.occurrences, error.to_name()) for error in stats.errors.values())
+    for error in stats.errors.values():
+        summary.append("%-18i %-100s" % (error.occurrences, error.to_name()))
     summary.append(separator)
     summary.append("")
     return summary

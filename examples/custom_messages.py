@@ -38,7 +38,9 @@ def on_test_start(environment, **_kwargs):
     # When the test is started, evenly divides list between
     # worker nodes to ensure unique data across threads
     if not isinstance(environment.runner, WorkerRunner):
-        users = [{"name": f"User{i}"} for i in range(environment.runner.target_user_count)]
+        users = []
+        for i in range(environment.runner.target_user_count):
+            users.append({"name": f"User{i}"})
 
         worker_count = environment.runner.worker_count
         chunk_size = int(len(users) / worker_count)
