@@ -1,5 +1,6 @@
 from locust.util.rounding import proper_round
 from locust.util.timespan import parse_timespan
+from locust.util.url import is_url
 
 import unittest
 
@@ -24,6 +25,11 @@ class TestParseTimespan(unittest.TestCase):
         self.assertRaises(ValueError, parse_timespan, "2h3m5s6")  # trailing '6' has no unit
         self.assertRaises(ValueError, parse_timespan, "1h30")  # '30' has no unit
         self.assertRaises(ValueError, parse_timespan, "30m45")  # '45' has no unit
+
+
+class TestIsUrl(unittest.TestCase):
+    def test_url_requires_host(self):
+        self.assertFalse(is_url("http://"))
 
 
 class TestRounding(unittest.TestCase):
