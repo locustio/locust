@@ -7,9 +7,6 @@ def is_url(url: str) -> bool:
     """
     try:
         result = urlparse(url)
-        if result.scheme == "https" or result.scheme == "http":
-            return True
-        else:
-            return False
+        return result.scheme in ("https", "http") and bool(result.netloc)
     except ValueError:
         return False
