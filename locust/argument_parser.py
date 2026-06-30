@@ -13,6 +13,7 @@ import os
 import platform
 import socket
 import sys
+import warnings
 import tempfile
 import textwrap
 from collections import OrderedDict
@@ -910,7 +911,12 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES) -> LocustArgumentParse
 
 
 def parse_options(args=None) -> configargparse.Namespace:
-    print("Warning: This function is deprecated and may be removed in a future version")
+    warnings.warn(
+        "parse_options() is deprecated and may be removed in a future version. "
+        "Use get_parser().parse_args() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     parser = get_parser()
     parsed_opts = parser.parse_args(args=args)
     if parsed_opts.stats_history_enabled and (parsed_opts.csv_prefix is None):
