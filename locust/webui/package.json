@@ -79,7 +79,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unused-imports": "^4.4.1",
     "jsdom": "^25.0.1",
-    "msw": "^2.6.6",
+    "msw": "^2.14.6",
     "prettier": "^3.0.3",
     "rollup": "^4.55.1",
     "typescript": "^5.9.3",
