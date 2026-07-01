@@ -1357,7 +1357,7 @@ docs = [
     { name = "sphinx-prompt", specifier = "==1.5.0" },
     { name = "sphinx-rtd-theme", specifier = "==3.1.0" },
     { name = "sphinx-substitution-extensions", specifier = "==2020.9.30.0" },
-    { name = "sphinxcontrib-applehelp", specifier = "==1.0.4" },
+    { name = "sphinxcontrib-applehelp", specifier = "==2.0.0" },
     { name = "sphinxcontrib-devhelp", specifier = "==1.0.2" },
     { name = "sphinxcontrib-googleanalytics", specifier = ">=0.4" },
     { name = "sphinxcontrib-htmlhelp", specifier = "==2.1.0" },
@@ -3349,11 +3349,11 @@ wheels = [
 
 [[package]]
 name = "sphinxcontrib-applehelp"
-version = "1.0.4"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/32/df/45e827f4d7e7fcc84e853bcef1d836effd762d63ccb86f43ede4e98b478c/sphinxcontrib-applehelp-1.0.4.tar.gz", hash = "sha256:828f867945bbe39817c210a1abfd1bc4895c8b73fcaade56d45357a348a07d7e", size = 24766, upload-time = "2023-01-23T09:41:54.435Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ba/6e/b837e84a1a704953c62ef8776d45c3e8d759876b4a84fe14eba2859106fe/sphinxcontrib_applehelp-2.0.0.tar.gz", hash = "sha256:2f29ef331735ce958efa4734873f084941970894c6090408b079c61b2e1c06d1", size = 20053, upload-time = "2024-07-29T01:09:00.465Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/06/c1/5e2cafbd03105ce50d8500f9b4e8a6e8d02e22d0475b574c3b3e9451a15f/sphinxcontrib_applehelp-1.0.4-py3-none-any.whl", hash = "sha256:29d341f67fb0f6f586b23ad80e072c8e6ad0b48417db2bde114a4c9746feb228", size = 120601, upload-time = "2023-01-23T09:41:52.364Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/85/9ebeae2f76e9e77b952f4b274c27238156eae7979c5421fba91a28f4970d/sphinxcontrib_applehelp-2.0.0-py3-none-any.whl", hash = "sha256:4cd3f0ec4ac5dd9c17ec65e9ab272c9b867ea77425228e68ecf08d6b28ddbdb5", size = 119300, upload-time = "2024-07-29T01:08:58.99Z" },
 ]
 
 [[package]]

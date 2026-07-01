@@ -99,7 +99,7 @@ docs = [
     "imagesize==1.4.1",
     "snowballstemmer==3.0.1",
     "sphinx-prompt==1.5.0",
-    "sphinxcontrib-applehelp==1.0.4",
+    "sphinxcontrib-applehelp==2.0.0",
     "sphinxcontrib-devhelp==1.0.2",
     "sphinxcontrib-htmlhelp==2.1.0",
     "sphinxcontrib-jsmath==1.0.1",
