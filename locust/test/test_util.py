@@ -45,3 +45,8 @@ class TestRounding(unittest.TestCase):
         self.assertEqual(4, proper_round(3.5))
         self.assertEqual(5, proper_round(4.5))
         self.assertEqual(6, proper_round(5.5))
+
+    def test_rounding_integer_with_digits(self):
+        self.assertEqual(0.0, proper_round(0, 2))
+        self.assertEqual(1.0, proper_round(1, 2))
+        self.assertEqual(5.0, proper_round(5, 2))
