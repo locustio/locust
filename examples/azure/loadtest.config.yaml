@@ -1,0 +1,19 @@
+version: v0.1
+displayName: Locust example load test
+description:
+testPlan: ../grpc/locustfile.py
+testType: Locust
+engineInstances: 1
+env:
+  - name: LOCUST_USERS
+    value: 10
+  - name: LOCUST_SPAWN_RATE
+    value: 3
+  - name: LOCUST_RUN_TIME
+    value: 30
+configurationFiles:
+  - requirements.txt
+  - ../grpc/grpc_user.py
+  - ../grpc/hello_pb2.py
+  - ../grpc/hello_pb2_grpc.py
+  - ../grpc/hello_server.py

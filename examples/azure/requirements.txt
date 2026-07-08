@@ -1,0 +1,4 @@
+locust
+grpcio
+grpc-interceptor
+protobuf
