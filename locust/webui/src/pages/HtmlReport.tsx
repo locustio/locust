@@ -73,52 +73,52 @@ export default function HtmlReport({
         <Box sx={{ my: 2 }}>
           {window.templateArgs.profile && (
             <Box sx={{ display: 'flex', columnGap: 0.5 }}>
-              <Typography fontWeight={600}>Profile:</Typography>
+              <Typography sx={{ fontWeight: 600 }}>Profile:</Typography>
               <Typography>{window.templateArgs.profile}</Typography>
             </Box>
           )}
           <Box sx={{ display: 'flex', columnGap: 0.5 }}>
-            <Typography fontWeight={600}>During:</Typography>
+            <Typography sx={{ fontWeight: 600 }}>During:</Typography>
             <Typography>
               {formatLocaleString(startTime)} - {formatLocaleString(endTime)} ({duration})
             </Typography>
           </Box>
 
           <Box sx={{ display: 'flex', columnGap: 0.5 }}>
-            <Typography fontWeight={600}>Target Host:</Typography>
+            <Typography sx={{ fontWeight: 600 }}>Target Host:</Typography>
             <Typography>{host || 'None'}</Typography>
           </Box>
 
           <Box sx={{ display: 'flex', columnGap: 0.5 }}>
-            <Typography fontWeight={600}>Script:</Typography>
+            <Typography sx={{ fontWeight: 600 }}>Script:</Typography>
             <Typography>{locustfile}</Typography>
           </Box>
         </Box>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 4 }}>
           <Box>
-            <Typography component='h2' mb={1} noWrap variant='h4'>
+            <Typography component='h2' noWrap sx={{ mb: 1 }} variant='h4'>
               Request Statistics
             </Typography>
             <StatsTable stats={requestsStatistics} tableStructure={statsReportTableStructure} />
           </Box>
           {!!responseTimeStatistics.length && (
             <Box>
-              <Typography component='h2' mb={1} noWrap variant='h4'>
+              <Typography component='h2' noWrap sx={{ mb: 1 }} variant='h4'>
                 Response Time Statistics
               </Typography>
               <ResponseTimeTable responseTimes={responseTimeStatistics} />
             </Box>
           )}
           <Box>
-            <Typography component='h2' mb={1} noWrap variant='h4'>
+            <Typography component='h2' noWrap sx={{ mb: 1 }} variant='h4'>
               Failures Statistics
             </Typography>
             <FailuresTable errors={failuresStatistics} />
           </Box>
           {!!exceptionsStatistics.length && (
             <Box>
-              <Typography component='h2' mb={1} noWrap variant='h4'>
+              <Typography component='h2' noWrap sx={{ mb: 1 }} variant='h4'>
                 Exceptions Statistics
               </Typography>
               <ExceptionsTable exceptions={exceptionsStatistics} />
@@ -126,13 +126,13 @@ export default function HtmlReport({
           )}
 
           <Box>
-            <Typography component='h2' mb={1} noWrap variant='h4'>
+            <Typography component='h2' noWrap sx={{ mb: 1 }} variant='h4'>
               Charts
             </Typography>
             <SwarmCharts charts={charts} isDarkMode={isDarkMode} />
           </Box>
           <Box>
-            <Typography component='h2' mb={1} noWrap variant='h4'>
+            <Typography component='h2' noWrap sx={{ mb: 1 }} variant='h4'>
               Final ratio
             </Typography>
             <SwarmRatios ratios={tasks} />

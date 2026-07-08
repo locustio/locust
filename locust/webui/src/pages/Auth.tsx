@@ -94,7 +94,7 @@ export default function Auth({
                 }}
               >
                 <img height='32' src={iconUrl} />
-                <Typography height='32' variant='button'>
+                <Typography sx={{ height: '32' }} variant='button'>
                   {label}
                 </Typography>
               </IconButton>

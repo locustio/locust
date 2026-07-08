@@ -61,10 +61,10 @@ function SwarmUserForm({ availableTasks, userToEdit, handleEditUser }: ISwarmUse
         {Object.entries(userFieldsToEdit).map(([field, value]) => (
           <TextField
             defaultValue={value}
-            inputProps={{ 'data-type': typeof value === 'number' ? 'number' : 'text' }}
             key={`user-to-edit-${field}`}
             label={toTitleCase(field)}
             name={field}
+            slotProps={{ htmlInput: { 'data-type': typeof value === 'number' ? 'number' : 'text' } }}
           />
         ))}
 

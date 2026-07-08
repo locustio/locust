@@ -9,12 +9,11 @@
     "noEmitOnError": true,
     "esModuleInterop": true,
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
     "jsx": "preserve",
-    "baseUrl": ".",
     "paths": {
-      "*": ["src/*"]
+      "*": ["./src/*"]
     }
   },
   "include": ["src"],
