@@ -19,7 +19,7 @@ const getLogColor = (log: string) => {
 
 export default function LogDisplay({ log }: { log: string }) {
   return (
-    <Typography color={getLogColor(log)} fontFamily={'monospace'} variant='body2'>
+    <Typography color={getLogColor(log)} sx={{ fontFamily: 'monospace' }} variant='body2'>
       {log}
     </Typography>
   );

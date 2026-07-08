@@ -25,7 +25,7 @@ describe('ViewColumnSelector', () => {
     const button = screen.getByRole('button');
     fireEvent.click(button);
 
-    const switches = screen.getAllByRole('checkbox');
+    const switches = screen.getAllByRole('switch');
     expect(switches.length).toEqual(mockStructure.length);
   });
 

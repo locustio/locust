@@ -17,7 +17,7 @@ export default function About() {
       </Box>
       <Modal onClose={() => setOpen(false)} open={open}>
         <div>
-          <Typography component='h2' mb={1} variant='h4'>
+          <Typography component='h2' sx={{ mb: 1 }} variant='h4'>
             About
           </Typography>
           <Typography component='p' variant='subtitle1'>
@@ -36,14 +36,14 @@ export default function About() {
         </div>
 
         <div>
-          <Typography component='h2' mb={1} variant='h4'>
+          <Typography component='h2' sx={{ mb: 1 }} variant='h4'>
             Version
           </Typography>
           <Link href={`https://github.com/locustio/locust/releases/tag/${version}`}>{version}</Link>
         </div>
 
         <div>
-          <Typography component='h2' mb={1} variant='h4'>
+          <Typography component='h2' sx={{ mb: 1 }} variant='h4'>
             Links
           </Typography>
           <Typography component='p' variant='subtitle1'>

@@ -187,7 +187,7 @@ function SwarmForm({
         {isEditSwarm ? 'Edit running load test' : 'Start new load test'}
       </Typography>
       {!isEditSwarm && showUserclassPicker && (
-        <Box marginBottom={2} marginTop={2}>
+        <Box sx={{ marginBottom: 2, marginTop: 2 }}>
           <SwarmUserClassPicker
             availableUserClasses={availableUserClasses}
             selectedUserClasses={selectedUserClasses}

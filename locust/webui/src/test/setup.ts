@@ -11,7 +11,7 @@ vi.mock('constants/auth');
 
 vi.mocked(swarmConstants).swarmTemplateArgs = swarmStateMock;
 
-global.window.templateArgs = swarmStateMock;
+window.templateArgs = swarmStateMock;
 window.matchMedia = vi.fn().mockImplementation(() => ({
   matches: false,
 }));
