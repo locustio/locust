@@ -1,5 +1,6 @@
+# https://learn.microsoft.com/azure/app-testing/load-testing/reference-test-config-yaml
 version: v0.1
-displayName: Locust example load test
+displayName: GRPC example load test
 description:
 testPlan: ../grpc/locustfile.py
 testType: Locust
