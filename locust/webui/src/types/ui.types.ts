@@ -95,6 +95,8 @@ export interface IStatsResponse {
   workerCount: number;
   currentRps: number;
   currentFailPerSec: number;
+  totalRps: number;
+  totalFailPerSec: number;
   totalAvgResponseTime: number;
   currentResponseTimePercentiles: {
     [key: `responseTimePercentile${number}`]: number | null;
