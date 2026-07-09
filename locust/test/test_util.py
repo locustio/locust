@@ -45,3 +45,11 @@ class TestRounding(unittest.TestCase):
         self.assertEqual(4, proper_round(3.5))
         self.assertEqual(5, proper_round(4.5))
         self.assertEqual(6, proper_round(5.5))
+    def test_proper_round_integer_input_with_digits(self):
+        # proper_round(int, digits) must not corrupt the value by adding an
+        # oversized epsilon.  Before the fix, str(0)='0' has length 1, so the
+        # epsilon was 10**(-2)=0.01, which survived round(..., 2) intact.
+        self.assertEqual(0.0, proper_round(0, 2))
+        self.assertEqual(1.0, proper_round(1, 2))
+        self.assertEqual(5.0, proper_round(5, 2))
+        self.assertEqual(9.0, proper_round(9, 2))
