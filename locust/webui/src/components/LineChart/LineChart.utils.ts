@@ -82,7 +82,7 @@ export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
   grid,
   scatterplot,
 }: ILineChart<ChartType>) => ({
-  title: { text: title },
+  title: { text: title, left: 'left' },
   tooltip: {
     trigger: 'axis',
     formatter: (params?: ILineChartTooltipFormatterParams[] | null) => {
