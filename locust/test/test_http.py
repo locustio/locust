@@ -327,6 +327,9 @@ class TestHttpSession(WebserverTestCase):
         self.assertIsInstance(r.request_meta["exception"], SSLError)
 
     def test_verify_false_succeeds_with_bad_cert(self):
+        import urllib3
+
+        urllib3.disable_warnings()  # hide InsecureRequestWarning
         s = self.get_client("https://expired.badssl.com")
         r = s.get("/", verify=False)
         self.assertEqual(r.status_code, 200)
