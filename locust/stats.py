@@ -210,7 +210,7 @@ class RequestStats:
     Class that holds the request statistics. Accessible in a User from self.environment.stats
     """
 
-    def __init__(self, use_response_times_cache=True):
+    def __init__(self, use_response_times_cache=True) -> None:
         """
         :param use_response_times_cache: The value of use_response_times_cache will be set for each StatsEntry()
                                          when they are created. Settings it to False saves some memory and CPU
@@ -220,7 +220,7 @@ class RequestStats:
         self.use_response_times_cache = use_response_times_cache
         self.entries: dict[tuple[str, str], StatsEntry] = EntriesDict(self)
         self.errors: dict[str, StatsError] = {}
-        self.total = StatsEntry(self, "Aggregated", None, use_response_times_cache=self.use_response_times_cache)
+        self.total = StatsEntry(self, "Aggregated", "", use_response_times_cache=self.use_response_times_cache)
         self.history = []
 
     @property
@@ -682,7 +682,7 @@ class StatsEntry:
             for _ in range(len(self.response_times_cache) - cache_size):
                 self.response_times_cache.popitem(last=False)
 
-    def to_dict(self, escape_string_values=False):
+    def to_dict(self, escape_string_values=False) -> dict[str, int | float | str]:
         response_time_percentiles = {
             f"response_time_percentile_{percentile}": self.get_response_time_percentile(percentile)
             for percentile in PERCENTILES_TO_STATISTICS
