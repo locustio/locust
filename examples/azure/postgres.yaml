@@ -1,0 +1,24 @@
+# https://learn.microsoft.com/azure/app-testing/load-testing/reference-test-config-yaml
+version: v0.1
+displayName: Postgres example load test
+description:
+testPlan: ../postgres.py
+testType: Locust
+engineInstances: 1
+env:
+  - name: LOCUST_USERS
+    value: 1
+  - name: LOCUST_RUN_TIME
+    value: 30
+  - name: PGHOST
+    value: point-to-your-own # example uses hh-pgsql-public.ebi.ac.uk, but we don't want to spam them
+  - name: PGPORT
+    value: 5432
+  - name: PGDATABASE
+    value: pfmegrnargs
+  - name: PGUSER
+    value: reader
+  - name: PGPASSWORD
+    value: NWDMCE5xdipIjRrp
+configurationFiles:
+  - requirements.txt

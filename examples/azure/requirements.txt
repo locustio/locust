@@ -1,4 +1,11 @@
 locust
+
+# this is for grpc.yaml
 grpcio
 grpc-interceptor
 protobuf
+
+# this is for postgres.yaml
+psycopg[binary]
+
+# sharing the requirements.txt file between grpc and postgres examples is a bit weird, but it simplifies things
