@@ -102,7 +102,7 @@ export const exceptionsResponseMock = {
 export const mockDate = new Date(1971, 1);
 
 export const statsResponseTransformed = {
-  totalRps: 1932.5,
+  currentRps: 1932.5,
   failRatio: 100,
   stats: [
     {

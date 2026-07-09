@@ -15,7 +15,7 @@ import { updateArraysAtProps } from 'utils/object';
 
 export interface IUiState {
   extendedStats?: IExtendedStat[];
-  totalRps: number;
+  currentRps: number;
   failRatio: number;
   startTime: string;
   stats: ISwarmStat[];
@@ -30,7 +30,7 @@ export interface IUiState {
 export type UiAction = PayloadAction<Partial<IUiState>>;
 
 const initialState = {
-  totalRps: 0,
+  currentRps: 0,
   failRatio: 0,
   startTime: '',
   stats: [] as ISwarmStat[],

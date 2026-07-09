@@ -10,7 +10,7 @@ const responseTimePercentileKey2 =
   `responseTimePercentile${percentilesToChart[1]}` as `responseTimePercentile${number}`;
 
 const initialState = {
-  totalRps: 0,
+  currentRps: 0,
   failRatio: 0,
   startTime: '',
   stats: [],
@@ -32,13 +32,13 @@ const initialState = {
 describe('uiSlice', () => {
   test('should set UI state', () => {
     const action = (uiActions.setUi as (payload: Partial<IUiState>) => UiAction)({
-      totalRps: 100,
+      currentRps: 100,
       userCount: 50,
     });
     const nextState = uiSlice(initialState, action);
     expect(nextState).toEqual({
       ...initialState,
-      totalRps: 100,
+      currentRps: 100,
       userCount: 50,
     });
   });

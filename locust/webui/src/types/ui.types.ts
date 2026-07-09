@@ -93,8 +93,8 @@ export interface IStatsResponse {
   errors: ISwarmError[];
   workers: ISwarmWorker[];
   workerCount: number;
-  totalRps: number;
-  totalFailPerSec: number;
+  currentRps: number;
+  currentFailPerSec: number;
   totalAvgResponseTime: number;
   currentResponseTimePercentiles: {
     [key: `responseTimePercentile${number}`]: number | null;
