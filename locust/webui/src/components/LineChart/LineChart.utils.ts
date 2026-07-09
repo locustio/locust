@@ -82,7 +82,7 @@ export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
   grid,
   scatterplot,
 }: ILineChart<ChartType>) => ({
-  title: { text: title },
+  title: { text: title, left: 'left' },
   tooltip: {
     trigger: 'axis',
     formatter: (params?: ILineChartTooltipFormatterParams[] | null) => {
@@ -126,6 +126,14 @@ export const createOptions = <ChartType extends Pick<ICharts, 'time'>>({
   color: colors,
   toolbox: {
     right: 10,
+    iconStyle: {
+      borderColor: '#666',
+    },
+    emphasis: {
+      iconStyle: {
+        borderColor: '#3E98C5',
+      },
+    },
     feature: {
       dataZoom: {
         title: {
