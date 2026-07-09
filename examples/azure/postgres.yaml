@@ -2,7 +2,7 @@
 version: v0.1
 displayName: Postgres example load test
 description:
-testPlan: ../postgres.py
+testPlan: ../postgres/locustfile.py
 testType: Locust
 engineInstances: 1
 env:
