@@ -8,13 +8,13 @@ import { ISwarmState } from 'types/swarm.types';
 
 interface ISwarmMonitor
   extends Pick<ISwarmState, 'isDistributed' | 'host' | 'state' | 'workerCount'>,
-    Pick<IUiState, 'totalRps' | 'failRatio' | 'userCount'> {}
+    Pick<IUiState, 'currentRps' | 'failRatio' | 'userCount'> {}
 
 function SwarmMonitor({
   isDistributed,
   state,
   host,
-  totalRps,
+  currentRps,
   failRatio,
   userCount,
   workerCount,
@@ -70,7 +70,7 @@ function SwarmMonitor({
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { md: 'center' } }}>
         <Typography sx={{ fontWeight: 'bold' }}>RPS</Typography>
         <Typography noWrap variant='button'>
-          {totalRps}
+          {currentRps}
         </Typography>
       </Box>
       <Divider flexItem orientation='vertical' />
@@ -84,12 +84,12 @@ function SwarmMonitor({
 
 const storeConnector = ({
   swarm: { isDistributed, state, host, workerCount },
-  ui: { totalRps, failRatio, userCount },
+  ui: { currentRps, failRatio, userCount },
 }: IRootState) => ({
   isDistributed,
   state,
   host,
-  totalRps,
+  currentRps,
   failRatio,
   userCount,
   workerCount,

@@ -142,6 +142,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         total_entry = data["stats"][-1]
         self.assertEqual(total_entry["total_rps"], data["total_rps"])
+        self.assertEqual(total_entry["current_fail_per_sec"], data["current_fail_per_sec"])
         self.assertEqual(total_entry["total_fail_per_sec"], data["total_fail_per_sec"])
 
     def test_stats_cache(self):

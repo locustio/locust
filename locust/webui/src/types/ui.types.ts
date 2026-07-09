@@ -93,6 +93,8 @@ export interface IStatsResponse {
   errors: ISwarmError[];
   workers: ISwarmWorker[];
   workerCount: number;
+  currentRps: number;
+  currentFailPerSec: number;
   totalRps: number;
   totalFailPerSec: number;
   totalAvgResponseTime: number;

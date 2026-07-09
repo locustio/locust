@@ -35,8 +35,8 @@ export default function useFetchStats() {
       extendedStats,
       stats,
       errors,
-      totalRps,
-      totalFailPerSec,
+      currentRps,
+      currentFailPerSec,
       failRatio,
       workers,
       workerCount,
@@ -51,8 +51,8 @@ export default function useFetchStats() {
       updateChartMarkers(time);
     }
 
-    const totalRpsRounded = roundToDecimalPlaces(totalRps, 2);
-    const totalFailPerSecRounded = roundToDecimalPlaces(totalFailPerSec, 2);
+    const currentRpsRounded = roundToDecimalPlaces(currentRps, 2);
+    const currentFailPerSecRounded = roundToDecimalPlaces(currentFailPerSec, 2);
     const totalFailureRatioRounded = roundToDecimalPlaces(failRatio * 100);
 
     const percentilesWithTime = Object.entries(currentResponseTimePercentiles).reduce(
@@ -65,8 +65,8 @@ export default function useFetchStats() {
 
     const newChartEntry = {
       ...percentilesWithTime,
-      currentRps: [time, totalRpsRounded],
-      currentFailPerSec: [time, totalFailPerSecRounded],
+      currentRps: [time, currentRpsRounded],
+      currentFailPerSec: [time, currentFailPerSecRounded],
       totalAvgResponseTime: [time, roundToDecimalPlaces(totalAvgResponseTime, 2)],
       userCount: [time, userCount],
       time,
@@ -76,7 +76,7 @@ export default function useFetchStats() {
       extendedStats,
       stats,
       errors,
-      totalRps: totalRpsRounded,
+      currentRps: currentRpsRounded,
       failRatio: totalFailureRatioRounded,
       workers,
       userCount,

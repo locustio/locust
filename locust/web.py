@@ -484,6 +484,8 @@ class WebUI:
             total_stats = _stats[-1]
 
             if _stats:
+                report["current_rps"] = total_stats["current_rps"]
+                report["current_fail_per_sec"] = total_stats["current_fail_per_sec"]
                 report["total_rps"] = total_stats["total_rps"]
                 report["total_fail_per_sec"] = total_stats["total_fail_per_sec"]
                 report["fail_ratio"] = environment.runner.stats.total.fail_ratio

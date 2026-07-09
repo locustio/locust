@@ -6,7 +6,7 @@ import { swarmStateMock } from 'test/mocks/swarmState.mock';
 import { renderWithProvider } from 'test/testUtils';
 
 const mockUiState = {
-  totalRps: '5',
+  currentRps: '5',
   failRatio: '3',
   stats: [],
   errors: [],
@@ -41,7 +41,7 @@ describe('SwarmMonitor', () => {
 
     expect(getByText('Host').nextElementSibling?.textContent).toBe(swarmStateMock.host);
     expect(getByText('Status').nextElementSibling?.textContent).toBe(SWARM_STATE.RUNNING);
-    expect(getByText('RPS').nextElementSibling?.textContent).toBe(mockUiState.totalRps);
+    expect(getByText('RPS').nextElementSibling?.textContent).toBe(mockUiState.currentRps);
     expect(getByText('Users').nextElementSibling?.textContent).toBe(mockUiState.userCount);
     expect(getByText('Failures').nextElementSibling?.textContent).toBe(`${mockUiState.failRatio}%`);
   });
