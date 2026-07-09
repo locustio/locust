@@ -37,7 +37,7 @@ class DNSClient:
             request_meta["response_time"] = (time.perf_counter() - start_perf_counter) * 1000
             request_meta["response"] = response
             self.request_event.fire(**request_meta)
-            return response
+            return response  # type: ignore
 
         return wrapper  # for some reason, pyright still wont infer the return type to be Message
 

@@ -221,7 +221,7 @@ class RequestStats:
         self.entries: dict[tuple[str, str], StatsEntry] = EntriesDict(self)
         self.errors: dict[str, StatsError] = {}
         self.total = StatsEntry(self, "Aggregated", "", use_response_times_cache=self.use_response_times_cache)
-        self.history = []
+        self.history: list[dict] = []
 
     @property
     def num_requests(self):
