@@ -423,8 +423,8 @@ jobs:
 
       - uses: docker/login-action@v4
         with:
-          username: cyberw
-          password: ${{ secrets.DOCKER_HUB_PAT_CYBERW }}
+          username: locustbuild
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
@@ -466,8 +466,8 @@ jobs:
 
       - uses: docker/login-action@v4
         with:
-          username: cyberw
-          password: ${{ secrets.DOCKER_HUB_PAT_CYBERW }}
+          username: locustbuild
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
