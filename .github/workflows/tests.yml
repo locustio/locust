@@ -194,6 +194,7 @@ jobs:
             os: ubuntu-latest,
             group: "test",
             env: "test:all",
+            allow_prereleases: true,
           }
           - {
               name: "Python 3.14",
@@ -239,6 +240,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+          allow-prereleases: ${{ matrix.allow_prereleases == true }}
 
       - uses: astral-sh/setup-uv@v8.3.2
         with:
