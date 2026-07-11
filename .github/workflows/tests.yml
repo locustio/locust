@@ -252,6 +252,11 @@ jobs:
 
       - run: uv venv --python ${{ matrix.python }}
 
+      # TODO: remove this after update lxml>=7.0 (in 7.0 will support python3.15)
+      - name: Install lxml build dependencies
+        if: matrix.python == '3.15'
+        run: sudo apt-get update && sudo apt-get install -y libxml2-dev libxslt-dev
+
       # Install what we need to run hatch envs but not the project itself
       - name: Install CI dependencies
         run: uv sync --group ${{ matrix.group }} --no-install-package locust
