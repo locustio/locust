@@ -568,15 +568,6 @@ wheels = [
 ]
 
 [[package]]
-name = "distro"
-version = "1.9.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fc/f8/98eea607f65de6527f8a2e8885fc8015d3e6f5775df186e443e0964a11c3/distro-1.9.0.tar.gz", hash = "sha256:2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed", size = 60722, upload-time = "2023-12-24T09:54:32.31Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/b3/231ffd4ab1fc9d679809f356cebee130ac7daa00d6d6f3206dd4fd137e9e/distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2", size = 20277, upload-time = "2023-12-24T09:54:30.421Z" },
-]
-
-[[package]]
 name = "dnspython"
 version = "2.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -953,14 +944,13 @@ wheels = [
 
 [[package]]
 name = "hatch"
-version = "1.17.1"
+version = "1.16.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "backports-zstd", marker = "python_full_version < '3.14'" },
     { name = "click" },
-    { name = "distro", marker = "sys_platform == 'linux'" },
     { name = "hatchling" },
-    { name = "httpx2" },
+    { name = "httpx" },
     { name = "hyperlink" },
     { name = "keyring" },
     { name = "packaging" },
@@ -976,9 +966,9 @@ dependencies = [
     { name = "uv" },
     { name = "virtualenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/01/5a/7cacce8d33a93e81cda9b4f8623ebf67b73859950af0062e1f2c527f4b34/hatch-1.17.1.tar.gz", hash = "sha256:e5f2f389ececd7e86cd86863e3f921a9024cd04ce6ef6b36d07cd9a6dc37c9cd", size = 5252686, upload-time = "2026-07-08T01:54:37.327Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d2/02/ce9c4c439fa3f195b21b4b5bb18b44d1076297c86477ef7e3d2de6064ec3/hatch-1.16.5.tar.gz", hash = "sha256:57bdeeaa72577859ce37091a5449583875331c06f9cb6af9077947ad40b3a1de", size = 5220741, upload-time = "2026-02-27T18:45:31.21Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0d/0a/2b4e653186fc85061f0dfde43d602e7e93c08c0d75b23fa3577f9b3f83fd/hatch-1.17.1-py3-none-any.whl", hash = "sha256:cc6c06d302cfa785c35586ab4285c8c28a24b1744addb66344192302f6958083", size = 162405, upload-time = "2026-07-08T01:54:35.452Z" },
+    { url = "https://files.pythonhosted.org/packages/e4/8a/11ae7e271870f0ad8fa0012e4265982bebe0fdc21766b161fb8b8fc3aefc/hatch-1.16.5-py3-none-any.whl", hash = "sha256:d9b8047f2cd10d3349eb6e8f278ad728a04f91495aace305c257d5c2747188fb", size = 141269, upload-time = "2026-02-27T18:45:29.573Z" },
 ]
 
 [[package]]
@@ -1033,19 +1023,6 @@ wheels = [
 ]
 
 [[package]]
-name = "httpcore2"
-version = "2.3.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "h11" },
-    { name = "truststore" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e6/34/18f1c596e677962f040284246f393b10a1f8ce440b3a7e69c637d0f1c7ad/httpcore2-2.3.0.tar.gz", hash = "sha256:07327e251560960eea8e969d92d4c6a325feb13cca39e25340731336c3baf924", size = 64300, upload-time = "2026-06-01T13:15:02.998Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c2/dd/3357218c69360d1cecc196c230c9a1d5c9afd5dba362056e23e60a5e64e5/httpcore2-2.3.0-py3-none-any.whl", hash = "sha256:477e9e334f74e5240dcac002e890580f36a57d40ff0fb14cc9655731d23b8415", size = 80024, upload-time = "2026-06-01T13:15:00.001Z" },
-]
-
-[[package]]
 name = "httpx"
 version = "0.28.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1063,21 +1040,6 @@ wheels = [
 [package.optional-dependencies]
 http2 = [
     { name = "h2" },
-]
-
-[[package]]
-name = "httpx2"
-version = "2.3.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "anyio" },
-    { name = "httpcore2" },
-    { name = "idna" },
-    { name = "truststore" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/9f/9a/cca0b9145f13d8ae34b885ae28d403a1469a433abc78e0f94f4ce94e650b/httpx2-2.3.0.tar.gz", hash = "sha256:227e7c41d95a76d4077a52640564132777215fc3394e07b66a3116c33d668fa9", size = 81115, upload-time = "2026-06-01T13:15:04.324Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/ce/ae2911859847f9ba1d6b23027e53481cbeb50b93234f355a968d300ca2cb/httpx2-2.3.0-py3-none-any.whl", hash = "sha256:6f393663bdf6dbe7fe90118e3eb5b2bd024a675cae0390ac08cec9198812d8b7", size = 74538, upload-time = "2026-06-01T13:15:01.566Z" },
 ]
 
 [[package]]
@@ -1374,8 +1336,8 @@ provides-extras = ["dns", "milvus", "mqtt", "otel", "qdrant"]
 
 [package.metadata.requires-dev]
 build = [
-    { name = "hatch", specifier = ">=1.17.1" },
-    { name = "hatch-vcs", specifier = ">=0.5.0" },
+    { name = "hatch", specifier = "==1.16.5" },
+    { name = "hatch-vcs", specifier = ">=0.4.0" },
 ]
 dns = [{ name = "dnspython", specifier = ">=2.8.0" }]
 docs = [
@@ -3550,15 +3512,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/35/68/175e7c07c5be13200387d5c0995b0da1e198e360047c08eb17d1002fcd92/trove_classifiers-2026.5.7.17.tar.gz", hash = "sha256:a04a48f8f0a787cb996514d3969ac7608aa3c60cb15d073c1e02801e60533e80", size = 17041, upload-time = "2026-05-07T17:48:01.931Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7b/e3/d81b065a2d866a33a541ac63a2a4cc5737e03ce2379ac3191c98bb8867e3/trove_classifiers-2026.5.7.17-py3-none-any.whl", hash = "sha256:5ec0800de5e2ddbd7c663cb4c0c15328f132dc168813897c18866c5c7b93db33", size = 14201, upload-time = "2026-05-07T17:48:00.488Z" },
-]
-
-[[package]]
-name = "truststore"
-version = "0.10.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/53/a3/1585216310e344e8102c22482f6060c7a6ea0322b63e026372e6dcefcfd6/truststore-0.10.4.tar.gz", hash = "sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301", size = 26169, upload-time = "2025-08-12T18:49:02.73Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/19/97/56608b2249fe206a67cd573bc93cd9896e1efb9e98bce9c163bcdc704b88/truststore-0.10.4-py3-none-any.whl", hash = "sha256:adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981", size = 18660, upload-time = "2025-08-12T18:49:01.46Z" },
 ]
 
 [[package]]
