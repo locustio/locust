@@ -1,4 +1,4 @@
-This folder contains examples of how to run Locust tests with dependencies in a requirements.txt file, suitable for use in Azure Load Testing.
+This folder contains examples of how to run Locust tests with dependencies in a [requirements.txt](requirements.txt) file, suitable for use in Azure Load Testing.
 
 [postgres.yaml](postgres.yaml) only relies on external dependencies, [grpc.yaml](grpc.yaml) shows a more complex scenario where we also use multiple Python files.
 
