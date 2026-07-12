@@ -45,9 +45,9 @@ jobs:
         with:
           python-version: "3.11"
 
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@v8.3.2
         with:
-          version: "0.9.7"
+          version: "0.11.28"
           enable-cache: true
           cache-dependency-glob: |
             "pyproject.toml"
@@ -55,7 +55,7 @@ jobs:
 
       - run: uv venv
 
-      #   # ensure uv.lock doesnt contain anything not in pyproject.toml
+      #   # ensure uv.lock doesn't contain anything not in pyproject.toml
       #   - run: uv lock --check
 
       - name: Install the project
@@ -189,6 +189,14 @@ jobs:
 
           # Unit tests on Python versions
           - {
+            name: "Python 3.15",
+            python: "3.15",
+            os: ubuntu-latest,
+            group: "test",
+            env: "test:all",
+            allow_prereleases: true,
+          }
+          - {
               name: "Python 3.14",
               python: "3.14",
               os: ubuntu-latest,
@@ -232,16 +240,22 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+          allow-prereleases: ${{ matrix.allow_prereleases == true }}
 
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@v8.3.2
         with:
-          version: "0.9.7"
+          version: "0.11.28"
           enable-cache: true
           cache-dependency-glob: |
             "pyproject.toml"
             "uv.lock"
 
       - run: uv venv --python ${{ matrix.python }}
+
+      # TODO: remove this after update lxml>=7.0 (in 7.0 will support python3.15)
+      - name: Install lxml build dependencies
+        if: matrix.python == '3.15'
+        run: sudo apt-get update && sudo apt-get install -y libxml2-dev libxslt-dev
 
       # Install what we need to run hatch envs but not the project itself
       - name: Install CI dependencies
