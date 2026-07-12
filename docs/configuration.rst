@@ -200,16 +200,25 @@ to your user:
 .. code-block:: python
 
     class Example(HttpUser):
+        some_custom_arg: str = "example"
+
         @task
         def example_task(self):
             self.client.get(f"/example/{self.some_custom_arg}")
 
         @classmethod
-        def json(self):
+        def json(cls):
             return {
-                "host": self.host,
-                "some_custom_arg": "example"
+                "host": cls.host,
+                "some_custom_arg": cls.some_custom_arg
             }
+
+.. note::
+
+    The ``json`` classmethod is only used to populate the class picker UI (the gear icon next to each User class).
+    It does not automatically set the attribute values on the User class. The default values must be defined as
+    class-level attributes (e.g. ``some_custom_arg: str = "example"``). To apply changes made in the UI, click the
+    save button for each User class.
 
 Configure Users from command line
 =================================
