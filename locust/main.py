@@ -164,6 +164,9 @@ def main():
     parser = get_parser()
     options = parser.parse_args()
 
+    if options.stats_history_enabled and (options.csv_prefix is None):
+        parser.error("'--csv-full-history' requires '--csv'.")
+
     stats.validate_stats_configuration()
 
     if options.headful:
@@ -576,8 +579,6 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
 
     if options.csv_prefix:
         gevent.spawn(stats_csv_writer.stats_writer).link_exception(greenlet_exception_handler)
-    if options.stats_history_enabled and (options.csv_prefix is None):
-        parser.error("'--csv-full-history' requires '--csv'.")
 
     if options.headless:
         start_automatic_run()
