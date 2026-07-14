@@ -53,7 +53,7 @@ export default function About() {
             <Link href='https://docs.locust.io/en/stable'>Documentation</Link>
           </Typography>
           <Typography component='p' variant='subtitle1'>
-            <Link href='https://medium.com/locust-cloud'>Blog</Link>
+            <Link href='https://medium.com/locust'>Blog</Link>
           </Typography>
         </div>
       </Modal>
