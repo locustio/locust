@@ -9,6 +9,7 @@ import {
   Box,
   Button,
   Container,
+  Link,
   SelectChangeEvent,
   TextField,
   Typography,
@@ -16,6 +17,7 @@ import {
 import { AlertColor } from '@mui/material/Alert';
 import { connect } from 'react-redux';
 
+import microsoftLogo from 'assets/microsoft_logo.svg';
 import CustomInput from 'components/Form/CustomInput';
 import Form from 'components/Form/Form';
 import NumericField from 'components/Form/NumericField';
@@ -317,6 +319,12 @@ function SwarmForm({
           </Button>
         </Box>
       </Form>
+      <Link href='https://aka.ms/loadtesting/quickstart-locust' underline='none'>
+        <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.8em' }}>
+            <img alt='Microsoft' src={microsoftLogo} style={{ height: '1.2em' }} />
+            Want to seamlessly scale your tests and get more insights? Check out Azure Load Testing!
+        </Typography>
+      </Link>
     </Container>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Button, Link, Typography } from '@mui/material';
 
+import microsoftLogo from 'assets/microsoft_logo.svg';
 import Modal from 'components/Modal/Modal';
 import { useSelector } from 'redux/hooks';
 
@@ -26,24 +27,17 @@ export default function About() {
           </Typography>
           <Typography component='p' sx={{ mt: 2 }} variant='subtitle1'>
             It was originally developed by Carl Byström and{' '}
-            <Link href='https://twitter.com/jonatanheyman'>Jonatan Heyman</Link>. Since 2019, it is
-            primarily maintained by <Link href='https://github.com/cyberw'>Lars Holmberg</Link>.
+            <Link href='https://twitter.com/jonatanheyman'>Jonatan Heyman</Link>. 
+            Since 2019, it is primarily maintained by <Link href='https://github.com/cyberw'>Lars Holmberg</Link>.
           </Typography>
           <Typography component='p' sx={{ mt: 2 }} variant='subtitle1'>
             Many thanks to all our wonderful{' '}
-            <Link href='https://github.com/locustio/locust/graphs/contributors'>contributors</Link>!
+            <Link href='https://github.com/locustio/locust/graphs/contributors'>contributors</Link>, and to <img alt='Microsoft' src={microsoftLogo} style={{ height: '0.8em' }} /> <Link href='https://aka.ms/loadtesting/quickstart-locust'>Microsoft</Link> for supporting us!
           </Typography>
         </div>
 
         <div>
-          <Typography component='h2' sx={{ mb: 1 }} variant='h4'>
-            Version
-          </Typography>
-          <Link href={`https://github.com/locustio/locust/releases/tag/${version}`}>{version}</Link>
-        </div>
-
-        <div>
-          <Typography component='h2' sx={{ mb: 1 }} variant='h4'>
+          <Typography component='h2' sx={{ mb: 1 }} variant='h5'>
             Links
           </Typography>
           <Typography component='p' variant='subtitle1'>
@@ -55,6 +49,10 @@ export default function About() {
           <Typography component='p' variant='subtitle1'>
             <Link href='https://medium.com/locust'>Blog</Link>
           </Typography>
+        </div>
+
+        <div>
+          Version: <Link href={`https://github.com/locustio/locust/releases/tag/${version}`}>{version}</Link>
         </div>
       </Modal>
     </>
