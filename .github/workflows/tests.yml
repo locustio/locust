@@ -188,14 +188,14 @@ jobs:
           # - { name: "MacOS", python: '3.12', os: macos-latest, group: "test", env: "integration_test_ci:fail_fast" }
 
           # Unit tests on Python versions
-          - {
-            name: "Python 3.15",
-            python: "3.15",
-            os: ubuntu-latest,
-            group: "test",
-            env: "test:all",
-            allow_prereleases: true,
-          }
+          # TODO: unskip in https://github.com/locustio/locust/issues/3465
+#          - {
+#            name: "Python 3.15",
+#            python: "3.15",
+#            os: ubuntu-latest,
+#            group: "test",
+#            env: "test:all",
+#          }
           - {
               name: "Python 3.14",
               python: "3.14",
@@ -240,7 +240,6 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
-          allow-prereleases: ${{ matrix.allow_prereleases == true }}
 
       - uses: astral-sh/setup-uv@v8.3.2
         with:
@@ -251,11 +250,6 @@ jobs:
             "uv.lock"
 
       - run: uv venv --python ${{ matrix.python }}
-
-      # TODO: remove this after update lxml>=7.0 (in 7.0 will support python3.15)
-      - name: Install lxml build dependencies
-        if: matrix.python == '3.15'
-        run: sudo apt-get update && sudo apt-get install -y libxml2-dev libxslt-dev
 
       # Install what we need to run hatch envs but not the project itself
       - name: Install CI dependencies
