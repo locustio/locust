@@ -1010,6 +1010,7 @@ class MasterRunner(DistributedRunner):
                 logging.debug(
                     "Got KeyboardInterrupt in client_listener. Other greenlets should catch this and shut down."
                 )
+                continue
             self.handle_message(client_id, msg)
 
     def handle_message(self, client_id: str, msg: Message) -> None:
