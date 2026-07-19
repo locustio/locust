@@ -108,7 +108,7 @@ docs = [
     "sphinxcontrib-serializinghtml==2.0.0",
     "sphinxcontrib-googleanalytics>=0.4",
     "sphinx-markdown-builder>=0.6.0",
-    # these optional dependencies are needed to build the some contrib modules
+    # these optional dependencies are needed to build some contrib modules
     "pymilvus>=2.5.0",
     "psycopg[binary]>=3.2.1",
     "pymongo>=4.8.0",
@@ -230,7 +230,8 @@ run = [
 template = "hatch-test"
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+# TODO: after https://github.com/locustio/locust/issues/3465 return 3.15
+python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
 
 ## Run all unit tests and advanced debugging
