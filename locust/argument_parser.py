@@ -20,14 +20,10 @@ from typing import Any, NamedTuple
 from urllib.parse import urlparse
 from uuid import uuid4
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
-
 import configargparse
 import gevent
 import requests
+import tomllib
 
 from .util.directory import get_abspaths_in
 from .util.timespan import parse_timespan

@@ -8,7 +8,7 @@ description = "Developer-friendly load testing framework"
 license = { text = "MIT" }
 dynamic = ["version"]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [{ name = "Jonatan Heyman" }, { name = "Lars Holmberg" }]
 maintainers = [
     { name = "Lars Holmberg" },
@@ -21,7 +21,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -183,7 +182,7 @@ locust = ["locust"]
 [tool.mypy]
 # missing type stubs
 ignore_missing_imports = true
-python_version = "3.10"
+python_version = "3.11"
 
 [tool.pyright]
 exclude = ["locust/test"]
@@ -224,14 +223,14 @@ run = [
 ## CI testing
 
 # Run all combinations: `hatch run test:all`
-# Run single env: `hatch run +py=3.10 test:all`
+# Run single env: `hatch run +py=3.14 test:all`
 
 [tool.hatch.envs.test]
 template = "hatch-test"
 
 [[tool.hatch.envs.test.matrix]]
 # TODO: after https://github.com/locustio/locust/issues/3465 return 3.15
-python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
+python = ["3.11", "3.12", "3.13", "3.14"]
 
 
 ## Run all unit tests and advanced debugging

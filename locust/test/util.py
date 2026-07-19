@@ -61,7 +61,7 @@ def create_tls_cert(hostname):
     """Generate a TLS cert and private key to serve over https"""
     key = rsa.generate_private_key(public_exponent=2**16 + 1, key_size=2048, backend=default_backend())
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, hostname)])
-    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    now = datetime.datetime.now(tz=datetime.UTC)
     cert = (
         x509.CertificateBuilder()
         .subject_name(name)

@@ -53,7 +53,7 @@ You can also run these tests against a specific Python version
 
 .. code-block:: console
 
-    $ hatch test -py=3.10
+    $ hatch test -py=3.14
     ...
     py39: commands[1]> pytest locust/test
     ...

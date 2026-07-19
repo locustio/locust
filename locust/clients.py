@@ -32,14 +32,9 @@ requests_version = Version(requests.__version__).release
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping
-    from typing import Any, TypedDict
+    from typing import Any, TypedDict, Unpack
 
     from requests.cookies import RequestsCookieJar
-
-    if sys.version_info >= (3, 11):
-        from typing import Unpack
-    else:
-        from typing_extensions import Unpack
 
     # Annotations below were generated using output from mypy.
     # Mypy underneath uses information from the https://github.com/python/typeshed repo.
