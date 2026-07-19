@@ -32,14 +32,8 @@ from geventhttpclient.useragent import CompatRequest, CompatResponse, Connection
 from requests.utils import get_encoding_from_headers
 
 if TYPE_CHECKING:
-    import sys
     from collections.abc import Callable, Generator
-    from typing import Any, TypedDict
-
-    if sys.version_info >= (3, 11):
-        from typing import Unpack
-    else:
-        from typing_extensions import Unpack
+    from typing import Any, TypedDict, Unpack
 
     class PostKwargs(TypedDict, total=False):
         name: str | None
