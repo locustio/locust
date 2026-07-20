@@ -1,5 +1,27 @@
 # Also see https://github.com/locustio/locust/releases
 
+## [2.46.0](https://github.com/locustio/locust/tree/2.46.0) (2026-07-19)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.45.0...2.46.0)
+
+**Closed issues:**
+
+- Unexpected Behaviour When Using the json Method with --class-picker [\#3435](https://github.com/locustio/locust/issues/3435)
+- parse\_options\(\) emits deprecation warning via print\(\) instead of warnings.warn\(DeprecationWarning\) [\#3433](https://github.com/locustio/locust/issues/3433)
+- proper\_round gives wrong result for integer inputs when digits \> 0 [\#3430](https://github.com/locustio/locust/issues/3430)
+- Code quality observations \(3 high priority\) [\#3427](https://github.com/locustio/locust/issues/3427)
+
+**Merged pull requests:**
+
+- skip python3.15 tests [\#3466](https://github.com/locustio/locust/pull/3466) ([even-even](https://github.com/even-even))
+- Fix two exception handling bugs [\#3464](https://github.com/locustio/locust/pull/3464) ([reachsridhard](https://github.com/reachsridhard))
+- Move --csv-full-history validation before process forking [\#3461](https://github.com/locustio/locust/pull/3461) ([reachsridhard](https://github.com/reachsridhard))
+- chore: add support python3.15 [\#3460](https://github.com/locustio/locust/pull/3460) ([even-even](https://github.com/even-even))
+- docs: fix class-picker json\(\) example and clarify behavior [\#3459](https://github.com/locustio/locust/pull/3459) ([reachsridhard](https://github.com/reachsridhard))
+- minor improvements to type hinting [\#3457](https://github.com/locustio/locust/pull/3457) ([cyberw](https://github.com/cyberw))
+- build\(deps-dev\): bump sphinxcontrib-applehelp from 1.0.4 to 2.0.0 [\#3445](https://github.com/locustio/locust/pull/3445) ([dependabot[bot]](https://github.com/apps/dependabot))
+- fix: proper\_round gives wrong result for integer inputs when digits \> 0 [\#3431](https://github.com/locustio/locust/pull/3431) ([JSap0914](https://github.com/JSap0914))
+
 ## [2.45.0](https://github.com/locustio/locust/tree/2.45.0) (2026-07-09)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.44.4...2.45.0)
