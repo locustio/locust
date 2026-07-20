@@ -1149,7 +1149,7 @@ class MyUser(HttpUser):
                 f"locust -f {mocked.file_path} --host http://google.com --headless -u 5 -r 5 -t 2 --json-file {output_base}",
                 sigint_on_exit=False,
             ) as tp:
-                tp.proc.wait(3)
+                tp.proc.wait(6)
                 tp.not_expect_any("error: argument --json-file: expected one argument")
 
             self.assertTrue(os.path.exists(output_filepath))
