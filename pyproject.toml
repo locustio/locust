@@ -40,7 +40,6 @@ dependencies = [
     "pyzmq>=25.0.0",
     "geventhttpclient>=2.3.1",
     "configargparse>=1.7.1",
-    "tomli>=1.1.0; python_version < '3.11'",
     "typing_extensions>=4.6.0; python_version < '3.12'",
     "psutil>=5.9.1",
     "Flask-Login>=0.6.3",
