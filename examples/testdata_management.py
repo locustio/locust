@@ -19,7 +19,7 @@
 # 10. Locust quit
 #
 # try it out by running:
-#  locust -f test_data_management.py --headless -u 2 -t 5 --processes 2
+#  locust -f testdata_management.py --headless -u 2 -t 5 --processes 2
 from __future__ import annotations
 
 from locust import HttpUser, events, task

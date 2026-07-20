@@ -252,7 +252,7 @@ When running Locust :ref:`distributed <running-distributed>`, custom arguments a
 Test data management
 ====================
 
-There are a number of ways to get test data into your tests (after all, your test is just a Python program and it can do whatever Python can). Locust's events give you fine-grained control over *when* to fetch/release test data. You can find a `detailed example here <https://github.com/locustio/locust/tree/master/examples/test_data_management.py>`_.
+There are a number of ways to get test data into your tests (after all, your test is just a Python program and it can do whatever Python can). Locust's events give you fine-grained control over *when* to fetch/release test data. You can find a `detailed example here <https://github.com/locustio/locust/tree/master/examples/testdata_management.py>`_.
 
 
 Per-request CSV logging
