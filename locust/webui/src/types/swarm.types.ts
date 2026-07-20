@@ -93,8 +93,9 @@ export interface IReportTemplateArgs extends Omit<IReport, 'charts'> {
   profile?: string;
 }
 
-export interface ISwarmFormInput
-  extends Partial<Pick<ISwarmState, 'host' | 'profile' | 'spawnRate' | 'userCount'>> {
+export interface ISwarmFormInput extends Partial<
+  Pick<ISwarmState, 'host' | 'profile' | 'spawnRate' | 'userCount' | 'extraOptions'>
+> {
   runTime?: string;
   userClasses?: string[];
   shapeClass?: string;
