@@ -31,7 +31,7 @@ import { useSelector } from 'redux/hooks';
 import { swarmActions } from 'redux/slice/swarm.slice';
 import { IRootState } from 'redux/store';
 import { ICustomInput } from 'types/form.types';
-import { ISwarmFormInput, ISwarmState } from 'types/swarm.types';
+import { IExtraOptions, ISwarmFormInput, ISwarmState } from 'types/swarm.types';
 import { isEmpty } from 'utils/object';
 
 const URL_VALIDATION_REGEX = /^(?:[a-zA-Z][a-zA-Z\d+\-.]*):\/\/[^\s/$.?#].[^\s]*$/;
@@ -57,7 +57,8 @@ export interface ISwarmFormProps extends Pick<ISwarmState, 'allProfiles'> {
 }
 
 interface ISwarmForm
-  extends IDispatchProps,
+  extends
+    IDispatchProps,
     Pick<
       ISwarmState,
       | 'allProfiles'
@@ -147,10 +148,21 @@ function SwarmForm({
     });
 
     if (data && data.success) {
+      const updatedExtraOptions: IExtraOptions = Object.fromEntries(
+        Object.entries(extraOptions).map(([key, option]) => [
+          key,
+          {
+            ...option,
+            defaultValue: (inputData as Record<string, any>)[key] ?? option.defaultValue,
+          },
+        ]),
+      );
+
       setSwarm({
         state: SWARM_STATE.RUNNING,
         host: inputData.host || host,
         runTime: inputData.runTime,
+        extraOptions: updatedExtraOptions,
         spawnRate: inputData.spawnRate,
         userCount: inputData.userCount,
         profile: inputData.profile,
@@ -321,8 +333,8 @@ function SwarmForm({
       </Form>
       <Link href='https://aka.ms/loadtesting/quickstart-locust' underline='none'>
         <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.8em' }}>
-            <img alt='Microsoft' src={microsoftLogo} style={{ height: '1.2em' }} />
-            Want to seamlessly scale your tests and get more insights? Check out Azure Load Testing!
+          <img alt='Microsoft' src={microsoftLogo} style={{ height: '1.2em' }} />
+          Want to seamlessly scale your tests and get more insights? Check out Azure Load Testing!
         </Typography>
       </Link>
     </Container>
