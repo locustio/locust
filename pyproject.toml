@@ -46,7 +46,7 @@ dependencies = [
     "Flask-Login>=0.6.3",
     "Flask-Cors>=3.0.10",
     "pywin32; sys_platform == 'win32'",
-    "gevent>=24.10.1,<26.0.0,!=25.8.1",
+    "gevent>=24.10.1",
     "python-socketio[client]>=5.13.0",
     "python-engineio>=4.12.2",
     "pytest>=8.3.3,<10",
@@ -294,4 +294,8 @@ filterwarnings = [
     # the proper fix for this is to run python -m gevent.monkey --module pytest ... 
     # but that isn't always possible
     "ignore::gevent.monkey.MonkeyPatchWarning",
+    # "This process is multi-threaded, use of fork() may lead to deadlocks in the child." started happening in Python 3.12
+    # It could potentially be a real issue, but I dont think
+    "ignore::DeprecationWarning:gevent",
+
 ]

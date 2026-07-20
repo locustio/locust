@@ -76,6 +76,16 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("Logging options:", output)
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
 
+    def test_version(self):
+        output = subprocess.check_output(
+            ["locust", "--version"],
+            stderr=subprocess.STDOUT,
+            timeout=5,
+            text=True,
+        ).strip()
+        self.assertIn(" from ", output)
+        self.assertNotIn("Traceback", output)
+
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
     def test_custom_arguments(self):
         port = get_free_tcp_port()
