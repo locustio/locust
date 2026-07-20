@@ -294,4 +294,8 @@ filterwarnings = [
     # the proper fix for this is to run python -m gevent.monkey --module pytest ... 
     # but that isn't always possible
     "ignore::gevent.monkey.MonkeyPatchWarning",
+    # "This process is multi-threaded, use of fork() may lead to deadlocks in the child." started happening in Python 3.12
+    # It could potentially be a real issue, but I dont think
+    "ignore::DeprecationWarning:gevent",
+
 ]
