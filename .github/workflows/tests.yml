@@ -43,7 +43,7 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.14"
 
       - uses: astral-sh/setup-uv@v8.3.2
         with:
@@ -140,14 +140,14 @@ jobs:
           # Static analysis and utilities
           - {
               name: "Ruff",
-              python: "3.12",
+              python: "3.14",
               os: ubuntu-latest,
               group: "lint",
               env: "lint:format",
             }
           - {
               name: "Mypy",
-              python: "3.12",
+              python: "3.14",
               os: ubuntu-latest,
               group: "lint",
               env: "lint:types",
@@ -156,7 +156,7 @@ jobs:
           # Verification of builds and other aspects
           - {
               name: "Docs Build",
-              python: "3.12",
+              python: "3.14",
               os: ubuntu-latest,
               group: "docs",
               env: "docs:build",
@@ -165,21 +165,21 @@ jobs:
           # OS Integration tests
           - {
               name: "Linux",
-              python: "3.12",
+              python: "3.14",
               os: ubuntu-latest,
               group: "test",
               env: "integration_test_ci:fail_fast",
             }
           - {
               name: "Windows",
-              python: "3.12",
+              python: "3.14",
               os: windows-latest,
               group: "test",
               env: "integration_test_ci:fail_fast",
             }
           - {
               name: "Linux_pytest_locustfile",
-              python: "3.12",
+              python: "3.14",
               os: ubuntu-latest,
               group: "test",
               env: "integration_test_ci:test_pytest",
@@ -204,15 +204,15 @@ jobs:
               env: "test:all",
             }
           - {
-              name: "Python 3.13",
-              python: "3.13",
+              name: "Python 3.14",
+              python: "3.14",
               os: ubuntu-latest,
               group: "test",
               env: "test:all",
             }
           - {
-              name: "Python 3.12",
-              python: "3.12",
+              name: "Python 3.14",
+              python: "3.14",
               os: ubuntu-latest,
               group: "test",
               env: "test:all",
