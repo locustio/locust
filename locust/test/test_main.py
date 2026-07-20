@@ -77,9 +77,14 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
         self.assertIn("--skip-log-setup      Disable Locust's logging setup.", output)
 
     def test_version(self):
-        with TestProcess("locust --version") as tp:
-            tp.expect(" from ", stream="stdout")  # locust 2.46.0 from /Users/...
-            tp.not_expect_any("Traceback")
+        output = subprocess.check_output(
+            ["locust", "--version"],
+            stderr=subprocess.STDOUT,
+            timeout=5,
+            text=True,
+        ).strip()
+        self.assertIn(" from ", output)
+        self.assertNotIn("Traceback", output)
 
     @unittest.skipIf(IS_WINDOWS, reason="Signal handling on windows is hard")
     def test_custom_arguments(self):
