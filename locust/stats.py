@@ -113,11 +113,7 @@ response time percentile
 """
 CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW = 10
 
-CachedResponseTimes = namedtuple(
-    "CachedResponseTimes",
-    ["response_times", "num_requests", "num_none_requests"],
-    defaults=(0,),  # num_none_requests is optional for backwards compatibility
-)
+CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_requests", "num_none_requests"])
 
 PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0]
 
