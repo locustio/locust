@@ -1,5 +1,19 @@
 # Also see https://github.com/locustio/locust/releases
 
+## [2.46.1](https://github.com/locustio/locust/tree/2.46.1) (2026-07-20)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.46.0...2.46.1)
+
+**Closed issues:**
+
+- \[Feature-Request\]\[Web UI\] Preserve Custom Parameters/Options values during edit [\#3462](https://github.com/locustio/locust/issues/3462)
+
+**Merged pull requests:**
+
+- Allow new gevent versions [\#3470](https://github.com/locustio/locust/pull/3470) ([cyberw](https://github.com/cyberw))
+- Update swarm state with extraOptions [\#3469](https://github.com/locustio/locust/pull/3469) ([yukha-dw](https://github.com/yukha-dw))
+- Remove support for Python 3.10 [\#3468](https://github.com/locustio/locust/pull/3468) ([cyberw](https://github.com/cyberw))
+
 ## [2.46.0](https://github.com/locustio/locust/tree/2.46.0) (2026-07-19)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.45.0...2.46.0)
