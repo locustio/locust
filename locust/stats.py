@@ -461,7 +461,7 @@ class StatsEntry:
 
     @property
     def current_fail_per_sec(self):
-        if self.stats.last_request_timestamp is None:
+        if self.stats is None or self.stats.last_request_timestamp is None:
             return 0
         slice_start_time = max(int(self.stats.last_request_timestamp) - 12, int(self.stats.start_time or 0))
 
@@ -472,7 +472,7 @@ class StatsEntry:
 
     @property
     def total_rps(self):
-        if not self.stats.last_request_timestamp or not self.stats.start_time:
+        if self.stats is None or not self.stats.last_request_timestamp or not self.stats.start_time:
             return 0.0
         try:
             return self.num_requests / (self.stats.last_request_timestamp - self.stats.start_time)
@@ -481,7 +481,7 @@ class StatsEntry:
 
     @property
     def total_fail_per_sec(self):
-        if not self.stats.last_request_timestamp or not self.stats.start_time:
+        if self.stats is None or not self.stats.last_request_timestamp or not self.stats.start_time:
             return 0.0
         try:
             return self.num_failures / (self.stats.last_request_timestamp - self.stats.start_time)
