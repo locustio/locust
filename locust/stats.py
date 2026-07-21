@@ -113,7 +113,11 @@ response time percentile
 """
 CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW = 10
 
-CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_requests"])
+CachedResponseTimes = namedtuple(
+    "CachedResponseTimes",
+    ["response_times", "num_requests", "num_none_requests"],
+    defaults=(0,),  # num_none_requests is optional for backwards compatibility
+)
 
 PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0]
 
@@ -604,7 +608,11 @@ class StatsEntry:
 
         Percent specified in range: 0.0 - 1.0
         """
-        return calculate_response_time_percentile(self.response_times, self.num_requests, percent)
+        # response_times only holds non-None samples, so None (async) requests
+        # must be excluded from the denominator, just like in avg/median
+        return calculate_response_time_percentile(
+            self.response_times, self.num_requests - self.num_none_requests, percent
+        )
 
     def get_current_response_time_percentile(self, percent: float) -> int | None:
         """
@@ -644,7 +652,7 @@ class StatsEntry:
             # for that timeframe
             return calculate_response_time_percentile(
                 diff_response_time_dicts(self.response_times, cached.response_times),
-                self.num_requests - cached.num_requests,
+                (self.num_requests - self.num_none_requests) - (cached.num_requests - cached.num_none_requests),
                 percent,
             )
         # if time was not in response times cache window
@@ -669,6 +677,7 @@ class StatsEntry:
         self.response_times_cache[t] = CachedResponseTimes(
             response_times=copy(self.response_times),
             num_requests=self.num_requests,
+            num_none_requests=self.num_none_requests,
         )
 
         # We'll use a cache size of CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW + 10 since - in the extreme case -

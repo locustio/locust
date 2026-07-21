@@ -142,6 +142,17 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(s.get_response_time_percentile(0.6), 60)
         self.assertEqual(s.get_response_time_percentile(0.95), 95)
 
+    def test_percentile_with_none_response_times(self):
+        s = StatsEntry(self.stats, "percentile_test", "GET")
+        for x in range(100):
+            s.log(x, 0)
+        for _ in range(100):
+            s.log(None, 0)
+
+        self.assertEqual(s.get_response_time_percentile(0.5), 50)
+        self.assertEqual(s.get_response_time_percentile(0.6), 60)
+        self.assertEqual(s.get_response_time_percentile(0.95), 95)
+
     def test_median(self):
         self.assertEqual(self.s.median_response_time, 79)
 
@@ -766,6 +777,19 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
         s.response_times = {i: 2 for i in range(100)}
         s.response_times[1] = 202
         s.num_requests = 300
+
+        self.assertEqual(95, s.get_current_response_time_percentile(0.95))
+
+    def test_get_current_response_time_percentile_with_none_response_times(self):
+        s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
+        t = int(time.time())
+        s.response_times_cache[t - 10] = CachedResponseTimes(
+            response_times={i: 1 for i in range(100)}, num_requests=200, num_none_requests=100
+        )
+
+        s.response_times = {i: 2 for i in range(100)}
+        s.num_requests = 400
+        s.num_none_requests = 200
 
         self.assertEqual(95, s.get_current_response_time_percentile(0.95))
 
