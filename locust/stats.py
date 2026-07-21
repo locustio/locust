@@ -1214,8 +1214,8 @@ class StatsCSVFileWriter(StatsCSV):
                         self.environment.runner.user_count if self.environment.runner is not None else 0,
                         stats_entry.method or "",
                         stats_entry.name,
-                        f"{stats_entry.current_rps:2f}",
-                        f"{stats_entry.current_fail_per_sec:2f}",
+                        f"{stats_entry.current_rps:.2f}",
+                        f"{stats_entry.current_fail_per_sec:.2f}",
                     ),
                     self._percentile_fields(stats_entry, use_current=self.full_history),
                     (
