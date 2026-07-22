@@ -65,9 +65,9 @@ otel = [
 qdrant = ["qdrant-client>=1.16.2"]
 
 [project.urls]
-homepage = "https://locust.io/"
-repository = "https://github.com/locustio/locust"
-documentation = "https://docs.locust.io/"
+Homepage = "https://locust.cloud/"
+Repository = "https://github.com/locustio/locust"
+Documentation = "https://docs.locust.io/"
 
 [tool.uv]
 default-groups = ["build", "test", "lint"]
