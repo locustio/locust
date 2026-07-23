@@ -298,7 +298,7 @@ class StatsEntry:
     Represents a single stats entry (name and method)
     """
 
-    def __init__(self, stats: RequestStats | None, name: str, method: str, use_response_times_cache: bool = False):
+    def __init__(self, stats: RequestStats, name: str, method: str, use_response_times_cache: bool = False):
         self.stats = stats
         self.name = name
         """ Name (URL) of this stats entry """
@@ -450,7 +450,7 @@ class StatsEntry:
 
     @property
     def current_rps(self) -> float:
-        if self.stats is None or self.stats.last_request_timestamp is None:
+        if self.stats.last_request_timestamp is None:
             return 0
         slice_start_time = max(int(self.stats.last_request_timestamp) - 12, int(self.stats.start_time or 0))
 
@@ -543,9 +543,9 @@ class StatsEntry:
         return cast(StatsEntryDict, {key: getattr(self, key, None) for key in StatsEntryDict.__annotations__.keys()})
 
     @classmethod
-    def unserialize(cls, data: StatsEntryDict) -> StatsEntry:
+    def unserialize(cls, data: StatsEntryDict, stats: RequestStats) -> StatsEntry:
         """Return the unserialzed version of the specified dict"""
-        obj = cls(None, data["name"], data["method"])
+        obj = cls(stats, data["name"], data["method"])
         valid_keys = StatsEntryDict.__annotations__.keys()
 
         for key, value in data.items():
@@ -835,7 +835,7 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
 
     def on_worker_report(client_id: str, data: dict[str, Any]) -> None:
         for stats_data in data["stats"]:
-            entry = StatsEntry.unserialize(stats_data)
+            entry = StatsEntry.unserialize(stats_data, stats)
             request_key = (entry.name, entry.method)
             if request_key not in stats.entries:
                 stats.entries[request_key] = StatsEntry(stats, entry.name, entry.method, use_response_times_cache=True)
@@ -856,7 +856,7 @@ def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats)
                         incoming_last if existing.last_seen is None else max(existing.last_seen, incoming_last)
                     )
 
-        stats.total.extend(StatsEntry.unserialize(data["stats_total"]))
+        stats.total.extend(StatsEntry.unserialize(data["stats_total"], stats))
 
     events.report_to_master.add_listener(on_report_to_master)
     events.worker_report.add_listener(on_worker_report)
