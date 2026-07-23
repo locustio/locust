@@ -421,10 +421,10 @@ class TestRequestStats(unittest.TestCase):
         s1.log(10, 0)
         s1.log(20, 0)
         s1.log(40, 0)
-        u1 = StatsEntry.unserialize(s1.serialize())
+        u1 = StatsEntry.unserialize(s1.serialize(), self.stats)
 
         data = Message.unserialize(Message("dummy", s1.serialize(), "none").serialize()).data
-        u1 = StatsEntry.unserialize(data)
+        u1 = StatsEntry.unserialize(data, self.stats)
 
         self.assertEqual(20, u1.median_response_time)
 
