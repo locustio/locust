@@ -45,7 +45,8 @@ def setup_opentelemetry(locustfile: str, profile: str | None) -> bool:
     if metrics_exporters:
         meter_provider = _setup_meter_provider(resource, metrics_exporters)
         metrics.set_meter_provider(meter_provider)
-        ttlb_histogram = metrics.get_meter("locust").create_histogram(
+        meter = metrics.get_meter("locust")
+        ttlb_histogram = meter.create_histogram(
             "locust.client.duration", unit="s", description="Time to last byte for requests"
         )
 
@@ -61,6 +62,22 @@ def setup_opentelemetry(locustfile: str, profile: str | None) -> bool:
                 attributes["error.type"] = exception.__class__.__name__
 
             ttlb_histogram.record(response_time / 1000.0, attributes=attributes)
+
+        @events.init.add_listener
+        def on_locust_init(runner, **kwargs):
+            if runner is None:
+                return
+
+            def observe_user_count(options):
+                for user_class, count in runner.user_classes_count.items():
+                    yield metrics.Observation(count, {"user_class": user_class})
+
+            meter.create_observable_gauge(
+                "locust.users.count",
+                callbacks=[observe_user_count],
+                unit="{user}",
+                description="Number of currently running Locust users",
+            )
 
     if logs_exporters:
         logger_provider = _setup_logger_provider(resource, logs_exporters)
