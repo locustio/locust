@@ -1527,4 +1527,4 @@ def _format_user_classes_count_for_log(user_classes_count: dict[str, int]) -> st
 def _aggregate_dispatched_users(d: dict[str, dict[str, int]]) -> dict[str, int]:
     # TODO: Test it
     user_classes = list(next(iter(d.values())).keys())
-    return {u: sum(d[u] for d in d.values()) for u in user_classes}
+    return {u: sum(worker_counts[u] for worker_counts in d.values()) for u in user_classes}
