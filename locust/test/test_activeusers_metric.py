@@ -1,5 +1,7 @@
-from unittest.mock import patch
 from locust import HttpUser, LoadTestShape, between, task
+
+from unittest.mock import patch
+
 from .testcases import LocustTestCase
 
 
