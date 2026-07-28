@@ -1,54 +1,51 @@
-from locust import HttpUser, LoadTestShape, between, task
-
-from unittest.mock import patch
+from locust import User, constant, task
+from locust.env import Environment
 
 from .testcases import LocustTestCase
 
 
-class SimpleUser(HttpUser):
-    wait_time = between(0.1, 0.3)
+class SimpleUser(User):
+    wait_time = constant(0)
 
     @task
-    def index(self):
-        self.client.get("/")
-
-
-class RampUserTest(LoadTestShape):
-    """
-    Shape used by the test to ramp active users up and back down.
-
-    The stages are chosen so the OTel ``locust.users.count`` gauge can be
-    observed increasing, decreasing, and finally reaching zero.
-    """
-
-    stages = [
-        {"duration": 6, "users": 6, "spawn_rate": 6},
-        {"duration": 12, "users": 3, "spawn_rate": 6},
-        {"duration": 18, "users": 0, "spawn_rate": 6},
-    ]
-
-    def tick(self):
-        run_time = self.get_run_time()
-
-        for stage in self.stages:
-            if run_time < stage["duration"]:
-                return (stage["users"], stage["spawn_rate"])
-
-        return None
+    def noop(self):
+        pass
 
 
 class UserCount(LocustTestCase):
-    def test_user_count_ramps_through_expected_stages(self):
-        shape = RampUserTest()
 
-        with patch.object(RampUserTest, "get_run_time", return_value=0):
-            self.assertEqual((6, 6), shape.tick())
+    def _get_reported_user_count(self,label: str) -> None:
+        metrics_data = self.reader.get_metrics_data()
+        metric = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0]
+        data_point = metric.data.data_points[0]
+        return data_point.value
+    
+    def test_user_count_gauge_reports_running_users(self):
+        try:
+            from opentelemetry import metrics
+            from opentelemetry.sdk.metrics import MeterProvider
+            from opentelemetry.sdk.metrics.export import InMemoryMetricReader
+            import locust
+        except ImportError:
+            self.skipTest("OpenTelemetry SDK is not installed")
 
-        with patch.object(RampUserTest, "get_run_time", return_value=6):
-            self.assertEqual((3, 6), shape.tick())
+        from locust.opentelemetry import setup_opentelemetry
 
-        with patch.object(RampUserTest, "get_run_time", return_value=12):
-            self.assertEqual((0, 6), shape.tick())
+        self.reader = InMemoryMetricReader()
+        metrics.set_meter_provider(MeterProvider(metric_readers=[self.reader]))
 
-        with patch.object(RampUserTest, "get_run_time", return_value=18):
-            self.assertIsNone(shape.tick())
+        environment = Environment(user_classes=[SimpleUser], events=locust.events)
+        self.runner = environment.create_local_runner()
+
+        setup_opentelemetry("activeusers_metric.py", None)
+        environment.events.init.fire(environment=environment, runner=self.runner, web_ui=None)
+
+        self.assertEqual(0, self.runner.user_count)
+
+        self.runner.start(3, spawn_rate=3)
+        self.runner.spawning_greenlet.join(timeout=5)
+        self.assertEqual(self.runner.user_count,self._get_reported_user_count("after start"))
+        self.addCleanup(self.runner.stop)
+
+        self.runner.stop()
+        self.assertEqual(self.runner.user_count,self._get_reported_user_count("after stop"))
