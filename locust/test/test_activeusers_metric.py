@@ -13,11 +13,16 @@ class SimpleUser(User):
 
 
 class UserCount(LocustTestCase):
-    def _get_reported_user_count(self, label: str) -> None:
+    def _get_metric(self, name):
         metrics_data = self.reader.get_metrics_data()
-        metric = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0]
-        data_point = metric.data.data_points[0]
-        return data_point.value
+
+        for resource_metrics in metrics_data.resource_metrics:
+            for scope_metrics in resource_metrics.scope_metrics:
+                for metric in scope_metrics.metrics:
+                    if metric.name == name:
+                        return metric
+
+        self.fail(f"Metric {name!r} not found")
 
     def test_user_count_gauge_reports_running_users(self):
         try:
@@ -44,8 +49,11 @@ class UserCount(LocustTestCase):
 
         self.runner.start(3, spawn_rate=3)
         self.runner.spawning_greenlet.join(timeout=5)
-        self.assertEqual(self.runner.user_count, self._get_reported_user_count("after start"))
+
+        metric = self._get_metric("locust.users.count")
+        self.assertEqual(self.runner.user_count, metric.data.data_points[0].value)
         self.addCleanup(self.runner.stop)
 
         self.runner.stop()
-        self.assertEqual(self.runner.user_count, self._get_reported_user_count("after stop"))
+        metric = self._get_metric("locust.users.count")
+        self.assertEqual(self.runner.user_count, metric.data.data_points[0].value)
