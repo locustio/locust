@@ -1737,3 +1737,28 @@ class TelemetryTests(ProcessIntegrationTest):
                 tp.expect("GET /hello", stream="stdout")
                 tp.expect("GET /custom-name", stream="stdout")
                 tp.not_expect_any("GET /world", stream="stdout")
+
+    def test_user_count_gauge_reports_running_users(self):
+        locustfile = textwrap.dedent(
+            """
+            from locust import User, constant, task
+
+            class SimpleUser(User):
+                wait_time = constant(1)
+
+                @task
+                def noop(self):
+                    pass
+            """
+        )
+        with mock_locustfile(content=locustfile, dir=tempfile.gettempdir()) as mocked:
+            with TestProcess(
+                f"locust -f {mocked.file_path} --headless -u 3 -r 3 --otel",
+                expect_return_code=None,
+                extra_env={
+                    "OTEL_METRICS_EXPORTER": "console",
+                    "OTEL_METRIC_EXPORT_INTERVAL": "1000",
+                },
+            ) as tp:
+                tp.expect('"name": "locust.users.count"', stream="stdout")
+                tp.expect('"value": 3', stream="stdout")
