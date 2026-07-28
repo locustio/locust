@@ -20,6 +20,7 @@ class RampUserTest(LoadTestShape):
     The stages are chosen so the OTel ``locust.users.count`` gauge can be
     observed increasing, decreasing, and finally reaching zero.
     """
+
     stages = [
         {"duration": 6, "users": 6, "spawn_rate": 6},
         {"duration": 12, "users": 3, "spawn_rate": 6},
