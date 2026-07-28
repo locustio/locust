@@ -659,6 +659,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
             stats.print_percentile_stats(runner.stats)
             stats.print_error_report(runner.stats)
         environment.events.quit.fire(exit_code=code)
+        if isinstance(stats_csv_writer, stats.StatsCSVFileWriter):
+            stats_csv_writer.close_files()
         sys.exit(code)
 
     # install SIGTERM handler
