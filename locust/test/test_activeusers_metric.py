@@ -13,19 +13,19 @@ class SimpleUser(User):
 
 
 class UserCount(LocustTestCase):
-
-    def _get_reported_user_count(self,label: str) -> None:
+    def _get_reported_user_count(self, label: str) -> None:
         metrics_data = self.reader.get_metrics_data()
         metric = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0]
         data_point = metric.data.data_points[0]
         return data_point.value
-    
+
     def test_user_count_gauge_reports_running_users(self):
         try:
+            import locust
+
             from opentelemetry import metrics
             from opentelemetry.sdk.metrics import MeterProvider
             from opentelemetry.sdk.metrics.export import InMemoryMetricReader
-            import locust
         except ImportError:
             self.skipTest("OpenTelemetry SDK is not installed")
 
@@ -44,8 +44,8 @@ class UserCount(LocustTestCase):
 
         self.runner.start(3, spawn_rate=3)
         self.runner.spawning_greenlet.join(timeout=5)
-        self.assertEqual(self.runner.user_count,self._get_reported_user_count("after start"))
+        self.assertEqual(self.runner.user_count, self._get_reported_user_count("after start"))
         self.addCleanup(self.runner.stop)
 
         self.runner.stop()
-        self.assertEqual(self.runner.user_count,self._get_reported_user_count("after stop"))
+        self.assertEqual(self.runner.user_count, self._get_reported_user_count("after stop"))
