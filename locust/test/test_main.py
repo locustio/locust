@@ -1753,7 +1753,7 @@ class TelemetryTests(ProcessIntegrationTest):
         )
         with mock_locustfile(content=locustfile, dir=tempfile.gettempdir()) as mocked:
             with TestProcess(
-                f"locust -f {mocked.file_path} --headless -u 3 -r 3 --otel",
+                f"locust -f {mocked.file_path} --headless -u 3 -r 3 --otel --run-time 5",
                 expect_return_code=None,
                 extra_env={
                     "OTEL_METRICS_EXPORTER": "console",
