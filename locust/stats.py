@@ -1102,6 +1102,10 @@ class StatsCSV:
             csv_writer.writerow([exc["count"], exc["msg"], exc["traceback"], ", ".join(exc["nodes"])])
 
 
+    def close_files(self) -> None:
+        pass
+
+
 class StatsCSVFileWriter(StatsCSV):
     """Write statistics to CSV files"""
 
