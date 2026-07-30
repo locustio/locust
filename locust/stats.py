@@ -1101,7 +1101,6 @@ class StatsCSV:
         for exc in self.environment.runner.exceptions.values():
             csv_writer.writerow([exc["count"], exc["msg"], exc["traceback"], ", ".join(exc["nodes"])])
 
-
     def close_files(self) -> None:
         pass
 
