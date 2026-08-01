@@ -438,6 +438,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     else:
         stats_csv_writer = stats.StatsCSV(environment, stats.PERCENTILES_TO_REPORT)
 
+    url = None
     # start Web UI
     if not options.headless and not options.worker:
         protocol = "https" if options.tls_cert and options.tls_key else "http"
@@ -610,8 +611,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
                         if runner.state != "spawning"
                         else logging.warning("Spawning users, can't stop right now")
                     ),
-                    "\r": lambda: webbrowser.open_new_tab(url),
-                    "\n": lambda: webbrowser.open_new_tab(url),
+                    "\r": lambda: webbrowser.open_new_tab(url) if url else None,
+                    "\n": lambda: webbrowser.open_new_tab(url) if url else None,
                 },
             )
         )
