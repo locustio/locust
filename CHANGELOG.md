@@ -1,5 +1,21 @@
 # Also see https://github.com/locustio/locust/releases
 
+## [2.46.3](https://github.com/locustio/locust/tree/2.46.3) (2026-08-01)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.46.2...2.46.3)
+
+**Fixed bugs:**
+
+- Workers spawned by `--processes` crash when using `--csv-full-history` [\#3428](https://github.com/locustio/locust/issues/3428)
+
+**Merged pull requests:**
+
+- Fix url possibly unbound in headless non-worker mode [\#3488](https://github.com/locustio/locust/pull/3488) ([reachsridhard](https://github.com/reachsridhard))
+- Update uv to 0.12 [\#3487](https://github.com/locustio/locust/pull/3487) ([cyberw](https://github.com/cyberw))
+- Explicitly close csv file handles before exit [\#3486](https://github.com/locustio/locust/pull/3486) ([reachsridhard](https://github.com/reachsridhard))
+- Fix variable shadowing in \_aggregate\_dispatched\_users [\#3484](https://github.com/locustio/locust/pull/3484) ([reachsridhard](https://github.com/reachsridhard))
+- \[FEAT\] : add active user metric as an observable gauge [\#3483](https://github.com/locustio/locust/pull/3483) ([RamachandraBhardwaj](https://github.com/RamachandraBhardwaj))
+
 ## [2.46.2](https://github.com/locustio/locust/tree/2.46.2) (2026-07-24)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.46.1...2.46.2)
