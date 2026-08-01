@@ -742,7 +742,8 @@ class MasterRunner(DistributedRunner):
 
         self.target_user_count = user_count
 
-        num_workers = len(self.clients.ready) + len(self.clients.running) + len(self.clients.spawning)
+        active_workers = self.clients.ready + self.clients.running + self.clients.spawning
+        num_workers = len(active_workers)
         if not num_workers:
             logger.warning("You can't start a distributed test before at least one worker processes has connected")
             return
@@ -755,7 +756,7 @@ class MasterRunner(DistributedRunner):
 
         if self._users_dispatcher is None:
             self._users_dispatcher = self.environment.dispatcher_class(
-                worker_nodes=list(self.clients.values()), user_classes=self.user_classes
+                worker_nodes=active_workers, user_classes=self.user_classes
             )
 
         logger.info(
