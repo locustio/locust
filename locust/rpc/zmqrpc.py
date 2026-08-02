@@ -1,3 +1,5 @@
+import logging
+
 from locust.exception import RPCError, RPCReceiveError, RPCSendError
 from locust.util.exception_handler import retry
 
@@ -69,7 +71,7 @@ class BaseSocket:
             if str(csocket.getaddrinfo(host, port, proto=csocket.IPPROTO_TCP)).find("Family.AF_INET6") == -1:
                 return True
         except gaierror as e:
-            print(f"Error resolving address: {e}")
+            logging.error(f"Error resolving address: {e}")
             return False
         return False
 

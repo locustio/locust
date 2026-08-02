@@ -1067,6 +1067,7 @@ class MasterRunner(DistributedRunner):
                     if os.path.isdir(locustfile_option):
                         locustfile_list.extend(get_abspaths_in(locustfile_option, extension=".py"))
 
+                filename = None
                 try:
                     locustfiles: list[str | dict[str, str]] = []
 
@@ -1075,10 +1076,9 @@ class MasterRunner(DistributedRunner):
                             locustfiles.append(filename)
                         else:
                             with open(filename) as f:
-                                filename = os.path.basename(filename)
                                 file_contents = f.read()
 
-                            locustfiles.append({"filename": filename, "contents": file_contents})
+                            locustfiles.append({"filename": os.path.basename(filename), "contents": file_contents})
                 except Exception as e:
                     error_message = "locustfile must be a full path to a single locustfile, a comma-separated list of .py files, or a URL for file distribution to work"
                     logger.error(f"{error_message} {e}")
