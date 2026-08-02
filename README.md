@@ -101,6 +101,7 @@ Azure offers [a managed load-testing service](https://learn.microsoft.com/azure/
 * Documentation: [docs.locust.io](https://docs.locust.io)
 * Support/Questions: [StackOverflow](https://stackoverflow.com/questions/tagged/locust)
 * Chat/discussion: [Discord](https://discord.gg/faeXQY82Zs)
+* Blog: [medium.com](https://medium.com/locust)
 
 ## Authors
 
