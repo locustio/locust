@@ -2763,6 +2763,34 @@ class TestMasterRunner(LocustRunnerTestCase):
             self.assertEqual(3, len(server.get_messages("spawn")))
             self.assertEqual(3, len(server.get_messages("spawning_complete")))
 
+    def test_new_dispatch_excludes_missing_workers(self):
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
+        with (
+            mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server,
+            patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0"),
+        ):
+            master = self.get_runner(user_classes=[TestUser])
+            server.mocked_send(Message("client_ready", __version__, "missing"))
+            server.mocked_send(Message("client_ready", __version__, "healthy"))
+
+            master.start(2, 100)
+            master.clients["missing"].state = STATE_MISSING
+            master.stop(send_stop_to_client=False)
+            master.update_state(STATE_STOPPED)
+
+            previous_spawn_count = len(server.get_messages("spawn"))
+
+            master.start(2, 100)
+
+            spawn_messages = server.get_messages("spawn")[previous_spawn_count:]
+            self.assertEqual(1, len(spawn_messages))
+            self.assertEqual("healthy", spawn_messages[0].node_id)
+            self.assertEqual({"TestUser": 2}, spawn_messages[0].data["user_classes_count"])
+
     def test_start_event(self):
         """
         Tests that test_start event is fired
