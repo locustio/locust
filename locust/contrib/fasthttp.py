@@ -273,8 +273,8 @@ class FastHttpSession:
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
         if stream:
-            if response.headers and "response_length" in response.headers:
-                request_meta["response_length"] = int(response.headers["response_length"])
+            if response.headers and "content-length" in response.headers:
+                request_meta["response_length"] = int(response.headers["content-length"])
         else:
             try:
                 request_meta["response_length"] = len(response.content) if response.content else 0
