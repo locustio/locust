@@ -1143,8 +1143,12 @@ class MasterRunner(DistributedRunner):
                     self.server.send_to_client(Message("quit", None, msg.node_id))
             case "spawning_complete":
                 # a worker finished spawning (this happens multiple times during rampup)
-                self.clients[msg.node_id].state = STATE_RUNNING
-                self.clients[msg.node_id].user_classes_count = msg.data["user_classes_count"]
+                try:
+                    self.clients[msg.node_id].state = STATE_RUNNING
+                    self.clients[msg.node_id].user_classes_count = msg.data["user_classes_count"]
+                except KeyError:
+                    logger.warning(f"Got spawning_complete message from unknown worker {msg.node_id}. Asking worker to quit.")
+                    self.server.send_to_client(Message("quit", None, msg.node_id))
             case "logs":
                 self.environment.update_worker_logs(msg.data)
             case "quit":
