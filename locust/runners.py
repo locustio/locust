@@ -1147,7 +1147,9 @@ class MasterRunner(DistributedRunner):
                     self.clients[msg.node_id].state = STATE_RUNNING
                     self.clients[msg.node_id].user_classes_count = msg.data["user_classes_count"]
                 except KeyError:
-                    logger.warning(f"Got spawning_complete message from unknown worker {msg.node_id}. Asking worker to quit.")
+                    logger.warning(
+                        f"Got spawning_complete message from unknown worker {msg.node_id}. Asking worker to quit."
+                    )
                     self.server.send_to_client(Message("quit", None, msg.node_id))
             case "logs":
                 self.environment.update_worker_logs(msg.data)
