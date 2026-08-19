@@ -228,8 +228,7 @@ run = [
 template = "hatch-test"
 
 [[tool.hatch.envs.test.matrix]]
-# TODO: after https://github.com/locustio/locust/issues/3465 return 3.15
-python = ["3.11", "3.12", "3.13", "3.14"]
+python = ["3.11", "3.12", "3.13", "3.14", "3.15"]
 
 
 ## Run all unit tests and advanced debugging

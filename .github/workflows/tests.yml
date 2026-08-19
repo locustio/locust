@@ -188,14 +188,14 @@ jobs:
           # - { name: "MacOS", python: '3.12', os: macos-latest, group: "test", env: "integration_test_ci:fail_fast" }
 
           # Unit tests on Python versions
-          # TODO: unskip in https://github.com/locustio/locust/issues/3465
-#          - {
-#            name: "Python 3.15",
-#            python: "3.15",
-#            os: ubuntu-latest,
-#            group: "test",
-#            env: "test:all",
-#          }
+          - {
+            name: "Python 3.15",
+            python: "3.15",
+            os: ubuntu-latest,
+            group: "test",
+            env: "test:all",
+            allow_prereleases: true,
+          }
           - {
               name: "Python 3.14",
               python: "3.14",
@@ -233,6 +233,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+          allow-prereleases: ${{ matrix.allow_prereleases == true }}
 
       - uses: astral-sh/setup-uv@v9.0.0
         with:
