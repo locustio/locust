@@ -188,14 +188,13 @@ jobs:
           # - { name: "MacOS", python: '3.12', os: macos-latest, group: "test", env: "integration_test_ci:fail_fast" }
 
           # Unit tests on Python versions
-          # TODO: unskip in https://github.com/locustio/locust/issues/3465
-#          - {
-#            name: "Python 3.15",
-#            python: "3.15",
-#            os: ubuntu-latest,
-#            group: "test",
-#            env: "test:all",
-#          }
+          - {
+            name: "Python 3.15",
+            python: "3.15",
+            os: ubuntu-latest,
+            group: "test",
+            env: "test:all",
+          }
           - {
               name: "Python 3.14",
               python: "3.14",
