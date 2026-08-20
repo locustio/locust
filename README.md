@@ -5,6 +5,7 @@
 [![Downloads](https://static.pepy.tech/personalized-badge/locust?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/locust)
 [![GitHub contributors](https://img.shields.io/github/contributors/locustio/locust.svg)](https://github.com/locustio/locust/graphs/contributors)
 [![Support Ukraine Badge](https://bit.ly/support-ukraine-now)](https://github.com/support-ukraine/support-ukraine)
+[![inspect.software](https://raw.githubusercontent.com/inspect-software/badges/main/v1/l/locustio/locust.svg)](https://inspect.software/software/locustio/locust)
 
 Locust is an open source performance/load testing tool for HTTP and other protocols. Its developer-friendly approach lets you define your tests in regular Python code.
 
