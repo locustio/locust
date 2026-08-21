@@ -2398,6 +2398,34 @@ class TestMasterRunner(LocustRunnerTestCase):
             self.assertEqual(0, len(master.clients.all))
             self.assertEqual(STATE_STOPPED, master.state, "All workers quit but test didn't stop.")
 
+    def test_quit_from_missing_worker_does_not_stop_test_if_other_workers_are_running(self):
+        """
+        worker_count already excludes missing workers (it only counts ready/spawning/running
+        workers), so subtracting len(self.clients.missing) again when handling a "quit" message
+        double-counts missing workers. If a previously-missing worker belatedly sends "quit"
+        while at least one other worker is still actively running, the test must not be stopped.
+        """
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner()
+            master.clients["fake_client1"] = WorkerNode("fake_client1")
+            master.clients["fake_client1"].state = STATE_RUNNING
+            master.clients["fake_client2"] = WorkerNode("fake_client2")
+            master.clients["fake_client2"].state = STATE_MISSING
+            master.clients["fake_client3"] = WorkerNode("fake_client3")
+            master.clients["fake_client3"].state = STATE_MISSING
+            master.state = STATE_RUNNING
+
+            self.assertEqual(1, master.worker_count)
+
+            # A worker that was marked missing eventually sends a belated "quit" message.
+            # fake_client1 is still actively running, so the test must keep running.
+            server.mocked_send(Message("quit", None, "fake_client2"))
+            self.assertNotIn(
+                master.state,
+                [STATE_STOPPED, STATE_STOPPING],
+                "A missing worker quitting stopped the test even though another worker is still running.",
+            )
+
     @mock.patch("locust.runners.HEARTBEAT_INTERVAL", new=0.1)
     def test_last_worker_missing_stops_test(self):
         class TestUser(User):
