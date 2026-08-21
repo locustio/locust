@@ -103,7 +103,9 @@ jobs:
       - id: set_tag_short
         run: echo "tag_short=$(uv run hatch version | cut -d '.' -f1-3)" | tee -a "$GITHUB_OUTPUT"
       - id: set_branch
-        run: echo "branch=${{ github.head_ref || github.ref_name }}" | tee -a "$GITHUB_OUTPUT"
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }} # use this intermediate step to prevent untrusted input from doing nasty stuff
+        run: echo "branch=$BRANCH" | tee -a "$GITHUB_OUTPUT"
       - id: set_is_merge_commit
         run: echo "is_merge_commit=$( [ $(git rev-list --count $GITHUB_SHA^@) -eq 2 ] && echo 'true' || echo 'false' )" | tee -a "$GITHUB_OUTPUT"
       - id: set_is_tag_build
