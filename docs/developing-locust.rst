@@ -33,7 +33,7 @@ If you install `pre-commit <https://pre-commit.com/>`_, linting and format check
 
 Before you open a pull request, make sure all the tests work. And if you are adding a feature, make sure it is documented (in ``docs/*.rst``).
 
-If you're in a hurry or don't have access to a development environment, you can simply use `Codespaces <https://github.com/features/codespaces>`_, the github cloud development environment.  On your fork page, just click on *Code* then on *Create codespace on <branch name>*, and voila, your ready to code and test.
+If you're in a hurry or don't have access to a development environment, you can simply use `Codespaces <https://github.com/features/codespaces>`_, the github cloud development environment.  On your fork page, just click on *Code* then on *Create codespace on <branch name>*, and voila, you're ready to code and test.
 
 Testing your changes
 ====================
@@ -45,18 +45,12 @@ All tests:
 .. code-block:: console
 
     $ hatch test
-    ...
-    py39: commands[1]> pytest locust/test
-    ...
 
-You can also run these tests against a specific Python version
+You can also run these tests against a specific Python version:
 
 .. code-block:: console
 
     $ hatch test -py=3.14
-    ...
-    py39: commands[1]> pytest locust/test
-    ...
 
 To only run a specific suite or specific test you can call `pytest <https://docs.pytest.org/>`_ directly.
 
