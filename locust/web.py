@@ -183,9 +183,10 @@ class WebUI:
         def handle_exception(error):
             error_message = str(error)
             error_code = getattr(error, "code", 500)
+            error_name = getattr(error, "name", type(error).__name__)
             logger.log(
                 logging.DEBUG if error_code <= 404 else logging.ERROR,
-                f"UI got request for {request.method} {request.path}, but it resulted in a {error_code}: {error.name}",
+                f"UI got request for {request.method} {request.path}, but it resulted in a {error_code}: {error_name}",
             )
             return make_response(error_message, error_code)
 
@@ -260,10 +261,20 @@ class WebUI:
             for key, value in request.form.items():
                 match key:
                     case "user_count":  # if we just renamed this field to "users" we wouldn't need this
-                        user_count = int(value)
+                        try:
+                            user_count = int(value)
+                        except ValueError:
+                            err_msg = f"Invalid user_count value: {value!r} (must be an integer)"
+                            logger.error(err_msg)
+                            return jsonify({"success": False, "message": err_msg, "host": environment.host})
                         parsed_options_dict["users"] = user_count
                     case "spawn_rate":
-                        spawn_rate = float(value)
+                        try:
+                            spawn_rate = float(value)
+                        except ValueError:
+                            err_msg = f"Invalid spawn_rate value: {value!r} (must be a number)"
+                            logger.error(err_msg)
+                            return jsonify({"success": False, "message": err_msg, "host": environment.host})
                         parsed_options_dict[key] = spawn_rate
                     case "host":
                         # Replace < > to guard against XSS

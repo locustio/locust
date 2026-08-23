@@ -291,6 +291,30 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual("https://localhost/other", response.json()["host"])
         self.assertEqual(self.environment.host, "https://localhost/other")
 
+    def test_swarm_invalid_user_count_returns_clean_error(self):
+        """
+        Posting a non-numeric user_count/spawn_rate to /swarm used to raise an uncaught ValueError
+        inside the view function. The generic `handle_exception` error handler assumed every
+        exception is a werkzeug HTTPException (which has a `.name` attribute) and crashed itself
+        with an AttributeError, hiding the real error behind an opaque 500 response.
+        """
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": "not-a-number", "spawn_rate": 5, "host": "https://localhost"},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertFalse(response.json()["success"])
+        self.assertIn("user_count", response.json()["message"])
+
+    def test_swarm_invalid_spawn_rate_returns_clean_error(self):
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 5, "spawn_rate": "not-a-number", "host": "https://localhost"},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertFalse(response.json()["success"])
+        self.assertIn("spawn_rate", response.json()["message"])
+
     def test_swarm_userclass_specified(self):
         class User1(User):
             wait_time = constant(1)
