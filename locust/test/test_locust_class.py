@@ -575,6 +575,26 @@ class TestLocustClass(LocustTestCase):
         self.assertEqual(0, len(group))
         self.assertEqual(1, user.test_state)
 
+    def test_stop_user_before_greenlet_starts(self):
+        # When a user greenlet has been spawned but hasn't started running yet
+        # (e.g. stopping a test mid-ramp-up with --stop-timeout), _state is None.
+        # stop(force=False) should kill the greenlet immediately, not raise.
+        class TestUser(User):
+            @task
+            def t(self):
+                sleep(1)
+
+        group = Group()
+        user = TestUser(self.environment)
+        user.start(group)
+        # Don't yield to the gevent hub — the greenlet hasn't run yet
+        self.assertIsNone(user._state)
+
+        result = user.stop(force=False)
+        self.assertTrue(result)
+        sleep(0)
+        self.assertEqual(0, len(group))
+
     def test_deprecated_locust_class(self):
         def test_locust():
             from locust import Locust

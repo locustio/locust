@@ -211,7 +211,7 @@ class User(metaclass=UserMeta):
                       methods are called. If force is True the greenlet will be killed immediately.
         :returns: True if the greenlet was killed immediately, otherwise False
         """
-        if force or self._state == LOCUST_STATE_WAITING:
+        if force or self._state in (None, LOCUST_STATE_WAITING):
             self._group.killone(self._greenlet)
             return True
         elif self._state == LOCUST_STATE_RUNNING:
