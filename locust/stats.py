@@ -816,14 +816,11 @@ def median_from_dict(total: int, count: dict[int, int]) -> int:
     """
     total is the number of requests made
     count is a dict {response_time: count}
-    """
-    pos = (total - 1) / 2
-    for k in sorted(count.keys()):
-        if pos < count[k]:
-            return k
-        pos -= count[k]
 
-    return k
+    Use the same upper-median rank as ``calculate_response_time_percentile(..., 0.5)``
+    so the console/CSV Med. column matches the 50% percentile for even samples.
+    """
+    return calculate_response_time_percentile(count, total, 0.5)
 
 
 def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats) -> None:

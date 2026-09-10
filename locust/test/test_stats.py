@@ -156,6 +156,13 @@ class TestRequestStats(unittest.TestCase):
     def test_median(self):
         self.assertEqual(self.s.median_response_time, 79)
 
+    def test_median_matches_p50_for_even_samples(self):
+        s = StatsEntry(self.stats, "median_p50", "GET")
+        s.log(100, 0)
+        s.log(200, 0)
+        self.assertEqual(s.median_response_time, 200)
+        self.assertEqual(s.median_response_time, s.get_response_time_percentile(0.5))
+
     def test_median_out_of_min_max_bounds(self):
         s = StatsEntry(self.stats, "median_test", "GET")
         s.log(6034, 0)
@@ -220,7 +227,7 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(self.s.num_requests, 2)
         self.assertEqual(self.s.num_failures, 1)
         self.assertEqual(self.s.avg_response_time, 420.5)
-        self.assertEqual(self.s.median_response_time, 85)
+        self.assertEqual(self.s.median_response_time, 756)
         self.assertNotEqual(None, self.s.last_request_timestamp)
         self.s.reset()
         self.assertEqual(None, self.s.last_request_timestamp)
@@ -276,7 +283,7 @@ class TestRequestStats(unittest.TestCase):
         s1.log(977, 0)  # (rounded 980)
 
         self.assertEqual(s1.num_requests, 8)
-        self.assertEqual(s1.median_response_time, 550)
+        self.assertEqual(s1.median_response_time, 560)
         self.assertEqual(s1.avg_response_time, 535.75)
         self.assertEqual(s1.min_response_time, 122)
         self.assertEqual(s1.max_response_time, 992)
