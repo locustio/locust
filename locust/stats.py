@@ -435,7 +435,12 @@ class StatsEntry:
     def median_response_time(self) -> int:
         if not self.response_times:
             return 0
-        median = median_from_dict(self.num_requests - self.num_none_requests, self.response_times) or 0
+        median = (
+            calculate_response_time_percentile(
+                self.response_times, self.num_requests - self.num_none_requests, 0.5
+            )
+            or 0
+        )
 
         # Since we only use two digits of precision when calculating the median response time
         # while still using the exact values for min and max response times, the following checks
@@ -810,17 +815,6 @@ class StatsError:
 
 def avg(values: list[float | int]) -> float:
     return sum(values, 0.0) / max(len(values), 1)
-
-
-def median_from_dict(total: int, count: dict[int, int]) -> int:
-    """
-    total is the number of requests made
-    count is a dict {response_time: count}
-
-    Use the same upper-median rank as ``calculate_response_time_percentile(..., 0.5)``
-    so the console/CSV Med. column matches the 50% percentile for even samples.
-    """
-    return calculate_response_time_percentile(count, total, 0.5)
 
 
 def setup_distributed_stats_event_listeners(events: Events, stats: RequestStats) -> None:
