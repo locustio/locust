@@ -168,6 +168,8 @@ For example, to make each user wait between 0.5 and 10 seconds between every tas
 
 * :py:attr:`constant_pacing <locust.wait_time.constant_pacing>` for an adaptive time that ensures the task runs (at most) once every X seconds  (it is the mathematical inverse of `constant_throughput`).
 
+* :py:attr:`poisson <locust.wait_time.poisson>` for a random time sampled from an exponential distribution, so that tasks arrive as a Poisson process with the given average rate. Unlike `constant_throughput`, the individual intervals vary randomly, so bursts and quiet periods occur naturally, which is a better approximation of how real users arrive.
+
 .. note::
 
     For example, if you want Locust to run 500 task iterations per second at peak load, you could use `wait_time = constant_throughput(0.1)` and a user count of 5000.

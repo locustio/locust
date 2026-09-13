@@ -1,4 +1,4 @@
-from locust import TaskSet, User, between, constant, constant_throughput
+from locust import TaskSet, User, between, constant, constant_throughput, poisson
 
 import random
 import time
@@ -76,3 +76,23 @@ class TestWaitTime(LocustTestCase):
             time.sleep(random.random() * 0.1)
             _ = ts2.wait_time()
             _ = ts2.wait_time()
+
+    def test_poisson_mean(self):
+        # The mean wait time of an exponential distribution with rate=10 is 1/10
+        # With 10000 samples the standard error of the mean is ~0.001, so a delta of 0.01 is very generous
+        class MyUser(User):
+            wait_time = poisson(10)
+
+        u = MyUser(self.environment)
+        waits = [u.wait_time() for _ in range(10000)]
+        self.assertAlmostEqual(sum(waits) / len(waits), 0.1, delta=0.01)
+        # All waits must be non-negative
+        self.assertTrue(all(w >= 0 for w in waits))
+        # The unbounded tail of the exponential distribution means we should see
+        # some waits far above the mean (P(wait > 0.3) = e^-3 ~= 5% per sample),
+        # distinguishing poisson from a uniformly distributed wait
+        self.assertTrue(any(w > 0.3 for w in waits))
+
+    def test_poisson_invalid_rate(self):
+        self.assertRaises(ValueError, poisson, 0)
+        self.assertRaises(ValueError, poisson, -1)

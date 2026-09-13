@@ -31,7 +31,7 @@ from .user.markov_taskset import MarkovTaskSet, transition, transitions
 from .user.sequential_taskset import SequentialTaskSet
 from .user.task import TaskSet, tag, task
 from .user.users import HttpUser, User
-from .user.wait_time import between, constant, constant_pacing, constant_throughput
+from .user.wait_time import between, constant, constant_pacing, constant_throughput, poisson
 
 events = Events()
 
@@ -51,6 +51,7 @@ __all__ = (
     "constant",
     "constant_pacing",
     "constant_throughput",
+    "poisson",
     "events",
     "LoadTestShape",
     "run_single_user",
