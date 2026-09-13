@@ -1,0 +1,4 @@
+[default]
+extend-ignore-identifiers-re = [
+    "(?i)mosquitto",
+]

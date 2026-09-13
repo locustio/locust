@@ -290,7 +290,7 @@
 
 **Closed issues:**
 
-- bumb pytest to support 9.x [\#3262](https://github.com/locustio/locust/issues/3262)
+- bump pytest to support 9.x [\#3262](https://github.com/locustio/locust/issues/3262)
 
 **Merged pull requests:**
 
@@ -517,8 +517,8 @@
 
 **Merged pull requests:**
 
-- FastHttpUser: Dont send zstd in Accept-Encoding header  [\#3188](https://github.com/locustio/locust/pull/3188) ([cyberw](https://github.com/cyberw))
-- Fix test flakyness and update error message [\#3187](https://github.com/locustio/locust/pull/3187) ([amadeuppereira](https://github.com/amadeuppereira))
+- FastHttpUser: Don't send zstd in Accept-Encoding header  [\#3188](https://github.com/locustio/locust/pull/3188) ([cyberw](https://github.com/cyberw))
+- Fix test flakiness and update error message [\#3187](https://github.com/locustio/locust/pull/3187) ([amadeuppereira](https://github.com/amadeuppereira))
 
 ## [2.38.0](https://github.com/locustio/locust/tree/2.38.0) (2025-08-07)
 
@@ -572,7 +572,7 @@
 **Fixed bugs:**
 
 - Error shutting down when using processes [\#3161](https://github.com/locustio/locust/issues/3161)
-- 1279 Locust instances makes master run at 100% continously [\#3142](https://github.com/locustio/locust/issues/3142)
+- 1279 Locust instances makes master run at 100% continuously [\#3142](https://github.com/locustio/locust/issues/3142)
 
 **Merged pull requests:**
 

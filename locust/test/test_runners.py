@@ -1060,7 +1060,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Check that all workers have a user count = 1 now
             check_rebalanced_equals()
 
-            # Simulate that some workers are missing by "killing" them abrutly
+            # Simulate that some workers are missing by "killing" them abruptly
             for i in range(3):
                 workers[i].greenlet.kill(block=True)
 
@@ -1072,12 +1072,12 @@ class TestMasterWorkerRunners(LocustTestCase):
             check_master_worker_missing_count()
 
             @retry(AssertionError, tries=10, delay=1)
-            def check_remaing_worker_new_user_count():
+            def check_remaining_worker_new_user_count():
                 for i in range(3, 6):
                     self.assertEqual(2, workers[i].user_count)
 
             # Check that remaining workers have a new count of user due to rebalancing.
-            check_remaing_worker_new_user_count()
+            check_remaining_worker_new_user_count()
             sleep(1)
 
             # Finally quit and check states of remaining workers.
@@ -1208,7 +1208,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             # make sure users are killed
             self.assertEqual(0, worker.user_count)
 
-        # check the spwaning_complete and test_stop events were called one time in master and one time in worker
+        # check the spawning_complete and test_stop events were called one time in master and one time in worker
         self.assertEqual(
             1,
             test_stop_count["master"],

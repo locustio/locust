@@ -249,8 +249,8 @@ class FastHttpSession:
                 headers["Accept"] = "application/json"
 
         if not allow_redirects:
-            old_redirect_response_codes = self.client.redirect_resonse_codes
-            self.client.redirect_resonse_codes = frozenset()
+            old_redirect_response_codes = self.client.redirect_response_codes
+            self.client.redirect_response_codes = frozenset()
 
         start_perf_counter = time.perf_counter()
         # send request, and catch any exceptions
@@ -266,7 +266,7 @@ class FastHttpSession:
         }
 
         if not allow_redirects:
-            self.client.redirect_resonse_codes = old_redirect_response_codes
+            self.client.redirect_response_codes = old_redirect_response_codes
 
         request_meta["response_length"] = 0  # default value, if length cannot be determined
 
@@ -668,7 +668,7 @@ class LocustUserAgent(UserAgent):
     response_type = FastResponse
     request_type = FastRequest
     valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 304, 307, 308])
-    redirect_resonse_codes = frozenset([301, 302, 303, 307, 308])
+    redirect_response_codes = frozenset([301, 302, 303, 307, 308])
 
     def __init__(self, client_pool: HTTPClientPool | None = None, **kwargs):
         super().__init__(**kwargs)

@@ -759,7 +759,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                     tp.expect("Shutting down (exit code 0)")
                     tp.expect("Aggregated")
 
-    def test_spawing_with_fixed_multiple_locustfiles(self):
+    def test_spawning_with_fixed_multiple_locustfiles(self):
         with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_A) as mocked1:
             with mock_locustfile(content=MOCK_LOCUSTFILE_CONTENT_B) as mocked2:
                 with TestProcess(

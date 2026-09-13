@@ -14,6 +14,13 @@ repos:
         language: system
         types_or: [python, pyi]
 
+      - id: typos
+        name: typos
+        entry: uv run typos
+        language: system
+        args: [--force-exclude]
+        types_or: [python, pyi]
+
       - id: yarn-lint
         name: yarn lint
         files: ^locust/webui/

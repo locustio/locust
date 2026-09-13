@@ -84,6 +84,7 @@ lint = [
     "ruff==0.15.12",
     "mypy>=1.13.0,<1.15.0",
     "types-requests==2.32.4.20250809",
+    "typos>=1.50.1"
 ]
 release = ["twine>=5.1.1,<6.0.0"]
 docs = [
@@ -273,6 +274,7 @@ python = ["3.12"]
 all = [""]
 types = ["mypy locust/"]
 format = ["ruff check .", "ruff format --check"]
+spelling = ["typos ."]
 
 
 ## Hatch docs building environment
@@ -294,7 +296,7 @@ filterwarnings = [
     # but that isn't always possible
     "ignore::gevent.monkey.MonkeyPatchWarning",
     # "This process is multi-threaded, use of fork() may lead to deadlocks in the child." started happening in Python 3.12
-    # It could potentially be a real issue, but I dont think
+    # It could potentially be a real issue, but I don't think
     "ignore::DeprecationWarning:gevent",
 
 ]

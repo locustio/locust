@@ -133,7 +133,7 @@ function App() {
 ```js
 {
     title: string; // **Required** Any string for display purposes
-    key: string; // **Required** Programatic key used in extendedTabs to find corresponding stats and tables
+    key: string; // **Required** Programmatic key used in extendedTabs to find corresponding stats and tables
     component: // **Optional** React component to render
     shouldDisplayTab: // **Optional** Function provided with Locust redux state to output boolean
 }
@@ -141,7 +141,7 @@ function App() {
 **Extended Stat**
 ```js
 {
-    key: string; // **Required** Programatic key that must correspond to a tab key
+    key: string; // **Required** Programmatic key that must correspond to a tab key
     data: {
         [key: string]: string; // The key must have a corresponding entry in the extended table structure. The value corresponds to the data to be displayed
     }[];
@@ -150,7 +150,7 @@ function App() {
 **Extended Table**
 ```js
 {
-    key: string; // **Required** Programatic key that must correspond to a tab key
+    key: string; // **Required** Programmatic key that must correspond to a tab key
     structure: {
         key: string; // **Required** key that must correspond to a key in the extended stat data object
         title: string; // **Required** Corresponds to the title of the column in the table
