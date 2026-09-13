@@ -84,3 +84,30 @@ def constant_throughput(task_runs_per_second: float) -> Callable[["User"], float
     the next task.
     """
     return constant_pacing(1 / task_runs_per_second)
+
+
+def poisson(rate: float) -> Callable[["User"], float]:
+    """
+    Returns a function that will return a random wait time sampled from an exponential
+    distribution with mean ``1/rate`` seconds. Tasks will therefore arrive according to a
+    Poisson process with mean rate ``rate`` tasks per second, which is a good approximation
+    of how real users arrive.
+
+    The average number of task runs per second will be ``rate``, but unlike
+    :py:func:`constant_throughput <locust.wait_time.constant_throughput>` the individual
+    intervals vary randomly, so bursts and quiet periods occur naturally.
+
+    Example::
+
+        class MyUser(User):
+            wait_time = poisson(2)  # on average, each user runs 2 tasks per second
+            @task
+            def my_task(self):
+                ...
+
+    If you have multiple requests in a task your RPS will of course be higher than the
+    specified throughput.
+    """
+    if rate <= 0:
+        raise ValueError(f"poisson() requires a positive rate, got: {rate}")
+    return lambda instance: random.expovariate(rate)

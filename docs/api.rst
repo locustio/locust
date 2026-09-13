@@ -112,7 +112,7 @@ Built in wait_time functions
 ============================
 
 .. automodule:: locust.wait_time
-    :members: between, constant, constant_pacing, constant_throughput
+    :members: between, constant, constant_pacing, constant_throughput, poisson
 
 Response class
 ==============
