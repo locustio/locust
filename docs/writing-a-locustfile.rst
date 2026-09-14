@@ -545,7 +545,7 @@ You can even avoid logging a request at all by throwing an exception and then ca
 REST/JSON APIs
 --------------
 
-:ref:`FastHttpUser <rest>` provides a ready-made ``rest`` method, but you can also do it yourself:
+HttpUser and FastHttpUser provide a ready-made :ref:`rest <rest>` method, but you can also do it yourself:
 
 .. code-block:: python
 

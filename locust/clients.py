@@ -478,6 +478,10 @@ class ResponseContextManager(Response):
         self._manual_result = exc
 
 
+class RestResponseContextManager(ResponseContextManager):
+    js: dict  # This is technically an Optional, but I dont want to force everyone to check it
+
+
 class LocustHttpAdapter(HTTPAdapter):
     def __init__(self, pool_manager: PoolManager | None, *args, **kwargs):
         self.poolmanager = pool_manager
