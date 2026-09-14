@@ -5,3 +5,8 @@ extend-ignore-identifiers-re = [
     # UserAgent, which is what decides whether redirects are followed
     "(?i)redirect_resonse_codes",
 ]
+
+[files]
+extend-exclude = [
+    "CHANGELOG.md" # generated file
+]
