@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from locust.clients import HttpSession
+from locust.clients import HttpSession, RestResponseContextManager
 from locust.exception import CatchResponseError, StopTest, StopUser
 from locust.user.task import (
     LOCUST_STATE_RUNNING,
@@ -14,11 +14,14 @@ from locust.user.wait_time import constant
 from locust.util import deprecation
 
 import logging
+import re
 import sys
 import time
 import traceback
 from collections.abc import Callable
-from typing import TYPE_CHECKING, final
+from contextlib import contextmanager
+from json.decoder import JSONDecodeError
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, final
 
 from gevent import GreenletExit, greenlet
 from gevent.pool import Group
@@ -32,6 +35,8 @@ else:
     from typing_extensions import override
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     import pytest
 
 logger = logging.getLogger(__name__)
@@ -250,7 +255,78 @@ class User(metaclass=UserMeta):
         return ".".join(filter(lambda x: x != "<locals>", (cls.__module__ + "." + cls.__qualname__).split(".")))
 
 
-class HttpUser(User):
+RestResponseT = TypeVar("RestResponseT")
+
+
+class RestMixin(Generic[RestResponseT]):
+    """
+    Provides the ``rest`` and ``rest_`` methods for User classes that have an HTTP ``client`` (HttpUser and FastHttpUser)
+    """
+
+    _callstack_regex = re.compile(r'  File "(\/.[^"]*)", line (\d*),(.*)')
+
+    @contextmanager
+    def rest(self, method, url, headers: dict | None = None, **kwargs) -> Generator[RestResponseT]:
+        """
+        A wrapper for self.client.request that:
+
+        * Parses the JSON response to a dict called ``js`` in the response object. Marks the request as failed if the response was not valid JSON.
+        * Defaults ``Content-Type`` and ``Accept`` headers to ``application/json``
+        * Sets ``catch_response=True`` (so always use a :ref:`with-block <catch-response>`)
+        * Catches any unhandled exceptions thrown inside your with-block, marking the sample as failed (instead of exiting the task immediately without even firing the request event)
+        """
+        headers = headers or {}
+        if not ("Content-Type" in headers or "content-type" in headers):
+            headers["Content-Type"] = "application/json"
+        if not ("Accept" in headers or "accept" in headers):
+            headers["Accept"] = "application/json"
+        with self.client.request(method, url, catch_response=True, headers=headers, **kwargs) as r:  # type: ignore[attr-defined]
+            resp: Any = r
+            resp.js = None
+            if resp.content is None:
+                resp.failure(str(resp.error))
+            elif resp.text:
+                try:
+                    resp.js = resp.json()
+                except JSONDecodeError as e:
+                    resp.failure(
+                        f"Could not parse response as JSON. {resp.text[:250]}, response code {resp.status_code}, error {e}"
+                    )
+            try:
+                yield resp
+            except AssertionError as e:
+                if e.args:
+                    if e.args[0].endswith(","):
+                        short_resp = resp.text[:200] if resp.text else resp.text
+                        resp.failure(f"{e.args[0][:-1]}, response was {short_resp}")
+                    else:
+                        resp.failure(e.args[0])
+                else:
+                    resp.failure("Assertion failed")
+
+            except Exception as e:
+                error_lines = []
+                for l in traceback.format_exc().split("\n"):
+                    if m := self._callstack_regex.match(l):
+                        filename = re.sub(r"/((home|Users)/\w*)/", "~/", m.group(1))
+                        error_lines.append(filename + ":" + m.group(2) + m.group(3))
+                    short_resp = resp.text[:200] if resp.text else resp.text
+                    resp.failure(f"{e.__class__.__name__}: {e} at {', '.join(error_lines)}. Response was {short_resp}")
+
+    @contextmanager
+    def rest_(self, method, url, name=None, **kwargs) -> Generator[RestResponseT]:
+        """
+        Some REST api:s use a timestamp as part of their query string (mainly to break through caches).
+        This is a convenience method for that, appending a _=<timestamp> parameter automatically
+        """
+        separator = "&" if "?" in url else "?"
+        if name is None:
+            name = url + separator + "_=..."
+        with self.rest(method, f"{url}{separator}_={int(time.time() * 1000)}", name=name, **kwargs) as resp:
+            yield resp
+
+
+class HttpUser(User, RestMixin[RestResponseContextManager]):
     """
     Represents an HTTP "user" which is to be spawned and attack the system that is to be load tested.
 

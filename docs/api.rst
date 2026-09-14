@@ -13,7 +13,7 @@ HttpUser class
 ================
 
 .. autoclass:: locust.HttpUser
-    :members: wait_time, tasks, client, abstract
+    :members: wait_time, tasks, client, abstract, rest, rest_
 
 HttpSession class
 =================

@@ -1,5 +1,5 @@
 from locust.clients import HttpSession
-from locust.exception import LocustError
+from locust.exception import CatchResponseError, LocustError
 from locust.user.users import HttpUser
 
 import time
@@ -330,3 +330,75 @@ class TestHttpSession(WebserverTestCase):
         s = self.get_client("https://expired.badssl.com")
         r = s.get("/", verify=False)
         self.assertEqual(r.status_code, 200)
+
+
+class TestHttpUserRest(WebserverTestCase):
+    def setUp(self):
+        super().setUp()
+
+        class MyUser(HttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        self.user = MyUser(self.environment)
+
+        self.num_failures = 0
+        self.num_success = 0
+
+        def on_request(exception, **kwargs):
+            if exception:
+                self.num_failures += 1
+                self.last_failure_exception = exception
+            else:
+                self.num_success += 1
+
+        self.environment.events.request.add_listener(on_request)
+
+    def test_rest_success(self):
+        self.last_failure_exception = None
+        with self.user.rest("POST", "/rest", json={"foo": "bar"}) as response:
+            assert response.js["foo"] == "bar"
+
+        self.assertEqual(0, self.num_failures)
+        self.assertEqual(1, self.num_success)
+
+    def test_rest_fail(self):
+        with self.user.rest("POST", "/rest", json={"foo": "bar"}) as response:
+            assert response.js["foo"] == "NOPE"
+
+        self.assertTrue(
+            isinstance(self.last_failure_exception, CatchResponseError),
+            "Failure event handler should have been passed a CatchResponseError instance",
+        )
+        self.assertEqual(1, self.num_failures)
+        self.assertEqual(0, self.num_success)
+
+    def test_rest_exception_in_with_block(self):
+        with self.user.rest("POST", "/rest", json={"foo": "bar"}) as response:
+            response.js["missing"]
+
+        self.assertIn("KeyError: 'missing'", str(self.last_failure_exception))
+        self.assertEqual(1, self.num_failures)
+        self.assertEqual(0, self.num_success)
+
+    def test_rest_invalid_json(self):
+        with self.user.rest("GET", "/ultra_fast") as response:
+            self.assertIsNone(response.js)
+
+        self.assertIn("Could not parse response as JSON", str(self.last_failure_exception))
+        self.assertEqual(1, self.num_failures)
+        self.assertEqual(0, self.num_success)
+
+    def test_rest_connection_error(self):
+        with self.user.rest("GET", "http://localhost:1/", timeout=0.1) as response:
+            self.assertIsNone(response.js)
+
+        self.assertEqual(1, self.num_failures)
+        self.assertEqual(0, self.num_success)
+
+    def test_rest_with_timestamp(self):
+        with self.user.rest_("POST", "/rest", json={"foo": "bar"}) as response:
+            assert response.js["foo"] == "bar"
+            self.assertRegex(response.request.path_url, r"^/rest\?_=\d+$")
+
+        self.assertEqual(1, self.num_success)
+        self.assertEqual(1, self.environment.stats.get("/rest?_=...", "POST").num_requests)

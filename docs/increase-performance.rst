@@ -61,7 +61,7 @@ A single FastHttpUser/geventhttpclient session can run concurrent requests, you 
 REST
 ====
 
-FastHttpUser provides a ``rest`` method for testing REST/JSON HTTP interfaces. It is a wrapper for ``self.client.request`` that:
+FastHttpUser provides a ``rest`` method for testing REST/JSON HTTP interfaces (it is also available on HttpUser). It is a wrapper for ``self.client.request`` that:
     
 * Parses the JSON response to a dict called ``js`` in the response object. Marks the request as failed if the response was not valid JSON.
 * Defaults ``Content-Type`` and ``Accept`` headers to ``application/json``
