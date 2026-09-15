@@ -29,6 +29,7 @@ from flask import (
 from flask_cors import CORS
 from flask_login import LoginManager, login_required
 from gevent import pywsgi
+from jinja2 import TemplateNotFound
 
 from . import __version__ as version
 from . import argument_parser, stats
@@ -206,8 +207,14 @@ class WebUI:
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
-
-            return render_template("index.html", template_args=self.template_args)
+            try:
+                return render_template("index.html", template_args=self.template_args)
+            except TemplateNotFound:
+                return make_response(
+                    "Web UI assets are missing. If running Locust from source, "
+                    "please refer to docs/developing-locust.rst for instructions on building the Web UI.",
+                    500,
+                )
 
         @app_blueprint.route("/swarm", methods=["POST"])
         @self.auth_required_if_enabled
