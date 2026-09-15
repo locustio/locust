@@ -1,9 +1,7 @@
 [default]
 extend-ignore-identifiers-re = [
     "(?i)mosquitto", # name of https://github.com/eclipse-mosquitto/mosquitto
-    # Intentionally mirrors the (misspelled) attribute name in geventhttpclient's
-    # UserAgent, which is what decides whether redirects are followed
-    "(?i)redirect_resonse_codes",
+    "(?i)redirect_resonse_codes", # bug in geventhttpclient, fixed in https://github.com/geventhttpclient/geventhttpclient/pull/244
 ]
 
 [files]
