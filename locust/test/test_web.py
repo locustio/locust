@@ -17,10 +17,12 @@ import os
 import traceback
 from io import StringIO
 from tempfile import NamedTemporaryFile
+from unittest.mock import patch
 
 import gevent
 import requests
 from flask_login import UserMixin
+from jinja2 import TemplateNotFound
 from pyquery import PyQuery as pq
 
 from .testcases import LocustTestCase
@@ -1199,6 +1201,16 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             self.environment.available_user_classes["User1"].json(),
             {"host": "http://localhost", "tasks": ["my_task_2"], "fixed_count": 0, "weight": 1},
         )
+
+    def test_missing_index_template(self):
+        expected_message = (
+            "Web UI assets are missing. If running Locust from source, "
+            "please refer to docs/developing-locust.rst for instructions on building the Web UI."
+        )
+        with patch("locust.web.render_template", side_effect=TemplateNotFound("index.html")):
+            response = self.web_ui.app.test_client().get("/")
+            self.assertEqual(response.status_code, 500)
+            self.assertEqual(response.get_data(as_text=True), expected_message)
 
 
 class TestWebUIAuth(LocustTestCase):
