@@ -90,5 +90,5 @@ terraform destroy --auto-approve
 
 - [Terraform aws-get-started >> install-terraform-on-linux](https://learn.hashicorp.com/tutorials/terraform/install-cli?in=terraform/aws-get-started#install-terraform-on-linux)
 
-- [Terraform module aws loadtest distribuited](https://registry.terraform.io/modules/marcosborges/loadtest-distribuited/aws/latest)
+- [Terraform module aws loadtest distributed](https://registry.terraform.io/modules/marcosborges/loadtest-distribuited/aws/latest)
 

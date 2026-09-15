@@ -179,7 +179,7 @@ describe('createOptions', () => {
     expect(options.color).toEqual(['#fff']);
   });
 
-  test('should allow xAxis config to be overriden', () => {
+  test('should allow xAxis config to be overridden', () => {
     const mockXAxisConfig = {
       type: 'category' as any,
       minInterval: 1,
@@ -192,7 +192,7 @@ describe('createOptions', () => {
     expect(options.xAxis).toEqual(mockXAxisConfig);
   });
 
-  test('should allow grid config to be overriden', () => {
+  test('should allow grid config to be overridden', () => {
     const mockGridConfig = {
       left: '6%',
       right: '6%',

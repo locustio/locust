@@ -154,7 +154,13 @@ jobs:
               group: "lint",
               env: "lint:types",
             }
-
+          - {
+              name: "Typos",
+              python: "3.12",
+              os: ubuntu-latest,
+              group: "lint",
+              env: "lint:spelling",
+            }
           # Verification of builds and other aspects
           - {
               name: "Docs Build",

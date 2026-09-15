@@ -61,7 +61,7 @@ describe('useSortByField', () => {
     expect(getByTestId('sortedStats').textContent).toBe(JSON.stringify(mockStats));
   });
 
-  test('should allow defaultSortKey to be overriden', () => {
+  test('should allow defaultSortKey to be overridden', () => {
     const { getByTestId } = render(<MockHook defaultSortKey='method' />);
 
     expect(getByTestId('sortedStats').textContent).toBe(

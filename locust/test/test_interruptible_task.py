@@ -6,7 +6,7 @@ from collections import defaultdict
 from unittest import TestCase
 
 
-class InterruptableTaskSet(SequentialTaskSet):
+class InterruptibleTaskSet(SequentialTaskSet):
     counter: defaultdict[str, int] = defaultdict(int)
 
     def on_start(self):
@@ -29,20 +29,20 @@ class InterruptableTaskSet(SequentialTaskSet):
             raise StopUser()
 
 
-class TestInterruptableTask(TestCase):
+class TestInterruptibleTask(TestCase):
     def setUp(self):
         super().setUp()
 
-        class InterruptableUser(User):
+        class InterruptibleUser(User):
             host = "127.0.0.1"
-            tasks = [InterruptableTaskSet]
+            tasks = [InterruptibleTaskSet]
             wait_time = constant(0)
 
-        self.locust = InterruptableUser(Environment(catch_exceptions=True))
+        self.locust = InterruptibleUser(Environment(catch_exceptions=True))
 
-    def test_interruptable_task(self):
+    def test_interruptible_task(self):
         self.locust.run()
-        self.assertEqual(InterruptableTaskSet.counter.get("on_start"), 2)
-        self.assertEqual(InterruptableTaskSet.counter.get("t1"), 2)
-        self.assertEqual(InterruptableTaskSet.counter.get("t2", 0), 0)
-        self.assertEqual(InterruptableTaskSet.counter.get("on_stop"), 2)
+        self.assertEqual(InterruptibleTaskSet.counter.get("on_start"), 2)
+        self.assertEqual(InterruptibleTaskSet.counter.get("t1"), 2)
+        self.assertEqual(InterruptibleTaskSet.counter.get("t2", 0), 0)
+        self.assertEqual(InterruptibleTaskSet.counter.get("on_stop"), 2)

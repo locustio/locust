@@ -247,7 +247,7 @@ class FastHttpSession:
                 headers["Accept"] = "application/json"
 
         if not allow_redirects:
-            old_redirect_response_codes = self.client.redirect_resonse_codes
+            old_redirect_resonse_codes = self.client.redirect_resonse_codes
             self.client.redirect_resonse_codes = frozenset()
 
         start_perf_counter = time.perf_counter()
@@ -264,7 +264,7 @@ class FastHttpSession:
         }
 
         if not allow_redirects:
-            self.client.redirect_resonse_codes = old_redirect_response_codes
+            self.client.redirect_resonse_codes = old_redirect_resonse_codes
 
         request_meta["response_length"] = 0  # default value, if length cannot be determined
 
