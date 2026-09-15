@@ -436,9 +436,7 @@ class StatsEntry:
         if not self.response_times:
             return 0
         median = (
-            calculate_response_time_percentile(
-                self.response_times, self.num_requests - self.num_none_requests, 0.5
-            )
+            calculate_response_time_percentile(self.response_times, self.num_requests - self.num_none_requests, 0.5)
             or 0
         )
 
