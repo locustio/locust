@@ -3499,9 +3499,7 @@ class TestMasterRunner(LocustRunnerTestCase):
             del master.clients["fake_client"]
             self.assertEqual(0, len(master.clients))
 
-            server.mocked_send(
-                Message("spawning_complete", {"user_classes_count": {"TestUser": 1}}, "fake_client")
-            )
+            server.mocked_send(Message("spawning_complete", {"user_classes_count": {"TestUser": 1}}, "fake_client"))
             sleep(0.1)
 
             # the master must still be processing worker messages afterwards
