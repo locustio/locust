@@ -3477,6 +3477,40 @@ class TestMasterRunner(LocustRunnerTestCase):
             server.mocked_send(Message("stats", UNRECOGNIZED_HOST_MESSAGE, "unknown_host"))
             self.assertEqual(3, len(server.get_messages()))
 
+    def test_spawning_complete_from_unknown_worker_does_not_kill_client_listener(self):
+        """
+        A worker that has already been pruned from master.clients can still have a
+        spawning_complete in flight. That must not raise out of handle_message, because
+        the exception propagates out of client_listener and permanently kills the only
+        greenlet that processes worker messages, leaving the master up but deaf.
+        """
+
+        class TestUser(User):
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
+            master = self.get_runner(user_classes=[TestUser])
+            server.mocked_send(Message("client_ready", __version__, "fake_client"))
+            self.assertEqual(1, len(master.clients))
+
+            # the worker goes away, exactly as heartbeat_worker prunes a dead one
+            del master.clients["fake_client"]
+            self.assertEqual(0, len(master.clients))
+
+            server.mocked_send(
+                Message("spawning_complete", {"user_classes_count": {"TestUser": 1}}, "fake_client")
+            )
+            sleep(0.1)
+
+            # the master must still be processing worker messages afterwards
+            server.mocked_send(Message("client_ready", __version__, "fake_client2"))
+            sleep(0.1)
+            self.assertIn(
+                "fake_client2", master.clients, "master stopped accepting workers after the unknown-worker message"
+            )
+
 
 class TestWorkerRunner(LocustTestCase):
     def setUp(self):
