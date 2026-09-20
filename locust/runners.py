@@ -917,10 +917,8 @@ class MasterRunner(DistributedRunner):
         self.greenlet.kill(block=True)
 
     def check_stopped(self) -> None:
-        if (
-            self.state == STATE_STOPPING
-            and all(x.state == STATE_INIT for x in self.clients.all)
-            or all(x.state not in (STATE_RUNNING, STATE_SPAWNING, STATE_INIT) for x in self.clients.all)
+        if (self.state == STATE_STOPPING and all(x.state == STATE_INIT for x in self.clients.all)) or all(
+            x.state not in (STATE_RUNNING, STATE_SPAWNING, STATE_INIT) for x in self.clients.all
         ):
             self.update_state(STATE_STOPPED)
 
@@ -938,7 +936,7 @@ class MasterRunner(DistributedRunner):
                     missing_clients_to_be_removed.append(client.id)
 
                 if client.heartbeat < 0 and client.state != STATE_MISSING:
-                    logger.info(f"Worker {str(client.id)} failed to send heartbeat, setting state to missing.")
+                    logger.info(f"Worker {client.id!s} failed to send heartbeat, setting state to missing.")
                     client.state = STATE_MISSING
                     client.user_classes_count = {}
                     if self._users_dispatcher is not None:
@@ -1023,7 +1021,7 @@ class MasterRunner(DistributedRunner):
                 elif msg.data != __version__ and msg.data != -1:
                     if msg.data[0:4] == __version__[0:4]:
                         logger.debug(
-                            f"A worker ({client_id}) running a different patch version ({repr(msg.data)}) connected, master version is {repr(__version__)}"
+                            f"A worker ({client_id}) running a different patch version ({msg.data!r}) connected, master version is {__version__!r}"
                         )
                     else:
                         logger.warning(
@@ -1113,7 +1111,7 @@ class MasterRunner(DistributedRunner):
                     c.heartbeat = HEARTBEAT_LIVENESS
                     client_state = msg.data["state"]
                     if c.state == STATE_MISSING:
-                        logger.info(f"Worker {str(c.id)} self-healed with heartbeat, setting state to {client_state}.")
+                        logger.info(f"Worker {c.id!s} self-healed with heartbeat, setting state to {client_state}.")
                         if self._users_dispatcher is not None:
                             self._users_dispatcher.add_worker(worker_node=c)
                             if not self._users_dispatcher.dispatch_in_progress and self.state == STATE_RUNNING:

@@ -23,6 +23,7 @@ from locust.runners import (
 from locust.stats import RequestStats
 from locust.user import TaskSet, User, task
 
+import itertools
 import json
 import logging
 import random
@@ -209,7 +210,7 @@ class TestLocustRunner(LocustRunnerTestCase):
         users = runner.spawn_users({BaseUser.__name__: 2}, wait=False)
         self.assertEqual(2, len(users))
         self.assertEqual(2, len(runner.user_greenlets))
-        g1 = list(runner.user_greenlets)[0]
+        g1 = next(iter(runner.user_greenlets))
         g2 = list(runner.user_greenlets)[1]
         runner.stop_users({BaseUser.__name__: 2})
         self.assertEqual(0, len(runner.user_greenlets))
@@ -1903,7 +1904,7 @@ class TestMasterWorkerRunners(LocustTestCase):
 
             stage = 1
             tolerance = 1  # in s
-            for (t1, state1, user_count1), (t2, state2, user_count2) in zip(statuses[:-1], statuses[1:]):
+            for (t1, state1, user_count1), (t2, state2, user_count2) in itertools.pairwise(statuses):
                 if state1 == STATE_SPAWNING and state2 == STATE_RUNNING and stage == 1:
                     self.assertTrue(2.5 - tolerance <= t2 <= 2.5 + tolerance)
                 elif state1 == STATE_RUNNING and state2 == STATE_SPAWNING and stage == 1:
@@ -3222,7 +3223,7 @@ class TestMasterRunner(LocustRunnerTestCase):
 
         # make sure exception was stored
         self.assertEqual(1, len(runner.exceptions))
-        hash_key, exception = runner.exceptions.popitem()
+        _, exception = runner.exceptions.popitem()
         self.assertTrue("traceback" in exception)
         self.assertTrue("HeyAnException" in exception["traceback"])
         self.assertEqual(2, exception["count"])

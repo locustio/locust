@@ -34,7 +34,7 @@ class NotUserSubclass():
 
 
 class MockedLocustfile:
-    __slots__ = ["filename", "directory", "file_path"]
+    __slots__ = ["directory", "file_path", "filename"]
 
 
 @contextmanager

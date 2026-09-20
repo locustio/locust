@@ -8,7 +8,7 @@ def retry(delays=(1, 3, 5), exception=Exception):
     def decorator(function):
         def wrapper(*args, **kwargs):
             cnt = 0
-            for delay in delays + (None,):
+            for delay in (*delays, None):
                 try:
                     return function(*args, **kwargs)
                 except exception as e:

@@ -1,5 +1,7 @@
 from locust import HttpUser, LoadTestShape, constant, task
 
+import itertools
+
 
 class UserA(HttpUser):
     wait_time = constant(600)
@@ -61,10 +63,10 @@ class RampUpThenDownLoadShape(LoadTestShape):
         {"duration": 20, "users": 1, "spawn_rate": 5},
     ]
 
-    for previous_stage, stage in zip(stages[:-1], stages[1:]):
+    for previous_stage, stage in itertools.pairwise(stages):
         stage["duration"] += previous_stage["duration"]
 
-    for previous_stage, stage in zip(stages[:-1], stages[1:]):
+    for previous_stage, stage in itertools.pairwise(stages):
         assert stage["duration"] > previous_stage["duration"]
 
     def tick(self):

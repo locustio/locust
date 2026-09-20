@@ -68,7 +68,7 @@ class TestLoadLocustfile(LocustTestCase):
 
     def test_return_docstring_and_user_classes(self):
         with mock_locustfile() as mocked:
-            user_classes, shape_classes = main.load_locustfile(mocked.file_path)
+            user_classes, _ = main.load_locustfile(mocked.file_path)
             self.assertIn("UserSubclass", user_classes)
             self.assertNotIn("NotUserSubclass", user_classes)
             self.assertNotIn("LoadTestShape", user_classes)

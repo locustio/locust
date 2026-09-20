@@ -51,7 +51,7 @@ def get_html_report(
     elif environment.runner.user_classes:
         all_hosts = {l.host for l in environment.runner.user_classes}
         if len(all_hosts) == 1:
-            host = list(all_hosts)[0]
+            host = next(iter(all_hosts))
 
     requests_statistics = list(chain(stats.sort_stats(request_stats.entries), [request_stats.total]))
     failures_statistics = stats.sort_stats(request_stats.errors)

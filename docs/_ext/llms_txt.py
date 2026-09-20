@@ -71,7 +71,7 @@ class _MarkdownBuilderProxy:
         self.config = _MarkdownConfig()
         self.current_doc_name = current_doc_name
 
-    def get_target_uri(self, docname: str, typ: str = None) -> str:
+    def get_target_uri(self, docname: str, typ: str | None = None) -> str:
         return f"{docname}.html"
 
 

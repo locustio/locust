@@ -42,7 +42,7 @@ class MyUser(FastHttpUser):
 
         with self.rest("", "/post", json={"foo": 1}) as resp:
             # assign and assert in one line
-            assert (foo := resp.js["foo"])
+            assert (foo := resp.js["foo"])  # noqa: RUF018
             print(f"the number {foo} is awesome")
 
         # rest() catches most exceptions, so any programming mistakes you make automatically marks the request as a failure

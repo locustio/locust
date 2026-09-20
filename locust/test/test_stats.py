@@ -360,7 +360,7 @@ class TestRequestStats(unittest.TestCase):
         self.stats.log_error("GET", "/some-path", Exception("Exception!"))
 
         self.assertEqual(1, len(self.stats.errors))
-        self.assertEqual(2, list(self.stats.errors.values())[0].occurrences)
+        self.assertEqual(2, next(iter(self.stats.errors.values())).occurrences)
 
         self.stats.log_error("GET", "/some-path", Exception("Another exception!"))
         self.stats.log_error("GET", "/some-path", Exception("Another exception!"))
@@ -382,7 +382,7 @@ class TestRequestStats(unittest.TestCase):
 
         before = time.time()
         self.stats.log_error("GET", "/some-path", Exception("Exception!"))
-        error = list(self.stats.errors.values())[0]
+        error = next(iter(self.stats.errors.values()))
         first_seen = error.first_seen
         self.assertIsNotNone(first_seen)
         self.assertIsNotNone(error.last_seen)

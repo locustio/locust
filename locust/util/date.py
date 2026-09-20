@@ -20,4 +20,4 @@ def format_duration(start_time, end_time):
 
     parts = [f"{value} {label}{'s' if value != 1 else ''}" for value, label in time_parts if value > 0]
 
-    return " and ".join(filter(None, [", ".join(parts[:-1])] + parts[-1:])) if parts else "0 seconds"
+    return " and ".join(filter(None, [", ".join(parts[:-1]), *parts[-1:]])) if parts else "0 seconds"

@@ -539,7 +539,7 @@ class StatsEntry:
             # (which is what the response times cache is used for) uses an approximation of the
             # last 10 seconds anyway, it should be fine to ignore this.
             last_time = int(self.last_request_timestamp) if self.last_request_timestamp else None
-            if last_time and last_time > (old_last_request_timestamp and int(old_last_request_timestamp) or 0):
+            if last_time and last_time > ((old_last_request_timestamp and int(old_last_request_timestamp)) or 0):
                 self._cache_response_times(last_time)
 
     def serialize(self) -> StatsEntryDict:
@@ -585,7 +585,7 @@ class StatsEntry:
             + str((STATS_NAME_WIDTH - STATS_TYPE_WIDTH) + 4)
             + "s %7d %12s |%7d %7d %7d%7d | %7.2f %11.2f"
         ) % (
-            (self.method and self.method + " " or ""),
+            ((self.method and self.method + " ") or ""),
             self.name,
             self.num_requests,
             "%d(%.2f%%)" % (self.num_failures, self.fail_ratio * 100),
@@ -661,12 +661,15 @@ class StatsEntry:
         if not self.num_requests:
             raise ValueError("Can't calculate percentile on url with no successful requests")
 
-        tpl = f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8d {' '.join(['%6d'] * len(PERCENTILES_TO_REPORT))}"
+        tpl = f"%-{STATS_TYPE_WIDTH!s}s %-{STATS_NAME_WIDTH!s}s %8d {' '.join(['%6d'] * len(PERCENTILES_TO_REPORT))}"
 
         return tpl % (
-            (self.method or "", self.name)
-            + tuple(self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT)
-            + (self.num_requests,)
+            (
+                self.method or "",
+                self.name,
+                *tuple(self.get_response_time_percentile(p) for p in PERCENTILES_TO_REPORT),
+                self.num_requests,
+            )
         )
 
     def _cache_response_times(self, t: int) -> None:
@@ -897,9 +900,9 @@ def get_percentile_stats_summary(stats: RequestStats) -> list[str]:
     Percentile stats summary will be returned as list of string
     """
     summary = ["Response time percentiles (approximated)"]
-    headers = ("Type", "Name") + tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)) + ("# reqs",)
+    headers = ("Type", "Name", *tuple(get_readable_percentiles(PERCENTILES_TO_REPORT)), "# reqs")
     summary.append(
-        (f"%-{str(STATS_TYPE_WIDTH)}s %-{str(STATS_NAME_WIDTH)}s %8s {' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}")
+        f"%-{STATS_TYPE_WIDTH!s}s %-{STATS_NAME_WIDTH!s}s %8s {' '.join(['%6s'] * len(PERCENTILES_TO_REPORT))}"
         % headers
     )
     separator = (
@@ -1008,7 +1011,8 @@ class StatsCSV:
             "Average Content Size",
             "Requests/s",
             "Failures/s",
-        ] + get_readable_percentiles(self.percentiles_to_report)
+            *get_readable_percentiles(self.percentiles_to_report),
+        ]
 
         self.failures_columns = [
             "Method",
@@ -1190,8 +1194,8 @@ class StatsCSVFileWriter(StatsCSV):
 
     def _stats_history_data_rows(self, csv_writer: CSVWriter, now: float) -> None:
         """
-        Write CSV rows with the *current* stats. By default only includes the
-        Aggregated stats entry, but if self.full_history is set to True, a row for each entry will
+        Write CSV rows with the *current* stats. By default, only includes the
+        Aggregated stats entry, but if self.full_history is set to True, a row for each entry
         will be included.
 
         Note that this method differs from the other methods as it appends time-stamped data to the file, whereas the other methods overwrites the data.

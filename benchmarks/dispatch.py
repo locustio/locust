@@ -153,7 +153,7 @@ if __name__ == "__main__":
                 1000 * statistics.mean(dispatch_iteration_durations_ramp_up),
                 1000 * min(dispatch_iteration_durations_ramp_up),
                 1000 * max(dispatch_iteration_durations_ramp_up),
-            )  # noqa: UP032
+            )
             cpu_ramp_down = "{:3.3f}/{:3.3f}/{:3.3f}".format(  # noqa: UP032
                 1000 * statistics.mean(dispatch_iteration_durations_ramp_down),
                 1000 * min(dispatch_iteration_durations_ramp_down),

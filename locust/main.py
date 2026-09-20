@@ -140,7 +140,7 @@ def merge_locustfiles_content(
             user_classes = load_locustfile_pytest(_locustfile)
             set_available_things(user_classes, [])
 
-    shape_class = list(available_shape_classes.values())[0] if available_shape_classes else None
+    shape_class = next(iter(available_shape_classes.values())) if available_shape_classes else None
 
     return available_user_classes, available_shape_classes, available_user_tasks, shape_class
 
