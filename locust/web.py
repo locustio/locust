@@ -691,7 +691,7 @@ class WebUI:
         elif self.environment.runner.user_classes:
             all_hosts = {l.host for l in self.environment.runner.user_classes}
             if len(all_hosts) == 1:
-                host = next(iter(all_hosts))
+                host = list(all_hosts)[0]
                 missing_host_warning = not host
             else:
                 # since we have multiple User classes with different host attributes, we'll

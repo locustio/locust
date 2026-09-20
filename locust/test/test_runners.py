@@ -210,7 +210,7 @@ class TestLocustRunner(LocustRunnerTestCase):
         users = runner.spawn_users({BaseUser.__name__: 2}, wait=False)
         self.assertEqual(2, len(users))
         self.assertEqual(2, len(runner.user_greenlets))
-        g1 = next(iter(runner.user_greenlets))
+        g1 = list(runner.user_greenlets)[0]
         g2 = list(runner.user_greenlets)[1]
         runner.stop_users({BaseUser.__name__: 2})
         self.assertEqual(0, len(runner.user_greenlets))

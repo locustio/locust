@@ -41,8 +41,9 @@ class MyUser(FastHttpUser):
             assert resp.js["data"]["foo"] == 2, "my custom error message with response text,"
 
         with self.rest("", "/post", json={"foo": 1}) as resp:
-            # assign and assert in one line
-            assert (foo := resp.js["foo"])  # noqa: RUF018
+            # assign, then assert that the value is truthy
+            foo = resp.js["foo"]
+            assert foo
             print(f"the number {foo} is awesome")
 
         # rest() catches most exceptions, so any programming mistakes you make automatically marks the request as a failure
@@ -50,13 +51,13 @@ class MyUser(FastHttpUser):
         with self.rest("POST", "/post", json={"foo": 1}) as resp:
             1 / 0  # pylint: disable=pointless-statement
 
-        # response isn't even json, but RestUser will already have been marked it as a failure, so we dont have to do it again
+        # response isn't even JSON, but RestUser will already have been marked it as a failure, so we dont have to do it again
         with self.rest("GET", "/") as resp:
             pass
 
         with self.rest("GET", "/") as resp:
             # If resp.js is None (which it will be when there is a connection failure, a non-json responses etc),
-            # reading from resp.js will raise a TypeError (instead of an AssertionError), so lets avoid that:
+            # reading from resp.js will raise a TypeError (instead of an AssertionError), so let's avoid that:
             if resp.js:
                 assert resp.js["foo"] == 2
             # or, as a mildly confusing oneliner:
