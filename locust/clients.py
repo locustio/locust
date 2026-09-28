@@ -11,14 +11,13 @@ from typing import TYPE_CHECKING, cast
 from urllib.parse import unquote, urlparse, urlunparse
 
 import requests
-from packaging.version import Version
 from requests import Response
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
-from requests.compat import basestring
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 from requests.utils import DEFAULT_CA_BUNDLE_PATH, extract_zipped_paths
 from urllib3 import PoolManager
+from urllib3.exceptions import MaxRetryError, NewConnectionError, ProtocolError
 from urllib3.util import create_urllib3_context
 
 from .exception import CatchResponseError, LocustError, ResponseError
@@ -27,8 +26,6 @@ if sys.version_info >= (3, 12):
     from typing import override
 else:
     from typing_extensions import override
-
-requests_version = Version(requests.__version__).release
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping
@@ -61,9 +58,8 @@ if TYPE_CHECKING:
 
 absolute_http_url_regexp = re.compile(r"^https?://", re.IGNORECASE)
 
-if requests_version >= (2, 32, 5):
-    _preloaded_ssl_context = create_urllib3_context()
-    _preloaded_ssl_context.load_verify_locations(extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH))
+_preloaded_ssl_context = create_urllib3_context()
+_preloaded_ssl_context.load_verify_locations(extract_zipped_paths(DEFAULT_CA_BUNDLE_PATH))
 
 
 class HttpSession(requests.Session):
@@ -419,10 +415,7 @@ class ResponseContextManager(Response):
                 while (
                     isinstance(
                         e,
-                        requests.exceptions.ConnectionError
-                        | requests.packages.urllib3.exceptions.ProtocolError
-                        | requests.packages.urllib3.exceptions.MaxRetryError
-                        | requests.packages.urllib3.exceptions.NewConnectionError,
+                        requests.exceptions.ConnectionError | ProtocolError | MaxRetryError | NewConnectionError,
                     )
                     and e.__context__  # Not sure if the above exceptions can ever be the lowest level, but it is good to be sure
                 ):
@@ -488,14 +481,10 @@ class LocustHttpAdapter(HTTPAdapter):
         if self.poolmanager is None:
             super().init_poolmanager(*args, **kwargs)
 
-    # In python requests version 2.32.5 they reverted
-    # https://github.com/psf/requests/pull/6667
-    # Without this change the root CA certificates are loaded on every request
-    # We re-implement this change to increase the performance
+    # requests reverted https://github.com/psf/requests/pull/6667 in 2.32.5, so without
+    # re-implementing it here the root CA certificates are loaded on every request.
+    # We re-implement it to increase performance (see _preloaded_ssl_context above).
     def cert_verify(self, conn, url, verify, cert):
-        if requests_version < (2, 32, 5):
-            return super().cert_verify(conn, url, verify, cert)
-
         if url.lower().startswith("https") and verify:
             conn.cert_reqs = "CERT_REQUIRED"
 
@@ -515,7 +504,7 @@ class LocustHttpAdapter(HTTPAdapter):
             conn.ca_cert_dir = None
 
         if cert:
-            if not isinstance(cert, basestring):
+            if not isinstance(cert, str):
                 conn.cert_file = cert[0]
                 conn.key_file = cert[1]
             else:
@@ -529,7 +518,7 @@ class LocustHttpAdapter(HTTPAdapter):
     def build_connection_pool_key_attributes(self, request, verify, cert=None):
         host_params, pool_kwargs = super().build_connection_pool_key_attributes(request, verify, cert)
 
-        if requests_version >= (2, 32, 5) and verify is True:
+        if verify is True:
             pool_kwargs["ssl_context"] = _preloaded_ssl_context
 
         return host_params, pool_kwargs
