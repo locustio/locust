@@ -14,10 +14,10 @@ import requests
 from requests import Response
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
+from requests.compat import basestring
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 from requests.utils import DEFAULT_CA_BUNDLE_PATH, extract_zipped_paths
 from urllib3 import PoolManager
-from urllib3.exceptions import MaxRetryError, NewConnectionError, ProtocolError
 from urllib3.util import create_urllib3_context
 
 from .exception import CatchResponseError, LocustError, ResponseError
@@ -415,7 +415,10 @@ class ResponseContextManager(Response):
                 while (
                     isinstance(
                         e,
-                        requests.exceptions.ConnectionError | ProtocolError | MaxRetryError | NewConnectionError,
+                        requests.exceptions.ConnectionError
+                        | requests.packages.urllib3.exceptions.ProtocolError
+                        | requests.packages.urllib3.exceptions.MaxRetryError
+                        | requests.packages.urllib3.exceptions.NewConnectionError,
                     )
                     and e.__context__  # Not sure if the above exceptions can ever be the lowest level, but it is good to be sure
                 ):
@@ -504,7 +507,7 @@ class LocustHttpAdapter(HTTPAdapter):
             conn.ca_cert_dir = None
 
         if cert:
-            if not isinstance(cert, str):
+            if not isinstance(cert, basestring):
                 conn.cert_file = cert[0]
                 conn.key_file = cert[1]
             else:
