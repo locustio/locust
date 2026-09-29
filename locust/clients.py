@@ -42,7 +42,7 @@ if TYPE_CHECKING:
         cookies: RequestsCookieJar | MutableMapping[str, str] | None
         files: Any  # simplified signature
         auth: Any  # simplified signature
-        timeout: float | tuple[float, float] | tuple[float, None] | None
+        timeout: float | tuple[float | None, float | None] | None
         allow_redirects: bool
         proxies: MutableMapping[str, str] | None
         hooks: Mapping[str, Iterable[Callable[[Response], Any]] | Callable[[Response], Any]] | None
