@@ -575,6 +575,18 @@ class TestFastHttpUserClass(WebserverTestCase):
         resp = l.client.get("/redirect")  # ensure redirect still works
         self.assertFalse("location" in resp.headers)
 
+    def test_allow_redirects_override_keeps_both_attr_spellings_in_sync(self):
+        # geventhttpclient renamed redirect_resonse_codes -> redirect_response_codes in 2.5+;
+        # both spellings must be kept in sync so the override works regardless of installed version.
+        class MyLocust(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyLocust(self.environment)
+        original = l.client.client.redirect_resonse_codes
+        l.client.get("/redirect", allow_redirects=False)
+        self.assertEqual(original, l.client.client.redirect_resonse_codes)
+        self.assertEqual(original, l.client.client.redirect_response_codes)
+
     def test_slow_redirect(self):
         s = FastHttpSession("http://127.0.0.1:%i" % self.port, self.environment.events.request, user=None)
         url = "/redirect?url=/redirect&delay=0.5"
