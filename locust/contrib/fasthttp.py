@@ -12,6 +12,7 @@ import socket
 import time
 import zlib
 from base64 import b64encode
+from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from ssl import SSLError
 from typing import TYPE_CHECKING
@@ -111,6 +112,11 @@ class FastHttpSession:
         self.request_event = request_event
         self.cookiejar = CookieJar()
         self.user = user
+
+        # Requests can be grouped under a common name by setting request_name, or by using the rename_request context manager
+        # This is an alternative to passing in the "name" parameter to the requests function
+        self.request_name: str | None = None
+
         if not ssl_context_factory:
             if insecure:
                 ssl_context_factory = insecure_ssl_context_factory
@@ -152,6 +158,16 @@ class FastHttpSession:
             return path
         else:
             return f"{self.base_url}{path}"
+
+    @contextmanager
+    def rename_request(self, name: str) -> Generator[None]:
+        """Group requests using the "with" keyword"""
+
+        self.request_name = name
+        try:
+            yield
+        finally:
+            self.request_name = None
 
     def _send_request_safe_mode(self, method: str, url: str, **kwargs) -> FastResponse:
         """
@@ -221,6 +237,10 @@ class FastHttpSession:
         :return: A :py:class:`FastResponse <locust.contrib.fasthttp.FastResponse>` object if catch_response is False, and
             :py:class:`ResponseContextManager <locust.contrib.fasthttp.ResponseContextManager>` if True.
         """
+        # if group name has been set and no name parameter has been passed in; set the name parameter to group_name
+        if self.request_name and not name:
+            name = self.request_name
+
         # prepend url with hostname unless it's already an absolute URL
         built_url = self._build_url(url)
 

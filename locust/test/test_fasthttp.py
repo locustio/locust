@@ -376,6 +376,66 @@ class TestRequestStatsWithWebserver(WebserverTestCase):
         locust.client.get("/ultra_fast", name="my_custom_name")
         self.assertEqual(1, self.runner.stats.get("my_custom_name", "GET").num_requests)
 
+    def test_request_stats_named_endpoint_request_name(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        self.assertIsNone(locust.client.request_name)
+        locust.client.request_name = "my_custom_name_1"
+        locust.client.get("/ultra_fast")
+        locust.client.get("/ultra_fast")
+        self.assertEqual(2, self.runner.stats.get("my_custom_name_1", "GET").num_requests)
+        self.assertNotIn(("/ultra_fast", "GET"), self.runner.stats.entries)
+        locust.client.request_name = None
+        locust.client.get("/ultra_fast")
+        self.assertEqual(1, self.runner.stats.get("/ultra_fast", "GET").num_requests)
+
+    def test_request_stats_named_endpoint_rename_request(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        with locust.client.rename_request("my_custom_name_3"):
+            locust.client.get("/ultra_fast")
+            locust.client.post("/post", json={"a": 1})
+        self.assertEqual(1, self.runner.stats.get("my_custom_name_3", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.get("my_custom_name_3", "POST").num_requests)
+        # outside the with-block, requests are named after their URL again
+        self.assertIsNone(locust.client.request_name)
+        locust.client.get("/ultra_fast")
+        self.assertEqual(1, self.runner.stats.get("/ultra_fast", "GET").num_requests)
+
+    def test_rename_request_resets_name_on_exception(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        with self.assertRaises(ValueError):
+            with locust.client.rename_request("my_custom_name_4"):
+                raise ValueError("boom")
+        self.assertIsNone(locust.client.request_name)
+
+    def test_rename_request_with_catch_response(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        with locust.client.rename_request("my_custom_name_5"):
+            with locust.client.get("/ultra_fast", catch_response=True) as response:
+                response.failure("nope")
+        self.assertEqual(1, self.runner.stats.get("my_custom_name_5", "GET").num_failures)
+
+    def test_name_argument_takes_precedence_over_request_name(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        with locust.client.rename_request("group_name"):
+            locust.client.get("/ultra_fast", name="explicit_name")
+        self.assertEqual(1, self.runner.stats.get("explicit_name", "GET").num_requests)
+        self.assertNotIn(("group_name", "GET"), self.runner.stats.entries)
+
     def test_request_stats_query_variables(self):
         class MyUser(FastHttpUser):
             host = "http://127.0.0.1:%i" % self.port

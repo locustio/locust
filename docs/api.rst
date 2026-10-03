@@ -46,7 +46,7 @@ FastHttpSession class
 =====================
 
 .. autoclass:: locust.contrib.fasthttp.FastHttpSession
-    :members: __init__, request, get, post, delete, put, head, options, patch, iter_lines
+    :members: __init__, request, get, post, delete, put, head, options, patch, iter_lines, rename_request
 
 PostgresUser class
 ==================

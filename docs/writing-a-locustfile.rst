@@ -590,6 +590,7 @@ wrap a Requests session. An alternative way of grouping requests is provided by 
     self.client.request_name=None
 
 If you want to chain multiple groupings with minimal boilerplate, you can use the ``client.rename_request()`` context manager.
+Both ``client.request_name`` and ``client.rename_request()`` are also available on the :py:class:`FastHttpSession <locust.contrib.fasthttp.FastHttpSession>` used by :ref:`FastHttpUser <increase-performance>`.
 
 .. code-block:: python
 
