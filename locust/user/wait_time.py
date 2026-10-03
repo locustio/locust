@@ -83,6 +83,8 @@ def constant_throughput(task_runs_per_second: float) -> Callable[["User"], float
     If a task execution exceeds the specified wait_time, the wait will be 0 before starting
     the next task.
     """
+    if task_runs_per_second <= 0:
+        raise ValueError(f"constant_throughput() requires a positive rate, got: {task_runs_per_second}")
     return constant_pacing(1 / task_runs_per_second)
 
 
