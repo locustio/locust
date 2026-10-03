@@ -118,7 +118,7 @@ FastHttpSession class
 ---------------------
 
 .. autoclass:: locust.contrib.fasthttp.FastHttpSession
-    :members: request, get, post, delete, put, head, options, patch
+    :members: request, get, post, delete, put, head, options, patch, rename_request
 
 .. autoclass:: locust.contrib.fasthttp.FastResponse
     :members: content, text, json, headers
