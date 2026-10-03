@@ -1,6 +1,6 @@
 import random
 from collections.abc import Callable
-from time import time
+from time import perf_counter
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -52,9 +52,9 @@ def constant_pacing(wait_time: float) -> Callable[["User"], float]:
     """
 
     def wait_time_func(self: "User") -> float:
-        run_time: float = time() - self._cp_last_run - self._cp_last_wait_time
+        run_time: float = perf_counter() - self._cp_last_run - self._cp_last_wait_time
         self._cp_last_wait_time = max(0, wait_time - run_time)
-        self._cp_last_run = time()
+        self._cp_last_run = perf_counter()
         return self._cp_last_wait_time
 
     return wait_time_func
@@ -83,6 +83,8 @@ def constant_throughput(task_runs_per_second: float) -> Callable[["User"], float
     If a task execution exceeds the specified wait_time, the wait will be 0 before starting
     the next task.
     """
+    if task_runs_per_second <= 0:
+        raise ValueError(f"constant_throughput() requires a positive rate, got: {task_runs_per_second}")
     return constant_pacing(1 / task_runs_per_second)
 
 

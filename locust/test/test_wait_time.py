@@ -1,9 +1,43 @@
-from locust import TaskSet, User, between, constant, constant_throughput, poisson
+from locust import TaskSet, User, between, constant, constant_pacing, constant_throughput, poisson
+from locust.env import Environment
 
+import importlib
 import random
 import time
 
+import pytest
+
 from .testcases import LocustTestCase
+
+
+@pytest.mark.parametrize("wait_time", [constant_pacing(10), constant_throughput(0.1)])
+@pytest.mark.parametrize("taskset", [False, True])
+@pytest.mark.parametrize("clock_adjustment", [-3600, 3600])
+def test_pacing_ignores_wall_clock_adjustments(monkeypatch, wait_time, taskset, clock_adjustment):
+    elapsed = 100.0
+    wall_clock = 10000.0
+    monkeypatch.setattr(time, "time", lambda: wall_clock)
+    monkeypatch.setattr(time, "perf_counter", lambda: elapsed)
+    for module_name in ("locust.user.task", "locust.user.wait_time"):
+        module = importlib.import_module(module_name)
+        monkeypatch.setattr(module, "time", lambda: wall_clock, raising=False)
+        monkeypatch.setattr(module, "perf_counter", lambda: elapsed, raising=False)
+
+    user = User(Environment())
+    paced = TaskSet(user) if taskset else user
+    elapsed += 2
+    wall_clock += 2 + clock_adjustment
+    assert wait_time(paced) == 8
+
+    # The previous eight-second wait and another three-second task have elapsed.
+    elapsed += 11
+    wall_clock += 11
+    assert wait_time(paced) == 7
+
+    # Tasks that overrun the interval still run again immediately.
+    elapsed += 20
+    wall_clock += 20
+    assert wait_time(paced) == 0
 
 
 class TestWaitTime(LocustTestCase):
@@ -76,6 +110,10 @@ class TestWaitTime(LocustTestCase):
             time.sleep(random.random() * 0.1)
             _ = ts2.wait_time()
             _ = ts2.wait_time()
+
+    def test_constant_throughput_invalid_rate(self):
+        self.assertRaises(ValueError, constant_throughput, 0)
+        self.assertRaises(ValueError, constant_throughput, -1)
 
     def test_poisson_mean(self):
         # The mean wait time of an exponential distribution with rate=10 is 1/10

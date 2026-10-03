@@ -87,3 +87,19 @@ def test_format_duration(check):
     start_time = dates_checks[0]["datetime"].timestamp()
     end_time = check["datetime"].timestamp()
     assert format_duration(start_time, end_time) == check["duration"]
+
+
+# The timestamps above are interpreted in the local timezone, so the checks below use
+# explicit unix timestamps instead.
+duration_checks = [
+    (1700000000.0, 1700000001.2, "1 second"),
+    (1700000000.9, 1700000002.1, "1 second"),
+    (1700000000.8, 1700000001.4, "0 seconds"),
+    (1700000000.5, 1700003661.5, "1 hour, 1 minute and 1 second"),
+    (1700000000.7, 1700086401.3, "1 day"),
+]
+
+
+@pytest.mark.parametrize("start_time,end_time,expected", duration_checks)
+def test_format_duration_of_elapsed_time(start_time, end_time, expected):
+    assert format_duration(start_time, end_time) == expected

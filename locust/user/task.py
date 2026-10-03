@@ -14,7 +14,7 @@ import random
 import traceback
 from collections import deque
 from collections.abc import Callable
-from time import time
+from time import perf_counter, time
 from typing import (
     TYPE_CHECKING,
     Protocol,
@@ -316,7 +316,7 @@ class TaskSet(metaclass=TaskSetMeta):
             self.max_wait = self.user.max_wait
         if not self.wait_function:
             self.wait_function = self.user.wait_function
-        self._cp_last_run: float = time()  # used by constant_pacing wait_time
+        self._cp_last_run: float = perf_counter()  # used by constant_pacing wait_time
         self._cp_last_wait_time: float = 0  # used by constant_pacing wait_time
 
     @property
