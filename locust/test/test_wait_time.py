@@ -111,6 +111,10 @@ class TestWaitTime(LocustTestCase):
             _ = ts2.wait_time()
             _ = ts2.wait_time()
 
+    def test_constant_throughput_invalid_rate(self):
+        self.assertRaises(ValueError, constant_throughput, 0)
+        self.assertRaises(ValueError, constant_throughput, -1)
+
     def test_poisson_mean(self):
         # The mean wait time of an exponential distribution with rate=10 is 1/10
         # With 10000 samples the standard error of the mean is ~0.001, so a delta of 0.01 is very generous
