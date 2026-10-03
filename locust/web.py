@@ -338,7 +338,7 @@ class WebUI:
                 self._swarm_greenlet = None
 
             if environment.runner is not None:
-                if user_count is None or user_count < 0 or not spawn_rate:
+                if user_count is None or user_count < 0 or spawn_rate is None or spawn_rate <= 0:
                     err_msg = "Missing or invalid user_count or spawn_rate from /swarm request"
                     logger.error(err_msg)
                     return jsonify({"success": False, "message": err_msg, "host": environment.host})
