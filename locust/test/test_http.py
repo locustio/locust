@@ -402,3 +402,14 @@ class TestHttpUserRest(WebserverTestCase):
 
         self.assertEqual(1, self.num_success)
         self.assertEqual(1, self.environment.stats.get("/rest?_=...", "POST").num_requests)
+
+    def test_rest_does_not_modify_the_given_headers(self):
+        headers = {"X-Header-Test": "hello"}
+        with self.user.rest("POST", "/rest", json={"foo": "bar"}, headers=headers) as response:
+            assert response.js["foo"] == "bar"
+            self.assertEqual("hello", response.request.headers["X-Header-Test"])
+            self.assertEqual("application/json", response.request.headers["Content-Type"])
+
+        self.assertEqual({"X-Header-Test": "hello"}, headers)
+        self.assertEqual(0, self.num_failures)
+        self.assertEqual(1, self.num_success)

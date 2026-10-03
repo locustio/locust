@@ -513,6 +513,16 @@ class TestFastHttpUserClass(WebserverTestCase):
         self.assertEqual("hello", r.headers.get("X-Header-Test"))
         self.assertEqual("hello", r.request.headers.get("X-Header-Test"))
 
+    def test_client_request_does_not_modify_the_given_headers(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        headers = {"X-Header-Test": "hello"}
+        r = locust.client.get("/request_header_test", headers=headers)
+        self.assertEqual("hello", r.text)
+        self.assertEqual({"X-Header-Test": "hello"}, headers)
+
     def test_client_get(self):
         class MyUser(FastHttpUser):
             host = "http://127.0.0.1:%i" % self.port
@@ -900,6 +910,17 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         )
         self.assertEqual(1, self.num_failures)
         self.assertEqual(0, self.num_success)
+
+    def test_rest_does_not_modify_the_given_headers(self):
+        headers = {"X-Header-Test": "hello"}
+        with self.user.rest("POST", "/rest", json={"foo": "bar"}, headers=headers) as response:
+            assert response.js["foo"] == "bar"
+            self.assertEqual("hello", response.request.headers.get("X-Header-Test"))
+            self.assertEqual("application/json", response.request.headers.get("Content-Type"))
+
+        self.assertEqual({"X-Header-Test": "hello"}, headers)
+        self.assertEqual(0, self.num_failures)
+        self.assertEqual(1, self.num_success)
 
 
 class TestFastHttpSsl(LocustTestCase):
