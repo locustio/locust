@@ -327,6 +327,15 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertFalse(response.json()["success"])
         self.assertIn("spawn_rate", response.json()["message"])
 
+    def test_swarm_negative_spawn_rate_returns_clean_error(self):
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 5, "spawn_rate": -5, "host": "https://localhost"},
+        )
+        self.assertEqual(200, response.status_code)
+        self.assertFalse(response.json()["success"])
+        self.assertIn("spawn_rate", response.json()["message"])
+
     def test_swarm_userclass_specified(self):
         class User1(User):
             wait_time = constant(1)
