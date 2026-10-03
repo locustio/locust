@@ -4157,6 +4157,21 @@ class TestFloatWeithts(unittest.TestCase):
                     self.assertDictEqual(x, next(users_dispatcher))
 
 
+class TestSpawnRateValidation(unittest.TestCase):
+    def test_new_dispatch_rejects_non_positive_spawn_rate(self):
+        """A spawn rate of zero or below must fail loudly instead of ramping instantly / dividing by zero."""
+
+        class User1(User):
+            weight = 1
+
+        users_dispatcher = UsersDispatcher(worker_nodes=[WorkerNode("1")], user_classes=[User1])
+
+        for spawn_rate in (0, 0.0, -0.5, -1, -1000):
+            with self.subTest(spawn_rate=spawn_rate):
+                with self.assertRaisesRegex(ValueError, "spawn_rate must be > 0"):
+                    users_dispatcher.new_dispatch(target_user_count=5, spawn_rate=spawn_rate)
+
+
 def _aggregate_dispatched_users(d: dict[str, dict[str, int]]) -> dict[str, int]:
     user_classes = list(next(iter(d.values())).keys())
     return {u: sum(d[u] for d in d.values()) for u in user_classes}
