@@ -1,5 +1,97 @@
 # Also see https://github.com/locustio/locust/releases
 
+## [2.46.7](https://github.com/locustio/locust/tree/2.46.7) (2026-10-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.46.7...2.46.7)
+
+**Closed issues:**
+
+- rest\(\) and FastHttpSession.request\(\) modify the headers dict passed by the caller [\#3529](https://github.com/locustio/locust/issues/3529)
+
+## [2.46.7](https://github.com/locustio/locust/tree/2.46.7) (2026-10-04)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.46.6...2.46.7)
+
+**Fixed bugs:**
+
+- /swarm accepts negative user\_count and reports success [\#3522](https://github.com/locustio/locust/issues/3522)
+
+**Closed issues:**
+
+- /swarm reports success:true for a negative spawn\_rate, then the run dies in the greenlet [\#3537](https://github.com/locustio/locust/issues/3537)
+- format\_duration\(\) inflates the duration by a second because it truncates each timestamp separately [\#3535](https://github.com/locustio/locust/issues/3535)
+- constant\_throughput\(\) accepts a non-positive rate: silent zero pacing, or a bare ZeroDivisionError at import [\#3533](https://github.com/locustio/locust/issues/3533)
+- spawn\_rate is never validated: a negative rate spawns the whole load instantly and 0 raises ZeroDivisionError [\#3527](https://github.com/locustio/locust/issues/3527)
+- FastHttpUser breaks with geventhttpclient\>=2.5 due to redirect\_resonse\_codes typo [\#3525](https://github.com/locustio/locust/issues/3525)
+- Web UI Number of users resets to 1 after page refresh [\#3518](https://github.com/locustio/locust/issues/3518)
+- MasterRunner.client\_listener dies permanently with KeyError on spawning\_complete from an unknown worker [\#3515](https://github.com/locustio/locust/issues/3515)
+
+**Merged pull requests:**
+
+- Reject a negative spawn\_rate in /swarm instead of reporting a successful start [\#3538](https://github.com/locustio/locust/pull/3538) ([Lesereingrape](https://github.com/Lesereingrape))
+- Fix format\_duration\(\) truncating each timestamp before subtracting [\#3536](https://github.com/locustio/locust/pull/3536) ([Lesereingrape](https://github.com/Lesereingrape))
+- Reject a non-positive rate in constant\_throughput\(\) [\#3534](https://github.com/locustio/locust/pull/3534) ([Lesereingrape](https://github.com/Lesereingrape))
+- Add request\_name and rename\_request to FastHttpSession [\#3532](https://github.com/locustio/locust/pull/3532) ([SulimanAbdulrazzaq](https://github.com/SulimanAbdulrazzaq))
+- Do not modify the headers dict the caller passed in [\#3530](https://github.com/locustio/locust/pull/3530) ([Lesereingrape](https://github.com/Lesereingrape))
+- Reject a non-positive spawn\_rate in new\_dispatch\(\) [\#3528](https://github.com/locustio/locust/pull/3528) ([Lesereingrape](https://github.com/Lesereingrape))
+- Fix FastHttpUser allow\_redirects=False on geventhttpclient 2.5+ [\#3526](https://github.com/locustio/locust/pull/3526) ([saiyaswanth883](https://github.com/saiyaswanth883))
+- Fix constant pacing after wall-clock adjustments [\#3524](https://github.com/locustio/locust/pull/3524) ([Shubham-Padkonde](https://github.com/Shubham-Padkonde))
+- Fix negative user\_count validation in /swarm endpoint [\#3523](https://github.com/locustio/locust/pull/3523) ([suraj-self](https://github.com/suraj-self))
+- chore: up min requests version to 2.33.1 and delete if-else requests [\#3521](https://github.com/locustio/locust/pull/3521) ([even-even](https://github.com/even-even))
+- Decode percent-encoded credentials in host URL and keep IPv6 brackets in base\_url [\#3520](https://github.com/locustio/locust/pull/3520) ([SulimanAbdulrazzaq](https://github.com/SulimanAbdulrazzaq))
+- chore: add RUF ruff rules [\#3519](https://github.com/locustio/locust/pull/3519) ([even-even](https://github.com/even-even))
+- Fix web UI user count not persisting in parsed\_options [\#3517](https://github.com/locustio/locust/pull/3517) ([saiyaswanth883](https://github.com/saiyaswanth883))
+- Fix negative --users causing infinite hang in headless mode [\#3509](https://github.com/locustio/locust/pull/3509) ([reachsridhard](https://github.com/reachsridhard))
+
+## [2.46.6](https://github.com/locustio/locust/tree/2.46.6) (2026-09-17)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.46.5...2.46.6)
+
+**Closed issues:**
+
+- \[DX\] Show actionable error when Web UI assets are missing [\#3513](https://github.com/locustio/locust/issues/3513)
+- "Med." column and "50%" percentile report different values for identical data \(lower- vs upper-median conventions\) [\#3503](https://github.com/locustio/locust/issues/3503)
+
+**Merged pull requests:**
+
+- Don't let a spawning\_complete from an unknown worker kill client\_listener [\#3516](https://github.com/locustio/locust/pull/3516) ([ergdevops](https://github.com/ergdevops))
+- \[DX\] Improve error message when Web UI assets are missing [\#3514](https://github.com/locustio/locust/pull/3514) ([suraj-self](https://github.com/suraj-self))
+- Add rest method to HttpUser [\#3512](https://github.com/locustio/locust/pull/3512) ([anandghegde](https://github.com/anandghegde))
+- chore: add typos linter [\#3511](https://github.com/locustio/locust/pull/3511) ([even-even](https://github.com/even-even))
+- Add wait\_time.poisson\(\) for Poisson-distributed task arrivals [\#3510](https://github.com/locustio/locust/pull/3510) ([whr313703](https://github.com/whr313703))
+- Compute Med. with the same rank as the 50% percentile [\#3508](https://github.com/locustio/locust/pull/3508) ([gyanu2507](https://github.com/gyanu2507))
+
+## [2.46.5](https://github.com/locustio/locust/tree/2.46.5) (2026-09-07)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.46.4...2.46.5)
+
+**Merged pull requests:**
+
+- \[FIX\] : correct  the user count metric for distributed runs [\#3507](https://github.com/locustio/locust/pull/3507) ([RamachandraBhardwaj](https://github.com/RamachandraBhardwaj))
+- Fix User.stop\(\) crash when greenlet hasn't started yet [\#3506](https://github.com/locustio/locust/pull/3506) ([reachsridhard](https://github.com/reachsridhard))
+- fix: fix pythonVersion in ruffConfig and fix extend-exclude setting [\#3504](https://github.com/locustio/locust/pull/3504) ([even-even](https://github.com/even-even))
+- Fix Web UI 500 error handler crashing on plain exceptions [\#3502](https://github.com/locustio/locust/pull/3502) ([reachsridhard](https://github.com/reachsridhard))
+- docs: remove stale Python 3.9 test output [\#3500](https://github.com/locustio/locust/pull/3500) ([liuyaohui666](https://github.com/liuyaohui666))
+
+## [2.46.4](https://github.com/locustio/locust/tree/2.46.4) (2026-08-21)
+
+[Full Changelog](https://github.com/locustio/locust/compare/2.46.3...2.46.4)
+
+**Fixed bugs:**
+
+- unstable tests on python3.15 CI [\#3465](https://github.com/locustio/locust/issues/3465)
+
+**Merged pull requests:**
+
+- Fix master stopping test prematurely when a missing worker quits [\#3501](https://github.com/locustio/locust/pull/3501) ([reachsridhard](https://github.com/reachsridhard))
+- build\(deps-dev\): bump cryptography from 48.0.1 to 50.0.0 [\#3498](https://github.com/locustio/locust/pull/3498) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build\(deps\): bump brace-expansion from 1.1.16 to 1.1.18 in /locust/webui [\#3497](https://github.com/locustio/locust/pull/3497) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build\(deps\): bump postcss from 8.5.16 to 8.5.26 in /locust/webui [\#3496](https://github.com/locustio/locust/pull/3496) ([dependabot[bot]](https://github.com/apps/dependabot))
+- docs: add inspect.software health badge [\#3495](https://github.com/locustio/locust/pull/3495) ([Nayjest](https://github.com/Nayjest))
+- Re-enable tests using Python 3.15. Update uv.lock [\#3494](https://github.com/locustio/locust/pull/3494) ([cyberw](https://github.com/cyberw))
+- Fix FastHttpUser streaming response\_length using wrong header key [\#3492](https://github.com/locustio/locust/pull/3492) ([reachsridhard](https://github.com/reachsridhard))
+- fix: exclude missing workers from new dispatches [\#3489](https://github.com/locustio/locust/pull/3489) ([ShiroKSH](https://github.com/ShiroKSH))
+
 ## [2.46.3](https://github.com/locustio/locust/tree/2.46.3) (2026-08-01)
 
 [Full Changelog](https://github.com/locustio/locust/compare/2.46.2...2.46.3)
@@ -184,7 +276,7 @@
 - Bump sphinxcontrib-htmlhelp from 2.0.1 to 2.1.0 [\#3359](https://github.com/locustio/locust/pull/3359) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Bump snowballstemmer from 2.2.0 to 3.0.1 [\#3358](https://github.com/locustio/locust/pull/3358) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Bump the all\_dependencies group with 2 updates [\#3356](https://github.com/locustio/locust/pull/3356) ([dependabot[bot]](https://github.com/apps/dependabot))
-- Add Qdrant support [\#3354](https://github.com/locustio/locust/pull/3354) ([Anush008](https://github.com/Anush008))
+- Add Qdrant support [\#3354](https://github.com/locustio/locust/pull/3354) ([anush008](https://github.com/anush008))
 - Unset print\_stats on workers created by --processes option [\#3353](https://github.com/locustio/locust/pull/3353) ([markogle](https://github.com/markogle))
 - adding mqtt user feature that works around the paho mqtt 340 connections limit issue [\#3268](https://github.com/locustio/locust/pull/3268) ([ionutab](https://github.com/ionutab))
 
