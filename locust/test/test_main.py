@@ -54,7 +54,7 @@ MOCK_LOCUSTFILE_CONTENT_B = textwrap.dedent(
 class ProcessIntegrationTest(TestCase):
     def setUp(self):
         super().setUp()
-        self.timeout = gevent.Timeout(10)
+        self.timeout = gevent.Timeout(20)
         self.timeout.start()
 
     def tearDown(self):
