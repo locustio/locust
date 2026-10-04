@@ -191,7 +191,9 @@ class Runner:
                     user_greenlet.dead,
                 )
                 continue
-            user_classes_count[user.__class__.__name__] += 1
+            # a user class may have been removed from environment.user_classes (e.g. by the
+            # class picker in the Web UI) while its greenlets are still running
+            user_classes_count[user.__class__.__name__] = user_classes_count.get(user.__class__.__name__, 0) + 1
         return user_classes_count
 
     def update_state(self, new_state: str) -> None:
@@ -237,6 +239,12 @@ class Runner:
 
         new_users: list[User] = []
         for user_class, spawn_count in user_classes_spawn_count.items():
+            if user_class not in self.user_classes_by_name:
+                # the dispatcher can reference classes that were removed from
+                # environment.user_classes (e.g. by the class picker in the Web UI)
+                # while a dispatch was in progress
+                logger.warning(f"Skipping spawn of {spawn_count} {user_class} user(s): class is not in user_classes")
+                continue
             new_users += spawn(user_class, spawn_count)
 
         if wait:
@@ -249,7 +257,7 @@ class Runner:
         stop_group = Group()
 
         for user_class, stop_count in user_classes_stop_count.items():
-            if self.user_classes_count[user_class] == 0:
+            if self.user_classes_count.get(user_class, 0) == 0:
                 continue
 
             to_stop: list[greenlet.greenlet] = []
@@ -263,7 +271,7 @@ class Runner:
                         "While stopping users, we encountered a user that didn't have proper args %s", user_greenlet
                     )
                     continue
-                if type(user) is self.user_classes_by_name[user_class]:
+                if type(user).__name__ == user_class:
                     to_stop.append(user)
 
             if not to_stop:
@@ -511,14 +519,11 @@ class LocalRunner(Runner):
                 user_classes_count = dispatched_users[self._local_worker_node.id]
                 logger.debug(f"Ramping to {_format_user_classes_count_for_log(user_classes_count)}")
                 for user_class_name, user_class_count in user_classes_count.items():
-                    if self.user_classes_count[user_class_name] > user_class_count:
-                        user_classes_stop_count[user_class_name] = (
-                            self.user_classes_count[user_class_name] - user_class_count
-                        )
-                    elif self.user_classes_count[user_class_name] < user_class_count:
-                        user_classes_spawn_count[user_class_name] = (
-                            user_class_count - self.user_classes_count[user_class_name]
-                        )
+                    current_class_count = self.user_classes_count.get(user_class_name, 0)
+                    if current_class_count > user_class_count:
+                        user_classes_stop_count[user_class_name] = current_class_count - user_class_count
+                    elif current_class_count < user_class_count:
+                        user_classes_spawn_count[user_class_name] = user_class_count - current_class_count
 
                 if wait:
                     # spawn_users will block, so we need to call stop_users first
@@ -1311,10 +1316,11 @@ class WorkerRunner(DistributedRunner):
         user_classes_stop_count: dict[str, int] = {}
 
         for user_class_name, user_class_count in user_classes_count.items():
-            if self.user_classes_count[user_class_name] > user_class_count:
-                user_classes_stop_count[user_class_name] = self.user_classes_count[user_class_name] - user_class_count
-            elif self.user_classes_count[user_class_name] < user_class_count:
-                user_classes_spawn_count[user_class_name] = user_class_count - self.user_classes_count[user_class_name]
+            current_class_count = self.user_classes_count.get(user_class_name, 0)
+            if current_class_count > user_class_count:
+                user_classes_stop_count[user_class_name] = current_class_count - user_class_count
+            elif current_class_count < user_class_count:
+                user_classes_spawn_count[user_class_name] = user_class_count - current_class_count
 
         # call spawn_users before stopping the users since stop_users
         # can be blocking because of the stop_timeout

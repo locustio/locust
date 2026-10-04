@@ -568,6 +568,41 @@ class TestLocustRunner(LocustRunnerTestCase):
 
         runner.quit()
 
+    def test_user_classes_count_after_user_class_removed(self):
+        # The class picker in the Web UI can remove a class from
+        # environment.user_classes while greenlets of that class are still
+        # running. Counting those users must not crash.
+        class MyUser1(User):
+            wait_time = constant(0)
+
+            @task
+            def my_task(self):
+                pass
+
+        class MyUser2(User):
+            wait_time = constant(0)
+
+            @task
+            def my_task(self):
+                pass
+
+        environment = Environment(user_classes=[MyUser1, MyUser2])
+        runner = LocalRunner(environment)
+
+        runner.start(user_count=4, spawn_rate=10, wait=False)
+        runner.spawning_greenlet.join()
+        self.assertDictEqual({"MyUser1": 2, "MyUser2": 2}, runner.user_classes_count)
+
+        # simulate the class picker deselecting MyUser2 while the test is running
+        environment.user_classes = [MyUser1]
+
+        self.assertDictEqual({"MyUser1": 2, "MyUser2": 2}, runner.user_classes_count)
+
+        runner.start(user_count=2, spawn_rate=10, wait=False)
+        runner.spawning_greenlet.join()
+
+        runner.quit()
+
     def test_host_class_attribute_from_web(self):
         """If host is left empty from the webUI, we should not use it"""
 
