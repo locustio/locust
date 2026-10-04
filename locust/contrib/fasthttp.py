@@ -249,7 +249,7 @@ class FastHttpSession:
         if self.user:
             context = {**self.user.context(), **context}
 
-        headers = headers or {}
+        headers = dict(headers) if headers else {}
         if auth:
             headers["Authorization"] = _construct_basic_auth_str(auth[0], auth[1])
         elif self.auth_header:
