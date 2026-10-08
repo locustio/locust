@@ -38,14 +38,14 @@ dependencies = [
     "requests>=2.33.1",
     "msgpack>=1.0.0",
     "pyzmq>=25.0.0",
-    "geventhttpclient>=2.3.1",
+    "geventhttpclient>=2.5.1",
     "configargparse>=1.7.1",
     "typing_extensions>=4.6.0; python_version < '3.12'",
     "psutil>=5.9.1",
     "Flask-Login>=0.6.3",
     "Flask-Cors>=3.0.10",
     "pywin32; sys_platform == 'win32'",
-    "gevent>=24.10.1",
+    "gevent>=24.11.1",
     "python-socketio[client]>=5.13.0",
     "python-engineio>=4.12.2",
     "pytest>=8.3.3,<10",
@@ -84,7 +84,7 @@ lint = [
     "ruff==0.16.8",
     "mypy>=1.13.0,<1.15.0",
     "types-requests==2.33.0.20260906",
-    "typos>=1.50.1"
+    "typos>=1.50.3"
 ]
 release = ["twine>=5.1.1,<6.0.0"]
 docs = [
