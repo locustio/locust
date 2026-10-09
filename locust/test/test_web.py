@@ -1011,6 +1011,68 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         # stop
         response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
 
+    def _swarm_with_run_time(self, run_time=None):
+        data = {"user_count": 5, "spawn_rate": 5, "host": "https://localhost"}
+        if run_time is not None:
+            data["run_time"] = run_time
+        response = requests.post("http://127.0.0.1:%i/swarm" % self.web_port, data=data)
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(response.json()["success"])
+
+    def _get_state(self):
+        return requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port).json()["state"]
+
+    def test_swarm_run_time_expires_and_stops_test(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                pass
+
+        self.environment.user_classes = [MyUser]
+        self.environment.web_ui.parsed_options = get_parser().parse_args()
+        self._swarm_with_run_time("1s")
+        gevent.sleep(1.5)
+        self.assertEqual("stopped", self._get_state())
+
+    def test_stop_cancels_run_time_timer(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                pass
+
+        self.environment.user_classes = [MyUser]
+        self.environment.web_ui.parsed_options = get_parser().parse_args()
+        self._swarm_with_run_time("1s")
+        requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        # a new test without run_time must not be stopped by the timer of the previous one
+        self._swarm_with_run_time()
+        gevent.sleep(1.5)
+        self.assertEqual("running", self._get_state())
+
+        requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+
+    def test_swarm_replaces_run_time_timer(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                pass
+
+        self.environment.user_classes = [MyUser]
+        self.environment.web_ui.parsed_options = get_parser().parse_args()
+        self._swarm_with_run_time("1s")
+        # restarting with a longer run_time must replace the first timer
+        self._swarm_with_run_time("5s")
+        gevent.sleep(1.5)
+        self.assertEqual("running", self._get_state())
+
+        requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+
     def test_host_value_from_user_class(self):
         class MyUser(User):
             host = "http://example.com"
