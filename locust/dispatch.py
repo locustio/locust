@@ -220,6 +220,33 @@ class UsersDispatcher(Iterator):
 
         self._dispatch_iteration_durations.clear()
 
+    def update_user_classes(self, user_classes: list[type[User]]) -> None:
+        """
+        Update the set of user classes being dispatched.
+
+        Called when the available user classes change while a test is running
+        (e.g. via the Web UI class picker). The counts of removed classes are
+        set to 0 so that the runner stops their remaining users, and they are
+        forgotten from _active_users so they are not removed again later.
+        """
+        if self._user_classes == sorted(user_classes, key=attrgetter("__name__")):
+            return
+
+        self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
+        self._user_generator = self._user_gen()
+
+        user_class_names = {user_class.__name__ for user_class in self._user_classes}
+        for worker_node_id, counts in self._users_on_workers.items():
+            self._users_on_workers[worker_node_id] = {
+                name: counts.get(name, 0) if name in user_class_names else 0
+                for name in user_class_names | counts.keys()
+            }
+        self._active_users = [
+            (worker_node, user_class_name)
+            for worker_node, user_class_name in self._active_users
+            if user_class_name in user_class_names
+        ]
+
     def add_worker(self, worker_node: WorkerNode) -> None:
         """
         This method is to be called when a new worker connects to the master. When
