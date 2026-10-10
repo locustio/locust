@@ -640,7 +640,9 @@ class LocustUserAgent(UserAgent):
 
     def _verify_status(self, status_code, url=None):
         """Hook for subclassing"""
-        if status_code not in self.valid_response_codes:
+        if status_code not in self.valid_response_codes or (
+            self.max_redirects == 0 and status_code in type(self).redirect_response_codes
+        ):
             raise LocustBadStatusCode(url, code=status_code)
 
 
