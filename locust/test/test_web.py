@@ -1011,6 +1011,80 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         # stop
         response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
 
+    def test_swarm_run_time_expires_and_stops_test(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                pass
+
+        self.environment.user_classes = [MyUser]
+        self.environment.web_ui.parsed_options = get_parser().parse_args()
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": "1s"},
+        )
+        self.assertEqual(200, response.status_code)
+        gevent.sleep(1.5)
+        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        self.assertEqual("stopped", response.json()["state"])
+
+    def test_stop_cancels_run_time_timer(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                pass
+
+        self.environment.user_classes = [MyUser]
+        self.environment.web_ui.parsed_options = get_parser().parse_args()
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": "1s"},
+        )
+        self.assertEqual(200, response.status_code)
+        requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        # a new test without run_time must not be stopped by the timer of the previous one
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost"},
+        )
+        self.assertEqual(200, response.status_code)
+        gevent.sleep(1.5)
+        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        self.assertEqual("running", response.json()["state"])
+
+        requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+
+    def test_swarm_replaces_run_time_timer(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                pass
+
+        self.environment.user_classes = [MyUser]
+        self.environment.web_ui.parsed_options = get_parser().parse_args()
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": "1s"},
+        )
+        self.assertEqual(200, response.status_code)
+        # restarting with a longer run_time must replace the first timer
+        response = requests.post(
+            "http://127.0.0.1:%i/swarm" % self.web_port,
+            data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": "5s"},
+        )
+        self.assertEqual(200, response.status_code)
+        gevent.sleep(1.5)
+        response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
+        self.assertEqual("running", response.json()["state"])
+
+        requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+
     def test_host_value_from_user_class(self):
         class MyUser(User):
             host = "http://example.com"
