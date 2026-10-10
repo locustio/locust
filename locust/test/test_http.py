@@ -4,6 +4,7 @@ from locust.user.users import HttpUser
 
 import time
 
+import pytest
 import urllib3
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 from urllib3.exceptions import SSLError
@@ -326,6 +327,7 @@ class TestHttpSession(WebserverTestCase):
         self.assertTrue("exception" in r.request_meta)
         self.assertIsInstance(r.request_meta["exception"], SSLError)
 
+    @pytest.mark.filterwarnings("ignore::urllib3.exceptions.InsecureRequestWarning")
     def test_verify_false_succeeds_with_bad_cert(self):
         s = self.get_client("https://expired.badssl.com")
         r = s.get("/", verify=False)
