@@ -61,6 +61,11 @@ def request_header_test():
     return response
 
 
+@app.route("/echo_target/<path:subpath>")
+def echo_target(subpath):
+    return {"path": request.path, "query_string": request.query_string.decode("ascii")}
+
+
 @app.route("/post", methods=["POST"])
 @app.route("/put", methods=["PUT"])
 def manipulate():
