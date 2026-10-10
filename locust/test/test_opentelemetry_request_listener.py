@@ -37,12 +37,6 @@ def metric_reader(monkeypatch):
     meter_provider.shutdown()
 
 
-def _fire(response_time):
-    events.request.fire(
-        request_type="GET", name="/test", response_time=response_time, response_length=0, exception=None, context={}
-    )
-
-
 def _sample_count(reader):
     count = 0
     data = reader.get_metrics_data()
@@ -56,14 +50,18 @@ def _sample_count(reader):
 
 
 def test_request_with_response_time_records_one_sample(metric_reader):
-    _fire(12.0)
+    events.request.fire(
+        request_type="GET", name="/test", response_time=12.0, response_length=0, exception=None, context={}
+    )
 
     assert _sample_count(metric_reader) == 1
     assert not locust_log.unhandled_greenlet_exception
 
 
 def test_request_without_response_time_records_no_sample_and_does_not_raise(metric_reader):
-    _fire(None)
+    events.request.fire(
+        request_type="GET", name="/test", response_time=None, response_length=0, exception=None, context={}
+    )
 
     assert _sample_count(metric_reader) == 0
     assert not locust_log.unhandled_greenlet_exception
