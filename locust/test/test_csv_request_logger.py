@@ -1,5 +1,6 @@
 """Tests for locust.contrib.csv_request_logger."""
 
+from locust import log as locust_log
 from locust.contrib.csv_request_logger import CSV_COLUMNS, CsvRequestLogger, _status_code
 from locust.env import Environment
 
@@ -92,6 +93,20 @@ class TestCsvRequestLogger(unittest.TestCase):
         assert int(row["response_length"]) == 512
         assert int(row["status_code"]) == 200
         assert row["exception"] == ""
+
+    def test_request_without_response_time_writes_an_empty_cell(self):
+        locust_log.unhandled_greenlet_exception = False
+        log = CsvRequestLogger(self.csv_path)
+        log.register(self.env)
+        _fire(self.env, response_time=None)
+        log.close()
+
+        rows = self._read_csv()
+        assert len(rows) == 1
+        assert rows[0]["response_time_ms"] == ""
+        assert rows[0]["name"] == "/test"
+        assert int(rows[0]["response_length"]) == 512
+        assert not locust_log.unhandled_greenlet_exception
 
     def test_failed_request_records_exception_string(self):
         log = CsvRequestLogger(self.csv_path)

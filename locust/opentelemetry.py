@@ -64,7 +64,9 @@ def setup_opentelemetry(locustfile: str, profile: str | None) -> bool:
             if exception:
                 attributes["error.type"] = exception.__class__.__name__
 
-            ttlb_histogram.record(response_time / 1000.0, attributes=attributes)
+            # response_time is None for requests that have no duration (typically async requests)
+            if response_time is not None:
+                ttlb_histogram.record(response_time / 1000.0, attributes=attributes)
 
         @events.init.add_listener
         def on_locust_init(runner, **kwargs):
