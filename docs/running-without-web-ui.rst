@@ -115,7 +115,7 @@ Here's an example using GitHub Actions. Use it in combination with the above sni
             timeout-minutes: 15 # just in case something goes wrong
         steps:
             - uses: actions/checkout@v6
-            - uses: actions/setup-python@v6
+            - uses: actions/setup-python@v7
               with:
                 python-version: '3.11' 
             - run: pip install locust
