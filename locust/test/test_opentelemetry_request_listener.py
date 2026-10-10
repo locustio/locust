@@ -24,6 +24,8 @@ def metric_reader(monkeypatch):
     # the OpenTelemetry API only lets the global meter provider be set once per process
     monkeypatch.setattr(metrics, "set_meter_provider", lambda provider: None)
     monkeypatch.setattr(metrics, "get_meter", meter_provider.get_meter)
+    # the instrumentations would call the patched get_meter with their own arguments and stay installed afterwards
+    monkeypatch.setattr(opentelemetry, "_setup_auto_instrumentation", lambda: None)
     monkeypatch.setattr(opentelemetry, "request_names", set())
     monkeypatch.setattr(locust_log, "unhandled_greenlet_exception", False)
     request_handlers = list(events.request._handlers)
