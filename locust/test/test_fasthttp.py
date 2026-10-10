@@ -634,7 +634,7 @@ class TestFastHttpUserClass(WebserverTestCase):
         l = MyUser(self.environment)
         response = l.client.get("/redirect")
         self.assertEqual(302, response.status_code)
-        self.assertTrue(response.headers["location"].endswith("/ultra_fast"))
+        self.assertTrue(response.headers["location"].endswith("/ultra_fast"))  # type: ignore
         self.assertEqual(1, self.runner.stats.get("/redirect", "GET").num_requests)
         self.assertEqual(0, self.runner.stats.get("/redirect", "GET").num_failures)
         self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET").num_requests)
