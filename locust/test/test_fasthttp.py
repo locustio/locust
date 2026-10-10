@@ -537,6 +537,34 @@ class TestFastHttpUserClass(WebserverTestCase):
         locust = MyUser(self.environment)
         self.assertEqual("GET", locust.client.get("http://127.0.0.1:%i/request_method" % self.port).text)
 
+    def _get_echo_target(self, url):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        events = []
+        self.environment.events.request.add_listener(lambda **kw: events.append(kw))
+        response = MyUser(self.environment).client.get(url)
+        self.assertEqual(1, len(events))
+        self.assertIsNone(events[0]["exception"])
+        return response.json()
+
+    def test_client_get_space_in_path_is_percent_encoded(self):
+        self.assertEqual("/echo_target/a b", self._get_echo_target("/echo_target/a b")["path"])
+
+    def test_client_get_space_in_query_is_percent_encoded(self):
+        target = self._get_echo_target("/echo_target/x?q=a b")
+        self.assertEqual("/echo_target/x", target["path"])
+        self.assertEqual("q=a%20b", target["query_string"])
+
+    def test_client_get_non_ascii_path_is_utf8_percent_encoded(self):
+        self.assertEqual("/echo_target/über", self._get_echo_target("/echo_target/über")["path"])
+
+    def test_client_get_percent_encoded_url_is_sent_unchanged(self):
+        self.assertEqual("/echo_target/a b", self._get_echo_target("/echo_target/a%20b")["path"])
+        # a literal "%20" in the path is sent as %2520 and must not be encoded a second time
+        self.assertEqual("/echo_target/a%20b", self._get_echo_target("/echo_target/a%2520b")["path"])
+        self.assertEqual("q=a%20b", self._get_echo_target("/echo_target/x?q=a%20b")["query_string"])
+
     def test_client_post(self):
         class MyUser(FastHttpUser):
             host = "http://127.0.0.1:%i" % self.port
@@ -632,8 +660,12 @@ class TestFastHttpUserClass(WebserverTestCase):
             host = "http://127.0.0.1:%i" % self.port
 
         l = MyUser(self.environment)
-        l.client.get("/redirect")
-        self.assertEqual(1, self.runner.stats.get("/redirect", "GET").num_failures)
+        response = l.client.get("/redirect")
+        self.assertEqual(302, response.status_code)
+        self.assertTrue(response.headers["location"].endswith("/ultra_fast"))  # type: ignore
+        self.assertEqual(1, self.runner.stats.get("/redirect", "GET").num_requests)
+        self.assertEqual(0, self.runner.stats.get("/redirect", "GET").num_failures)
+        self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET").num_requests)
 
     def test_allow_redirects_override(self):
         class MyLocust(FastHttpUser):

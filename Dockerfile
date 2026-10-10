@@ -11,7 +11,7 @@ RUN yarn webui:install --production --network-timeout 60000
 RUN yarn webui:build
 
 # Stage 2: Build Locust package (make sure any changes here are also reflected in Dockerfile.ci)
-FROM python:3.13-slim AS base
+FROM python:3.14-slim AS base
 
 FROM base AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git
@@ -29,7 +29,7 @@ COPY --from=webui-builder locust/webui/dist locust/webui/dist
 
 # Build the Python project
 ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
-ADD https://astral.sh/uv/0.12.0/install.sh /uv-installer.sh
+ADD https://astral.sh/uv/0.12.24/install.sh /uv-installer.sh
 RUN sh /uv-installer.sh && rm /uv-installer.sh
 ENV PATH="/root/.local/bin/:$PATH"
 RUN uv build && \
