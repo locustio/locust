@@ -10,6 +10,8 @@ from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock
 
 import gevent
+from gevent.server import StreamServer
+from geventhttpclient._parser import HTTPParseError
 from geventhttpclient.client import HTTPClientPool
 from pyquery import PyQuery as pq
 
@@ -37,6 +39,22 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(r.url, "http://localhost:1/")
         self.assertEqual(r.request.url, r.url)
         self.assertEqual(r.request.headers.get("X-Test-Headers", ""), "hello")
+
+    def test_malformed_response_is_reported_as_failure(self):
+        def handle(sock, address):
+            sock.recv(4096)
+            sock.sendall(b"HTTP/1.1 200 OK\r\nBad Header Name: x\r\nContent-Length: 0\r\n\r\n")
+            sock.close()
+
+        server = StreamServer(("127.0.0.1", 0), handle)
+        server.start()
+        s = FastHttpSession("http://127.0.0.1:%i" % server.server_port, self.environment.events.request, user=None)
+        r = s.get("/")
+        server.stop()
+        self.assertEqual(r.status_code, 0)
+        self.assertTrue(isinstance(r.error, HTTPParseError))
+        self.assertEqual(1, self.runner.stats.get("/", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.get("/", "GET").num_failures)
 
     def test_error_message(self):
         s = self.get_client()
