@@ -1446,10 +1446,13 @@ class WorkerRunner(DistributedRunner):
             case _ if lc := self.custom_messages.get(msg.type):
                 listener, concurrent = lc
                 logger.debug(f"Received {msg.type} message from master")
-                if not concurrent:
-                    listener(environment=self.environment, msg=msg)
-                else:
-                    gevent.spawn(listener, self.environment, msg)
+                try:
+                    if not concurrent:
+                        listener(environment=self.environment, msg=msg)
+                    else:
+                        gevent.spawn(listener, environment=self.environment, msg=msg)
+                except Exception:
+                    logging.error(f"Uncaught exception in handler for {msg.type}\n{traceback.format_exc()}")
             case _:
                 logger.warning(f"Unknown message type received: {msg.type}")
 

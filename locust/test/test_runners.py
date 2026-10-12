@@ -4008,6 +4008,59 @@ class TestWorkerRunner(LocustTestCase):
             msg = self.mocked_log.warning[0]
             self.assertIn("Unknown message type received", msg)
 
+    def test_custom_message_receive_exception_in_listener(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            received = []
+
+            def on_failing_msg(msg, **kw):
+                raise Exception("listener failed")
+
+            def on_ok_msg(msg, **kw):
+                received.append(msg.data)
+
+            worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
+            worker.register_message("failing_msg", on_failing_msg)
+            worker.register_message("ok_msg", on_ok_msg)
+
+            client.mocked_send(Message("failing_msg", {}, "dummy_client_id"))
+            client.mocked_send(Message("ok_msg", 123, "dummy_client_id"))
+
+            # the worker must keep handling messages after a listener raised
+            self.assertEqual([123], received)
+            self.assertEqual(1, len(self.mocked_log.error))
+            self.assertIn("Uncaught exception in handler for failing_msg", self.mocked_log.error[0])
+            worker.quit()
+
+    def test_concurrent_custom_message_receive(self):
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            received = []
+
+            def on_custom_msg(msg, **kw):
+                received.append(msg.data)
+
+            worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
+            worker.register_message("test_custom_msg", on_custom_msg, concurrent=True)
+
+            client.mocked_send(Message("test_custom_msg", 123, "dummy_client_id"))
+
+            gevent.sleep(0.1)
+            self.assertEqual([123], received)
+            worker.quit()
+
     def test_start_event(self):
         class MyTestUser(User):
             _test_state = 0
