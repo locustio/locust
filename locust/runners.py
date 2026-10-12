@@ -175,7 +175,7 @@ class Runner:
         """
         :returns: Number of currently running users for each user class
         """
-        user_classes_count = {user_class.__name__: 0 for user_class in self.user_classes}
+        user_classes_count = defaultdict(int, {user_class.__name__: 0 for user_class in self.user_classes})
         for user_greenlet in self.user_greenlets:
             try:
                 user = user_greenlet.args[0]
@@ -191,7 +191,7 @@ class Runner:
                     user_greenlet.dead,
                 )
                 continue
-            user_classes_count[user.__class__.__name__] = user_classes_count.get(user.__class__.__name__, 0) + 1
+            user_classes_count[user.__class__.__name__] += 1
         return user_classes_count
 
     def update_state(self, new_state: str) -> None:
@@ -249,7 +249,7 @@ class Runner:
         stop_group = Group()
 
         for user_class, stop_count in user_classes_stop_count.items():
-            if self.user_classes_count.get(user_class, 0) == 0:
+            if self.user_classes_count[user_class] == 0:
                 continue
 
             to_stop: list[greenlet.greenlet] = []
@@ -502,8 +502,8 @@ class LocalRunner(Runner):
         logger.info("Ramping to %d users at a rate of %.2f per second" % (user_count, spawn_rate))
 
         if user_classes is None:
-            # environment.user_classes is authoritative, e.g. when changed via
-            # the Web UI class picker while the test was running
+            # re-sync the dispatcher with environment.user_classes — classes may
+            # have been removed while the test was running (e.g. Web UI class picker)
             self._users_dispatcher.update_user_classes(self.user_classes)
         self._users_dispatcher.new_dispatch(user_count, spawn_rate, user_classes)
 
@@ -514,13 +514,13 @@ class LocalRunner(Runner):
                 user_classes_count = dispatched_users[self._local_worker_node.id]
                 logger.debug(f"Ramping to {_format_user_classes_count_for_log(user_classes_count)}")
                 for user_class_name, user_class_count in user_classes_count.items():
-                    if self.user_classes_count.get(user_class_name, 0) > user_class_count:
+                    if self.user_classes_count[user_class_name] > user_class_count:
                         user_classes_stop_count[user_class_name] = (
-                            self.user_classes_count.get(user_class_name, 0) - user_class_count
+                            self.user_classes_count[user_class_name] - user_class_count
                         )
-                    elif self.user_classes_count.get(user_class_name, 0) < user_class_count:
-                        user_classes_spawn_count[user_class_name] = user_class_count - self.user_classes_count.get(
-                            user_class_name, 0
+                    elif self.user_classes_count[user_class_name] < user_class_count:
+                        user_classes_spawn_count[user_class_name] = (
+                            user_class_count - self.user_classes_count[user_class_name]
                         )
 
                 if wait:
@@ -784,8 +784,8 @@ class MasterRunner(DistributedRunner):
         self.update_state(STATE_SPAWNING)
 
         if user_classes is None:
-            # environment.user_classes is authoritative, e.g. when changed via
-            # the Web UI class picker while the test was running
+            # re-sync the dispatcher with environment.user_classes — classes may
+            # have been removed while the test was running (e.g. Web UI class picker)
             self._users_dispatcher.update_user_classes(self.user_classes)
         self._users_dispatcher.new_dispatch(
             target_user_count=user_count, spawn_rate=spawn_rate, user_classes=user_classes
@@ -1318,14 +1318,10 @@ class WorkerRunner(DistributedRunner):
         user_classes_stop_count: dict[str, int] = {}
 
         for user_class_name, user_class_count in user_classes_count.items():
-            if self.user_classes_count.get(user_class_name, 0) > user_class_count:
-                user_classes_stop_count[user_class_name] = (
-                    self.user_classes_count.get(user_class_name, 0) - user_class_count
-                )
-            elif self.user_classes_count.get(user_class_name, 0) < user_class_count:
-                user_classes_spawn_count[user_class_name] = user_class_count - self.user_classes_count.get(
-                    user_class_name, 0
-                )
+            if self.user_classes_count[user_class_name] > user_class_count:
+                user_classes_stop_count[user_class_name] = self.user_classes_count[user_class_name] - user_class_count
+            elif self.user_classes_count[user_class_name] < user_class_count:
+                user_classes_spawn_count[user_class_name] = user_class_count - self.user_classes_count[user_class_name]
 
         # call spawn_users before stopping the users since stop_users
         # can be blocking because of the stop_timeout

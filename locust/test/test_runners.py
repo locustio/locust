@@ -569,10 +569,8 @@ class TestLocustRunner(LocustRunnerTestCase):
         runner.quit()
 
     def test_user_classes_count_after_user_class_removed(self):
-        # The class picker in the Web UI can remove a class from
-        # environment.user_classes while greenlets of that class are still
-        # running. Users of the removed class must be stopped, and accessing
-        # user_classes_count or starting/stopping must not raise KeyError.
+        # removing a class from environment.user_classes while its users are
+        # still running must stop them on the next dispatch, not raise KeyError
         class MyUser1(User):
             @task
             def my_task(self):
