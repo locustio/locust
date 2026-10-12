@@ -132,6 +132,14 @@ class TestArgumentParser(LocustTestCase):
         # check default arg
         self.assertEqual(8089, options.web_port)
 
+    def test_parse_options_rejects_non_finite_spawn_rate(self):
+        """float() accepts nan/inf, and both pass a `<= 0` check, so -r has to reject them explicitly."""
+        for value in ["nan", "inf"]:
+            with self.subTest(value=value):
+                with mock.patch("sys.stderr", new=StringIO()):
+                    with self.assertRaises(SystemExit):
+                        get_parser(default_config_files=[]).parse_args(args=["-f", "locustfile.py", "-r", value])
+
     def test_parse_options_from_env(self):
         os.environ["LOCUST_LOCUSTFILE"] = "locustfile.py"
         os.environ["LOCUST_USERS"] = "100"

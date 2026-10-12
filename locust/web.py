@@ -4,6 +4,7 @@ import csv
 import itertools
 import json
 import logging
+import math
 import mimetypes
 import os.path
 from functools import wraps
@@ -340,7 +341,13 @@ class WebUI:
             self._cancel_run_time_timer()
 
             if environment.runner is not None:
-                if user_count is None or user_count < 0 or spawn_rate is None or spawn_rate <= 0:
+                if (
+                    user_count is None
+                    or user_count < 0
+                    or spawn_rate is None
+                    or spawn_rate <= 0
+                    or not math.isfinite(spawn_rate)
+                ):
                     err_msg = "Missing or invalid user_count or spawn_rate from /swarm request"
                     logger.error(err_msg)
                     return jsonify({"success": False, "message": err_msg, "host": environment.host})
