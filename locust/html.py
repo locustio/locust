@@ -1,3 +1,4 @@
+import math
 import os
 from itertools import chain
 
@@ -21,7 +22,18 @@ def process_html_filename(options) -> None:
     }
     for option_term, option_value in option_mapping.items():
         if option_value is not None:
-            options.html_file = options.html_file.replace(option_term, str(int(option_value)))
+            options.html_file = options.html_file.replace(option_term, _format_filename_value(option_value))
+
+
+def _format_filename_value(value) -> str:
+    # Fractional values are legal input (-r/--spawn-rate is gt_zero(float)) and must
+    # keep their fractional part in the file name; int() would silently truncate
+    # -r 0.05, -r 0.2 and -r 0.5 all to 0, so the runs overwrite one report file.
+    # Integral floats keep the int form (2.0 -> "2"); everything else keeps the
+    # previous int() cast, so integral values and run_time are unchanged.
+    if isinstance(value, float) and (math.isinf(value) or not value.is_integer()):
+        return str(value)
+    return str(int(value))
 
 
 def render_template_from(file, build_path=DEFAULT_BUILD_PATH, **kwargs):
