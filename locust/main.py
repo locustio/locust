@@ -109,8 +109,14 @@ def merge_locustfiles_content(
         for _shape_class in shape_classes:
             shape_class_name = type(_shape_class).__name__
             if shape_class_name in available_shape_classes.keys():
-                sys.stderr.write(f"Duplicate shape classes: {shape_class_name}\n")
-                sys.exit(1)
+                previous_path = inspect.getfile(type(available_shape_classes[shape_class_name]))
+                new_path = inspect.getfile(type(_shape_class))
+                if previous_path == new_path:
+                    # The same shape class was defined in two locustfiles but one probably imported the other, so we just ignore it
+                    continue
+                else:
+                    sys.stderr.write(f"Duplicate shape classes: {shape_class_name}\n")
+                    sys.exit(1)
 
             available_shape_classes[shape_class_name] = _shape_class
 

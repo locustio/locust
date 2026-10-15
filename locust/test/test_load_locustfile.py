@@ -127,6 +127,24 @@ class TestLoadLocustfile(LocustTestCase):
             self.assertNotIn("UserLoadTestShape", user_classes)
             self.assertEqual(shape_classes[0].__class__.__name__, "UserLoadTestShape")
 
+    def test_same_shape_class_in_two_locustfiles(self):
+        # one locustfile imports the shape class defined in the other, so it is found in both
+        content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
+            """\
+        class UserLoadTestShape(LoadTestShape):
+            def tick(self):
+                pass
+        """
+        )
+        with mock_locustfile(content=content) as mocked1:
+            module_name = os.path.splitext(mocked1.filename)[0]
+            with mock_locustfile(content=f"from {module_name} import UserLoadTestShape\n") as mocked2:
+                _, shape_classes, _, shape_class = main.merge_locustfiles_content(
+                    [mocked1.file_path, mocked2.file_path]
+                )
+                self.assertEqual(["UserLoadTestShape"], list(shape_classes))
+                self.assertEqual("UserLoadTestShape", type(shape_class).__name__)
+
     def test_with_not_imported_shape_class(self):
         content = MOCK_LOCUSTFILE_CONTENT + textwrap.dedent(
             """\
