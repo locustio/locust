@@ -148,9 +148,9 @@ class QdrantUser(User):
         Qdrant server URL, e.g. ``"http://localhost:6333"``.
     collection_name : str
         The name of the collection to operate on.
-    **client_kwargs
+    ``**client_kwargs``
         Additional keyword arguments forwarded to the client.
-    **collection_kwargs
+    ``**collection_kwargs``
         Additional keyword arguments forwarded to ``create_collection``.
     """
 

@@ -284,7 +284,7 @@ class MilvusUser(User):
         Milvus server URI, e.g. ``"http://localhost:19530"``.
     collection_name : str
         The name of the collection to operate on.
-    **client_kwargs
+    ``**client_kwargs``
         Additional keyword arguments forwarded to the client.
     """
 
