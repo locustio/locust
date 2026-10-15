@@ -652,6 +652,8 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
         if options.json:
             stats.print_stats_json(runner.stats)
         if options.json_file:
+            if json_dir := os.path.dirname(options.json_file):
+                os.makedirs(json_dir, exist_ok=True)
             stats.save_stats_json(runner.stats, options.json_file)
         elif not isinstance(runner, locust.runners.WorkerRunner):
             stats.print_stats(runner.stats, current=False)
