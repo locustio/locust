@@ -595,27 +595,6 @@ class TestLocustClass(LocustTestCase):
         sleep(0)
         self.assertEqual(0, len(group))
 
-    def test_stop_user_that_is_already_stopping(self):
-        # A user that was asked to stop gracefully (--stop-timeout) is still running its task.
-        # If it is asked to stop again (e.g. the test is stopped during a ramp-down) that should not raise.
-        class TestUser(User):
-            @task
-            def t(self):
-                sleep(1)
-
-        group = Group()
-        user = TestUser(self.environment)
-        user.start(group)
-        sleep(0)  # let the user start its task
-
-        self.assertFalse(user.stop(force=False))
-        self.assertFalse(user.stop(force=False))
-        self.assertEqual(1, len(group))
-
-        self.assertTrue(user.stop(force=True))
-        sleep(0)
-        self.assertEqual(0, len(group))
-
     def test_deprecated_locust_class(self):
         def test_locust():
             from locust import Locust

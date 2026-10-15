@@ -512,6 +512,35 @@ class TestLocustRunner(LocustRunnerTestCase):
             runner.user_count == 2, "User count has not decreased correctly to 2, it is : %i" % runner.user_count
         )
 
+    def test_stop_while_users_are_still_stopping(self):
+        """
+        Users that a ramp-down already asked to stop (they finish their task first) are waited for when the
+        test is stopped, not asked to stop a second time.
+        """
+        stop_calls = []
+
+        class MyUser(User):
+            @task
+            def my_task(self):
+                gevent.sleep(1)
+
+            def stop(self, force=False):
+                stop_calls.append(force)
+                return super().stop(force=force)
+
+        environment = Environment(user_classes=[MyUser], stop_timeout=5)
+        runner = LocalRunner(environment)
+        runner.start(3, 3, wait=False)
+        runner.spawning_greenlet.join()
+        sleep(0.1)  # let the users start their task
+
+        runner.start(0, 3, wait=False)  # ramp-down: the users are flagged stopping and finish their task
+        sleep(0.2)
+        runner.stop()
+
+        self.assertEqual([False, False, False], stop_calls)
+        self.assertEqual(0, runner.user_count)
+
     def test_attributes_populated_when_calling_start(self):
         class MyUser1(User):
             wait_time = constant(0)

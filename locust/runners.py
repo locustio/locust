@@ -32,6 +32,7 @@ from .exception import RPCError, RPCReceiveError, RPCSendError, StopTest
 from .log import get_logs, greenlet_exception_logger
 from .rpc import Message, rpc
 from .stats import RequestStats, StatsError, setup_distributed_stats_event_listeners
+from .user.task import LOCUST_STATE_STOPPING
 from .util.directory import get_abspaths_in
 from .util.url import is_url
 
@@ -276,7 +277,9 @@ class Runner:
                     # User called runner.quit(), so don't block waiting for killing to finish
                     user_to_stop.group.killone(user_to_stop.greenlet, block=False)
                 elif self.environment.stop_timeout:
-                    async_calls_to_stop.add(gevent.spawn_later(0, user_to_stop.stop, force=False))
+                    # a user that a ramp-down already asked to stop is only waited for, stopping it again raises
+                    if user_to_stop._state != LOCUST_STATE_STOPPING:
+                        async_calls_to_stop.add(gevent.spawn_later(0, user_to_stop.stop, force=False))
                     stop_group.add(user_to_stop.greenlet)
                 else:
                     async_calls_to_stop.add(gevent.spawn_later(0, user_to_stop.stop, force=True))
