@@ -198,6 +198,9 @@ class UsersDispatcher(Iterator):
         if spawn_rate <= 0:
             raise ValueError(f"spawn_rate must be > 0, got {spawn_rate}")
 
+        if not math.isfinite(spawn_rate):
+            raise ValueError(f"spawn_rate must be a finite number, got {spawn_rate}")
+
         if user_classes is not None and self._user_classes != sorted(user_classes, key=attrgetter("__name__")):
             self._user_classes = sorted(user_classes, key=attrgetter("__name__"))
             self._user_generator = self._user_gen()

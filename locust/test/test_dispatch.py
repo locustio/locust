@@ -4171,6 +4171,19 @@ class TestSpawnRateValidation(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "spawn_rate must be > 0"):
                     users_dispatcher.new_dispatch(target_user_count=5, spawn_rate=spawn_rate)
 
+    def test_new_dispatch_rejects_non_finite_spawn_rate(self):
+        """nan passes a `<= 0` comparison, so it has to be rejected before math.floor() raises deep in the dispatcher."""
+
+        class User1(User):
+            weight = 1
+
+        users_dispatcher = UsersDispatcher(worker_nodes=[WorkerNode("1")], user_classes=[User1])
+
+        for spawn_rate in (float("nan"), float("inf")):
+            with self.subTest(spawn_rate=spawn_rate):
+                with self.assertRaisesRegex(ValueError, "spawn_rate must be a finite number"):
+                    users_dispatcher.new_dispatch(target_user_count=5, spawn_rate=spawn_rate)
+
 
 def _aggregate_dispatched_users(d: dict[str, dict[str, int]]) -> dict[str, int]:
     user_classes = list(next(iter(d.values())).keys())

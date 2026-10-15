@@ -336,6 +336,19 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertFalse(response.json()["success"])
         self.assertIn("spawn_rate", response.json()["message"])
 
+    def test_swarm_non_finite_spawn_rate_returns_clean_error(self):
+        """float("nan") parses fine and passes `spawn_rate <= 0`, which used to report a successful start
+        and then kill the spawning greenlet inside math.floor(), leaving the test never running."""
+        for spawn_rate in ["nan", "inf"]:
+            with self.subTest(spawn_rate=spawn_rate):
+                response = requests.post(
+                    "http://127.0.0.1:%i/swarm" % self.web_port,
+                    data={"user_count": 5, "spawn_rate": spawn_rate, "host": "https://localhost"},
+                )
+                self.assertEqual(200, response.status_code)
+                self.assertFalse(response.json()["success"])
+                self.assertIn("spawn_rate", response.json()["message"])
+
     def test_swarm_userclass_specified(self):
         class User1(User):
             wait_time = constant(1)

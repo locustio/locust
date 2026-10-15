@@ -9,6 +9,7 @@ import ast
 import atexit
 import difflib
 import json
+import math
 import os
 import platform
 import socket
@@ -431,6 +432,8 @@ def positive_integer(string) -> int:
 def gt_zero(t):
     def checker(value):
         v = t(value)
+        if not math.isfinite(v):
+            raise argparse.ArgumentTypeError("must be a finite number")
         if v <= 0:
             raise argparse.ArgumentTypeError("must be > 0")
         return v
