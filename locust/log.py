@@ -1,5 +1,6 @@
 import logging
 import logging.config
+import os
 import re
 import socket
 from collections import deque
@@ -63,6 +64,8 @@ def setup_logging(loglevel, logfile=None):
         },
     }
     if logfile:
+        if logfile_dir := os.path.dirname(logfile):
+            os.makedirs(logfile_dir, exist_ok=True)
         # if a file has been specified add a file logging handler and set
         # the locust and root loggers to use it
         LOGGING_CONFIG["handlers"]["file"] = {
