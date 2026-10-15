@@ -21,7 +21,9 @@ def process_html_filename(options) -> None:
     }
     for option_term, option_value in option_mapping.items():
         if option_value is not None:
-            options.html_file = options.html_file.replace(option_term, str(int(option_value)))
+            # -r is a float option, so a fractional spawn rate must survive the substitution.
+            replacement = str(int(option_value)) if float(option_value).is_integer() else str(option_value)
+            options.html_file = options.html_file.replace(option_term, replacement)
 
 
 def render_template_from(file, build_path=DEFAULT_BUILD_PATH, **kwargs):
