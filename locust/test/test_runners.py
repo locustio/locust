@@ -21,7 +21,7 @@ from locust.runners import (
     WorkerRunner,
 )
 from locust.stats import RequestStats
-from locust.user import TaskSet, User, task
+from locust.user import HttpUser, TaskSet, User, task
 
 import itertools
 import json
@@ -628,6 +628,19 @@ class TestLocustRunner(LocustRunnerTestCase):
         self.assertEqual(MyUser2.host, "https://host2.com")
 
         runner.quit()
+
+    def test_stop_test_in_spawning_greenlet_stops_runner_without_parsed_options(self):
+        class MyUser(HttpUser):  # host is missing, so spawning the user raises StopTest
+            @task
+            def my_task(self):
+                pass
+
+        environment = Environment(user_classes=[MyUser])
+        self.assertIsNone(environment.parsed_options)
+        runner = environment.create_local_runner()
+        runner.start(user_count=1, spawn_rate=1)
+        gevent.sleep(0.1)
+        self.assertEqual(STATE_STOPPED, runner.state)
 
     def test_custom_message(self):
         class MyUser(User):
