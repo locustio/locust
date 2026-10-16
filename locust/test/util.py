@@ -9,7 +9,10 @@ import time
 import warnings
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
+from types import SimpleNamespace
 
+import gevent
+import gevent.pywsgi
 import requests
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -55,6 +58,26 @@ def get_free_tcp_port():
     port = s.getsockname()[1]
     s.close()
     return port
+
+
+@contextmanager
+def local_http_server():
+    """Serve 200 for / and 404 for any other path on 127.0.0.1. Yields .url and .paths (requested paths)"""
+    paths = []
+
+    def app(environ, start_response):
+        paths.append(environ["PATH_INFO"])
+        start_response("200 OK" if environ["PATH_INFO"] == "/" else "404 Not Found", [("Content-Type", "text/plain")])
+        return [b"ok"]
+
+    server = gevent.pywsgi.WSGIServer(("127.0.0.1", 0), app, log=None)
+    gevent.spawn(server.serve_forever)
+    gevent.sleep(0.01)
+    try:
+        yield SimpleNamespace(url=f"http://127.0.0.1:{server.server_port}", paths=paths)
+    finally:
+        server.stop_accepting()
+        server.stop()
 
 
 def create_tls_cert(hostname):

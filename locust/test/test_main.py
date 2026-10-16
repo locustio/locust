@@ -19,7 +19,7 @@ from pyquery import PyQuery as pq
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .subprocess_utils import TestProcess
-from .util import IS_WINDOWS, get_free_tcp_port, patch_env, temporary_file, wait_for_server
+from .util import IS_WINDOWS, get_free_tcp_port, local_http_server, patch_env, temporary_file, wait_for_server
 
 SHORT_SLEEP = 2 if sys.platform == "darwin" else 1  # macOS is slow on GH, give it some extra time
 
@@ -1234,9 +1234,9 @@ def test_xxcrash(session):
         output_filepath = f"{output_base}.json"
         if os.path.exists(output_filepath):
             os.remove(output_filepath)
-        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked, local_http_server() as server:
             with TestProcess(
-                f"locust -f {mocked.file_path} -H https://www.locust.io --headless -u 2 -r 10 -t 3 --exit-code-on-error 0",
+                f"locust -f {mocked.file_path} -H {server.url} --headless -u 2 -r 10 -t 3 --exit-code-on-error 0",
             ) as tp:
                 tp.expect(
                     "/                                                                                  2     0(0.00%)",
@@ -1246,6 +1246,8 @@ def test_xxcrash(session):
                 )
                 tp.not_expect_any("Traceback")
                 assert tp.proc.wait(3) == 0
+            assert "/" in server.paths
+            assert "/doesntexist" in server.paths
 
     def test_no_host_should_quit_test(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
@@ -1759,33 +1761,34 @@ class TelemetryTests(ProcessIntegrationTest):
                 tp.expect(mocked.file_path, stream="stdout")
 
     def test_request_name(self):
-        locustfile = textwrap.dedent(
-            """
-            from locust import HttpUser, task, constant
+        with local_http_server() as server:
+            locustfile = textwrap.dedent(
+                f"""
+                from locust import HttpUser, task, constant
 
-            class TestUser(HttpUser):
-                host = "http://www.locust.io"
-                wait_time = constant(1)
+                class TestUser(HttpUser):
+                    host = "{server.url}"
+                    wait_time = constant(1)
 
-                @task
-                def t(self):
-                    self.client.get("/hello")
-                    self.client.get("/world", name="/custom-name")
-            """
-        )
-        with mock_locustfile(content=locustfile) as mocked:
-            with TestProcess(
-                f"locust -f {mocked.file_path} --headless -u 5 -r 5 --otel --run-time 1s",
-                expect_return_code=None,
-                extra_env={
-                    "OTEL_LOGS_EXPORTER": "none",
-                    "OTEL_METRICS_EXPORTER": "none",
-                    "OTEL_TRACES_EXPORTER": "console",
-                },
-            ) as tp:
-                tp.expect("GET /hello", stream="stdout")
-                tp.expect("GET /custom-name", stream="stdout")
-                tp.not_expect_any("GET /world", stream="stdout")
+                    @task
+                    def t(self):
+                        self.client.get("/hello")
+                        self.client.get("/world", name="/custom-name")
+                """
+            )
+            with mock_locustfile(content=locustfile) as mocked:
+                with TestProcess(
+                    f"locust -f {mocked.file_path} --headless -u 5 -r 5 --otel --run-time 1s",
+                    expect_return_code=None,
+                    extra_env={
+                        "OTEL_LOGS_EXPORTER": "none",
+                        "OTEL_METRICS_EXPORTER": "none",
+                        "OTEL_TRACES_EXPORTER": "console",
+                    },
+                ) as tp:
+                    tp.expect("GET /hello", stream="stdout")
+                    tp.expect("GET /custom-name", stream="stdout")
+                    tp.not_expect_any("GET /world", stream="stdout")
 
     def test_user_count_gauge_reports_running_users(self):
         locustfile = textwrap.dedent(
