@@ -4536,6 +4536,25 @@ class TestStopTimeout(LocustTestCase):
         finally:
             timeout.cancel()
 
+    def test_listener_can_remove_itself_while_event_is_firing(self):
+        calls = []
+        environment = Environment()
+
+        def one_shot(*args, **kwargs):
+            calls.append("one_shot")
+            environment.events.test_stop.remove_listener(one_shot)
+
+        def other(*args, **kwargs):
+            calls.append("other")
+
+        environment.events.test_stop.add_listener(one_shot)
+        environment.events.test_stop.add_listener(other)
+
+        environment.events.test_stop.fire(environment=environment)
+        self.assertEqual(["one_shot", "other"], calls)
+        environment.events.test_stop.fire(environment=environment)
+        self.assertEqual(["one_shot", "other", "other"], calls)
+
     def test_gracefully_handle_exceptions_in_listener(self):
         class MyUser(User):
             wait_time = constant(1)

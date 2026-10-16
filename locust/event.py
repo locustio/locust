@@ -38,10 +38,8 @@ class EventHook:
         self._handlers.remove(handler)
 
     def fire(self, *, reverse=False, **kwargs):
-        if reverse:
-            handlers = reversed(self._handlers)
-        else:
-            handlers = self._handlers
+        # iterate over a copy, so that listeners can add or remove listeners while the event is firing
+        handlers = self._handlers[::-1] if reverse else self._handlers.copy()
         for handler in handlers:
             try:
                 handler(**kwargs)
