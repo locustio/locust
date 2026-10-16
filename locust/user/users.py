@@ -167,6 +167,8 @@ class User(metaclass=UserMeta):
             except Exception as e:
                 # unhandled exceptions inside tasks are logged in TaskSet.run, but since we're not yet there...
                 logger.error("%s\n%s", e, traceback.format_exc())
+                if not isinstance(e, (StopUser, StopTest)):
+                    self.environment.events.user_error.fire(user_instance=self, exception=e, tb=e.__traceback__)
                 raise
 
             self._taskset_instance.run()
