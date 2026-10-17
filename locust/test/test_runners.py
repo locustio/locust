@@ -597,6 +597,40 @@ class TestLocustRunner(LocustRunnerTestCase):
 
         runner.quit()
 
+    def test_user_classes_count_after_user_class_removed(self):
+        # removing a class from environment.user_classes while its users are
+        # still running must stop them on the next dispatch, not raise KeyError
+        class MyUser1(User):
+            @task
+            def my_task(self):
+                pass
+
+        class MyUser2(User):
+            @task
+            def my_task(self):
+                pass
+
+        environment = Environment(user_classes=[MyUser1, MyUser2])
+        runner = LocalRunner(environment)
+
+        runner.start(user_count=4, spawn_rate=10, wait=False)
+        runner.spawning_greenlet.join()
+        self.assertDictEqual({"MyUser1": 2, "MyUser2": 2}, runner.user_classes_count)
+
+        environment.user_classes = [MyUser1]  # simulate the class picker deselecting MyUser2
+
+        self.assertDictEqual({"MyUser1": 2, "MyUser2": 2}, runner.user_classes_count)
+
+        runner.start(user_count=2, spawn_rate=10, wait=False)
+        runner.spawning_greenlet.join()
+
+        # users of the removed class are stopped, only MyUser1 remains
+        self.assertDictEqual({"MyUser1": 2}, runner.user_classes_count)
+        self.assertEqual(2, runner.user_count)
+
+        runner.quit()
+        self.assertEqual(0, runner.user_count)
+
     def test_host_class_attribute_from_web(self):
         """If host is left empty from the webUI, we should not use it"""
 
