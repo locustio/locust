@@ -483,6 +483,29 @@ class TestLocustClass(LocustTestCase):
         self.assertTrue(l.t1_executed)
         self.assertTrue(l.t2_executed)
 
+    def test_locust_on_start_exception_fires_user_error(self):
+        class MyUser(User):
+            def on_start(self):
+                raise ValueError("on_start failed")
+
+        errors = []
+        self.environment.events.user_error.add_listener(lambda **kwargs: errors.append(kwargs))
+        l = MyUser(self.environment)
+        self.assertRaises(ValueError, l.run)
+        self.assertEqual(1, len(errors))
+        self.assertIs(l, errors[0]["user_instance"])
+        self.assertIsInstance(errors[0]["exception"], ValueError)
+
+    def test_locust_on_start_stop_user_does_not_fire_user_error(self):
+        class MyUser(User):
+            def on_start(self):
+                raise StopUser()
+
+        errors = []
+        self.environment.events.user_error.add_listener(lambda **kwargs: errors.append(kwargs))
+        MyUser(self.environment).run()
+        self.assertEqual([], errors)
+
     def test_locust_on_stop(self):
         class MyUser(User):
             on_stop_executed = False

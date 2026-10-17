@@ -231,6 +231,8 @@ class TestLoggingOptions(LocustTestCase):
                     "-t",
                     "1",
                     "--headless",
+                    "--exit-code-on-error",
+                    "0",
                 ],
                 stderr=subprocess.STDOUT,
                 timeout=10,
