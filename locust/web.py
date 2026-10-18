@@ -370,7 +370,7 @@ class WebUI:
             else:
                 return jsonify({"success": False, "message": "No runner", "host": environment.host})
 
-        @app_blueprint.route("/stop")
+        @app_blueprint.route("/stop", methods=["POST"])
         @self.auth_required_if_enabled
         def stop() -> Response:
             if self._swarm_greenlet is not None:
@@ -381,7 +381,7 @@ class WebUI:
                 environment.runner.stop()
             return jsonify({"success": True, "message": "Test stopped"})
 
-        @app_blueprint.route("/stats/reset")
+        @app_blueprint.route("/stats/reset", methods=["POST"])
         @self.auth_required_if_enabled
         def reset_stats() -> str:
             environment.events.reset_stats.fire()

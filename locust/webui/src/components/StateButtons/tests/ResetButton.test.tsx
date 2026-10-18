@@ -10,7 +10,7 @@ import { renderWithProvider } from 'test/testUtils';
 const resetStats = vi.fn();
 
 const server = setupServer(
-  http.get(`${TEST_BASE_API}/stats/reset`, resetStats,
+  http.post(`${TEST_BASE_API}/stats/reset`, resetStats,
   ),
 );
 

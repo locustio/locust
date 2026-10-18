@@ -10,7 +10,7 @@ import { renderWithProvider } from 'test/testUtils';
 const stopSwarm = vi.fn();
 
 const server = setupServer(
-  http.get(`${TEST_BASE_API}/stop`, stopSwarm)
+  http.post(`${TEST_BASE_API}/stop`, stopSwarm)
 );
 
 describe('StopButton', () => {
