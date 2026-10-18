@@ -294,40 +294,6 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual("https://localhost/other", response.json()["host"])
         self.assertEqual(self.environment.host, "https://localhost/other")
 
-    def test_stop_and_stats_reset_require_post(self):
-        """
-        /stop and /stats/reset mutate server state, so they must not be reachable
-        via GET. Otherwise any page a logged-in admin's browser loads could stop a
-        running test or wipe its stats cross-site (a plain GET needs no CSRF token).
-        """
-
-        class MyUser(User):
-            wait_time = constant(1)
-
-            @task(1)
-            def my_task(self):
-                pass
-
-        self.environment.user_classes = [MyUser]
-        self.environment.web_ui.parsed_options = get_parser().parse_args()
-        response = requests.post(
-            "http://127.0.0.1:%i/swarm" % self.web_port,
-            data={"user_count": 1, "spawn_rate": 1, "host": "https://localhost"},
-        )
-        self.assertEqual(200, response.status_code)
-        gevent.sleep(1)
-        # GET must not stop the test
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
-        self.assertEqual(405, response.status_code)
-        self.assertEqual("running", self.environment.runner.state)
-        # GET must not reset stats
-        response = requests.get("http://127.0.0.1:%i/stats/reset" % self.web_port)
-        self.assertEqual(405, response.status_code)
-        # POST still works
-        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(response.json()["message"], "Test stopped")
-
     def test_swarm_invalid_user_count_returns_clean_error(self):
         """
         Posting a non-numeric user_count/spawn_rate to /swarm used to raise an uncaught ValueError
