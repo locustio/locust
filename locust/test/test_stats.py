@@ -604,6 +604,30 @@ class TestCsvStats(LocustTestCase):
         self.assertTrue(saw100, "Never saw 95th percentile increase to 100")
         self.assertTrue(saw10, "Never saw 95th percentile decrease to 10")
 
+    def test_stats_history_aggregated_row_uses_current_percentiles(self):
+        # Without --csv-full-history only the Aggregated row is written, and it should still hold the
+        # *current* (last ~10 seconds) percentiles, like the rows written with --csv-full-history
+        stats_writer = StatsCSVFileWriter(self.environment, PERCENTILES_TO_REPORT, self.STATS_BASE_NAME)
+        stats = self.runner.stats
+        for _ in range(10):
+            stats.log_request("GET", "/", 1000, content_length=0)
+        # pretend the slow requests above were made more than 10 seconds ago
+        stats.total.response_times_cache[int(time.time()) - 10] = CachedResponseTimes(
+            response_times=dict(stats.total.response_times), num_requests=10, num_none_requests=0
+        )
+        for _ in range(10):
+            stats.log_request("GET", "/", 10, content_length=0)
+
+        data = StringIO()
+        stats_writer._stats_history_data_rows(csv.writer(data), time.time())
+        stats_writer.close_files()
+        rows = list(csv.DictReader(StringIO(data.getvalue()), fieldnames=stats_writer.stats_history_csv_columns))
+
+        self.assertEqual(["Aggregated"], [row["Name"] for row in rows])
+        self.assertEqual("20", rows[0]["Total Request Count"])
+        self.assertEqual("10", rows[0]["95%"])
+        self.assertEqual("10", rows[0]["100%"])
+
     def test_stats_history_without_response_times_cache(self):
         # Worker nodes keep no response times cache, so the history rows fall back to the total percentiles
         environment = Environment()
