@@ -812,7 +812,7 @@ class TestLocustRunner(LocustRunnerTestCase):
         self.assertLessEqual(local_runner.user_count, 10)
 
         ts = time.perf_counter()
-        response = requests.get(
+        response = requests.post(
             f"http://127.0.0.1:{web_ui.server.server_port}/stop",
         )
         self.assertEqual(200, response.status_code)
@@ -917,7 +917,7 @@ class TestLocustRunner(LocustRunnerTestCase):
             self.assertTrue(time.perf_counter() - t0 <= 1, local_runner.user_count)
             gevent.sleep(0.1)
 
-        response = requests.get(
+        response = requests.post(
             f"http://127.0.0.1:{web_ui.server.server_port}/stop",
         )
         self.assertEqual(200, response.status_code)
@@ -2070,7 +2070,7 @@ class TestMasterWorkerRunners(LocustTestCase):
             self.assertLessEqual(master.user_count, 10)
 
             ts = time.perf_counter()
-            response = requests.get(
+            response = requests.post(
                 f"http://127.0.0.1:{web_ui.server.server_port}/stop",
             )
             self.assertEqual(200, response.status_code)

@@ -64,11 +64,11 @@ export const api = createApi({
     }),
 
     resetStats: builder.mutation<void, void>({
-      query: () => ({ url: 'stats/reset' }),
+      query: () => ({ url: 'stats/reset', method: 'POST' }),
       invalidatesTags: ['stats'],
     }),
     stopSwarm: builder.mutation<void, void>({
-      query: () => ({ url: 'stop' }),
+      query: () => ({ url: 'stop', method: 'POST' }),
     }),
   }),
 });

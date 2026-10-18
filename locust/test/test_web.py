@@ -215,7 +215,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.stats.log_request("GET", "/test", 120, 5612)
         self.stats.log_error("GET", "/", Exception("Error1337"))
 
-        response = requests.get("http://127.0.0.1:%i/stats/reset" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stats/reset" % self.web_port)
 
         self.assertEqual(200, response.status_code)
 
@@ -281,7 +281,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual(self.environment.parsed_options.num_users, 5)
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
         # and swarm again, with new host
         gevent.sleep(1)
@@ -384,7 +384,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
         # and swarm again, with new locustfile
@@ -442,7 +442,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_updates_parsed_options_when_single_userclass_specified(self):
@@ -481,7 +481,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
         # Checking environment.parsed_options.user_classes was updated
@@ -523,7 +523,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
         # Checking environment.parsed_options.user_classes was updated
@@ -564,7 +564,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_uses_pre_selected_user_classes_when_empty_payload_and_test_is_already_running_with_class_picker(
@@ -617,7 +617,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_error_when_userclass_picker_is_active_but_no_available_userclasses(self):
@@ -690,7 +690,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_shape_class_defaults_to_none_when_userclass_picker_is_active(self):
@@ -740,7 +740,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_shape_class_is_updated_when_userclass_picker_is_active(self):
@@ -775,7 +775,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_userclass_shapeclass_ignored_when_userclass_picker_is_inactive(self):
@@ -826,7 +826,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
 
         # stop
         gevent.sleep(1)
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
         self.assertEqual(response.json()["message"], "Test stopped")
 
     def test_swarm_custom_arguments(self):
@@ -995,7 +995,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         # verify test was not started
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual("ready", response.json()["state"])
-        requests.get("http://127.0.0.1:%i/stats/reset" % self.web_port)
+        requests.post("http://127.0.0.1:%i/stats/reset" % self.web_port)
 
     def test_swarm_run_time_empty_input(self):
         class MyUser(User):
@@ -1022,7 +1022,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         self.assertEqual("running", response.json()["state"])
 
         # stop
-        response = requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        response = requests.post("http://127.0.0.1:%i/stop" % self.web_port)
 
     def test_swarm_run_time_expires_and_stops_test(self):
         class MyUser(User):
@@ -1058,7 +1058,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             data={"user_count": 5, "spawn_rate": 5, "host": "https://localhost", "run_time": "1s"},
         )
         self.assertEqual(200, response.status_code)
-        requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        requests.post("http://127.0.0.1:%i/stop" % self.web_port)
         # a new test without run_time must not be stopped by the timer of the previous one
         response = requests.post(
             "http://127.0.0.1:%i/swarm" % self.web_port,
@@ -1069,7 +1069,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual("running", response.json()["state"])
 
-        requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        requests.post("http://127.0.0.1:%i/stop" % self.web_port)
 
     def test_swarm_replaces_run_time_timer(self):
         class MyUser(User):
@@ -1096,7 +1096,7 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual("running", response.json()["state"])
 
-        requests.get("http://127.0.0.1:%i/stop" % self.web_port)
+        requests.post("http://127.0.0.1:%i/stop" % self.web_port)
 
     def test_host_value_from_user_class(self):
         class MyUser(User):
