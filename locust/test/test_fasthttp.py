@@ -745,7 +745,23 @@ class TestFastHttpUserClass(WebserverTestCase):
 
         locust = MyUser(self.environment)
         self.assertEqual("http://[::1]:8089/base", locust.client.base_url)
+    def test_client_callable_auth_header(self):
+        tokens = [
+            _construct_basic_auth_str("locust", "wrong"),
+            _construct_basic_auth_str("locust", "menace"),
+        ]
 
+        class MyUser(FastHttpUser):
+            host = f"http://127.0.0.1:{self.port}"
+
+        user = MyUser(self.environment)
+        user.client.auth_header = lambda: tokens.pop(0)
+
+        # First request gets the wrong token -> returns 401
+        self.assertEqual(401, user.client.get("/basic_auth").status_code)
+
+        # Second request calls lambda again to get the fresh token -> returns 200
+        self.assertEqual(200, user.client.get("/basic_auth").status_code)
     def test_shared_client_pool(self):
         shared_client_pool = HTTPClientPool(concurrency=1)
 
