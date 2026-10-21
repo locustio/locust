@@ -1033,7 +1033,7 @@ class StatsCSV:
     def _percentile_fields(self, stats_entry: StatsEntry, use_current: bool = False) -> list[str] | list[int]:
         if not stats_entry.num_requests:
             return self.percentiles_na
-        elif use_current:
+        elif use_current and stats_entry.use_response_times_cache:
             return [int(stats_entry.get_current_response_time_percentile(x) or 0) for x in self.percentiles_to_report]
         else:
             return [int(stats_entry.get_response_time_percentile(x) or 0) for x in self.percentiles_to_report]

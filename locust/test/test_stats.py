@@ -604,6 +604,21 @@ class TestCsvStats(LocustTestCase):
         self.assertTrue(saw100, "Never saw 95th percentile increase to 100")
         self.assertTrue(saw10, "Never saw 95th percentile decrease to 10")
 
+    def test_stats_history_without_response_times_cache(self):
+        # Worker nodes keep no response times cache, so the history rows fall back to the total percentiles
+        environment = Environment()
+        environment.stats = RequestStats(use_response_times_cache=False)
+        stats_writer = StatsCSVFileWriter(environment, PERCENTILES_TO_REPORT, self.STATS_BASE_NAME, full_history=True)
+        environment.stats.log_request("GET", "/", 100, content_length=0)
+
+        data = StringIO()
+        stats_writer._stats_history_data_rows(csv.writer(data), time.time())
+        stats_writer.close_files()
+        rows = list(csv.DictReader(StringIO(data.getvalue()), fieldnames=stats_writer.stats_history_csv_columns))
+
+        self.assertEqual(["/", "Aggregated"], [row["Name"] for row in rows])
+        self.assertEqual(["100", "100"], [row["95%"] for row in rows])
+
     def test_csv_stats_on_master_from_aggregated_stats(self):
         # Failing test for: https://github.com/locustio/locust/issues/1315
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
