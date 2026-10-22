@@ -949,6 +949,15 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.assertEqual(1, self.num_failures)
         self.assertEqual(0, self.num_success)
 
+    def test_rest_fail_with_non_string_assertion_message(self):
+        # e.g. `assert response.js["foo"] == "NOPE", response.js` in a locustfile (not rewritten by pytest)
+        with self.user.rest("POST", "/rest", json={"foo": "bar"}) as response:
+            raise AssertionError(response.js)
+
+        self.assertEqual("{'foo': 'bar'}", str(self.last_failure_exception))
+        self.assertEqual(1, self.num_failures)
+        self.assertEqual(0, self.num_success)
+
     def test_rest_does_not_modify_the_given_headers(self):
         headers = {"X-Header-Test": "hello"}
         with self.user.rest("POST", "/rest", json={"foo": "bar"}, headers=headers) as response:
