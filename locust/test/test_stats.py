@@ -724,6 +724,23 @@ class TestCsvStats(LocustTestCase):
                 csv_request_name = rows[0].get("Name")
                 self.assertEqual(request_name_str, csv_request_name)
 
+    def test_csv_files_are_utf8_with_crlf_line_endings(self):
+        name = "/\u0645\u0631\u062d\u0628\u0627/\u4f60\u597d"  # can not be encoded with cp1252
+        self.environment.events.request.fire(
+            request_type="GET", name=name, response_time=1, response_length=1, exception=None, context={}
+        )
+        self.environment.events.request.fire(
+            request_type="GET", name=name, response_time=1, response_length=1, exception=Exception(name), context={}
+        )
+        _write_csv_files(self.environment, self.STATS_BASE_NAME, full_history=True)
+
+        for filename in (self.STATS_FILENAME, self.STATS_HISTORY_FILENAME, self.STATS_FAILURES_FILENAME):
+            with open(filename, "rb") as f:
+                content = f.read()
+            self.assertIn(b"\r\n", content)
+            self.assertNotIn(b"\r\r\n", content)
+            self.assertIn(name, content.decode("utf-8"))
+
     def test_stats_history(self):
         env1 = Environment(events=locust.events, catch_exceptions=False)
         runner1 = env1.create_master_runner("127.0.0.1", 5558)
