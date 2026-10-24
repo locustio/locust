@@ -1112,17 +1112,19 @@ class StatsCSVFileWriter(StatsCSV):
         self.base_filepath = base_filepath
         self.full_history = full_history
 
-        self.requests_csv_filehandle = open(self.base_filepath + "_stats.csv", "w")
+        # newline="": the csv module writes its own line terminators (otherwise Windows ends up with \r\r\n)
+        # encoding="utf-8": request names can contain characters that the locale encoding cannot represent
+        self.requests_csv_filehandle = open(self.base_filepath + "_stats.csv", "w", newline="", encoding="utf-8")
         self.requests_csv_writer = csv.writer(self.requests_csv_filehandle)
 
-        self.stats_history_csv_filehandle = open(self.stats_history_file_name(), "w")
+        self.stats_history_csv_filehandle = open(self.stats_history_file_name(), "w", newline="", encoding="utf-8")
         self.stats_history_csv_writer = csv.writer(self.stats_history_csv_filehandle)
 
-        self.failures_csv_filehandle = open(self.base_filepath + "_failures.csv", "w")
+        self.failures_csv_filehandle = open(self.base_filepath + "_failures.csv", "w", newline="", encoding="utf-8")
         self.failures_csv_writer = csv.writer(self.failures_csv_filehandle)
         self.failures_csv_data_start: int = 0
 
-        self.exceptions_csv_filehandle = open(self.base_filepath + "_exceptions.csv", "w")
+        self.exceptions_csv_filehandle = open(self.base_filepath + "_exceptions.csv", "w", newline="", encoding="utf-8")
         self.exceptions_csv_writer = csv.writer(self.exceptions_csv_filehandle)
         self.exceptions_csv_data_start: int = 0
 
