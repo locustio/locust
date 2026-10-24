@@ -1220,7 +1220,7 @@ class StatsCSVFileWriter(StatsCSV):
                         f"{stats_entry.current_rps:2f}",
                         f"{stats_entry.current_fail_per_sec:2f}",
                     ),
-                    self._percentile_fields(stats_entry, use_current=self.full_history),
+                    self._percentile_fields(stats_entry, use_current=True),
                     (
                         stats_entry.num_requests,
                         stats_entry.num_failures,
