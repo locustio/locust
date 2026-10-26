@@ -9,6 +9,8 @@ import filecmp
 import os
 import textwrap
 
+import gevent.pywsgi
+
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .testcases import LocustTestCase
 from .util import get_locustfiles_from_args, temporary_file
@@ -241,6 +243,36 @@ class TestLoadLocustfile(LocustTestCase):
                 f"{os.getcwd()}/examples/basic.py",
             )
         )
+
+    def test_locustfile_from_url_is_saved_byte_for_byte(self):
+        content = textwrap.dedent(
+            """
+            from locust import User, task
+
+
+            class UserSubclass(User):
+                @task
+                def t(self):
+                    print("こんにちは café")
+            """
+        ).encode("utf-8")
+
+        def app(environ, start_response):
+            # No charset, so requests decodes response.text as ISO-8859-1
+            start_response("200 OK", [("Content-Type", "text/x-python")])
+            return [content]
+
+        server = gevent.pywsgi.WSGIServer(("127.0.0.1", 0), app, log=None)
+        server.start()
+        try:
+            locustfiles = get_locustfiles_from_args(
+                args=["-f", f"http://127.0.0.1:{server.server_port}/non_ascii_locustfile.py"]
+            )
+        finally:
+            server.stop()
+        self.assertEqual(len(locustfiles), 1)
+        with open(locustfiles[0], "rb") as f:
+            self.assertEqual(content, f.read())
 
     def test_profile_flag(self):
         options = get_parser().parse_args()
