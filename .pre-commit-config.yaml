@@ -6,7 +6,7 @@ repos:
         entry: uv run ruff check
         language: system
         types_or: [python, pyi]
-        args: [--fix, --show-fixes]
+        args: [--fix, --show-fixes, --unsafe-fixes]
 
       - id: ruff-format
         name: ruff format

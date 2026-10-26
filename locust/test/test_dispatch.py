@@ -2133,7 +2133,7 @@ class TestLargeScale(unittest.TestCase):
             users_dispatcher = UsersDispatcher(worker_nodes=workers, user_classes=user_classes)
 
             ts = time.perf_counter()
-            users_on_workers, user_gen, worker_gen, active_users = users_dispatcher._distribute_users(
+            users_on_workers, _user_gen, _worker_gen, _active_users = users_dispatcher._distribute_users(
                 target_user_count=target_user_count
             )
             delta = time.perf_counter() - ts
