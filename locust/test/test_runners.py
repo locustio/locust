@@ -3240,7 +3240,7 @@ class TestMasterRunner(LocustRunnerTestCase):
         self.assertRaises(HeyAnException, l.run)
         self.assertEqual(1, len(runner.exceptions))
 
-        hash_key, exception = runner.exceptions.popitem()
+        _hash_key, exception = runner.exceptions.popitem()
         self.assertIn("traceback", exception)
         self.assertIn("HeyAnException", exception["traceback"])
         self.assertEqual(2, exception["count"])

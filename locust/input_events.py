@@ -41,7 +41,7 @@ class UnixKeyPoller:
         termios.tcsetattr(self.stdin, termios.TCSANOW, self.tattr)
 
     def poll(_self):
-        dr, dw, de = select.select([sys.stdin], [], [], 0)
+        dr, _dw, _de = select.select([sys.stdin], [], [], 0)
         if not dr == []:
             return sys.stdin.read(1)
         return None

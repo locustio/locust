@@ -80,11 +80,11 @@ test = [
     "retry>=0.9.2,<1.0.0",
 ]
 lint = [
-    "pre-commit>=4.5.0,<5.0.0",
-    "ruff==0.16.8",
+    "pre-commit>=4.7.0,<5.0.0",
+    "ruff==0.17.2",
     "mypy>=1.13.0,<1.15.0",
     "types-requests==2.33.0.20260906",
-    "typos>=1.50.3"
+    "typos>=1.51.1"
 ]
 release = ["twine>=5.1.1,<6.0.0"]
 docs = [
@@ -159,7 +159,7 @@ extend-exclude = [
     "src/readthedocs-sphinx-search/",
     "examples/grpc/hello_pb2*.py",
 ]
-lint.ignore = ["E402", "E501", "E713", "E731", "E741", "UP031", "PERF203", "RUF012", "RUF059", "RUF015"]
+lint.ignore = ["E402", "E501", "E713", "E731", "E741", "UP031", "PERF203", "RUF012", "RUF015"]
 lint.select = ["E", "F", "W", "UP", "FA102", "I001", "FURB", "PERF", "RUF"]
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?)|resp)$"
 
@@ -298,5 +298,4 @@ filterwarnings = [
     # "This process is multi-threaded, use of fork() may lead to deadlocks in the child." started happening in Python 3.12
     # It could potentially be a real issue, but I don't think
     "ignore::DeprecationWarning:gevent",
-
 ]

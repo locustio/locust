@@ -577,7 +577,7 @@ class LocalRunner(Runner):
         """
         logger.debug(f"Running locally: sending {msg_type} message to self")
         if msg_type in self.custom_messages:
-            listener, concurrent = self.custom_messages[msg_type]
+            listener, _concurrent = self.custom_messages[msg_type]
             msg = Message(msg_type, data, "local")
             listener(environment=self.environment, msg=msg)
         else:
