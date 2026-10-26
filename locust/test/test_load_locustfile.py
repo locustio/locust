@@ -5,7 +5,6 @@ from locust.user import HttpUser, TaskSet, User
 from locust.user.users import PytestUser
 from locust.util.load_locustfile import is_user_class
 
-import filecmp
 import os
 import textwrap
 
@@ -237,12 +236,10 @@ class TestLoadLocustfile(LocustTestCase):
             ]
         )
         self.assertEqual(len(locustfiles), 1)
-        self.assertTrue(
-            filecmp.cmp(
-                locustfiles[0],
-                f"{os.getcwd()}/examples/basic.py",
-            )
-        )
+        # Compare as text, because a Windows checkout of examples/basic.py may have CRLF line endings
+        with open(locustfiles[0], encoding="utf-8") as downloaded:
+            with open(f"{os.getcwd()}/examples/basic.py", encoding="utf-8") as local:
+                self.assertEqual(local.read(), downloaded.read())
 
     def test_locustfile_from_url_is_saved_byte_for_byte(self):
         content = textwrap.dedent(
