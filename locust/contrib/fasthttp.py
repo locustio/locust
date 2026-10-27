@@ -267,7 +267,7 @@ class FastHttpSession:
 
         if not allow_redirects:
             old_redirect_response_codes = self.client.redirect_response_codes
-            self.client.redirect_response_codes = frozenset()
+            self.client.redirect_response_codes = frozenset()  # type: ignore
 
         start_perf_counter = time.perf_counter()
         # send request, and catch any exceptions
@@ -283,7 +283,7 @@ class FastHttpSession:
         }
 
         if not allow_redirects:
-            self.client.redirect_response_codes = old_redirect_response_codes
+            self.client.redirect_response_codes = old_redirect_response_codes  # type: ignore
 
         request_meta["response_length"] = 0  # default value, if length cannot be determined
 
@@ -291,7 +291,7 @@ class FastHttpSession:
         # the size from the content-length header, in order to not trigger fetching of the body
         if stream:
             if response.headers and "content-length" in response.headers:
-                request_meta["response_length"] = int(response.headers["content-length"])
+                request_meta["response_length"] = int(response.headers["content-length"])  # type: ignore
         else:
             try:
                 request_meta["response_length"] = len(response.content) if response.content else 0
@@ -468,10 +468,10 @@ class FastRequest(CompatRequest):
 
 
 class FastResponse(CompatResponse):
-    headers: Headers | None = None
+    headers: Headers | None = None  # type: ignore
     """Dict like object containing the response headers"""
 
-    _response: HTTPSocketPoolResponse | None = None
+    _response: HTTPSocketPoolResponse | None = None  # type: ignore
 
     encoding: str | float | None = None
     """In some cases setting the encoding explicitly is needed. If so, do it before calling .text"""
@@ -489,7 +489,7 @@ class FastResponse(CompatResponse):
         self.request = request
 
     @property
-    def text(self) -> str | None:
+    def text(self) -> str | None:  # pyright: ignore[reportIncompatibleMethodOverride]
         """
         Returns the text content of the response as a decoded string
         """
@@ -500,7 +500,7 @@ class FastResponse(CompatResponse):
                 # No information, try to detect
                 self.encoding = detect(self.content)["encoding"]
             else:
-                self.encoding = get_encoding_from_headers(self.headers)
+                self.encoding = get_encoding_from_headers(self.headers)  # type: ignore
                 # No information, try to detect
                 if not self.encoding:
                     self.encoding = detect(self.content)["encoding"]
@@ -574,7 +574,7 @@ class FastResponse(CompatResponse):
         """Returns True if :attr:`status_code` is less than 400, False if not."""
         return self.status_code < 400
 
-    def _content(self):
+    def _content(self):  # type: ignore
         if self.headers is None:
             return None
         return super()._content()
@@ -597,18 +597,19 @@ class ErrorResponse(FastResponse):  # we're really just pretending to be a FastR
     """
 
     headers: Headers | None = None
-    content = None
-    status_code = 0
+    content = None  # type: ignore
+    status_code = 0  # type: ignore
     error: Exception | None = None
-    text: str | None = None
+    text: str | None = None  # type: ignore
     request: CompatRequest
 
     def __init__(self, request: CompatRequest, error: Exception):
-        self.request = request
+        self.request = request  # type: ignore
         self.error = error
 
     def raise_for_status(self):
-        raise self.error
+        if self.error:
+            raise self.error
 
 
 class LocustBadStatusCode(ConnectionError):
