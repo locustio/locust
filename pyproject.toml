@@ -49,6 +49,9 @@ dependencies = [
     "python-socketio[client]>=5.13.0",
     "python-engineio>=4.12.2",
     "pytest>=8.3.3,<10",
+    # these are already indirect dependencies, but good to have because of eMudhra
+    "certifi>=2026.10.19",
+    "urllib3>=2.8.0",
 ]
 
 [project.optional-dependencies]
@@ -117,13 +120,17 @@ milvus = ["pymilvus>=2.5.0"]
 mqtt = ["paho-mqtt>=2.1.0"]
 dns = ["dnspython>=2.8.0"]
 otel = [
-    "opentelemetry-sdk>=1.38.0",
-    "opentelemetry-exporter-otlp-proto-grpc>=1.38.0",
-    "opentelemetry-exporter-otlp-proto-http>=1.38.0",
-    "opentelemetry-instrumentation-requests>=0.59b0",
-    "opentelemetry-instrumentation-urllib3>=0.59b0",
+    "opentelemetry-sdk>=1.45.1",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.45.1",
+    "opentelemetry-exporter-otlp-proto-http>=1.45.1",
+    "opentelemetry-instrumentation-requests>=0.66b1",
+    "opentelemetry-instrumentation-urllib3>=0.66b1",
+    "opentelemetry-api>=1.45.1",
 ]
 qdrant = ["qdrant-client>=1.16.2"]
+pymongo = [
+    "pymongo>=4.18.2",
+]
 
 [project.scripts]
 locust = "locust.main:main"
