@@ -489,7 +489,7 @@ class FastResponse(CompatResponse):
         self.request = request
 
     @property
-    def text(self) -> str | None:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def text(self) -> str | None:  # type: ignore
         """
         Returns the text content of the response as a decoded string
         """
