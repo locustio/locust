@@ -5,9 +5,10 @@ from locust.user import HttpUser, TaskSet, User
 from locust.user.users import PytestUser
 from locust.util.load_locustfile import is_user_class
 
-import filecmp
 import os
 import textwrap
+
+import gevent.pywsgi
 
 from .mock_locustfile import MOCK_LOCUSTFILE_CONTENT, mock_locustfile
 from .testcases import LocustTestCase
@@ -235,12 +236,40 @@ class TestLoadLocustfile(LocustTestCase):
             ]
         )
         self.assertEqual(len(locustfiles), 1)
-        self.assertTrue(
-            filecmp.cmp(
-                locustfiles[0],
-                f"{os.getcwd()}/examples/basic.py",
+        # Compare as text, because a Windows checkout of examples/basic.py may have CRLF line endings
+        with open(locustfiles[0], encoding="utf-8") as downloaded:
+            with open(f"{os.getcwd()}/examples/basic.py", encoding="utf-8") as local:
+                self.assertEqual(local.read(), downloaded.read())
+
+    def test_locustfile_from_url_is_saved_byte_for_byte(self):
+        content = textwrap.dedent(
+            """
+            from locust import User, task
+
+
+            class UserSubclass(User):
+                @task
+                def t(self):
+                    print("こんにちは café")
+            """
+        ).encode("utf-8")
+
+        def app(environ, start_response):
+            # No charset, so requests decodes response.text as ISO-8859-1
+            start_response("200 OK", [("Content-Type", "text/x-python")])
+            return [content]
+
+        server = gevent.pywsgi.WSGIServer(("127.0.0.1", 0), app, log=None)
+        server.start()
+        try:
+            locustfiles = get_locustfiles_from_args(
+                args=["-f", f"http://127.0.0.1:{server.server_port}/non_ascii_locustfile.py"]
             )
-        )
+        finally:
+            server.stop()
+        self.assertEqual(len(locustfiles), 1)
+        with open(locustfiles[0], "rb") as f:
+            self.assertEqual(content, f.read())
 
     def test_profile_flag(self):
         options = get_parser().parse_args()

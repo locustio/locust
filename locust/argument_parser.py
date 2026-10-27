@@ -199,15 +199,15 @@ def download_locustfile_from_url(url: str) -> str:
     else:
         try:
             # Check if response is valid python code
-            ast.parse(response.text)
+            ast.parse(response.content)
         except SyntaxError:
             sys.stderr.write(
                 f"Failed to get locustfile from: {url}. Response was not valid python code: '{response.text[:100]}'"
             )
             sys.exit(1)
 
-    with open(os.path.join(tempfile.gettempdir(), urlparse(url).path.split("/")[-1]), "w") as locustfile:
-        locustfile.write(response.text)
+    with open(os.path.join(tempfile.gettempdir(), urlparse(url).path.split("/")[-1]), "wb") as locustfile:
+        locustfile.write(response.content)
 
     atexit.register(exit_handler, locustfile.name)
     return locustfile.name
