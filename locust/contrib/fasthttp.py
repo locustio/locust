@@ -601,7 +601,7 @@ class ErrorResponse(FastResponse):  # we're really just pretending to be a FastR
     status_code = 0  # type: ignore
     error: Exception | None = None
     text: str | None = None  # type: ignore
-    request: CompatRequest
+    request: CompatRequest  # type: ignore
 
     def __init__(self, request: CompatRequest, error: Exception):
         self.request = request  # type: ignore
