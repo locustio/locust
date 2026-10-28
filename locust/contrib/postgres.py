@@ -7,7 +7,7 @@ import psycopg
 
 class PostgresClient:
     def __init__(self, conn_string):
-        self.connection = psycopg.connect(conn_string)
+        self.connection = psycopg.connect(conn_string, autocommit=True)
 
     def execute_query(self, query):
         start_time = time.time()
