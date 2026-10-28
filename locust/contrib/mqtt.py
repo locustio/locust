@@ -235,7 +235,7 @@ class MqttClient(mqtt.Client):
         self,
         client: mqtt.Client,
         userdata: typing.Any,
-        rc: int | ReasonCode,
+        rc: int | ReasonCode | None,
     ):
         if rc != 0:
             self.environment.events.request.fire(
@@ -273,8 +273,7 @@ class MqttClient(mqtt.Client):
         self,
         client: mqtt.Client,
         userdata: typing.Any,
-        disconnect_flags: mqtt.DisconnectFlags,
-        reasoncode: ReasonCode,
+        reasoncode: ReasonCode | int | None,
         properties: Properties | None,
     ) -> None:
         return self._on_disconnect_cb(client, userdata, reasoncode)
