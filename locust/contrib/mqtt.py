@@ -20,10 +20,12 @@ if typing.TYPE_CHECKING:
     from paho.mqtt.subscribeoptions import SubscribeOptions
 
 
-# A SUBACK response for MQTT can only contain 0x00, 0x01, 0x02, or 0x80. 0x80
-# indicates a failure to subscribe.
+# A SUBACK response for MQTT 3.1.1 can only contain 0x00, 0x01, 0x02, or 0x80.
+# 0x80 indicates a failure to subscribe. In MQTT 5, any reason code of 0x80 or
+# greater indicates a failure.
 #
 # http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Figure_3.26_-
+# https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901031
 SUBACK_FAILURE = 0x80
 REQUEST_TYPE = "MQTT"
 
@@ -189,7 +191,7 @@ class MqttClient(mqtt.Client):
                 },
             )
         else:
-            if SUBACK_FAILURE in granted_qos:
+            if any(code >= SUBACK_FAILURE for code in granted_qos):
                 self.environment.events.request.fire(
                     request_type=REQUEST_TYPE,
                     name=self._generate_event_name("subscribe", qos, topic),
