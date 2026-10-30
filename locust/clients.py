@@ -122,11 +122,12 @@ class HttpSession(requests.Session):
     def rename_request(self, name: str) -> Generator[None]:
         """Group requests using the "with" keyword"""
 
+        previous_name = self.request_name
         self.request_name = name
         try:
             yield
         finally:
-            self.request_name = None
+            self.request_name = previous_name
 
     def request(  # type: ignore[override]
         self,
