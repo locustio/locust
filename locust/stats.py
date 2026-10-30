@@ -1200,6 +1200,10 @@ class StatsCSVFileWriter(StatsCSV):
         Aggregated stats entry, but if self.full_history is set to True, a row for each entry
         will be included.
 
+        Requests/s and Failures/s are always the current (sliding window) rates. The
+        percentiles are the current ones only if self.full_history is set to True, and
+        cover the whole run otherwise.
+
         Note that this method differs from the other methods as it appends time-stamped data to the file, whereas the other methods overwrites the data.
         """
 
