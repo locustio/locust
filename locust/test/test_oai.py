@@ -1,3 +1,5 @@
+from locust.event import EventHook
+
 import pytest
 
 pytest.importorskip("openai")
@@ -7,7 +9,6 @@ pytest.importorskip("openai")
 def client(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "local-test-only")
     from locust.contrib.oai import OpenAIClient
-    from locust.event import EventHook
 
     client = OpenAIClient(EventHook(), user=None)
     yield client
