@@ -1198,6 +1198,10 @@ class StatsCSVFileWriter(StatsCSV):
         Aggregated stats entry, but if self.full_history is set to True, a row for each entry
         will be included.
 
+        Requests/s and Failures/s are always the current (sliding window) rates. The
+        percentiles are the current ones only if self.full_history is set to True, and
+        cover the whole run otherwise.
+
         Note that this method differs from the other methods as it appends time-stamped data to the file, whereas the other methods overwrites the data.
         """
 
@@ -1218,7 +1222,7 @@ class StatsCSVFileWriter(StatsCSV):
                         f"{stats_entry.current_rps:2f}",
                         f"{stats_entry.current_fail_per_sec:2f}",
                     ),
-                    self._percentile_fields(stats_entry, use_current=True),
+                    self._percentile_fields(stats_entry, use_current=self.full_history),
                     (
                         stats_entry.num_requests,
                         stats_entry.num_failures,
