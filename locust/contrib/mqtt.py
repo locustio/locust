@@ -404,7 +404,7 @@ class MqttClient(mqtt.Client):
             # Clear sockpairR - only ever a single byte written.
             with suppress(BlockingIOError):
                 # Read many bytes at once - this allows up to 10000 calls to
-                # publish() inbetween calls to loop().
+                # publish() in between calls to loop().
                 self._sockpairR.recv(10000)
 
         if self._sock in socklist[1]:
