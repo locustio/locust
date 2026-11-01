@@ -339,7 +339,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
 
     def test_default_headless_spawn_options(self):
         with mock_locustfile() as mocked:
-            # just to test --stop-timeout argument parsing, doesnt actually validate its function:
+            # just to test --stop-timeout argument parsing, doesn't actually validate its function:
             with TestProcess(
                 f"locust -f {mocked.file_path} --host https://test.com --run-time 1s --headless --loglevel DEBUG --exit-code-on-error 0 --stop-timeout 0s",
             ) as tp:
@@ -640,7 +640,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 response = requests.get(f"http://127.0.0.1:{port}/")
                 self.assertEqual(200, response.status_code)
 
-    @unittest.skipIf(IS_WINDOWS, reason="termios doesnt exist on windows, and thus we cannot import pty")
+    @unittest.skipIf(IS_WINDOWS, reason="termios doesn't exist on windows, and thus we cannot import pty")
     def test_input(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
@@ -687,7 +687,7 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 tp.expect("Aggregated")
                 tp.expect("Response time percentiles (approximated)")
 
-    @unittest.skipIf(IS_WINDOWS, reason="termios doesnt exist on windows, and thus we cannot import pty")
+    @unittest.skipIf(IS_WINDOWS, reason="termios doesn't exist on windows, and thus we cannot import pty")
     def test_autospawn_browser(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
@@ -1558,7 +1558,7 @@ class AnyUser(HttpUser):
                         self.assertEqual(0, indexes[0], f"expected index 0 but got {indexes[0]}")
                         self.assertEqual(1, indexes[1], f"expected index 1 but got {indexes[1]}")
 
-    @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
+    @unittest.skipIf(IS_WINDOWS, reason="--processes doesn't work on windows")
     def test_processes(self):
         with mock_locustfile() as mocked:
             with TestProcess(
@@ -1570,7 +1570,7 @@ class AnyUser(HttpUser):
                 tp.expect("The last worker quit, stopping test")
                 tp.not_expect_any("Traceback")
 
-    @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
+    @unittest.skipIf(IS_WINDOWS, reason="--processes doesn't work on windows")
     def test_processes_autodetect(self):
         with mock_locustfile() as mocked:
             with TestProcess(
@@ -1582,7 +1582,7 @@ class AnyUser(HttpUser):
                 tp.expect("The last worker quit, stopping test")
                 tp.not_expect_any("Traceback")
 
-    @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
+    @unittest.skipIf(IS_WINDOWS, reason="--processes doesn't work on windows")
     def test_processes_separate_worker(self):
         with mock_locustfile() as mocked:
             master_proc = TestProcess(
@@ -1603,7 +1603,7 @@ class AnyUser(HttpUser):
             master_proc.expect("(index 3) reported as ready")
             master_proc.expect("Shutting down (exit code 0)")
 
-    @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
+    @unittest.skipIf(IS_WINDOWS, reason="--processes doesn't work on windows")
     def test_processes_ctrl_c(self):
         with mock_locustfile() as mocked:
             with TestProcess(
@@ -1639,7 +1639,7 @@ class AnyUser(HttpUser):
 
                 tp.not_expect_any("Traceback")
 
-    @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
+    @unittest.skipIf(IS_WINDOWS, reason="--processes doesn't work on windows")
     def test_workers_shut_down_if_master_is_gone(self):
         content = """
 from locust import HttpUser, task, constant, runners
@@ -1672,7 +1672,7 @@ class AnyUser(HttpUser):
                     tp_worker_parent.expect("Shutting down")
                     tp_worker_parent.not_expect_any("Traceback")
 
-    @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
+    @unittest.skipIf(IS_WINDOWS, reason="--processes doesn't work on windows")
     def test_processes_error_doesnt_blow_up_completely(self):
         with mock_locustfile() as mocked:
             with TestProcess(
@@ -1689,7 +1689,7 @@ class AnyUser(HttpUser):
                 self.assertEqual(total_logs, 5)
                 tp.not_expect_any("Traceback")
 
-    @unittest.skipIf(IS_WINDOWS, reason="--processes doesnt work on windows")
+    @unittest.skipIf(IS_WINDOWS, reason="--processes doesn't work on windows")
     @unittest.skipIf(sys.platform == "darwin", reason="Flaky on macOS :-/")
     def test_processes_workers_quit_unexpected(self):
         content = """
