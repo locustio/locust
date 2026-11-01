@@ -298,11 +298,13 @@ class RestMixin(Generic[RestResponseT]):
                 yield resp
             except AssertionError as e:
                 if e.args:
-                    if e.args[0].endswith(","):
+                    # the message can be any object, e.g. `assert ..., response.js`
+                    message = str(e.args[0])
+                    if message.endswith(","):
                         short_resp = resp.text[:200] if resp.text else resp.text
-                        resp.failure(f"{e.args[0][:-1]}, response was {short_resp}")
+                        resp.failure(f"{message[:-1]}, response was {short_resp}")
                     else:
-                        resp.failure(e.args[0])
+                        resp.failure(message)
                 else:
                     resp.failure("Assertion failed")
 
