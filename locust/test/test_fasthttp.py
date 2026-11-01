@@ -23,6 +23,48 @@ class TestFastHttpSession(WebserverTestCase):
     def get_client(self):
         return FastHttpSession("http://127.0.0.1:%i" % self.port, self.environment.events.request, user=None)
 
+    def test_nested_rename_request_restores_outer_name(self):
+        client = self.get_client()
+        with client.rename_request("outer"):
+            client.get("/ultra_fast")
+            with client.rename_request("inner"):
+                client.get("/ultra_fast")
+            client.get("/ultra_fast")
+        self.assertEqual(2, self.runner.stats.get("outer", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.get("inner", "GET").num_requests)
+        self.assertNotIn(("/ultra_fast", "GET"), self.runner.stats.entries)
+        self.assertIsNone(client.request_name)
+
+    def test_nested_rename_request_restores_outer_name_on_exception(self):
+        client = self.get_client()
+        with client.rename_request("outer"):
+            with self.assertRaises(ValueError):
+                with client.rename_request("inner"):
+                    raise ValueError("boom")
+            client.get("/ultra_fast")
+        self.assertEqual(1, self.runner.stats.get("outer", "GET").num_requests)
+        self.assertIsNone(client.request_name)
+
+    def test_rename_request_restores_existing_name(self):
+        client = self.get_client()
+        client.request_name = "existing"
+        with client.rename_request("temporary"):
+            client.get("/ultra_fast")
+        client.get("/ultra_fast")
+        self.assertEqual(1, self.runner.stats.get("temporary", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.get("existing", "GET").num_requests)
+        self.assertEqual("existing", client.request_name)
+
+    def test_rename_request_restores_existing_name_on_exception(self):
+        client = self.get_client()
+        client.request_name = "existing"
+        with self.assertRaises(ValueError):
+            with client.rename_request("temporary"):
+                raise ValueError("boom")
+        client.get("/ultra_fast")
+        self.assertEqual(1, self.runner.stats.get("existing", "GET").num_requests)
+        self.assertEqual("existing", client.request_name)
+
     def test_get(self):
         s = self.get_client()
         r = s.get("/ultra_fast")
