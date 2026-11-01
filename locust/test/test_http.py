@@ -71,6 +71,21 @@ class TestHttpSession(WebserverTestCase):
         r = s.get("/ultra_fast")
         self.assertEqual(200, r.status_code)
 
+    def test_bytes_urls_reach_the_http_server(self):
+        for suffix in ("/ultra_fast", "/echo_target/café?q=hello", "/ultra_fast?query=value"):
+            for absolute in (False, True):
+                for as_bytes in (False, True):
+                    with self.subTest(suffix=suffix, absolute=absolute, as_bytes=as_bytes):
+                        client = self.get_client()
+                        url = client.base_url + suffix if absolute else suffix
+                        response = client.get(url.encode("utf-8") if as_bytes else url)
+                        self.assertEqual(200, response.status_code)
+                        self.assertNotIn("b'", response.url)
+                        if "echo_target" in suffix:
+                            self.assertEqual("/echo_target/café", response.json()["path"])
+                        self.assertGreater(self.runner.stats.total.num_requests, 0)
+                        self.assertEqual(0, self.runner.stats.total.num_failures)
+
     def test_connection_error(self):
         s = self.get_client(base_url="http://localhost:1")
         r = s.get("/", timeout=0.1)
