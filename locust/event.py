@@ -87,16 +87,6 @@ class EventHook:
             self.fire(**request_meta)
 
 
-class DeprecatedEventHook(EventHook):
-    def __init__(self, message):
-        self.message = message
-        super().__init__()
-
-    def add_listener(self, handler):
-        logging.warning(self.message)
-        return super().add_listener(handler)
-
-
 class Events:
     request: EventHook
     """

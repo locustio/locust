@@ -142,10 +142,6 @@ def bucket_response_time(response_time: int | float) -> int:
         return int(round(response_time, -3))
 
 
-class RequestStatsAdditionError(Exception):
-    pass
-
-
 def get_readable_percentiles(percentile_list: list[float]) -> list[str]:
     """
     Converts a list of percentiles from 0-1 fraction to 0%-100% view for using in console & csv reporting
