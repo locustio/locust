@@ -111,8 +111,10 @@ class HttpSession(requests.Session):
         self.mount("https://", LocustHttpAdapter(pool_manager=pool_manager))
         self.mount("http://", LocustHttpAdapter(pool_manager=pool_manager))
 
-    def _build_url(self, path) -> str:
+    def _build_url(self, path: str | bytes) -> str:
         """prepend url with hostname unless it's already an absolute URL"""
+        if isinstance(path, bytes):
+            path = path.decode("utf-8")
         if absolute_http_url_regexp.match(path):
             return path
         else:
