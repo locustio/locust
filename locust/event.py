@@ -80,6 +80,8 @@ class EventHook:
         }
         try:
             yield request_meta
+        except (StopUser, StopTest, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet):
+            raise
         except Exception as e:
             request_meta["exception"] = e
         finally:
