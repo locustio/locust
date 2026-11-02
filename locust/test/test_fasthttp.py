@@ -1,6 +1,15 @@
 from locust import FastHttpUser
 from locust.contrib.fasthttp import FastHttpSession, _construct_basic_auth_str
-from locust.exception import CatchResponseError, InterruptTaskSet, LocustError, ResponseError
+from locust.exception import (
+    CatchResponseError,
+    InterruptTaskSet,
+    LocustError,
+    RescheduleTask,
+    RescheduleTaskImmediately,
+    ResponseError,
+    StopTest,
+    StopUser,
+)
 from locust.user import TaskSet, task
 from locust.util.load_locustfile import is_user_class
 
@@ -999,6 +1008,15 @@ class TestFastHttpCatchResponse(WebserverTestCase):
         self.assertEqual("{'foo': 'bar'}", str(self.last_failure_exception))
         self.assertEqual(1, self.num_failures)
         self.assertEqual(0, self.num_success)
+
+    def test_rest_does_not_catch_task_control_exceptions(self):
+        for exception_type in (StopUser, StopTest, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet):
+            with self.subTest(exception_type=exception_type.__name__):
+                with self.assertRaises(exception_type):
+                    with self.user.rest("POST", "/rest", json={"foo": "bar"}):
+                        raise exception_type()
+
+        self.assertEqual(0, self.num_failures)
 
     def test_rest_does_not_modify_the_given_headers(self):
         headers = {"X-Header-Test": "hello"}

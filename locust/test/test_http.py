@@ -1,5 +1,13 @@
 from locust.clients import HttpSession
-from locust.exception import CatchResponseError, LocustError
+from locust.exception import (
+    CatchResponseError,
+    InterruptTaskSet,
+    LocustError,
+    RescheduleTask,
+    RescheduleTaskImmediately,
+    StopTest,
+    StopUser,
+)
 from locust.user.users import HttpUser
 
 import time
@@ -447,6 +455,15 @@ class TestHttpUserRest(WebserverTestCase):
         self.assertIn("KeyError: 'missing'", str(self.last_failure_exception))
         self.assertEqual(1, self.num_failures)
         self.assertEqual(0, self.num_success)
+
+    def test_rest_does_not_catch_task_control_exceptions(self):
+        for exception_type in (StopUser, StopTest, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet):
+            with self.subTest(exception_type=exception_type.__name__):
+                with self.assertRaises(exception_type):
+                    with self.user.rest("POST", "/rest", json={"foo": "bar"}):
+                        raise exception_type()
+
+        self.assertEqual(0, self.num_failures)
 
     def test_rest_invalid_json(self):
         with self.user.rest("GET", "/ultra_fast") as response:
