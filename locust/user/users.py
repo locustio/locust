@@ -1,7 +1,14 @@
 from __future__ import annotations
 
 from locust.clients import HttpSession, RestResponseContextManager
-from locust.exception import CatchResponseError, StopTest, StopUser
+from locust.exception import (
+    CatchResponseError,
+    InterruptTaskSet,
+    RescheduleTask,
+    RescheduleTaskImmediately,
+    StopTest,
+    StopUser,
+)
 from locust.user.task import (
     LOCUST_STATE_RUNNING,
     LOCUST_STATE_STOPPING,
@@ -308,6 +315,8 @@ class RestMixin(Generic[RestResponseT]):
                 else:
                     resp.failure("Assertion failed")
 
+            except (StopUser, StopTest, RescheduleTask, RescheduleTaskImmediately, InterruptTaskSet):
+                raise
             except Exception as e:
                 error_lines = []
                 for l in traceback.format_exc().split("\n"):
