@@ -331,16 +331,28 @@ class TestRequestStats(unittest.TestCase):
 
     def test_percentile_rounded_down(self):
         s1 = StatsEntry(self.stats, "rounding down!", "GET")
-        s1.log(122, 0)  # (rounded 120) min
+        s1.log(122, 0)  # rounded 120, which is below the min
         actual_percentile = s1.percentile().split()
 
-        self.assertEqual(actual_percentile, ["GET", "rounding", "down!"] + ["120"] * len(PERCENTILES_TO_REPORT) + ["1"])
+        self.assertEqual(actual_percentile, ["GET", "rounding", "down!"] + ["122"] * len(PERCENTILES_TO_REPORT) + ["1"])
 
     def test_percentile_rounded_up(self):
         s2 = StatsEntry(self.stats, "rounding up!", "GET")
-        s2.log(127, 0)  # (rounded 130) min
+        s2.log(127, 0)  # rounded 130, which is above the max
         actual_percentile = s2.percentile().split()
-        self.assertEqual(actual_percentile, ["GET", "rounding", "up!"] + ["130"] * len(PERCENTILES_TO_REPORT) + ["1"])
+        self.assertEqual(actual_percentile, ["GET", "rounding", "up!"] + ["127"] * len(PERCENTILES_TO_REPORT) + ["1"])
+
+    def test_percentile_within_min_max_bounds(self):
+        s = StatsEntry(self.stats, "percentile_bounds", "GET")
+        for _ in range(99):
+            s.log(1020, 0)  # rounded 1000, which is below the min
+        s.log(1460, 0)  # rounded 1500, which is above the max
+
+        self.assertEqual(s.get_response_time_percentile(0.5), 1020)
+        self.assertEqual(s.get_response_time_percentile(0.95), 1020)
+        self.assertEqual(s.get_response_time_percentile(0.99), 1460)
+        self.assertEqual(s.get_response_time_percentile(1.0), 1460)
+        self.assertEqual(s.median_response_time, s.get_response_time_percentile(0.5))
 
     def test_custom_percentile_list(self):
         s = StatsEntry(self.stats, "custom_percentiles", "GET")
