@@ -10,6 +10,7 @@ from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock
 
 import gevent
+from gevent.pywsgi import WSGIServer
 from gevent.server import StreamServer
 from geventhttpclient._parser import HTTPParseError
 from geventhttpclient.client import HTTPClientPool
@@ -736,6 +737,52 @@ class TestFastHttpUserClass(WebserverTestCase):
         self.assertTrue(resp.headers["location"].endswith("/ultra_fast"))
         resp = l.client.get("/redirect")  # ensure redirect still works
         self.assertFalse("location" in resp.headers)
+
+    def test_iter_lines_preserves_utf8_across_read_boundaries(self):
+        payloads = {
+            "two_byte_split": b"a" * 1023 + "é\n".encode(),
+            "three_byte_split_first": b"a" * 1023 + "界\n".encode(),
+            "three_byte_split_second": b"a" * 1022 + "界\n".encode(),
+            "four_byte_split_first": b"a" * 1023 + "😀\n".encode(),
+            "four_byte_split_second": b"a" * 1022 + "😀\n".encode(),
+            "four_byte_split_third": b"a" * 1021 + "😀\n".encode(),
+            "aligned": b"a" * 1024 + "é\n".encode(),
+            "ascii": b"first\nsecond\n",
+            "crlf_boundary": b"a" * 1023 + b"\r\nlast\r\n",
+            "final_line": "first\né".encode(),
+            "empty": b"",
+            "invalid": b"first\na\xffb\n",
+            "truncated": b"last\xe2\x82",
+        }
+
+        def application(environ, start_response):
+            body = payloads[environ["PATH_INFO"].lstrip("/")]
+            start_response("200 OK", [("Content-Type", "text/plain; charset=utf-8")])
+            return [body]
+
+        server = WSGIServer(("127.0.0.1", 0), application, log=None)
+        server.start()
+        self.addCleanup(server.stop)
+
+        class StreamingUser(FastHttpUser):
+            host = f"http://127.0.0.1:{server.server_port}"
+
+        client = StreamingUser(self.environment).client
+        events = []
+        self.environment.events.request.add_listener(lambda **kwargs: events.append(kwargs))
+        for name, body in payloads.items():
+            with self.subTest(name=name):
+                events.clear()
+                lines = list(client.iter_lines(f"/{name}"))
+                expected = body.decode("utf-8", errors="replace").split("\n")
+                if expected[-1] == "":
+                    expected.pop()
+                self.assertEqual(expected, lines)
+                self.assertEqual(1, len(events))
+                self.assertIsNone(events[0]["exception"])
+                stats = self.runner.stats.get(f"/{name}", "GET")
+                self.assertEqual(1, stats.num_requests)
+                self.assertEqual(0, stats.num_failures)
 
     def test_slow_redirect(self):
         s = FastHttpSession("http://127.0.0.1:%i" % self.port, self.environment.events.request, user=None)

@@ -12,6 +12,7 @@ import socket
 import time
 import zlib
 from base64 import b64encode
+from codecs import getincrementaldecoder
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from ssl import SSLError
@@ -335,17 +336,16 @@ class FastHttpSession:
         response = self.request(method, url, stream=True, **kwargs)
         response.raise_for_status()
 
+        decoder = getincrementaldecoder("utf-8")(errors="replace")
         buffer = ""
-        for chunk in response.iter_content(chunk_size=1024, decode_content=True):
-            #  Ensure that chunk is a string.
-            if isinstance(chunk, bytes):
-                chunk = chunk.decode("utf-8", errors="replace")
-
-            buffer += chunk
+        for chunk in response.iter_content(chunk_size=1024, decode_content=False):
+            buffer += decoder.decode(chunk)
             while "\n" in buffer:
                 line, buffer = buffer.split("\n", 1)
                 yield line
 
+        # Flush a final incomplete character using the same replacement policy.
+        buffer += decoder.decode(b"", final=True)
         # Return to the last line that may be incomplete.
         if buffer:
             yield buffer
