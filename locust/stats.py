@@ -433,23 +433,7 @@ class StatsEntry:
 
     @property
     def median_response_time(self) -> int:
-        if not self.response_times:
-            return 0
-        median = (
-            calculate_response_time_percentile(self.response_times, self.num_requests - self.num_none_requests, 0.5)
-            or 0
-        )
-
-        # Since we only use two digits of precision when calculating the median response time
-        # while still using the exact values for min and max response times, the following checks
-        # makes sure that we don't report a median > max or median < min when a StatsEntry only
-        # have one (or very few) really slow requests
-        if median > self.max_response_time:
-            median = self.max_response_time
-        elif self.min_response_time is not None and median < self.min_response_time:
-            median = self.min_response_time
-
-        return median
+        return self.get_response_time_percentile(0.5)
 
     @property
     def current_rps(self) -> float:
@@ -609,9 +593,20 @@ class StatsEntry:
         """
         # response_times only holds non-None samples, so None (async) requests
         # must be excluded from the denominator, just like in avg/median
-        return calculate_response_time_percentile(
+        percentile = calculate_response_time_percentile(
             self.response_times, self.num_requests - self.num_none_requests, percent
         )
+
+        # Since we only use two digits of precision when calculating percentiles while still
+        # using the exact values for min and max response times, the following checks make sure
+        # that we don't report a percentile > max or percentile < min, e.g. a 95th percentile of
+        # 1500 when the slowest request took 1460
+        if percentile > self.max_response_time:
+            percentile = self.max_response_time
+        elif self.min_response_time is not None and percentile < self.min_response_time:
+            percentile = self.min_response_time
+
+        return percentile
 
     def get_current_response_time_percentile(self, percent: float) -> int | None:
         """
