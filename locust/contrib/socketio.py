@@ -67,7 +67,7 @@ class SocketIOClient(socketio.Client):
         This is the default handler for events received.
         You can register separate handlers using self.sio.on(event, handler)
 
-        Measuring response_time isn't obvious for for WebSockets/SocketIO so we set them to 0.
+        Measuring response_time isn't obvious for WebSockets/SocketIO so we set them to 0.
         Sometimes response time can be inferred from the event data (if it contains a timestamp)
         or related to a message that you sent. Override this method in your User class to do that.
         """

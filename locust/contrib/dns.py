@@ -39,7 +39,7 @@ class DNSClient:
             self.request_event.fire(**request_meta)
             return response  # type: ignore
 
-        return wrapper  # for some reason, pyright still wont infer the return type to be Message
+        return wrapper  # for some reason, pyright still won't infer the return type to be Message
 
 
 class DNSUser(User):

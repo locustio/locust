@@ -1,5 +1,5 @@
 # Note: this User is experimental and may change without notice.
-# The filename is oai.py so it doesnt clash with the openai package.
+# The filename is oai.py so it doesn't clash with the openai package.
 from locust.user import User
 
 import os

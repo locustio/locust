@@ -166,7 +166,7 @@ def get_tasks_from_base_classes(bases, class_dict):
 
     for item in class_dict.values():
         if "locust_task_weight" in dir(item):
-            for i in range(item.locust_task_weight):
+            for _ in range(item.locust_task_weight):
                 new_tasks.append(item)
 
     return new_tasks

@@ -95,18 +95,6 @@ def _get_first_paragraph(doctree: nodes.document) -> str:
     return ""
 
 
-def _walk_toctree(env, docname: str, exclude: list[str]) -> list[str]:
-    """Recursively walk toctree includes and return ordered docnames, excluding specified ones."""
-    result = []
-    includes = env.toctree_includes.get(docname, [])
-    for child in includes:
-        if child in exclude:
-            continue
-        result.append(child)
-        result.extend(_walk_toctree(env, child, exclude))
-    return result
-
-
 def _get_section_groups(env, master_doc: str, exclude: list[str]) -> list[tuple[str, list[str]]]:
     """Parse the master document's toctree to get section groups.
 
@@ -190,7 +178,7 @@ def _generate_llms_full_txt(app: Sphinx, section_groups: list[tuple[str, list[st
 
     parts = [f"# {project}\n\n> {description}\n"]
 
-    for section_title, docnames in section_groups:
+    for _, docnames in section_groups:
         for docname in docnames:
             doctree = app.env.get_doctree(docname)
             try:
