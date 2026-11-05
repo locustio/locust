@@ -4,6 +4,7 @@ import inspect
 from collections import defaultdict
 from json import dumps
 
+from ..dispatch import _kl_generator
 from .task import TaskSet
 from .users import User
 
@@ -32,11 +33,15 @@ def _calc_distribution(user_classes, num_users):
     num_users = num_users or (total_weight if not fixed_count else 1)
     weighted_count = num_users - fixed_count
     weighted_count = max(0, weighted_count)
-    user_classes_count = {}
+    user_classes_count = {u.__name__: u.fixed_count for u in user_classes}
 
-    for u in user_classes:
-        count = u.fixed_count or (u.weight / total_weight) * weighted_count
-        user_classes_count[u.__name__] = round(count)
+    # Pick weighted users the way the dispatcher does, so the counts match a real run.
+    weighted_users = _kl_generator((u.__name__, u.weight) for u in user_classes if not u.fixed_count)
+    for _ in range(int(weighted_count)):
+        name = next(weighted_users)
+        if name is None:
+            break
+        user_classes_count[name] += 1
 
     return user_classes_count
 

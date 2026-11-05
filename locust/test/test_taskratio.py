@@ -1,5 +1,7 @@
+from locust.dispatch import UsersDispatcher
+from locust.runners import WorkerNode
 from locust.user import TaskSet, User, task
-from locust.user.inspectuser import _get_task_ratio, get_ratio
+from locust.user.inspectuser import _calc_distribution, _get_task_ratio, get_ratio
 
 import unittest
 
@@ -92,3 +94,24 @@ class TestTaskRatio(unittest.TestCase):
             + likely["task3"]["ratio"]
             == 1
         )
+
+    def test_user_distribution_matches_dispatcher(self):
+        class A(User):
+            pass
+
+        class B(User):
+            pass
+
+        class C(User):
+            weight = 2
+
+        class D(User):
+            fixed_count = 1
+
+        for user_classes in ([A, B], [A, B, C], [A, B, C, D]):
+            for num_users in (1, 2, 3, 5, 7, 10):
+                dispatcher = UsersDispatcher(worker_nodes=[WorkerNode("w")], user_classes=user_classes)
+                dispatcher.new_dispatch(target_user_count=num_users, spawn_rate=num_users)
+                spawned = list(dispatcher)[-1]["w"]
+                with self.subTest(user_classes=[u.__name__ for u in user_classes], num_users=num_users):
+                    self.assertEqual(spawned, _calc_distribution(user_classes, num_users))
