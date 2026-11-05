@@ -45,9 +45,9 @@ jobs:
         with:
           python-version: "3.11"
 
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
-          version: "0.12.24"
+          version: "0.13.7"
           enable-cache: true
           cache-dependency-glob: |
             "pyproject.toml"
@@ -202,7 +202,6 @@ jobs:
             os: ubuntu-latest,
             group: "test",
             env: "test:all",
-            allow_prereleases: true,
           }
           - {
               name: "Python 3.14",
@@ -241,11 +240,10 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
-          allow-prereleases: ${{ matrix.allow_prereleases == true }}
 
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
-          version: "0.12.24"
+          version: "0.13.7"
           enable-cache: true
           cache-dependency-glob: |
             "pyproject.toml"
