@@ -1433,8 +1433,8 @@ requires-dist = [
     { name = "flask", specifier = ">=2.0.0" },
     { name = "flask-cors", specifier = ">=3.0.10" },
     { name = "flask-login", specifier = ">=0.6.3" },
-    { name = "gevent", specifier = ">=25.9.1" },
-    { name = "geventhttpclient", specifier = ">=2.6.1" },
+    { name = "gevent", specifier = ">=24.11.1" },
+    { name = "geventhttpclient", specifier = ">=2.5.1" },
     { name = "msgpack", specifier = ">=1.0.0" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", marker = "extra == 'otel'", specifier = ">=1.38.0" },
     { name = "opentelemetry-exporter-otlp-proto-http", marker = "extra == 'otel'", specifier = ">=1.38.0" },
@@ -1444,7 +1444,7 @@ requires-dist = [
     { name = "paho-mqtt", marker = "extra == 'mqtt'", specifier = ">=2.1.0" },
     { name = "psutil", specifier = ">=5.9.1" },
     { name = "pymilvus", marker = "extra == 'milvus'", specifier = ">=2.5.0" },
-    { name = "pytest", specifier = ">=8.4.2,<10" },
+    { name = "pytest", specifier = ">=8.3.3,<10" },
     { name = "python-engineio", specifier = ">=4.12.2" },
     { name = "python-socketio", extras = ["client"], specifier = ">=5.13.0" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
@@ -1453,7 +1453,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.33.1" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'", specifier = ">=4.6.0" },
     { name = "urllib3", specifier = ">=2.8.0" },
-    { name = "werkzeug", specifier = ">=3.0.0" },
+    { name = "werkzeug", specifier = ">=2.0.0" },
 ]
 provides-extras = ["dns", "milvus", "mqtt", "otel", "qdrant"]
 
@@ -1509,7 +1509,7 @@ pymongo = [{ name = "pymongo", specifier = ">=4.18.2" }]
 qdrant = [{ name = "qdrant-client", specifier = ">=1.16.2" }]
 release = [{ name = "twine", specifier = ">=5.1.1,<6.0.0" }]
 test = [
-    { name = "cryptography", specifier = ">=45.0.7,<51.0.0" },
+    { name = "cryptography", specifier = ">=43.0.1,<51.0.0" },
     { name = "pyquery", specifier = ">=2.0.0,<3.0.0" },
     { name = "retry", specifier = ">=0.9.2,<1.0.0" },
 ]
