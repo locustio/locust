@@ -1076,7 +1076,8 @@ class MasterRunner(DistributedRunner):
                         if is_url(filename):
                             locustfiles.append(filename)
                         else:
-                            with open(filename) as f:
+                            # Workers write the contents back as UTF-8 (see parse_locustfiles_from_master)
+                            with open(filename, encoding="utf-8") as f:
                                 filename = os.path.basename(filename)
                                 file_contents = f.read()
 
