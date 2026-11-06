@@ -1501,6 +1501,32 @@ class SecondUser(HttpUser):
 
                 tp_worker.expect("hello", stream="stdout")
 
+    def test_locustfile_distribution_with_non_ascii_content(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+            from locust import User, task, constant
+
+            GREETING = "café 안녕하세요 ✅"
+
+            class User1(User):
+                wait_time = constant(1)
+
+                @task
+                def t(self):
+                    print(ascii(GREETING))
+            """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            with TestProcess("locust -f - --worker", sigint_on_exit=False) as tp_worker:
+                with TestProcess(
+                    f"locust -f {mocked.file_path} --headless --master -u 1 -r 1 --expect-workers 1 -t 1",
+                    sigint_on_exit=False,
+                ) as tp:
+                    tp.expect('All users spawned: {"User1": 1} (1 total users)')
+                    tp.expect("Shutting down (exit code 0)")
+
+                tp_worker.expect(ascii("café 안녕하세요 ✅"), stream="stdout")
+
     def test_distributed_with_locustfile_distribution_not_plain_filename(self):
         LOCUSTFILE_CONTENT = textwrap.dedent(
             """
