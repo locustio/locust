@@ -1,6 +1,7 @@
 import locust
 from locust import HttpUser, TaskSet, User, __version__, constant, task
 from locust.env import Environment
+from locust.exception import CatchResponseError
 from locust.rpc.protocol import Message
 from locust.stats import (
     PERCENTILES_TO_REPORT,
@@ -429,6 +430,13 @@ class TestRequestStats(unittest.TestCase):
         self.assertEqual(merged.occurrences, 5)
         self.assertEqual(merged.first_seen, 90.0)
         self.assertEqual(merged.last_seen, 120.0)
+
+    def test_error_name_same_in_standalone_and_distributed_mode(self):
+        for message in ["boom", 'it\'s "bad"']:
+            error = StatsError("GET", "/x", CatchResponseError(message), occurrences=1)
+            from_worker = StatsError.unserialize(error.serialize())
+            self.assertEqual(f"GET /x: {message}", error.to_name())
+            self.assertEqual(f"GET /x: {message}", from_worker.to_name())
 
     def test_serialize_through_message(self):
         """

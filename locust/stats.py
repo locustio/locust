@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import csv
 import hashlib
 import json
@@ -761,6 +762,14 @@ class StatsError:
                 # unwrap CatchResponseErrors
                 length = len("CatchResponseError(")
                 unwrapped_error = error[length:-1]
+                try:
+                    # the message is the repr() of a string, so strip its quotes like standalone mode does
+                    literal = ast.literal_eval(unwrapped_error)
+                except (ValueError, SyntaxError):
+                    pass
+                else:
+                    if isinstance(literal, str):
+                        unwrapped_error = literal
             else:
                 unwrapped_error = error
         else:  # in standalone mode, errors are still objects
