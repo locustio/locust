@@ -3428,6 +3428,23 @@ class TestAddWorker(unittest.TestCase):
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[1].id), 3)
         self.assertEqual(_user_count_on_worker(dispatched_users, worker_nodes[2].id), 4)
 
+    def test_rebalance_with_unchanged_user_count_resets_dispatch_flag(self):
+        class User1(User):
+            weight = 1
+
+        first_worker = WorkerNode("1")
+        second_worker = WorkerNode("2")
+        users_dispatcher = UsersDispatcher(worker_nodes=[first_worker], user_classes=[User1])
+        users_dispatcher.new_dispatch(target_user_count=1, spawn_rate=1)
+        users_dispatcher._wait_between_dispatch = 0
+        list(users_dispatcher)
+
+        users_dispatcher.add_worker(second_worker)
+        users_dispatcher.new_dispatch(target_user_count=1, spawn_rate=1)
+        list(users_dispatcher)
+
+        self.assertFalse(users_dispatcher.dispatch_in_progress)
+
 
 class TestRampUpUsersFromZeroWithFixed(unittest.TestCase):
     class RampUpCase:

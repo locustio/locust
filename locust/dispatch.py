@@ -156,6 +156,7 @@ class UsersDispatcher(Iterator):
             self._rebalance = False
             yield self._users_on_workers
             if self._current_user_count == self._target_user_count:
+                self._dispatch_in_progress = False
                 return
 
         if self._current_user_count == self._target_user_count:
