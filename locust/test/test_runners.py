@@ -5,7 +5,7 @@ from locust import LoadTestShape, __version__, constant, runners
 from locust.argument_parser import get_parser
 from locust.dispatch import UsersDispatcher
 from locust.env import Environment
-from locust.exception import RPCError, RPCReceiveError, StopUser
+from locust.exception import CatchResponseError, RPCError, RPCReceiveError, StopUser
 from locust.log import LogReader
 from locust.main import create_environment
 from locust.rpc import Message
@@ -1045,6 +1045,40 @@ class TestMasterWorkerRunners(LocustTestCase):
             20,
             "For some reason the master node's stats has not come in",
         )
+
+    def test_distributed_catch_response_error_name(self):
+        """
+        A CatchResponseError reported by a worker should get the same error name on the master
+        as it does in standalone mode, without the quotes of the message's repr().
+        """
+
+        class TestUser(User):
+            wait_time = constant(0.1)
+
+            @task
+            def fail(self):
+                self.environment.events.request.fire(
+                    request_type="GET",
+                    name="/",
+                    response_time=1,
+                    response_length=0,
+                    exception=CatchResponseError('it\'s "bad"'),
+                    context={},
+                )
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            master_env = Environment(user_classes=[TestUser])
+            master = master_env.create_master_runner("*", 0)
+            sleep(0)
+            worker_env = Environment(user_classes=[TestUser])
+            worker_env.create_worker_runner("127.0.0.1", master.server.port)
+            sleep(0.1)
+            master.start(1, spawn_rate=1000)
+            sleep(1)
+            master.quit()
+
+        error_names = [error.to_name() for error in master_env.runner.stats.errors.values()]
+        self.assertEqual(['GET /: it\'s "bad"'], error_names)
 
     def test_distributed_rebalanced_integration_run(self):
         """
