@@ -5,7 +5,7 @@ flag is given
 This is only to serve as a starting point, proper authentication should be implemented
 according to your projects specifications.
 
-For more information, see https://docs.locust.io/en/stable/extending-locust.html#authentication
+For more information, see https://docs.locust.io/en/stable/extending-locust.html#adding-authentication-to-the-web-ui
 """
 
 from __future__ import annotations
