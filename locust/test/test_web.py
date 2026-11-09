@@ -1043,6 +1043,38 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
         response = requests.get("http://127.0.0.1:%i/stats/requests" % self.web_port)
         self.assertEqual("stopped", response.json()["state"])
 
+    def test_run_time_stops_ramp_up_in_progress(self):
+        # MasterRunner.start() runs the whole ramp-up in the /swarm greenlet, so when the run time
+        # expires that greenlet has to be killed, like /stop does, or it keeps spawning users
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task(1)
+            def my_task(self):
+                pass
+
+        spawned = []
+
+        def ramp_up(user_count, spawn_rate, wait=False):
+            for i in range(user_count):
+                spawned.append(i)
+                gevent.sleep(1 / spawn_rate)
+
+        self.environment.user_classes = [MyUser]
+        self.environment.web_ui.parsed_options = get_parser().parse_args()
+        with patch.object(self.environment.runner, "start", side_effect=ramp_up):
+            response = requests.post(
+                "http://127.0.0.1:%i/swarm" % self.web_port,
+                data={"user_count": 100, "spawn_rate": 10, "host": "https://localhost", "run_time": "1s"},
+            )
+            self.assertEqual(200, response.status_code)
+            gevent.sleep(1.5)
+            spawned_at_stop = len(spawned)
+            self.assertLess(spawned_at_stop, 100)
+            gevent.sleep(0.5)
+            self.assertEqual(spawned_at_stop, len(spawned))
+            self.assertIsNone(self.web_ui._swarm_greenlet)
+
     def test_stop_cancels_run_time_timer(self):
         class MyUser(User):
             wait_time = constant(1)
