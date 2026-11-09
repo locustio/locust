@@ -579,14 +579,14 @@ def setup_parser_arguments(parser):
         help=configargparse.SUPPRESS,
         env_var="LOCUST_WEB_AUTH",
         action=raise_argument_type_error(
-            "The --web-auth parameters has been replaced with --web-login. See https://docs.locust.io/en/stable/extending-locust.html#authentication for details"
+            "The --web-auth parameters has been replaced with --web-login. See https://docs.locust.io/en/stable/extending-locust.html#adding-authentication-to-the-web-ui for details"
         ),
     )
     web_ui_group.add_argument(
         "--web-login",
         default=False,
         action="store_true",
-        help="Protects the web interface with a login page. See https://docs.locust.io/en/stable/extending-locust.html#authentication",
+        help="Protects the web interface with a login page. See https://docs.locust.io/en/stable/extending-locust.html#adding-authentication-to-the-web-ui",
         env_var="LOCUST_WEB_LOGIN",
     )
     web_ui_group.add_argument(
