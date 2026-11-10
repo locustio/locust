@@ -793,6 +793,584 @@ class TestFastHttpUserClass(WebserverTestCase):
                 self.assertEqual(1, stats.num_requests)
                 self.assertEqual(0, stats.num_failures)
 
+    def test_slow_redirect(self):
+        s = self.get_client()
+        url = "/redirect?url=/redirect&delay=0.5"
+        s.get(url)
+        stats = self.runner.stats.get(url, method="GET")
+        self.assertEqual(1, stats.num_requests)
+        self.assertGreater(stats.avg_response_time, 500)
+
+    def test_post_redirect(self):
+        s = self.get_client()
+        url = "/redirect"
+        r = s.post(url)
+        self.assertEqual(200, r.status_code)
+        post_stats = self.runner.stats.get(url, method="POST")
+        get_stats = self.runner.stats.get(url, method="GET")
+        self.assertEqual(1, post_stats.num_requests)
+        self.assertEqual(0, get_stats.num_requests)
+
+    def test_cookie(self):
+        s = self.get_client()
+        r = s.post("/set_cookie?name=testcookie&value=1337")
+        self.assertEqual(200, r.status_code)
+        r = s.get("/get_cookie?name=testcookie")
+        self.assertEqual("1337", r.content.decode())
+        self.assertEqual("1337", r.text)
+
+    def test_head(self):
+        s = self.get_client()
+        r = s.head("/request_method")
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("", r.content.decode())
+
+    def test_delete(self):
+        s = self.get_client()
+        r = s.delete("/request_method")
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("DELETE", r.content.decode())
+
+    def test_patch(self):
+        s = self.get_client()
+        r = s.patch("/request_method")
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("PATCH", r.content.decode())
+
+    def test_options(self):
+        s = self.get_client()
+        r = s.options("/request_method")
+        self.assertEqual(200, r.status_code)
+        self.assertEqual("", r.content.decode())
+        self.assertEqual(
+            {"OPTIONS", "DELETE", "PUT", "GET", "POST", "HEAD", "PATCH"},
+            set(r.headers["allow"].split(", ")),
+        )
+
+    def test_json_payload(self):
+        s = self.get_client()
+        r = s.post("/request_method", json={"foo": "bar"})
+        self.assertEqual(200, r.status_code)
+        self.assertEqual(r.request.body, '{"foo": "bar"}')
+        self.assertEqual(r.request.headers.get("Content-Type"), "application/json")
+
+    def test_catch_response_fail_successful_request(self):
+        s = self.get_client()
+        with s.get("/ultra_fast", catch_response=True) as r:
+            r.failure("nope")
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_failures)
+
+    def test_catch_response_pass_failed_request(self):
+        s = self.get_client()
+        with s.get("/fail", catch_response=True) as r:
+            r.success()
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(0, self.environment.stats.total.num_failures)
+
+    def test_catch_response_multiple_failure_and_success(self):
+        s = self.get_client()
+        with s.get("/ultra_fast", catch_response=True) as r:
+            r.failure("nope")
+            r.success()
+            r.failure("nooo")
+            r.success()
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(0, self.environment.stats.total.num_failures)
+
+    def test_catch_response_pass_failed_request_with_other_exception_within_block(self):
+        class OtherException(Exception):
+            pass
+
+        s = self.get_client()
+        try:
+            with s.get("/fail", catch_response=True) as r:
+                r.success()
+                raise OtherException("wtf")
+        except OtherException:
+            pass
+        else:
+            self.fail("OtherException should have been raised")
+
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(0, self.environment.stats.total.num_failures)
+
+    def test_catch_response_default_success(self):
+        s = self.get_client()
+        with s.get("/ultra_fast", catch_response=True):
+            pass
+        self.assertEqual(1, self.environment.stats.get("/ultra_fast", "GET").num_requests)
+        self.assertEqual(0, self.environment.stats.get("/ultra_fast", "GET").num_failures)
+
+    def test_catch_response_default_fail(self):
+        s = self.get_client()
+        with s.get("/fail", catch_response=True):
+            pass
+        self.assertEqual(1, self.environment.stats.total.num_requests)
+        self.assertEqual(1, self.environment.stats.total.num_failures)
+
+    def test_error_message_with_name_replacement(self):
+        s = self.get_client()
+        kwargs = {}
+
+        def on_request(**kw):
+            self.assertIsNotNone(kw["exception"])
+            kwargs.update(kw)
+
+        self.environment.events.request.add_listener(on_request)
+        before_request = time.time()
+        s.request("get", "/wrong_url/01", name="replaced_url_name", context={"foo": "bar"})
+        after_request = time.time()
+        # self.assertIn("for url: replaced_url_name", str(kwargs["exception"])) # this is actually broken for FastHttpUser right now...
+        self.assertAlmostEqual(before_request, kwargs["start_time"], delta=0.01)
+        self.assertAlmostEqual(after_request, kwargs["start_time"] + kwargs["response_time"] / 1000, delta=0.01)
+        self.assertEqual(s.base_url + "/wrong_url/01", kwargs["url"])  # url is unaffected by name
+        self.assertDictEqual({"foo": "bar"}, kwargs["context"])
+
+    def test_custom_ssl_context_fail_with_bad_context(self):
+        """
+        Test FastHttpSession with a custom SSLContext factory that will fail as
+        we can not set verify_mode to CERT_NONE when check_hostname is enabled
+        """
+
+        def create_custom_context():
+            context = gevent.ssl.create_default_context()
+            context.check_hostname = True
+            context.verify_mode = gevent.ssl.CERT_NONE
+            return context
+
+        s = FastHttpSession(
+            "https://127.0.0.1:%i" % self.port,
+            self.environment.events.request,
+            ssl_context_factory=create_custom_context,
+            user=None,
+        )
+        with self.assertRaises(ValueError) as e:
+            s.get("/")
+        self.assertEqual(e.exception.args, ("Cannot set verify_mode to CERT_NONE when check_hostname is enabled.",))
+
+    def test_custom_ssl_context_passed_correct_to_client_pool(self):
+        """
+        Test FastHttpSession with a custom SSLContext factory with a options.name
+        that will be passed correctly to the ClientPool. It will also test a 2nd
+        factory which is not the correct one.
+        """
+
+        def custom_ssl_context():
+            context = gevent.ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = gevent.ssl.CERT_NONE
+            context.options.name = "FAKEOPTION"
+            return context
+
+        def custom_context_with_wrong_option():
+            context = gevent.ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = gevent.ssl.CERT_NONE
+            context.options.name = "OPTIONFAKED"
+            return context
+
+        s = FastHttpSession(
+            "https://127.0.0.1:%i" % self.port,
+            self.environment.events.request,
+            ssl_context_factory=custom_ssl_context,
+            user=None,
+        )
+        self.assertEqual(s.client.clientpool.client_args["ssl_context_factory"], custom_ssl_context)
+        self.assertNotEqual(s.client.clientpool.client_args["ssl_context_factory"], custom_context_with_wrong_option)
+
+
+class TestRequestStatsWithWebserver(WebserverTestCase):
+    def test_request_stats_content_length(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        locust.client.get("/ultra_fast")
+        self.assertEqual(
+            self.runner.stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response")
+        )
+        locust.client.get("/ultra_fast")
+        self.assertEqual(
+            self.runner.stats.get("/ultra_fast", "GET").avg_content_length, len("This is an ultra fast response")
+        )
+
+    def test_request_stats_no_content_length(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyUser(self.environment)
+        path = "/no_content_length"
+        l.client.get(path)
+        self.assertEqual(
+            self.runner.stats.get(path, "GET").avg_content_length,
+            len("This response does not have content-length in the header"),
+        )
+
+    def test_request_stats_no_content_length_streaming(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyUser(self.environment)
+        path = "/no_content_length"
+        l.client.get(path, stream=True)
+        self.assertEqual(0, self.runner.stats.get(path, "GET").avg_content_length)
+
+    def test_request_stats_named_endpoint(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        locust.client.get("/ultra_fast", name="my_custom_name")
+        self.assertEqual(1, self.runner.stats.get("my_custom_name", "GET").num_requests)
+
+    def test_request_stats_named_endpoint_request_name(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        self.assertIsNone(locust.client.request_name)
+        locust.client.request_name = "my_custom_name_1"
+        locust.client.get("/ultra_fast")
+        locust.client.get("/ultra_fast")
+        self.assertEqual(2, self.runner.stats.get("my_custom_name_1", "GET").num_requests)
+        self.assertNotIn(("/ultra_fast", "GET"), self.runner.stats.entries)
+        locust.client.request_name = None
+        locust.client.get("/ultra_fast")
+        self.assertEqual(1, self.runner.stats.get("/ultra_fast", "GET").num_requests)
+
+    def test_request_stats_named_endpoint_rename_request(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        with locust.client.rename_request("my_custom_name_3"):
+            locust.client.get("/ultra_fast")
+            locust.client.post("/post", json={"a": 1})
+        self.assertEqual(1, self.runner.stats.get("my_custom_name_3", "GET").num_requests)
+        self.assertEqual(1, self.runner.stats.get("my_custom_name_3", "POST").num_requests)
+        # outside the with-block, requests are named after their URL again
+        self.assertIsNone(locust.client.request_name)
+        locust.client.get("/ultra_fast")
+        self.assertEqual(1, self.runner.stats.get("/ultra_fast", "GET").num_requests)
+
+    def test_rename_request_resets_name_on_exception(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        with self.assertRaises(ValueError):
+            with locust.client.rename_request("my_custom_name_4"):
+                raise ValueError("boom")
+        self.assertIsNone(locust.client.request_name)
+
+    def test_rename_request_with_catch_response(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        with locust.client.rename_request("my_custom_name_5"):
+            with locust.client.get("/ultra_fast", catch_response=True) as response:
+                response.failure("nope")
+        self.assertEqual(1, self.runner.stats.get("my_custom_name_5", "GET").num_failures)
+
+    def test_name_argument_takes_precedence_over_request_name(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        with locust.client.rename_request("group_name"):
+            locust.client.get("/ultra_fast", name="explicit_name")
+        self.assertEqual(1, self.runner.stats.get("explicit_name", "GET").num_requests)
+        self.assertNotIn(("group_name", "GET"), self.runner.stats.entries)
+
+    def test_request_stats_query_variables(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        locust.client.get("/ultra_fast?query=1")
+        self.assertEqual(1, self.runner.stats.get("/ultra_fast?query=1", "GET").num_requests)
+
+    def test_request_stats_put(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        locust.client.put("/put")
+        self.assertEqual(1, self.runner.stats.get("/put", "PUT").num_requests)
+
+    def test_request_connection_error(self):
+        class MyUser(FastHttpUser):
+            host = "http://localhost:1"
+
+        locust = MyUser(self.environment)
+        response = locust.client.get("/")
+        self.assertEqual(response.status_code, 0)
+        self.assertEqual(1, self.runner.stats.get("/", "GET").num_failures)
+        self.assertEqual(1, self.runner.stats.get("/", "GET").num_requests)
+
+
+class TestFastHttpUserClass(WebserverTestCase):
+    def test_is_abstract(self):
+        self.assertTrue(FastHttpUser.abstract)
+        self.assertFalse(is_user_class(FastHttpUser))
+
+    def test_class_context(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+            def context(self):
+                return {"user": self.username}
+
+        kwargs = {}
+
+        def on_request(**kw):
+            kwargs.update(kw)
+
+        self.environment.events.request.add_listener(on_request)
+        user = MyUser(self.environment)
+        user.username = "foo"
+        user.client.request("get", "/request_method")
+        self.assertDictEqual({"user": "foo"}, kwargs["context"])
+        self.assertEqual("GET", kwargs["response"].text)
+        user.client.request("get", "/request_method", context={"user": "bar"})
+        self.assertDictEqual({"user": "bar"}, kwargs["context"])
+
+    def test_get_request(self):
+        self.response = ""
+
+        def t1(l):
+            self.response = l.client.get("/ultra_fast")
+
+        class MyUser(FastHttpUser):
+            tasks = [t1]
+            host = "http://127.0.0.1:%i" % self.port
+
+        my_locust = MyUser(self.environment)
+        t1(my_locust)
+        self.assertEqual(self.response.text, "This is an ultra fast response")
+
+    def test_client_request_headers(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        r = locust.client.get("/request_header_test", headers={"X-Header-Test": "hello"})
+        self.assertEqual("hello", r.text)
+        self.assertEqual("hello", r.headers.get("X-Header-Test"))
+        self.assertEqual("hello", r.request.headers.get("X-Header-Test"))
+
+    def test_client_request_does_not_modify_the_given_headers(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        headers = {"X-Header-Test": "hello"}
+        r = locust.client.get("/request_header_test", headers=headers)
+        self.assertEqual("hello", r.text)
+        self.assertEqual({"X-Header-Test": "hello"}, headers)
+
+    def test_client_get(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        self.assertEqual("GET", locust.client.get("/request_method").text)
+
+    def test_client_get_absolute_url(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        self.assertEqual("GET", locust.client.get("http://127.0.0.1:%i/request_method" % self.port).text)
+
+    def _get_echo_target(self, url):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        events = []
+        self.environment.events.request.add_listener(lambda **kw: events.append(kw))
+        response = MyUser(self.environment).client.get(url)
+        self.assertEqual(1, len(events))
+        self.assertIsNone(events[0]["exception"])
+        return response.json()
+
+    def test_client_get_space_in_path_is_percent_encoded(self):
+        self.assertEqual("/echo_target/a b", self._get_echo_target("/echo_target/a b")["path"])
+
+    def test_client_get_space_in_query_is_percent_encoded(self):
+        target = self._get_echo_target("/echo_target/x?q=a b")
+        self.assertEqual("/echo_target/x", target["path"])
+        self.assertEqual("q=a%20b", target["query_string"])
+
+    def test_client_get_non_ascii_path_is_utf8_percent_encoded(self):
+        self.assertEqual("/echo_target/über", self._get_echo_target("/echo_target/über")["path"])
+
+    def test_client_get_percent_encoded_url_is_sent_unchanged(self):
+        self.assertEqual("/echo_target/a b", self._get_echo_target("/echo_target/a%20b")["path"])
+        # a literal "%20" in the path is sent as %2520 and must not be encoded a second time
+        self.assertEqual("/echo_target/a%20b", self._get_echo_target("/echo_target/a%2520b")["path"])
+        self.assertEqual("q=a%20b", self._get_echo_target("/echo_target/x?q=a%20b")["query_string"])
+
+    def test_client_post(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        self.assertEqual("POST", locust.client.post("/request_method", {"arg": "hello world"}).text)
+        self.assertEqual("hello world", locust.client.post("/post", {"arg": "hello world"}).text)
+
+    def test_client_put(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        self.assertEqual("PUT", locust.client.put("/request_method", {"arg": "hello world"}).text)
+        self.assertEqual("hello world", locust.client.put("/put", {"arg": "hello world"}).text)
+
+    def test_client_delete(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        self.assertEqual("DELETE", locust.client.delete("/request_method").text)
+        self.assertEqual(200, locust.client.delete("/request_method").status_code)
+
+    def test_client_head(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+        self.assertEqual(200, locust.client.head("/request_method").status_code)
+
+    def test_complex_content_type(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        locust = MyUser(self.environment)
+
+        self.assertEqual("stuff", locust.client.get("/content_type_missing_charset").text)
+        self.assertEqual("stuff", locust.client.get("/content_type_regular").text)
+        self.assertEqual("stuff", locust.client.get("/content_type_with_extra_stuff").text)
+
+    def test_log_request_name_argument(self):
+        self.response = ""
+
+        class MyUser(FastHttpUser):
+            tasks = []
+            host = "http://127.0.0.1:%i" % self.port
+
+            @task()
+            def t1(l):
+                self.response = l.client.get("/ultra_fast", name="new name!")
+
+        my_locust = MyUser(self.environment)
+        my_locust.t1()
+
+        self.assertEqual(1, self.runner.stats.get("new name!", "GET").num_requests)
+        self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET").num_requests)
+
+    def test_redirect_url_original_path_as_name(self):
+        class MyUser(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyUser(self.environment)
+        l.client.get("/redirect")
+
+        self.assertEqual(1, len(self.runner.stats.entries))
+        self.assertEqual(1, self.runner.stats.get("/redirect", "GET").num_requests)
+        self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET").num_requests)
+
+    def test_network_timeout_setting(self):
+        class MyUser(FastHttpUser):
+            network_timeout = 0.5
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyUser(self.environment)
+
+        timeout = gevent.Timeout(
+            seconds=0.6,
+            exception=AssertionError(
+                "Request took longer than 0.6 even though FastHttpUser.network_timeout was set to 0.5"
+            ),
+        )
+        timeout.start()
+        r = l.client.get("/redirect?url=/redirect&delay=5.0")
+        timeout.cancel()
+
+        self.assertTrue(isinstance(r.error.original, socket.timeout))
+        self.assertEqual(1, self.runner.stats.get("/redirect?url=/redirect&delay=5.0", "GET").num_failures)
+
+    def test_max_redirect_setting(self):
+        class MyUser(FastHttpUser):
+            max_redirects = 0
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyUser(self.environment)
+        response = l.client.get("/redirect")
+        self.assertEqual(302, response.status_code)
+        self.assertTrue(response.headers["location"].endswith("/ultra_fast"))  # type: ignore
+        self.assertEqual(1, self.runner.stats.get("/redirect", "GET").num_requests)
+        self.assertEqual(0, self.runner.stats.get("/redirect", "GET").num_failures)
+        self.assertEqual(0, self.runner.stats.get("/ultra_fast", "GET").num_requests)
+
+    def test_allow_redirects_override(self):
+        class MyLocust(FastHttpUser):
+            host = "http://127.0.0.1:%i" % self.port
+
+        l = MyLocust(self.environment)
+        resp = l.client.get("/redirect", allow_redirects=False)
+        self.assertTrue(resp.headers["location"].endswith("/ultra_fast"))
+        resp = l.client.get("/redirect")  # ensure redirect still works
+        self.assertFalse("location" in resp.headers)
+
+    def test_iter_lines_preserves_utf8_across_read_boundaries(self):
+        payloads = {
+            "two_byte_split": b"a" * 1023 + "é\n".encode(),
+            "three_byte_split_first": b"a" * 1023 + "界\n".encode(),
+            "three_byte_split_second": b"a" * 1022 + "界\n".encode(),
+            "four_byte_split_first": b"a" * 1023 + "😀\n".encode(),
+            "four_byte_split_second": b"a" * 1022 + "😀\n".encode(),
+            "four_byte_split_third": b"a" * 1021 + "😀\n".encode(),
+            "aligned": b"a" * 1024 + "é\n".encode(),
+            "ascii": b"first\nsecond\n",
+            "crlf_boundary": b"a" * 1023 + b"\r\nlast\r\n",
+            "final_line": "first\né".encode(),
+            "empty": b"",
+            "invalid": b"first\na\xffb\n",
+            "truncated": b"last\xe2\x82",
+        }
+
+        def application(environ, start_response):
+            body = payloads[environ["PATH_INFO"].lstrip("/")]
+            start_response("200 OK", [("Content-Type", "text/plain; charset=utf-8")])
+            return [body]
+
+        server = WSGIServer(("127.0.0.1", 0), application, log=None)
+        server.start()
+        self.addCleanup(server.stop)
+
+        class StreamingUser(FastHttpUser):
+            host = f"http://127.0.0.1:{server.server_port}"
+
+        client = StreamingUser(self.environment).client
+        events = []
+        self.environment.events.request.add_listener(lambda **kwargs: events.append(kwargs))
+        for name, body in payloads.items():
+            with self.subTest(name=name):
+                events.clear()
+                lines = list(client.iter_lines(f"/{name}"))
+                expected = body.decode("utf-8", errors="replace").split("\n")
+                if expected[-1] == "":
+                    expected.pop()
+                self.assertEqual(expected, lines)
+                self.assertEqual(1, len(events))
+                self.assertIsNone(events[0]["exception"])
+                stats = self.runner.stats.get(f"/{name}", "GET")
+                self.assertEqual(1, stats.num_requests)
+                self.assertEqual(0, stats.num_failures)
+
     def test_bytes_urls_reach_the_http_server(self):
         # as with HttpSession (#3588)
         for suffix in ("/ultra_fast", "/echo_target/café?q=hello", "/ultra_fast?query=value"):
