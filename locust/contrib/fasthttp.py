@@ -468,6 +468,46 @@ class FastRequest(CompatRequest):
         return self.payload
 
 
+class _StreamDecompressor:
+    """Decompresses a streamed body chunk by chunk, for the encodings that
+    geventhttpclient's ``CompatResponse.content`` decompresses all at once."""
+
+    def __init__(self, content_encoding: str):
+        self._encoding = content_encoding
+        self._zlib = zlib.decompressobj(16 + zlib.MAX_WBITS) if content_encoding == "gzip" else None
+        self._brotli = None
+        if content_encoding == "br":
+            import brotli  # a geventhttpclient dependency, used the same way for .content
+
+            self._brotli = brotli.Decompressor()
+        self._deflate_start = b""
+
+    def decompress(self, chunk: bytes) -> bytes:
+        if self._brotli is not None:
+            return self._brotli.process(chunk)
+        if self._encoding == "deflate" and self._zlib is None:
+            # "deflate" bodies are zlib-wrapped, or raw deflate from some servers.
+            # Tell them apart by the zlib (RFC 1950) header in the first two bytes.
+            self._deflate_start += chunk
+            if len(self._deflate_start) < 2:
+                return b""
+            cmf, flg = self._deflate_start[0], self._deflate_start[1]
+            wrapped = (cmf & 0x0F) == 8 and ((cmf << 8) | flg) % 31 == 0
+            self._zlib = zlib.decompressobj(zlib.MAX_WBITS if wrapped else -zlib.MAX_WBITS)
+            chunk, self._deflate_start = self._deflate_start, b""
+        if self._zlib is not None:
+            return self._zlib.decompress(chunk)
+        return chunk
+
+    def flush(self) -> bytes:
+        if self._encoding == "deflate" and self._zlib is None:
+            if not self._deflate_start:
+                return b""
+            self._zlib = zlib.decompressobj(-zlib.MAX_WBITS)
+            return self._zlib.decompress(self._deflate_start) + self._zlib.flush()
+        return self._zlib.flush() if self._zlib is not None else b""
+
+
 class FastResponse(CompatResponse):
     headers: Headers | None = None  # type: ignore
     """Dict like object containing the response headers"""
@@ -541,9 +581,27 @@ class FastResponse(CompatResponse):
         :param `decode_content`: Whether to decode the content (from bytes to string)
 
         :return: A generator that produces one chunk at a time
+
+        Like ``requests``, a gzip, deflate or br encoded body is decompressed first.
+        The session asks for these encodings by default.
         """
         if not self._response:
             raise LocustError("Cannot iterate content on a response without _response attribute")
+
+        try:
+            content_encoding = self.headers.getlist("content-encoding")[0].strip().lower()
+        except (AttributeError, IndexError):
+            content_encoding = "identity"
+        decompressor = _StreamDecompressor(content_encoding)
+
+        def decoded(chunk: bytes) -> str | bytes:
+            if decode_content:
+                try:
+                    return chunk.decode("utf-8")
+                except UnicodeDecodeError:
+                    # If decoding fails, preserve the data in byte format.
+                    pass
+            return chunk
 
         while True:
             try:
@@ -551,16 +609,14 @@ class FastResponse(CompatResponse):
                 if not chunk:
                     break
 
-                if decode_content and isinstance(chunk, bytes):
-                    try:
-                        chunk = chunk.decode("utf-8")
-                    except UnicodeDecodeError:
-                        # If decoding fails, preserve the data in byte format.
-                        pass
-
-                yield chunk
+                chunk = decompressor.decompress(chunk)
+                if chunk:
+                    yield decoded(chunk)
             except (HTTPConnectionClosed, ConnectionError):
                 break
+
+        if tail := decompressor.flush():
+            yield decoded(tail)
 
     @property
     def status_code(self) -> int:
