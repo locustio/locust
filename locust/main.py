@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 version = locust.__version__
 
 # Options to ignore when using a custom shape class without `use_common_options=True`
-# See: https://docs.locust.io/en/stable/custom-load-shape.html#use-common-options
+# See: https://docs.locust.io/en/stable/configuration.html#use-common-options
 COMMON_OPTIONS = {
     "num_users": "users",
     "spawn_rate": "spawn-rate",
@@ -386,7 +386,7 @@ See https://github.com/locustio/locust/wiki/Installation#increasing-maximum-numb
     ):
         logger.warning(
             "--run-time, --users or --spawn-rate have no impact on LoadShapes unless the shape class explicitly reads them. "
-            "See: docs.locust.io/en/stable/custom-load-shape.html#use-common-options"
+            "See: docs.locust.io/en/stable/configuration.html#use-common-options"
         )
         ignored = [f"--{arg}" for opt, arg in COMMON_OPTIONS.items() if getattr(options, opt, None)]
         logger.warning(f"The following option(s) will be ignored: {', '.join(ignored)}")
