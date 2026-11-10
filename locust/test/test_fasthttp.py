@@ -801,6 +801,21 @@ class TestFastHttpUserClass(WebserverTestCase):
         self.assertEqual(1, stats.num_requests)
         self.assertGreater(stats.avg_response_time, 500)
 
+    def test_bytes_urls_reach_the_http_server(self):
+        # as with HttpSession (#3588)
+        for suffix in ("/ultra_fast", "/echo_target/café?q=hello", "/ultra_fast?query=value"):
+            for absolute in (False, True):
+                with self.subTest(suffix=suffix, absolute=absolute):
+                    s = FastHttpSession("http://127.0.0.1:%i" % self.port, self.environment.events.request, user=None)
+                    url = s.base_url + suffix if absolute else suffix
+                    response = s.get(url.encode("utf-8"))
+                    self.assertEqual(200, response.status_code)
+                    if "echo_target" in suffix:
+                        self.assertEqual("/echo_target/café", response.json()["path"])
+                    stats = self.runner.stats.get(url, "GET")
+                    self.assertEqual(1, stats.num_requests)
+                    self.assertEqual(0, stats.num_failures)
+
     def test_client_basic_auth(self):
         class MyUser(FastHttpUser):
             host = "http://127.0.0.1:%i" % self.port

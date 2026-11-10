@@ -199,7 +199,7 @@ class FastHttpSession:
     def request(
         self,
         method: str,
-        url: str,
+        url: str | bytes,
         name: str | None = None,
         data: str | dict | None = None,
         catch_response: bool = False,
@@ -240,6 +240,10 @@ class FastHttpSession:
         :return: A :py:class:`FastResponse <locust.contrib.fasthttp.FastResponse>` object if catch_response is False, and
             :py:class:`ResponseContextManager <locust.contrib.fasthttp.ResponseContextManager>` if True.
         """
+        # accept a bytes URL, as HttpSession and requests do, and record its name as text
+        if isinstance(url, bytes):
+            url = url.decode("utf-8")
+
         # if group name has been set and no name parameter has been passed in; set the name parameter to group_name
         if self.request_name and not name:
             name = self.request_name
