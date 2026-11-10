@@ -592,16 +592,17 @@ class StatsEntry:
         percentile = calculate_response_time_percentile(
             self.response_times, self.num_requests - self.num_none_requests, percent
         )
+        return self._within_min_max_response_time(percentile)
 
+    def _within_min_max_response_time(self, percentile: int) -> int:
         # Since we only use two digits of precision when calculating percentiles while still
         # using the exact values for min and max response times, the following checks make sure
         # that we don't report a percentile > max or percentile < min, e.g. a 95th percentile of
         # 1500 when the slowest request took 1460
         if percentile > self.max_response_time:
-            percentile = self.max_response_time
-        elif self.min_response_time is not None and percentile < self.min_response_time:
-            percentile = self.min_response_time
-
+            return self.max_response_time
+        if self.min_response_time is not None and percentile < self.min_response_time:
+            return self.min_response_time
         return percentile
 
     def get_current_response_time_percentile(self, percent: float) -> int | None:
@@ -640,11 +641,17 @@ class StatsEntry:
             # times dict of the last 10 seconds (approximately) by diffing it with the current
             # total response times. Then we'll use that to calculate a response time percentile
             # for that timeframe
-            return calculate_response_time_percentile(
+            num_requests_in_window = (self.num_requests - self.num_none_requests) - (
+                cached.num_requests - cached.num_none_requests
+            )
+            percentile = calculate_response_time_percentile(
                 diff_response_time_dicts(self.response_times, cached.response_times),
-                (self.num_requests - self.num_none_requests) - (cached.num_requests - cached.num_none_requests),
+                num_requests_in_window,
                 percent,
             )
+            # The window's own min and max aren't tracked, but its percentiles can't lie outside
+            # the overall ones. A window without requests keeps its 0.
+            return self._within_min_max_response_time(percentile) if num_requests_in_window > 0 else percentile
         # if time was not in response times cache window
         return None
 
