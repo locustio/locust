@@ -13,8 +13,11 @@ from locust.exception import (
 from locust.user import TaskSet, task
 from locust.util.load_locustfile import is_user_class
 
+import gzip
+import random
 import socket
 import time
+import zlib
 from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock
 
@@ -792,6 +795,46 @@ class TestFastHttpUserClass(WebserverTestCase):
                 stats = self.runner.stats.get(f"/{name}", "GET")
                 self.assertEqual(1, stats.num_requests)
                 self.assertEqual(0, stats.num_failures)
+
+    def test_iter_lines_and_iter_content_decompress_encoded_responses(self):
+        import brotli  # geventhttpclient uses it to decompress "br" responses
+
+        # Random ids keep the compressed body far larger than one 1024-byte read
+        rng = random.Random(0)
+        body = "".join(f'{{"n": {i}, "id": "{rng.getrandbits(64):016x}", "text": "é界😀"}}\n' for i in range(1000))
+        body = body.encode()
+        raw_deflate = zlib.compressobj(wbits=-zlib.MAX_WBITS)
+        encoded = {
+            "identity": (None, body),
+            "gzip": ("gzip", gzip.compress(body)),
+            "deflate": ("deflate", zlib.compress(body)),
+            "raw_deflate": ("deflate", raw_deflate.compress(body) + raw_deflate.flush()),
+            "br": ("br", brotli.compress(body)),
+        }
+
+        def application(environ, start_response):
+            content_encoding, data = encoded[environ["PATH_INFO"].lstrip("/")]
+            headers = [("Content-Type", "application/x-ndjson")]
+            if content_encoding:
+                headers.append(("Content-Encoding", content_encoding))
+            start_response("200 OK", headers)
+            return [data]
+
+        server = WSGIServer(("127.0.0.1", 0), application, log=None)
+        server.start()
+        self.addCleanup(server.stop)
+
+        class StreamingUser(FastHttpUser):
+            host = f"http://127.0.0.1:{server.server_port}"
+
+        client = StreamingUser(self.environment).client
+        for name, (_, data) in encoded.items():
+            with self.subTest(name=name):
+                self.assertGreater(len(data), 4096)
+                lines = list(client.iter_lines(f"/{name}"))
+                self.assertEqual(body.decode().split("\n")[:-1], lines)
+                response = client.get(f"/{name}", stream=True)
+                self.assertEqual(body, b"".join(response.iter_content(decode_content=False)))
 
     def test_slow_redirect(self):
         s = FastHttpSession("http://127.0.0.1:%i" % self.port, self.environment.events.request, user=None)
