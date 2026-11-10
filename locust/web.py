@@ -815,4 +815,8 @@ class WebUI:
 
     def _stop_runners(self):
         self._run_time_greenlet = None
+        # MasterRunner.start() ramps up inside the /swarm greenlet, so stop it like /stop does
+        if self._swarm_greenlet is not None:
+            self._swarm_greenlet.kill(block=True)
+            self._swarm_greenlet = None
         self.environment.runner.stop()
