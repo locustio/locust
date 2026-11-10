@@ -829,6 +829,8 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
         s.response_times = {i: 2 for i in range(100)}
         s.response_times[1] = 202
         s.num_requests = 300
+        # as log() would have set them for these response times
+        s.min_response_time, s.max_response_time = 0, 99
 
         self.assertEqual(95, s.get_current_response_time_percentile(0.95))
 
@@ -842,8 +844,33 @@ class TestStatsEntryResponseTimesCache(unittest.TestCase):
         s.response_times = {i: 2 for i in range(100)}
         s.num_requests = 400
         s.num_none_requests = 200
+        # as log() would have set them for these response times
+        s.min_response_time, s.max_response_time = 0, 99
 
         self.assertEqual(95, s.get_current_response_time_percentile(0.95))
+
+    def test_get_current_response_time_percentile_within_min_max_bounds(self):
+        s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
+        t = int(time.time())
+        s.response_times_cache[t - 10] = CachedResponseTimes(response_times={}, num_requests=0, num_none_requests=0)
+        for _ in range(99):
+            s.log(1020, 0)  # rounded 1000, which is below the min
+        s.log(1460, 0)  # rounded 1500, which is above the max
+
+        self.assertEqual(s.get_current_response_time_percentile(0.5), 1020)
+        self.assertEqual(s.get_current_response_time_percentile(0.95), 1020)
+        self.assertEqual(s.get_current_response_time_percentile(1.0), 1460)
+
+    def test_get_current_response_time_percentile_without_requests_in_window(self):
+        s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
+        s.log(1020, 0)
+        t = int(time.time())
+        # every request is older than the window, so there is nothing to bound
+        s.response_times_cache[t - 10] = CachedResponseTimes(
+            response_times=dict(s.response_times), num_requests=s.num_requests, num_none_requests=0
+        )
+
+        self.assertEqual(s.get_current_response_time_percentile(0.95), 0)
 
     def test_get_current_response_time_percentile_outside_cache_window(self):
         s = StatsEntry(self.stats, "/", "GET", use_response_times_cache=True)
