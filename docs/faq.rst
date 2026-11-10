@@ -65,7 +65,7 @@ How to run a Docker container of Locust in Windows Subsystem for Linux (Windows 
 
    If you use WSL on a Windows computer, then you need one extra step
    than the `“docker run …”
-   command <https://docs.locust.io/en/stable/running-locust-docker.html>`__:
+   command <https://docs.locust.io/en/stable/running-in-docker.html>`__:
    copy your locusttest1.py to a folder in a Windows path on your WSL
    and mount that folder instead of your normal WSL folder:
 
