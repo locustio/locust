@@ -13,6 +13,7 @@ from locust.stats import (
     StatsError,
     bucket_response_time,
     diff_response_time_dicts,
+    get_readable_percentiles,
     setup_distributed_stats_event_listeners,
     stats_history,
 )
@@ -328,6 +329,19 @@ class TestRequestStats(unittest.TestCase):
         s1.last_request_timestamp = 700
         s1.extend(s2)
         self.assertEqual(700, s1.last_request_timestamp)
+
+    def test_readable_percentiles(self):
+        self.assertEqual(
+            get_readable_percentiles([0.5, 0.95, 0.999, 0.9999, 1.0]),
+            ["50%", "95%", "99.9%", "99.99%", "100%"],
+        )
+
+    def test_readable_percentiles_whole_number_with_float_error(self):
+        # these are not exactly whole numbers when multiplied by 100 (e.g. 0.57 * 100 == 56.99999999999999)
+        self.assertEqual(
+            get_readable_percentiles([0.07, 0.29, 0.55, 0.57]),
+            ["7%", "29%", "55%", "57%"],
+        )
 
     def test_percentile_rounded_down(self):
         s1 = StatsEntry(self.stats, "rounding down!", "GET")
