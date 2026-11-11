@@ -276,6 +276,14 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(r.request.body, '{"foo": "bar"}')
         self.assertEqual(r.request.headers.get("Content-Type"), "application/json")
 
+    def test_dict_payload_sends_a_list_value_as_one_field_per_item(self):
+        s = self.get_client()
+        r = s.post("/post", data={"arg": ["hello", "world"], "page": 2})
+        self.assertEqual(r.request.body, "arg=hello&arg=world&page=2")
+        self.assertEqual(r.request.headers.get("Content-Type"), "application/x-www-form-urlencoded; charset=utf-8")
+        # the server reads the first of the two arg fields
+        self.assertEqual("hello", r.text)
+
     def test_catch_response_fail_successful_request(self):
         s = self.get_client()
         with s.get("/ultra_fast", catch_response=True) as r:
