@@ -2645,6 +2645,48 @@ class TestMasterRunner(LocustRunnerTestCase):
             self.assertEqual(2, master.worker_count)
             master.stop()
 
+    @mock.patch("locust.runners.HEARTBEAT_INTERVAL", new=0.1)
+    @mock.patch("locust.runners.HEARTBEAT_DEAD_INTERNAL", new=-3)
+    def test_users_are_redistributed_without_restarting_after_dead_worker_removal(self):
+        class TestUserA(User):
+            @task
+            def my_task(self):
+                pass
+
+        class TestUserB(User):
+            @task
+            def my_task(self):
+                pass
+
+        with (
+            mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server,
+            patch_env("LOCUST_WAIT_FOR_WORKERS_REPORT_AFTER_RAMP_UP", "0.1"),
+        ):
+            master = self.get_runner(user_classes=[TestUserA, TestUserB])
+            for i in range(1, 4):
+                server.mocked_send(Message("client_ready", __version__, f"fake_client{i}"))
+
+            # like a load test shape, only spawn TestUserA, and then continue at a low spawn rate
+            master.start(6, 6, user_classes=[TestUserA])
+            master.start(6, 1)
+            spawn_messages_before = len(server.get_messages("spawn"))
+
+            # fake_client3 stops sending heartbeats: it goes missing first, and is removed later
+            for _ in range(15):
+                for client_id in ["fake_client1", "fake_client2"]:
+                    data = {"state": STATE_RUNNING, "current_cpu_usage": 50, "current_memory_usage": 200}
+                    server.mocked_send(Message("heartbeat", data, client_id))
+                sleep(0.1)
+            self.assertNotIn("fake_client3", master.clients)
+
+            # the 6 users are redistributed over the 2 remaining workers at once: no ramp-up from 0 users, and
+            # TestUserB, which is not part of the test, is not spawned
+            spawn_messages = server.get_messages("spawn")[spawn_messages_before:]
+            self.assertEqual(2, len(spawn_messages))
+            for message in spawn_messages:
+                self.assertEqual({"TestUserA": 3, "TestUserB": 0}, message.data["user_classes_count"])
+            master.stop()
+
     def test_master_total_stats(self):
         with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
             master = self.get_runner()

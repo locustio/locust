@@ -959,10 +959,12 @@ class MasterRunner(DistributedRunner):
                     if self.clients.get(to_remove_client_id) is not None:
                         del self.clients[to_remove_client_id]
                 if self.state == STATE_RUNNING or self.state == STATE_SPAWNING:
-                    # _users_dispatcher is set to none so that during redistribution the dead clients are not picked, alternative is to call self.stop() before start
-                    self._users_dispatcher = None
-                    # trigger redistribution after missing cclient removal
-                    self.start(user_count=self.target_user_count, spawn_rate=self.spawn_rate)
+                    # The dispatcher already dropped the dead workers when they went missing, so it is reused.
+                    # A new one would ramp up from 0 users again (and forget the user classes of a shape).
+                    # If a dispatch is in progress it picks up the redistribution by itself.
+                    if self._users_dispatcher is None or not self._users_dispatcher.dispatch_in_progress:
+                        # trigger redistribution after missing client removal
+                        self.start(user_count=self.target_user_count, spawn_rate=self.spawn_rate)
 
     def reset_connection(self) -> None:
         logger.info("Resetting RPC server and all worker connections.")
