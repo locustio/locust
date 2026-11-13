@@ -1144,7 +1144,7 @@ class StatsCSVFileWriter(StatsCSV):
 
         # Write header row for all files and save position for non-append files
         self.requests_csv_writer.writerow(self.requests_csv_columns)
-        requests_csv_data_start = self.requests_csv_filehandle.tell()
+        self.requests_csv_data_start = self.requests_csv_filehandle.tell()
 
         self.stats_history_csv_writer.writerow(self.stats_history_csv_columns)
 
@@ -1160,19 +1160,7 @@ class StatsCSVFileWriter(StatsCSV):
             while True:
                 now = time.time()
 
-                self.requests_csv_filehandle.seek(requests_csv_data_start)
-                self._requests_data_rows(self.requests_csv_writer)
-                self.requests_csv_filehandle.truncate()
-
-                self._stats_history_data_rows(self.stats_history_csv_writer, now)
-
-                self.failures_csv_filehandle.seek(self.failures_csv_data_start)
-                self._failures_data_rows(self.failures_csv_writer)
-                self.failures_csv_filehandle.truncate()
-
-                self.exceptions_csv_filehandle.seek(self.exceptions_csv_data_start)
-                self._exceptions_data_rows(self.exceptions_csv_writer)
-                self.exceptions_csv_filehandle.truncate()
+                self._write_data_rows(now)
 
                 if now - last_flush_time > CSV_STATS_FLUSH_INTERVAL_SEC:
                     self.requests_flush()
@@ -1184,6 +1172,22 @@ class StatsCSVFileWriter(StatsCSV):
                 gevent.sleep(CSV_STATS_INTERVAL_SEC)
         except KeyboardInterrupt as e:
             logger.debug(e, exc_info=True)
+
+    def _write_data_rows(self, now: float, history: bool = True) -> None:
+        self.requests_csv_filehandle.seek(self.requests_csv_data_start)
+        self._requests_data_rows(self.requests_csv_writer)
+        self.requests_csv_filehandle.truncate()
+
+        if history:
+            self._stats_history_data_rows(self.stats_history_csv_writer, now)
+
+        self.failures_csv_filehandle.seek(self.failures_csv_data_start)
+        self._failures_data_rows(self.failures_csv_writer)
+        self.failures_csv_filehandle.truncate()
+
+        self.exceptions_csv_filehandle.seek(self.exceptions_csv_data_start)
+        self._exceptions_data_rows(self.exceptions_csv_writer)
+        self.exceptions_csv_filehandle.truncate()
 
     def _stats_history_data_rows(self, csv_writer: CSVWriter, now: float) -> None:
         """
@@ -1237,6 +1241,9 @@ class StatsCSVFileWriter(StatsCSV):
         self.exceptions_csv_filehandle.flush()
 
     def close_files(self) -> None:
+        # Requests made since the last interval would otherwise be missing from the totals
+        if hasattr(self, "requests_csv_data_start"):
+            self._write_data_rows(time.time(), history=False)
         self.requests_csv_filehandle.close()
         self.stats_history_csv_filehandle.close()
         self.failures_csv_filehandle.close()
