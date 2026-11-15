@@ -148,10 +148,9 @@ def get_readable_percentiles(percentile_list: list[float]) -> list[str]:
     :param percentile_list: The list of percentiles in range 0-1
     :return: The list of string representation for each percentile in 0%-100% view
     """
-    return [
-        f"{int(percentile * 100) if (percentile * 100).is_integer() else round(100 * percentile, 6)}%"
-        for percentile in percentile_list
-    ]
+    # round before checking for a whole number, since e.g. 0.55 * 100 is 55.00000000000001
+    rounded_percentiles = [round(100 * percentile, 6) for percentile in percentile_list]
+    return [f"{int(percentile) if percentile.is_integer() else percentile}%" for percentile in rounded_percentiles]
 
 
 def calculate_response_time_percentile(response_times: dict[int, int], num_requests: int, percent: float) -> int:
