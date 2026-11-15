@@ -566,6 +566,19 @@ class TestCsvStats(LocustTestCase):
         self.assertEqual("Aggregated", rows[1]["Name"])
 
     @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=_TEST_CSV_STATS_INTERVAL_SEC)
+    def test_csv_stats_writer_writes_final_stats_on_close(self):
+        stats_writer = StatsCSVFileWriter(self.environment, PERCENTILES_TO_REPORT, self.STATS_BASE_NAME)
+        greenlet = gevent.spawn(stats_writer)
+        gevent.sleep(_TEST_CSV_STATS_INTERVAL_WAIT_SEC)
+        gevent.kill(greenlet)
+        self.runner.stats.log_request("GET", "/", 100, content_length=666)
+        stats_writer.close_files()
+
+        with open(self.STATS_FILENAME) as f:
+            rows = list(csv.DictReader(f))
+        self.assertEqual("1", rows[-1]["Request Count"])
+
+    @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=_TEST_CSV_STATS_INTERVAL_SEC)
     def test_csv_stats_writer_full_history(self):
         stats_writer = StatsCSVFileWriter(
             self.environment, PERCENTILES_TO_REPORT, self.STATS_BASE_NAME, full_history=True
