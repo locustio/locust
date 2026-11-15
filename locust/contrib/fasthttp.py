@@ -17,7 +17,7 @@ from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from ssl import SSLError
 from typing import TYPE_CHECKING
-from urllib.parse import unquote, urlparse, urlunparse
+from urllib.parse import unquote, urlencode, urlparse, urlunparse
 
 import gevent
 from charset_normalizer import detect
@@ -226,7 +226,8 @@ class FastHttpSession:
             request to be marked as a fail based on the content of the response, even if the response
             code is ok (2xx). The opposite also works, one can use catch_response to catch a request
             and then mark it as successful even if the response code was not (i.e. 500 or 404).
-        :param data: (optional) String/bytes to send in the body of the request.
+        :param data: (optional) String/bytes to send in the body of the request, or a dict to send
+            as a form. A list value in the dict is sent as one field per item, like HttpSession does.
         :param json: (optional) Json to send in the body of the request.
             Automatically sets Content-Type and Accept headers to "application/json".
             Only used if data is not set.
@@ -266,6 +267,13 @@ class FastHttpSession:
                 headers["Content-Type"] = "application/json"
             if "Accept" not in headers and "accept" not in headers:
                 headers["Accept"] = "application/json"
+
+        if isinstance(data, dict) and not kwargs.get("files"):
+            # geventhttpclient would send a list value as its repr ("arg=['a', 'b']"), so encode
+            # the form here, like requests does: one field per item ("arg=a&arg=b")
+            data = urlencode(data, doseq=True)
+            if "Content-Type" not in headers and "content-type" not in headers:
+                headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
 
         if not allow_redirects:
             old_redirect_response_codes = self.client.redirect_response_codes
