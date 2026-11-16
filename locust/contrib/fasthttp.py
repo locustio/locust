@@ -13,6 +13,7 @@ import time
 import zlib
 from base64 import b64encode
 from codecs import getincrementaldecoder
+from collections.abc import Mapping
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from ssl import SSLError
@@ -53,7 +54,7 @@ if TYPE_CHECKING:
         json: Any
 
     class RESTKwargs(PostKwargs, total=False):
-        data: str | dict | None
+        data: str | dict | list | tuple | None
         json: Any
 
 
@@ -91,6 +92,17 @@ def _construct_basic_auth_str(username, password):
     if isinstance(password, str):
         password = password.encode("latin1")
     return "Basic " + b64encode(b":".join((username, password))).strip().decode("ascii")
+
+
+def _encode_form(data: Mapping | list | tuple) -> str:
+    """Encode a dict or a list of (key, value) pairs as a form, like requests does: a list value
+    is sent as one field per item ("arg=a&arg=b"), and a None value is left out"""
+    fields: list[tuple[Any, Any]] = []
+    for key, values in data.items() if isinstance(data, Mapping) else data:
+        if isinstance(values, (str, bytes)) or not hasattr(values, "__iter__"):
+            values = [values]
+        fields.extend((key, value) for value in values if value is not None)
+    return urlencode(fields)
 
 
 def insecure_ssl_context_factory():
@@ -201,7 +213,7 @@ class FastHttpSession:
         method: str,
         url: str,
         name: str | None = None,
-        data: str | dict | None = None,
+        data: str | dict | list | tuple | None = None,
         catch_response: bool = False,
         stream: bool = False,
         headers: dict | None = None,
@@ -226,8 +238,9 @@ class FastHttpSession:
             request to be marked as a fail based on the content of the response, even if the response
             code is ok (2xx). The opposite also works, one can use catch_response to catch a request
             and then mark it as successful even if the response code was not (i.e. 500 or 404).
-        :param data: (optional) String/bytes to send in the body of the request, or a dict to send
-            as a form. A list value in the dict is sent as one field per item, like HttpSession does.
+        :param data: (optional) String/bytes to send in the body of the request, or a dict or a list of
+            (key, value) pairs to send as a form. Like HttpSession, a list value is sent as one field per
+            item, and a field whose value is None is left out.
         :param json: (optional) Json to send in the body of the request.
             Automatically sets Content-Type and Accept headers to "application/json".
             Only used if data is not set.
@@ -268,10 +281,10 @@ class FastHttpSession:
             if "Accept" not in headers and "accept" not in headers:
                 headers["Accept"] = "application/json"
 
-        if isinstance(data, dict) and not kwargs.get("files"):
-            # geventhttpclient would send a list value as its repr ("arg=['a', 'b']"), so encode
-            # the form here, like requests does: one field per item ("arg=a&arg=b")
-            data = urlencode(data, doseq=True)
+        if isinstance(data, (Mapping, list, tuple)) and not kwargs.get("files"):
+            # geventhttpclient would send a list value as its repr ("arg=['a', 'b']") and a None value
+            # as "None", and fails on a list of pairs, so encode the form here
+            data = _encode_form(data)
             if "Content-Type" not in headers and "content-type" not in headers:
                 headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
 
@@ -366,17 +379,21 @@ class FastHttpSession:
         """Sends a OPTIONS request"""
         return self.request("OPTIONS", url, **kwargs)
 
-    def patch(self, url: str, data: str | dict | None = None, **kwargs: Unpack[PatchKwargs]) -> ResponseContextManager:
+    def patch(
+        self, url: str, data: str | dict | list | tuple | None = None, **kwargs: Unpack[PatchKwargs]
+    ) -> ResponseContextManager:
         """Sends a PATCH request"""
         return self.request("PATCH", url, data=data, **kwargs)
 
     def post(
-        self, url: str, data: str | dict | None = None, json: Any = None, **kwargs: Unpack[PostKwargs]
+        self, url: str, data: str | dict | list | tuple | None = None, json: Any = None, **kwargs: Unpack[PostKwargs]
     ) -> ResponseContextManager:
         """Sends a POST request"""
         return self.request("POST", url, data=data, json=json, **kwargs)
 
-    def put(self, url: str, data: str | dict | None = None, **kwargs: Unpack[PutKwargs]) -> ResponseContextManager:
+    def put(
+        self, url: str, data: str | dict | list | tuple | None = None, **kwargs: Unpack[PutKwargs]
+    ) -> ResponseContextManager:
         """Sends a PUT request"""
         return self.request("PUT", url, data=data, **kwargs)
 
