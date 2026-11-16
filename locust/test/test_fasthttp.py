@@ -287,6 +287,29 @@ class TestFastHttpSession(WebserverTestCase):
         # the server reads the first of the two arg fields
         self.assertEqual("hello", r.text)
 
+    def test_list_of_pairs_payload_is_sent_as_a_form(self):
+        cases = [
+            ([("arg", "hello"), ("arg", "world"), ("page", 2)], "arg=hello&arg=world&page=2"),
+            ((("arg", "hello"), ("page", 2)), "arg=hello&page=2"),
+        ]
+        for data, body in cases:
+            with self.subTest(data=data):
+                # a new client for each case, so a request that fails halfway can't leave the next one waiting
+                r = self.get_client().post("/post", data=data)
+                self.assertEqual(200, r.status_code)
+                self.assertEqual(r.request.body, body)
+                self.assertEqual(
+                    r.request.headers.get("Content-Type"), "application/x-www-form-urlencoded; charset=utf-8"
+                )
+                self.assertEqual("hello", r.text)
+
+    def test_form_payload_leaves_out_none_values(self):
+        s = self.get_client()
+        r = s.post("/post", data={"arg": None, "page": 2, "tags": ["a", None]})
+        self.assertEqual(r.request.body, "page=2&tags=a")
+        # the server gets no arg field at all, not the text "None"
+        self.assertEqual("", r.text)
+
     def test_catch_response_fail_successful_request(self):
         s = self.get_client()
         with s.get("/ultra_fast", catch_response=True) as r:
