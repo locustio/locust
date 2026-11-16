@@ -11,13 +11,17 @@ from locust.exception import (
 from locust.user.users import HttpUser
 
 import time
+from tempfile import NamedTemporaryFile
 
+import gevent
+import gevent.pywsgi
 import pytest
 import urllib3
 from requests.exceptions import InvalidSchema, InvalidURL, MissingSchema, RequestException
 from urllib3.exceptions import SSLError
 
-from .testcases import WebserverTestCase
+from .testcases import LocustTestCase, WebserverTestCase, app
+from .util import create_tls_cert
 
 urllib3.disable_warnings()
 
@@ -386,17 +390,49 @@ class TestHttpSession(WebserverTestCase):
         user.client.request("get", "/request_method", context={"user": "bar"})  # override User context
         self.assertDictEqual({"user": "bar"}, kwargs["context"])
 
+
+class TestHttpSessionSsl(LocustTestCase):
+    """Certificate checks against a local HTTPS server, so they don't depend on an outside host"""
+
+    def setUp(self):
+        super().setUp()
+        # a self-signed certificate, which requests can't verify
+        tls_cert, tls_key = create_tls_cert("127.0.0.1")
+        self.tls_cert_file = NamedTemporaryFile()
+        self.tls_key_file = NamedTemporaryFile()
+        with open(self.tls_cert_file.name, "w") as f:
+            f.write(tls_cert.decode())
+        with open(self.tls_key_file.name, "w") as f:
+            f.write(tls_key.decode())
+        self._web_server = gevent.pywsgi.WSGIServer(
+            ("127.0.0.1", 0), app, log=None, certfile=self.tls_cert_file.name, keyfile=self.tls_key_file.name
+        )
+        gevent.spawn(self._web_server.serve_forever)
+        gevent.sleep(0.01)
+
+    def tearDown(self):
+        super().tearDown()
+        self._web_server.stop()
+        self.tls_cert_file.close()
+        self.tls_key_file.close()
+
+    def get_client(self):
+        return HttpSession(
+            base_url="https://127.0.0.1:%i" % self._web_server.server_port,
+            request_event=self.environment.events.request,
+            user=None,
+        )
+
     def test_verify_true_fails_with_bad_cert(self):
-        s = self.get_client("https://expired.badssl.com")
-        r = s.get("/", verify=True)
+        r = self.get_client().get("/ultra_fast", verify=True)
         self.assertTrue("exception" in r.request_meta)
         self.assertIsInstance(r.request_meta["exception"], SSLError)
 
     @pytest.mark.filterwarnings("ignore::urllib3.exceptions.InsecureRequestWarning")
     def test_verify_false_succeeds_with_bad_cert(self):
-        s = self.get_client("https://expired.badssl.com")
-        r = s.get("/", verify=False)
+        r = self.get_client().get("/ultra_fast", verify=False)
         self.assertEqual(r.status_code, 200)
+        self.assertEqual("This is an ultra fast response", r.text)
 
 
 class TestHttpUserRest(WebserverTestCase):
