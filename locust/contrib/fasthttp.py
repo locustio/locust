@@ -702,6 +702,10 @@ class LocustUserAgent(UserAgent):
         client = self.clientpool.get_client(request.url_split)
         # quoted_uri (percent-encoded, as geventhttpclient's own UserAgent sends it) was added in geventhttpclient 2.3.4
         request_uri = getattr(request.url_split, "quoted_uri", request.url_split.request_uri)
+        if any(value is None for _, value in request.headers.items()):
+            # Leave out a header that is set to None, like HttpSession (requests) does, also when it
+            # overrides one of the default headers. geventhttpclient would send it as "None".
+            request.headers = Headers([(name, value) for name, value in request.headers.items() if value is not None])
         resp = client.request(request.method, request_uri, body=request.payload, headers=request.headers)
         return self.response_type(resp, request=request, sent_request=resp._sent_request)
 
