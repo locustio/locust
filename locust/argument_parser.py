@@ -174,14 +174,13 @@ def _parse_locustfile_path(path: str) -> list[str]:
         if not parsed_paths:
             sys.stderr.write(f"Could not find any locustfiles in directory '{path}'")
             sys.exit(1)
+    # If file exists add the abspath
+    elif os.path.exists(path) and path.endswith(".py"):
+        parsed_paths.append(os.path.abspath(path))
     else:
-        # If file exists add the abspath
-        if os.path.exists(path) and path.endswith(".py"):
-            parsed_paths.append(os.path.abspath(path))
-        else:
-            note_about_file_endings = "Ensure your locustfile ends with '.py' or is a directory with locustfiles. "
-            sys.stderr.write(f"Could not find '{path}'. {note_about_file_endings}See --help for available options.\n")
-            sys.exit(1)
+        note_about_file_endings = "Ensure your locustfile ends with '.py' or is a directory with locustfiles. "
+        sys.stderr.write(f"Could not find '{path}'. {note_about_file_endings}See --help for available options.\n")
+        sys.exit(1)
 
     return parsed_paths
 
