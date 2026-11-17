@@ -240,19 +240,18 @@ class WebUI:
                         if user_class_name in form_data_user_class_names
                     }
 
+                elif self.environment.runner and self.environment.runner.state == STATE_RUNNING:
+                    # Test is already running
+                    # Using the user classes that have already been selected
+                    user_classes = {
+                        key: value
+                        for (key, value) in self.environment.available_user_classes.items()
+                        if value in self.environment.user_classes
+                    }
                 else:
-                    if self.environment.runner and self.environment.runner.state == STATE_RUNNING:
-                        # Test is already running
-                        # Using the user classes that have already been selected
-                        user_classes = {
-                            key: value
-                            for (key, value) in self.environment.available_user_classes.items()
-                            if value in self.environment.user_classes
-                        }
-                    else:
-                        # Starting test with no user class selection
-                        # Defaulting to using all available user classes
-                        user_classes = self.environment.available_user_classes
+                    # Starting test with no user class selection
+                    # Defaulting to using all available user classes
+                    user_classes = self.environment.available_user_classes
 
                 self._update_user_classes(user_classes)
 

@@ -97,7 +97,10 @@ def locust_init(environment, **kwargs):
             # extended_stats contains the data where extended_tables looks for its data: "cache-statistics"
             response.set_data(
                 json.dumps(
-                    {**response.json, "extended_stats": [{"key": "cache-statistics", "data": get_cache_stats()}]}
+                    {
+                        **response.json,
+                        "extended_stats": [{"key": "cache-statistics", "data": get_cache_stats()}],
+                    }
                 )
             )
 

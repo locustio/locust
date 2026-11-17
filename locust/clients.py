@@ -103,7 +103,14 @@ class HttpSession(requests.Session):
             # remove username and password from the base_url (keeping e.g. the brackets of an IPv6 host)
             netloc = parsed_url.netloc.rpartition("@")[2]
             self.base_url = urlunparse(
-                (parsed_url.scheme, netloc, parsed_url.path, parsed_url.params, parsed_url.query, parsed_url.fragment)
+                (
+                    parsed_url.scheme,
+                    netloc,
+                    parsed_url.path,
+                    parsed_url.params,
+                    parsed_url.query,
+                    parsed_url.fragment,
+                )
             )
             # configure requests to use basic auth (credentials in a URL are percent-encoded)
             self.auth = HTTPBasicAuth(unquote(parsed_url.username), unquote(parsed_url.password))

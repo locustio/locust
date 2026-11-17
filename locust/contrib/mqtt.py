@@ -492,24 +492,23 @@ class MqttClient(mqtt.Client):
                     "start_time": start_time,
                 },
             )
+        elif mid is None:
+            # QoS 0 subscriptions do not have a mid, so we'll just fire a success event immediately
+            self.environment.events.request.fire(
+                request_type=REQUEST_TYPE,
+                name=self._generate_event_name("subscribe", qos, subscribe_topic),
+                response_time=(time.time() - start_time) * 1000,
+                response_length=0,
+                exception=None,
+                context={
+                    "client_id": self.client_id,
+                    "qos": qos,
+                    "topic": subscribe_topic,
+                    "start_time": start_time,
+                },
+            )
         else:
-            if mid is None:
-                # QoS 0 subscriptions do not have a mid, so we'll just fire a success event immediately
-                self.environment.events.request.fire(
-                    request_type=REQUEST_TYPE,
-                    name=self._generate_event_name("subscribe", qos, subscribe_topic),
-                    response_time=(time.time() - start_time) * 1000,
-                    response_length=0,
-                    exception=None,
-                    context={
-                        "client_id": self.client_id,
-                        "qos": qos,
-                        "topic": subscribe_topic,
-                        "start_time": start_time,
-                    },
-                )
-            else:
-                self._subscribe_requests[mid] = (qos, subscribe_topic, start_time)
+            self._subscribe_requests[mid] = (qos, subscribe_topic, start_time)
 
         return result, mid
 
