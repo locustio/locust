@@ -690,6 +690,9 @@ class LocustUserAgent(UserAgent):
     request_type = FastRequest
     valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 304, 307, 308])
     redirect_response_codes = frozenset([301, 302, 303, 307, 308])
+    # Leave out a header that is set to None, like HttpSession (requests) does, also when it overrides
+    # one of the default headers. geventhttpclient would raise a TypeError instead.
+    drop_none_headers = True
 
     def __init__(self, client_pool: HTTPClientPool | None = None, **kwargs):
         super().__init__(**kwargs)
@@ -702,10 +705,6 @@ class LocustUserAgent(UserAgent):
         client = self.clientpool.get_client(request.url_split)
         # quoted_uri (percent-encoded, as geventhttpclient's own UserAgent sends it) was added in geventhttpclient 2.3.4
         request_uri = getattr(request.url_split, "quoted_uri", request.url_split.request_uri)
-        if any(value is None for _, value in request.headers.items()):
-            # Leave out a header that is set to None, like HttpSession (requests) does, also when it
-            # overrides one of the default headers. geventhttpclient would send it as "None".
-            request.headers = Headers([(name, value) for name, value in request.headers.items() if value is not None])
         resp = client.request(request.method, request_uri, body=request.payload, headers=request.headers)
         return self.response_type(resp, request=request, sent_request=resp._sent_request)
 
