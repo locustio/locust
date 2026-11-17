@@ -47,7 +47,7 @@ def mock_locustfile(filename_prefix="mock_locustfile", content=MOCK_LOCUSTFILE_C
         random.randint(0, 100000),
     )
     mocked.file_path = os.path.join(mocked.directory, mocked.filename)
-    with open(mocked.file_path, "w") as file:
+    with open(mocked.file_path, "w", encoding="utf-8") as file:
         file.write(content)
 
     try:
