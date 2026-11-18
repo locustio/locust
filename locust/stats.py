@@ -850,13 +850,20 @@ def print_stats(stats: RequestStats, current=True) -> None:
     console_logger.info("")
 
 
+def _serialize_stats_for_json(stats: RequestStats) -> list[StatsEntryDict]:
+    # RequestStats.serialize_stats() is what workers use to hand their stats over to the master, so it resets
+    # every entry. The JSON output must leave the stats alone, because the summary table and the CSV files
+    # are written after it.
+    return [e.serialize() for e in stats.entries.values() if not (e.num_requests == 0 and e.num_failures == 0)]
+
+
 def print_stats_json(stats: RequestStats) -> None:
-    print(json.dumps(stats.serialize_stats(), indent=4))
+    print(json.dumps(_serialize_stats_for_json(stats), indent=4))
 
 
 def save_stats_json(stats: RequestStats, filename: str) -> None:
     with open(f"{filename}.json", "w") as file:
-        json.dump(stats.serialize_stats(), file, indent=4)
+        json.dump(_serialize_stats_for_json(stats), file, indent=4)
 
 
 def get_stats_summary(stats: RequestStats, current=True) -> list[str]:

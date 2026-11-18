@@ -25,6 +25,7 @@ import csv
 import json
 import os
 import re
+import tempfile
 import time
 import unittest
 from io import StringIO
@@ -523,6 +524,33 @@ class TestStatsPrinting(LocustTestCase):
         # table ascii separators
         self.assertEqual(info[2], info[-2])
 
+    def test_print_stats_json_keeps_stats(self):
+        with mock.patch("sys.stdout", new=StringIO()) as stdout:
+            locust.stats.print_stats_json(self.stats)
+        printed = {entry["name"]: entry for entry in json.loads(stdout.getvalue())}
+        self.assertEqual(2, len(printed))
+        self.assertEqual(100, printed["test_entry"]["num_requests"])
+        self.assertEqual(20, printed["test_entry"]["num_failures"])
+
+        # the summary table and the csv files are written after the json, so the stats must still be there
+        entry = self.stats.get("test_entry", "GET")
+        self.assertEqual(100, entry.num_requests)
+        self.assertEqual(20, entry.num_failures)
+        self.assertEqual(99, entry.max_response_time)
+
+    def test_save_stats_json_keeps_stats(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            filename = os.path.join(temp_dir, "stats")
+            # --json and --json-file can be used together, so the stats are serialized twice
+            with mock.patch("sys.stdout", new=StringIO()):
+                locust.stats.print_stats_json(self.stats)
+            locust.stats.save_stats_json(self.stats, filename)
+            with open(f"{filename}.json", encoding="utf-8") as f:
+                saved = {entry["name"]: entry for entry in json.load(f)}
+        self.assertEqual(2, len(saved))
+        self.assertEqual(100, saved["test_entry"]["num_requests"])
+        self.assertEqual(100, self.stats.get("test_entry", "GET").num_requests)
+
 
 class TestCsvStats(LocustTestCase):
     STATS_BASE_NAME = "test"
@@ -591,6 +619,23 @@ class TestCsvStats(LocustTestCase):
         with open(self.STATS_FILENAME) as f:
             rows = list(csv.DictReader(f))
         self.assertEqual("1", rows[-1]["Request Count"])
+
+    @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=_TEST_CSV_STATS_INTERVAL_SEC)
+    def test_csv_stats_writer_final_stats_after_json_output(self):
+        stats_writer = StatsCSVFileWriter(self.environment, PERCENTILES_TO_REPORT, self.STATS_BASE_NAME)
+        greenlet = gevent.spawn(stats_writer)
+        gevent.sleep(_TEST_CSV_STATS_INTERVAL_WAIT_SEC)
+        gevent.kill(greenlet)
+        self.runner.stats.log_request("GET", "/", 100, content_length=666)
+        # on shutdown the json stats (--json / --json-file) are written before the csv files are closed
+        with mock.patch("sys.stdout", new=StringIO()):
+            locust.stats.print_stats_json(self.runner.stats)
+        stats_writer.close_files()
+
+        with open(self.STATS_FILENAME) as f:
+            rows = list(csv.DictReader(f))
+        self.assertEqual("/", rows[0]["Name"])
+        self.assertEqual("1", rows[0]["Request Count"])
 
     @mock.patch("locust.stats.CSV_STATS_INTERVAL_SEC", new=_TEST_CSV_STATS_INTERVAL_SEC)
     def test_csv_stats_writer_full_history(self):
