@@ -1394,10 +1394,12 @@ class WorkerRunner(DistributedRunner):
                     default_parser = argument_parser.get_empty_argument_parser()
                     argument_parser.setup_parser_arguments(default_parser)
                     self.environment.parsed_options = default_parser.parse(args=[])
+                # once per spawn message, not per option: parsing the whole argument parser blocks the event loop
+                default_args = argument_parser.default_args_dict() if job["parsed_options"] else {}
                 custom_args_from_master = {
                     k: v
                     for k, v in job["parsed_options"].items()
-                    if k not in argument_parser.default_args_dict()
+                    if k not in default_args
                     # these settings are sometimes needed on workers
                     or k in ["expect_workers", "tags", "exclude_tags"]
                 }
