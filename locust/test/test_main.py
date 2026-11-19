@@ -1428,8 +1428,15 @@ class SecondUser(HttpUser):
             """
             from locust import User, task, constant
 
+            import gevent
+
             class User1(User):
                 wait_time = constant(1)
+
+                def __init__(self, *args, **kwargs):
+                    super().__init__(*args, **kwargs)
+                    # delay spawning beyond the master's 10 ms wait for worker reports
+                    gevent.sleep(0.1)
 
                 @task
                 def t(self):
