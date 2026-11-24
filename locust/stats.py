@@ -372,37 +372,29 @@ class StatsEntry:
             self._cache_response_times(t - 1)
 
         self.num_requests += 1
-        self._log_time_of_request(current_time)
-        self._log_response_time(response_time)
-
-        # increase total content-length
-        self.total_content_length += content_length
-
-    def _log_time_of_request(self, current_time: float) -> None:
-        t = int(current_time)
         self.num_reqs_per_sec[t] += 1
         self.last_request_timestamp = current_time
 
-    def _log_response_time(self, response_time: int) -> None:
         if response_time is None:
             self.num_none_requests += 1
-            return
-
-        self.total_response_time += response_time
-
-        if self.min_response_time is None:
-            self.min_response_time = response_time
         else:
-            self.min_response_time = min(self.min_response_time, response_time)
-        self.max_response_time = max(self.max_response_time, response_time)
+            self.total_response_time += response_time
 
-        # to avoid to much data that has to be transferred to the master node when
-        # running in distributed mode, we save the response time rounded in a dict
-        # so that 147 becomes 150, 3432 becomes 3400 and 58760 becomes 59000
-        rounded_response_time = bucket_response_time(response_time)
+            if self.min_response_time is None or response_time < self.min_response_time:
+                self.min_response_time = response_time
+            if response_time > self.max_response_time:
+                self.max_response_time = response_time
 
-        # increase request count for the rounded key in response time dict
-        self.response_times[rounded_response_time] += 1
+            # to avoid to much data that has to be transferred to the master node when
+            # running in distributed mode, we save the response time rounded in a dict
+            # so that 147 becomes 150, 3432 becomes 3400 and 58760 becomes 59000
+            rounded_response_time = bucket_response_time(response_time)
+
+            # increase request count for the rounded key in response time dict
+            self.response_times[rounded_response_time] += 1
+
+        # increase total content-length
+        self.total_content_length += content_length
 
     def log_error(self, error: Exception | str | None) -> None:
         self.num_failures += 1
