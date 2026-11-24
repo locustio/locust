@@ -604,6 +604,25 @@ class TestFastHttpUserClass(WebserverTestCase):
         self.assertEqual("hello", r.text)
         self.assertEqual({"X-Header-Test": "hello"}, headers)
 
+    def test_client_leaves_out_headers_set_to_none(self):
+        # Like HttpSession, a header set to None is not sent, also when it overrides a default header
+        def application(environ, start_response):
+            sent = sorted(f"{key}={value}" for key, value in environ.items() if key.startswith("HTTP_X_"))
+            start_response("200 OK", [("Content-Type", "text/plain")])
+            return ["\n".join(sent).encode()]
+
+        server = WSGIServer(("127.0.0.1", 0), application, log=None)
+        server.start()
+        self.addCleanup(server.stop)
+
+        class MyUser(FastHttpUser):
+            host = f"http://127.0.0.1:{server.server_port}"
+            default_headers = {"X-Default": "kept", "X-Dropped-Default": "dropped"}
+
+        locust = MyUser(self.environment)
+        r = locust.client.get("/", headers={"X-Given": "kept", "X-None": None, "X-Dropped-Default": None})
+        self.assertEqual("HTTP_X_DEFAULT=kept\nHTTP_X_GIVEN=kept", r.text)
+
     def test_client_get(self):
         class MyUser(FastHttpUser):
             host = "http://127.0.0.1:%i" % self.port

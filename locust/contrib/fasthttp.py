@@ -690,6 +690,9 @@ class LocustUserAgent(UserAgent):
     request_type = FastRequest
     valid_response_codes = frozenset([200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 301, 302, 303, 304, 307, 308])
     redirect_response_codes = frozenset([301, 302, 303, 307, 308])
+    # Leave out a header that is set to None, like HttpSession (requests) does, also when it overrides
+    # one of the default headers. geventhttpclient would raise a TypeError instead.
+    drop_none_headers = True
 
     def __init__(self, client_pool: HTTPClientPool | None = None, **kwargs):
         super().__init__(**kwargs)
