@@ -66,6 +66,31 @@ CompatRequest.unverifiable = False
 # Might allow secure cookies over non-secure connections but that is a minor concern in a load testing tool
 CompatRequest.type = "https"
 
+# Keyword arguments that python-requests (and therefore HttpSession) accepts, but that FastHttpSession
+# does not implement. geventhttpclient's UserAgent.urlopen treats any keyword argument it does not know
+# as a request parameter, so these would otherwise be sent to the server as query parameters (or as
+# form fields in a body-less POST) instead of having the effect the locustfile author intended.
+# See https://github.com/locustio/locust/issues/3611
+_UNSUPPORTED_REQUESTS_KWARGS = {
+    "timeout": "set network_timeout/connection_timeout on the FastHttpUser class instead",
+    "verify": "set insecure on the FastHttpUser class instead",
+    "cert": "pass a custom ssl_context_factory to the FastHttpUser class instead",
+    "proxies": "set proxy_host/proxy_port on the FastHttpUser class instead",
+    "cookies": 'set a "Cookie" header, or rely on the session cookie jar, instead',
+    "hooks": "use Locust's request event instead",
+}
+
+
+def _check_unsupported_kwargs(kwargs: dict) -> None:
+    unsupported = [key for key in kwargs if key in _UNSUPPORTED_REQUESTS_KWARGS]
+    if unsupported:
+        details = "; ".join(f"{key}: {_UNSUPPORTED_REQUESTS_KWARGS[key]}" for key in unsupported)
+        raise TypeError(
+            f"FastHttpSession does not support the requests keyword argument(s) {', '.join(map(repr, unsupported))} "
+            f"(geventhttpclient would send them to the server as request parameters). {details}"
+        )
+
+
 # Regexp for checking if an absolute URL was specified
 absolute_http_url_regexp = re.compile(r"^https?://", re.IGNORECASE)
 
@@ -244,6 +269,12 @@ class FastHttpSession:
         # if group name has been set and no name parameter has been passed in; set the name parameter to group_name
         if self.request_name and not name:
             name = self.request_name
+
+        _check_unsupported_kwargs(kwargs)
+        if isinstance(kwargs.get("params"), dict):
+            # geventhttpclient merges any extra keyword arguments into the params mapping it is given,
+            # so pass a copy rather than modifying the caller's dict in place
+            kwargs["params"] = dict(kwargs["params"])
 
         # prepend url with hostname unless it's already an absolute URL
         built_url = self._build_url(url)
