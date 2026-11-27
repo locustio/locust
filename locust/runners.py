@@ -176,7 +176,7 @@ class Runner:
         """
         :returns: Number of currently running users for each user class
         """
-        user_classes_count = {user_class.__name__: 0 for user_class in self.user_classes}
+        user_classes_count = defaultdict(int, {user_class.__name__: 0 for user_class in self.user_classes})
         for user_greenlet in self.user_greenlets:
             try:
                 user = user_greenlet.args[0]
@@ -264,7 +264,7 @@ class Runner:
                         "While stopping users, we encountered a user that didn't have proper args %s", user_greenlet
                     )
                     continue
-                if type(user) is self.user_classes_by_name[user_class]:
+                if type(user).__name__ == user_class:
                     to_stop.append(user)
 
             if not to_stop:
@@ -475,8 +475,7 @@ class LocalRunner(Runner):
         :param wait: If True calls to this method will block until all users are spawned.
                      If False (the default), a greenlet that spawns the users will be
                      started and the call to this method will return immediately.
-        :param user_classes: The user classes to be dispatched, None indicates to use the classes the dispatcher was
-                             invoked with.
+        :param user_classes: The user classes to be dispatched, None indicates to use environment.user_classes.
         """
         self.target_user_count = user_count
 
@@ -505,6 +504,10 @@ class LocalRunner(Runner):
 
         logger.info("Ramping to %d users at a rate of %.2f per second" % (user_count, spawn_rate))
 
+        if user_classes is None:
+            # re-sync the dispatcher with environment.user_classes — classes may
+            # have been removed while the test was running (e.g. Web UI class picker)
+            self._users_dispatcher.update_user_classes(self.user_classes)
         self._users_dispatcher.new_dispatch(user_count, spawn_rate, user_classes)
 
         try:
@@ -783,6 +786,10 @@ class MasterRunner(DistributedRunner):
 
         self.update_state(STATE_SPAWNING)
 
+        if user_classes is None:
+            # re-sync the dispatcher with environment.user_classes — classes may
+            # have been removed while the test was running (e.g. Web UI class picker)
+            self._users_dispatcher.update_user_classes(self.user_classes)
         self._users_dispatcher.new_dispatch(
             target_user_count=user_count, spawn_rate=spawn_rate, user_classes=user_classes
         )
