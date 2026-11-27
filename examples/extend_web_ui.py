@@ -76,7 +76,10 @@ def locust_init(environment, **kwargs):
 
             response.set_data(
                 json.dumps(
-                    {**response.json, "extended_stats": [{"key": "content-length", "data": get_content_length_stats()}]}
+                    {
+                        **response.json,
+                        "extended_stats": [{"key": "content-length", "data": get_content_length_stats()}],
+                    }
                 )
             )
 

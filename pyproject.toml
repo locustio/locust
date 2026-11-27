@@ -87,7 +87,7 @@ test = [
 ]
 lint = [
     "pre-commit>=4.7.0,<5.0.0",
-    "ruff==0.17.2",
+    "ruff==0.17.5",
     "mypy>=1.13.0,<1.15.0",
     "types-requests==2.33.0.20260906",
     "typos>=1.51.1"
@@ -169,7 +169,7 @@ extend-exclude = [
     "examples/grpc/hello_pb2*.py",
 ]
 lint.ignore = ["E402", "E501", "E713", "E731", "E741", "UP031", "PERF203", "RUF012", "RUF015"]
-lint.select = ["E", "F", "W", "UP", "FA102", "I001", "FURB", "PERF", "RUF"]
+lint.select = ["E", "F", "W", "UP", "FA102", "I001", "FURB", "PERF", "RUF", "PLE"]
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?)|resp)$"
 
 [tool.ruff.lint.per-file-ignores]
