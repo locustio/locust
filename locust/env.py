@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from operator import methodcaller
-from typing import TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from configargparse import Namespace
 
@@ -15,6 +15,9 @@ from .stats import RequestStats, StatsCSV
 from .user import User
 from .user.task import TaskHolder, TaskSet, filter_tasks_by_tags
 from .web import WebUI
+
+if TYPE_CHECKING:
+    from .dynamic_config import DynamicConfig
 
 RunnerType = TypeVar("RunnerType", bound=Runner)
 
@@ -112,6 +115,9 @@ class Environment:
         self._remove_user_classes_with_weight_zero()
         self._validate_user_class_name_uniqueness()
         self._validate_shape_class_instance()
+
+        for name, config in self._dynamic_configs().items():
+            config.apply(self._user_class_by_name(name))
 
     def _create_runner(
         self,
@@ -221,6 +227,44 @@ class Environment:
                 setattr(user_class, key, value)
             if key == "tasks":
                 user_class.tasks = [task for task in user_tasks if task.__name__ in value]
+
+    def _dynamic_configs(self) -> dict[str, DynamicConfig]:
+        return {u.__name__: u.dynamic_config for u in self.user_classes if u.dynamic_config is not None}
+
+    def _user_class_by_name(self, name: str) -> type[User]:
+        return next(u for u in self.user_classes if u.__name__ == name)
+
+    def get_dynamic_config(self) -> dict[str, dict[str, Any]]:
+        """
+        Returns the current :class:`DynamicConfig <locust.dynamic_config.DynamicConfig>` settings of every
+        user class that has one, as ``{user class name: {setting: value}}``.
+        """
+        return {name: config.get_config_bucket() for name, config in self._dynamic_configs().items()}
+
+    def update_dynamic_config(self, config: dict[str, dict[str, Any]]) -> None:
+        """
+        Changes settings of one or more user classes and, on a master, forwards them to the workers.
+        Settings that are not in ``config`` keep their value.
+
+        :param config: ``{user class name: {setting: new value}}``
+        :raises ValueError: if ``config`` has the wrong shape, or names a user class or setting that does not exist.
+            Nothing is changed in that case.
+        """
+        configs = self._dynamic_configs()
+        if not isinstance(config, dict) or not all(isinstance(values, dict) for values in config.values()):
+            raise ValueError("Dynamic config must be an object of the form {user class name: {setting: value}}")
+        for name, values in config.items():
+            if name not in configs:
+                raise ValueError(f"User class '{name}' has no dynamic config")
+            if unknown := sorted(values.keys() - configs[name].get_config_bucket().keys()):
+                raise ValueError(f"Unknown setting(s) for user class '{name}': {', '.join(unknown)}")
+
+        for name, values in config.items():
+            configs[name].update_config_bucket(values)
+            configs[name].apply(self._user_class_by_name(name))
+
+        if isinstance(self.runner, MasterRunner):
+            self.runner.send_message("update_dynamic_config", config)
 
     def update_worker_logs(self, worker_log_report):
         if worker_log_report.get("worker_id", None):

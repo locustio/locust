@@ -617,6 +617,25 @@ class WebUI:
 
             return {}, 201
 
+        @app_blueprint.route("/dynamic-config", methods=["GET"])
+        @self.auth_required_if_enabled
+        def get_dynamic_config():
+            return self.environment.get_dynamic_config()
+
+        @app_blueprint.route("/dynamic-config", methods=["POST"])
+        @self.auth_required_if_enabled
+        def update_dynamic_config():
+            try:
+                self.environment.update_dynamic_config(request.get_json(force=True, silent=True))
+            except ValueError as e:
+                return {"success": False, "message": str(e)}, 400
+
+            return {
+                "success": True,
+                "message": "Dynamic config updated",
+                "config": self.environment.get_dynamic_config(),
+            }
+
         @app_blueprint.route("/worker-count")
         @self.auth_required_if_enabled
         def get_worker_count():
@@ -783,6 +802,7 @@ class WebUI:
             "percentiles_to_statistics": stats.PERCENTILES_TO_STATISTICS,
             "is_host_required": HOST_IS_REQUIRED,
             "profile": self.environment.profile,
+            "has_dynamic_config": bool(self.environment.get_dynamic_config()),
         }
 
         self.template_args = {**self.template_args, **new_template_args}

@@ -1,3 +1,4 @@
+import DynamicConfig from 'components/DynamicConfig/DynamicConfig';
 import ExceptionsTab from 'components/ExceptionsTab/ExceptionsTab';
 import FailuresTable from 'components/FailuresTable/FailuresTableContainer';
 import LogViewer from 'components/LogViewer/LogViewer';
@@ -52,6 +53,12 @@ export const tabConfig = {
     title: 'Workers',
     shouldDisplayTab: (state: IRootState) => state.swarm.isDistributed,
   },
+  dynamicConfig: {
+    component: DynamicConfig,
+    key: 'dynamic-config',
+    title: 'Dynamic Config',
+    shouldDisplayTab: (state: IRootState) => !!state.swarm.hasDynamicConfig,
+  },
 };
 
 export const baseTabs: ITab[] = [
@@ -63,4 +70,5 @@ export const baseTabs: ITab[] = [
   tabConfig.reports,
   tabConfig.logs,
   tabConfig.workers,
+  tabConfig.dynamicConfig,
 ];

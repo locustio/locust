@@ -19,7 +19,7 @@ describe('Tabs', () => {
 
   test('renders the component with conditional tabs based on state', () => {
     const { getByText } = renderWithProvider(<Tabs />, {
-      swarm: { isDistributed: true },
+      swarm: { isDistributed: true, hasDynamicConfig: true },
     });
 
     baseTabs
@@ -31,7 +31,7 @@ describe('Tabs', () => {
 
   test('does not render the conditional tabs when condition is falsy', () => {
     const { queryByText } = renderWithProvider(<Tabs />, {
-      swarm: { isDistributed: false },
+      swarm: { isDistributed: false, hasDynamicConfig: false },
     });
 
     baseTabs
