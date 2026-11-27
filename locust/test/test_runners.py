@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import locust
-from locust import LoadTestShape, __version__, constant, runners
+from locust import LoadTestShape, __version__, argument_parser, constant, runners
 from locust.argument_parser import get_parser
 from locust.dispatch import UsersDispatcher
 from locust.env import Environment
@@ -3668,6 +3668,87 @@ class TestWorkerRunner(LocustTestCase):
             worker.user_greenlets.join()
             # check that locust user did not get to finish
             self.assertEqual(1, MyTestUser._test_state)
+
+    def test_spawn_message_builds_default_args_once(self):
+        # Building the default args parses the whole argument parser, which blocks
+        # the worker's event loop, so a spawn message must do it exactly once.
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        # the worker's own options, which built-in options from the master must not override
+        worker_options = get_parser().parse_args(["--master-port", "5558"])
+        parsed_options = argument_parser.default_args_dict()
+        parsed_options["master_port"] = 9999
+        # one of the built-in options that workers do take from the master
+        parsed_options["expect_workers"] = 7
+        parsed_options["my_custom_argument"] = "custom value"
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            worker = self.get_runner(
+                environment=Environment(parsed_options=worker_options), user_classes=[MyUser], client=client
+            )
+            with mock.patch(
+                "locust.argument_parser.default_args_dict", wraps=argument_parser.default_args_dict
+            ) as default_args_dict:
+                client.mocked_send(
+                    Message(
+                        "spawn",
+                        {
+                            "timestamp": 1605538584,
+                            "user_classes_count": {"MyUser": 1},
+                            "host": "",
+                            "stop_timeout": None,
+                            "parsed_options": parsed_options,
+                        },
+                        "dummy_client_id",
+                    )
+                )
+                self.assertTrue(client.get_messages("spawning"))
+                worker.spawning_greenlet.join()
+
+            self.assertEqual(1, default_args_dict.call_count)
+            options = worker.environment.parsed_options
+            self.assertEqual("custom value", options.my_custom_argument)
+            self.assertEqual(7, options.expect_workers)
+            self.assertEqual(5558, options.master_port)
+            worker.quit()
+
+    def test_spawn_message_without_options_does_not_build_default_args(self):
+        # A master without parsed options sends an empty dict in every spawn message.
+        class MyUser(User):
+            wait_time = constant(1)
+
+            @task
+            def my_task(self):
+                pass
+
+        with mock.patch("locust.rpc.rpc.Client", mocked_rpc()) as client:
+            worker = self.get_runner(environment=Environment(), user_classes=[MyUser], client=client)
+            with mock.patch(
+                "locust.argument_parser.default_args_dict", wraps=argument_parser.default_args_dict
+            ) as default_args_dict:
+                client.mocked_send(
+                    Message(
+                        "spawn",
+                        {
+                            "timestamp": 1605538584,
+                            "user_classes_count": {"MyUser": 1},
+                            "host": "",
+                            "stop_timeout": None,
+                            "parsed_options": {},
+                        },
+                        "dummy_client_id",
+                    )
+                )
+                self.assertTrue(client.get_messages("spawning"))
+                worker.spawning_greenlet.join()
+
+            default_args_dict.assert_not_called()
+            worker.quit()
 
     def test_spawn_message_with_older_timestamp_is_rejected(self):
         class MyUser(User):
