@@ -58,35 +58,6 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(1, self.runner.stats.get("outer", "GET").num_requests)
         self.assertIsNone(client.request_name)
 
-    def test_requests_only_kwargs_raise_instead_of_being_sent_as_params(self):
-        # https://github.com/locustio/locust/issues/3611
-        s = self.get_client()
-        for kwargs in (
-            {"timeout": 5},
-            {"verify": False},
-            {"cert": "client.pem"},
-            {"proxies": {"http": "http://127.0.0.1:1"}},
-            {"cookies": {"session": "abc"}},
-            {"hooks": {}},
-        ):
-            with self.subTest(kwargs=kwargs):
-                with self.assertRaises(TypeError) as cm:
-                    s.get("/get_arg", params={"arg": "x"}, **kwargs)
-                self.assertIn(repr(next(iter(kwargs))), str(cm.exception))
-        with self.assertRaises(TypeError):
-            s.post("/request_method", timeout=5)
-        # nothing was sent for the rejected calls
-        self.assertEqual(0, self.runner.stats.total.num_requests)
-
-    def test_requests_only_kwargs_error_lists_every_offending_kwarg(self):
-        s = self.get_client()
-        with self.assertRaises(TypeError) as cm:
-            s.get("/ultra_fast", timeout=5, verify=False)
-        self.assertIn("'timeout'", str(cm.exception))
-        self.assertIn("'verify'", str(cm.exception))
-        self.assertIn("network_timeout", str(cm.exception))
-        self.assertIn("insecure", str(cm.exception))
-
     def test_params_dict_is_not_modified(self):
         s = self.get_client()
         params = {"arg": "hello"}

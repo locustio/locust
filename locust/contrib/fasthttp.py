@@ -56,6 +56,16 @@ if TYPE_CHECKING:
         data: str | dict | None
         json: Any
 
+    # Extra keyword arguments accepted by request() besides its named parameters.
+    # python-requests arguments that FastHttpSession does not implement (timeout,
+    # verify, cert, proxies, cookies, hooks) are intentionally omitted so a type
+    # checker will flag them. At runtime, unknown keywords are still forwarded to
+    # geventhttpclient, which would send those requests-only names as params.
+    # See https://github.com/locustio/locust/issues/3611
+    class RequestKwargs(TypedDict, total=False):
+        params: dict | None
+        files: dict | None
+
 
 # Monkey patch geventhttpclient.useragent.CompatRequest so that Cookiejar works with Python >= 3.3
 # More info: https://github.com/requests/requests/pull/871
@@ -65,31 +75,6 @@ CompatRequest.unverifiable = False
 # https://github.com/locustio/locust/issues/1138
 # Might allow secure cookies over non-secure connections but that is a minor concern in a load testing tool
 CompatRequest.type = "https"
-
-# Keyword arguments that python-requests (and therefore HttpSession) accepts, but that FastHttpSession
-# does not implement. geventhttpclient's UserAgent.urlopen treats any keyword argument it does not know
-# as a request parameter, so these would otherwise be sent to the server as query parameters (or as
-# form fields in a body-less POST) instead of having the effect the locustfile author intended.
-# See https://github.com/locustio/locust/issues/3611
-_UNSUPPORTED_REQUESTS_KWARGS = {
-    "timeout": "set network_timeout/connection_timeout on the FastHttpUser class instead",
-    "verify": "set insecure on the FastHttpUser class instead",
-    "cert": "pass a custom ssl_context_factory to the FastHttpUser class instead",
-    "proxies": "set proxy_host/proxy_port on the FastHttpUser class instead",
-    "cookies": 'set a "Cookie" header, or rely on the session cookie jar, instead',
-    "hooks": "use Locust's request event instead",
-}
-
-
-def _check_unsupported_kwargs(kwargs: dict) -> None:
-    unsupported = [key for key in kwargs if key in _UNSUPPORTED_REQUESTS_KWARGS]
-    if unsupported:
-        details = "; ".join(f"{key}: {_UNSUPPORTED_REQUESTS_KWARGS[key]}" for key in unsupported)
-        raise TypeError(
-            f"FastHttpSession does not support the requests keyword argument(s) {', '.join(map(repr, unsupported))} "
-            f"(geventhttpclient would send them to the server as request parameters). {details}"
-        )
-
 
 # Regexp for checking if an absolute URL was specified
 absolute_http_url_regexp = re.compile(r"^https?://", re.IGNORECASE)
@@ -234,7 +219,7 @@ class FastHttpSession:
         json: Any = None,
         allow_redirects: bool = True,
         context: dict = {},
-        **kwargs,
+        **kwargs: Unpack[RequestKwargs],
     ) -> ResponseContextManager:  # technically it can also return FastResponse
         """
         Send an HTTP request
@@ -263,18 +248,28 @@ class FastHttpSession:
             Another side effect of setting stream to True is that the time for downloading the response
             content will not be accounted for in the request time that is reported by Locust.
         :param allow_redirects: (optional) Set to True by default.
+        :param params: (optional) Dictionary of query parameters to include in the request.
+        :param files: (optional) Dictionary of ``'name': file-like-objects`` for multipart upload.
         :return: A :py:class:`FastResponse <locust.contrib.fasthttp.FastResponse>` object if catch_response is False, and
             :py:class:`ResponseContextManager <locust.contrib.fasthttp.ResponseContextManager>` if True.
+
+        FastHttpSession does not implement the python-requests keyword arguments ``timeout``,
+        ``verify``, ``cert``, ``proxies``, ``cookies`` and ``hooks``. They are omitted from the
+        type hints so a type checker will flag them. Do not pass them at runtime either:
+        geventhttpclient would send them to the server as request parameters. Set the equivalent
+        options on the :py:class:`FastHttpUser <locust.contrib.fasthttp.FastHttpUser>` class
+        instead (for example ``network_timeout``, ``connection_timeout``, ``insecure``,
+        ``proxy_host`` / ``proxy_port``).
         """
         # if group name has been set and no name parameter has been passed in; set the name parameter to group_name
         if self.request_name and not name:
             name = self.request_name
 
-        _check_unsupported_kwargs(kwargs)
-        if isinstance(kwargs.get("params"), dict):
+        params = kwargs.get("params")
+        if isinstance(params, dict):
             # geventhttpclient merges any extra keyword arguments into the params mapping it is given,
             # so pass a copy rather than modifying the caller's dict in place
-            kwargs["params"] = dict(kwargs["params"])
+            kwargs["params"] = dict(params)
 
         # prepend url with hostname unless it's already an absolute URL
         built_url = self._build_url(url)
@@ -370,9 +365,10 @@ class FastHttpSession:
         """Sends a GET request"""
         return self.request("GET", url, **kwargs)
 
-    def iter_lines(self, url: str, method: str = "GET", **kwargs) -> Generator[str]:
+    def iter_lines(self, url: str, method: str = "GET", **kwargs: Unpack[RESTKwargs]) -> Generator[str]:
         """Sends a iter_lines request for streaming responses"""
-        response = self.request(method, url, stream=True, **kwargs)
+        kwargs["stream"] = True
+        response = self.request(method, url, **kwargs)
         response.raise_for_status()
 
         decoder = getincrementaldecoder("utf-8")(errors="replace")
