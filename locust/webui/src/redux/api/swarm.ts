@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
+import { IDynamicConfig, IUpdateDynamicConfigResponse } from 'types/dynamicConfig.types';
 import { IStartSwarmResponse, ISwarmFormInput } from 'types/swarm.types';
 import {
   IStatsResponse,
@@ -23,7 +24,7 @@ const baseQuery = (args: any, api: any, extraOptions: any) =>
 
 export const api = createApi({
   baseQuery: baseQuery,
-  tagTypes: ['stats'],
+  tagTypes: ['stats', 'dynamicConfig'],
   endpoints: builder => ({
     getStats: builder.query<IStatsResponse, void>({
       query: () => 'stats/requests',
@@ -46,6 +47,11 @@ export const api = createApi({
       query: () => 'worker-count',
       transformResponse: camelCaseKeys<IWorkerCountResponse>,
     }),
+    // no key transformation: user class and setting names are chosen by the locustfile
+    getDynamicConfig: builder.query<IDynamicConfig, void>({
+      query: () => 'dynamic-config',
+      providesTags: ['dynamicConfig'],
+    }),
 
     startSwarm: builder.mutation<IStartSwarmResponse, ISwarmFormInput>({
       query: body => ({
@@ -61,6 +67,11 @@ export const api = createApi({
         method: 'POST',
         body: snakeCaseKeys(body),
       }),
+    }),
+
+    updateDynamicConfig: builder.mutation<IUpdateDynamicConfigResponse, IDynamicConfig>({
+      query: body => ({ url: 'dynamic-config', method: 'POST', body }),
+      invalidatesTags: ['dynamicConfig'],
     }),
 
     resetStats: builder.mutation<void, void>({
@@ -79,8 +90,10 @@ export const {
   useGetExceptionsQuery,
   useGetLogsQuery,
   useGetWorkerCountQuery,
+  useGetDynamicConfigQuery,
   useStartSwarmMutation,
   useUpdateUserSettingsMutation,
+  useUpdateDynamicConfigMutation,
   useStopSwarmMutation,
   useResetStatsMutation,
 } = api;

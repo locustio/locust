@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import locust
-from locust import LoadTestShape, constant, stats
+from locust import DynamicConfig, LoadTestShape, constant, stats
 from locust.argument_parser import get_parser
 from locust.env import Environment
 from locust.log import LogReader
@@ -1307,6 +1307,73 @@ class TestWebUI(LocustTestCase, _HeaderCheckMixin):
             self.environment.available_user_classes["User1"].json(),
             {"host": "http://localhost", "tasks": ["my_task_2"], "fixed_count": 0, "weight": 1},
         )
+
+    def _set_up_dynamic_config_user_classes(self):
+        class AConfig(DynamicConfig):
+            config_bucket = {"ratio": 1, "enabled": True}
+
+        class BConfig(DynamicConfig):
+            config_bucket = {"rate": 0.5}
+
+        class UserA(User):
+            dynamic_config = AConfig()
+
+        class UserB(User):
+            dynamic_config = BConfig()
+
+        self.environment.user_classes = [UserA, UserB]
+        for user_class in (UserA, UserB):
+            user_class.dynamic_config.apply(user_class)
+        return UserA, UserB
+
+    def test_get_dynamic_config(self):
+        self._set_up_dynamic_config_user_classes()
+
+        response = requests.get("http://127.0.0.1:%i/dynamic-config" % self.web_port)
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual({"UserA": {"ratio": 1, "enabled": True}, "UserB": {"rate": 0.5}}, response.json())
+
+    def test_get_dynamic_config_without_dynamic_config(self):
+        self.environment.user_classes = [type("PlainUser", (User,), {})]
+
+        response = requests.get("http://127.0.0.1:%i/dynamic-config" % self.web_port)
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual({}, response.json())
+        self.web_ui.update_template_args()
+        self.assertFalse(self.web_ui.template_args["has_dynamic_config"])
+
+    def test_update_dynamic_config(self):
+        user_a, user_b = self._set_up_dynamic_config_user_classes()
+        self.web_ui.update_template_args()
+        self.assertTrue(self.web_ui.template_args["has_dynamic_config"])
+
+        response = requests.post(
+            "http://127.0.0.1:%i/dynamic-config" % self.web_port,
+            json={"UserA": {"ratio": 5}, "UserB": {"rate": 2}},
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(response.json()["success"])
+        self.assertEqual(
+            {"UserA": {"ratio": 5, "enabled": True}, "UserB": {"rate": 2}},
+            response.json()["config"],
+        )
+        self.assertEqual((5, 2), (user_a.ratio, user_b.rate))
+
+    def test_update_dynamic_config_invalid(self):
+        user_a, user_b = self._set_up_dynamic_config_user_classes()
+
+        for body in ({"UserA": {"ratio": 5}, "UserB": {"nope": 1}}, {"Nope": {"ratio": 5}}, [1], "{not json"):
+            with self.subTest(body=body):
+                kwargs = {"data": body} if isinstance(body, str) else {"json": body}
+                response = requests.post("http://127.0.0.1:%i/dynamic-config" % self.web_port, **kwargs)
+
+                self.assertEqual(400, response.status_code)
+                self.assertFalse(response.json()["success"])
+                self.assertTrue(response.json()["message"])
+                self.assertEqual((1, 0.5), (user_a.ratio, user_b.rate))
 
     def test_missing_index_template(self):
         expected_message = (

@@ -1031,6 +1031,9 @@ class MasterRunner(DistributedRunner):
                             f"A worker ({client_id}) running a different version ({msg.data}) connected, master version is {__version__}"
                         )
                 self.send_message("ack", client_id=client_id, data={"index": self.get_worker_index(client_id)})
+                if dynamic_config := self.environment.get_dynamic_config():
+                    # catch up workers that connect after the dynamic config was changed
+                    self.send_message("update_dynamic_config", client_id=client_id, data=dynamic_config)
                 self.environment.events.worker_connect.fire(client_id=msg.node_id)
                 client_already_connected = client_id in self.clients
                 self.clients[client_id] = WorkerNode(client_id, heartbeat_liveness=HEARTBEAT_LIVENESS)
@@ -1443,6 +1446,8 @@ class WorkerRunner(DistributedRunner):
                 )
             case "update_user_class":
                 self.environment.update_user_class(msg.data)
+            case "update_dynamic_config":
+                self.environment.update_dynamic_config(msg.data)
             case "spawning_complete":
                 # master says we have finished spawning (happens only once during a normal rampup)
                 self.environment.events.spawning_complete.fire(user_count=msg.data["user_count"])

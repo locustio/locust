@@ -7,7 +7,13 @@ User class
 ============
 
 .. autoclass:: locust.User
-    :members: wait_time, tasks, weight, fixed_count, abstract, on_start, on_stop, wait, context, environment
+    :members: wait_time, tasks, weight, fixed_count, abstract, dynamic_config, on_start, on_stop, wait, context, environment
+
+DynamicConfig class
+===================
+
+.. autoclass:: locust.dynamic_config.DynamicConfig
+    :members: config_bucket, get_config_bucket, update_config_bucket, apply
 
 HttpUser class
 ================

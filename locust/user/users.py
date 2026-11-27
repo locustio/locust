@@ -42,6 +42,8 @@ else:
     from typing_extensions import override
 
 if TYPE_CHECKING:
+    from locust.dynamic_config import DynamicConfig
+
     from collections.abc import Generator
 
     import pytest
@@ -139,6 +141,12 @@ class User(metaclass=UserMeta):
 
     abstract: bool = True
     """If abstract is True, the class is meant to be subclassed, and locust will not spawn users of this class during a test."""
+
+    dynamic_config: DynamicConfig | None = None
+    """
+    Optional :class:`DynamicConfig <locust.dynamic_config.DynamicConfig>` instance with settings of this user class
+    that can be changed during a test (from the "Dynamic Config" tab of the web UI or the ``/dynamic-config`` endpoint).
+    """
 
     def __init__(self, environment) -> None:
         super().__init__()

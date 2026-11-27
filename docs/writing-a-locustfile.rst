@@ -279,6 +279,42 @@ that TaskSet, and :py:meth:`on_stop <locust.TaskSet.on_stop>` is called when the
 executing that TaskSet (when :py:meth:`interrupt() <locust.TaskSet.interrupt>` is called, or the
 user is killed).
 
+.. _dynamic-config:
+
+dynamic_config attribute
+------------------------
+
+A User class can declare a :py:class:`DynamicConfig <locust.dynamic_config.DynamicConfig>` with settings that you
+can change while the test is running, without restarting it. List the settings and their default values, and
+attach an instance to the user class. Each setting is then an attribute of the user class that always holds
+the current value:
+
+.. code-block:: python
+
+    from locust import DynamicConfig, HttpUser, task
+
+    class MyConfig(DynamicConfig):
+        config_bucket = {"search_enabled": True, "page_size": 10}
+
+    class MyUser(HttpUser):
+        dynamic_config = MyConfig()
+
+        @task
+        def search(self):
+            if self.search_enabled:
+                self.client.get("/search", params={"size": self.page_size})
+
+If your locustfile has several user classes, each one can have its own ``dynamic_config``.
+
+When at least one user class has a ``dynamic_config`` the web UI shows a *Dynamic Config* tab where the settings
+of every user class can be edited. The same can be done by sending a ``POST`` request with a JSON body of the form
+``{"<user class name>": {"<setting>": <new value>}}`` to ``/dynamic-config`` (``GET /dynamic-config`` returns the current
+values). Only the settings that are sent are changed. Requests that name an unknown user class or setting are rejected
+with status 400 and change nothing. When running :ref:`distributed <running-distributed>`, changes are
+sent from the master to all workers, including workers that connect later.
+
+See `dynamic_config.py <https://github.com/locustio/locust/tree/master/examples/dynamic_config.py>`_ for a full example.
+
 Tasks
 =====
 

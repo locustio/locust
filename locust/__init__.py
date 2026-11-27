@@ -24,6 +24,7 @@ if not os.getenv("LOCUST_SKIP_MONKEY_PATCH", None):
 from ._version import version as __version__
 from .contrib.fasthttp import FastHttpUser
 from .debug import run_single_user
+from .dynamic_config import DynamicConfig
 from .event import Events
 from .shape import LoadTestShape
 from .user import wait_time
@@ -36,6 +37,7 @@ from .user.wait_time import between, constant, constant_pacing, constant_through
 events = Events()
 
 __all__ = (
+    "DynamicConfig",
     "FastHttpUser",
     "HttpLocust",
     "HttpUser",
