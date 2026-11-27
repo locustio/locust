@@ -13,6 +13,7 @@ Only the settings you send are changed. In a distributed run the new values are 
 """
 
 from locust import DynamicConfig, HttpUser, between, task
+
 import random
 
 
