@@ -10,7 +10,7 @@ Reported using regular GitHub issues. If there is some reason an issue cannot be
 
 ## Use Locust safely
 
-Locust is not intended to be deployed on a public-facing server. By default the web UI is only exposed on localhost, so normally this is not a problem.
+Locust is not intended to be deployed on a public-facing server. By default the web UI binds to all network interfaces (`--web-host=""`, equivalent to `*` / `0.0.0.0`). To restrict the web UI to localhost only, pass `--web-host 127.0.0.1` (or set `LOCUST_WEB_HOST=127.0.0.1`).
 
 Do not give someone access to the web UI unless you trust them with everything else that is on that machine.
 
