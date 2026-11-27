@@ -57,6 +57,16 @@ if TYPE_CHECKING:
         data: str | dict | list | tuple | None
         json: Any
 
+    # Extra keyword arguments accepted by request() besides its named parameters.
+    # python-requests arguments that FastHttpSession does not implement (timeout,
+    # verify, cert, proxies, cookies, hooks) are intentionally omitted so a type
+    # checker will flag them. At runtime, unknown keywords are still forwarded to
+    # geventhttpclient, which would send those requests-only names as params.
+    # See https://github.com/locustio/locust/issues/3611
+    class RequestKwargs(TypedDict, total=False):
+        params: dict | None
+        files: dict | None
+
 
 # Monkey patch geventhttpclient.useragent.CompatRequest so that Cookiejar works with Python >= 3.3
 # More info: https://github.com/requests/requests/pull/871
@@ -221,7 +231,7 @@ class FastHttpSession:
         json: Any = None,
         allow_redirects: bool = True,
         context: dict = {},
-        **kwargs,
+        **kwargs: Unpack[RequestKwargs],
     ) -> ResponseContextManager:  # technically it can also return FastResponse
         """
         Send an HTTP request
@@ -251,8 +261,18 @@ class FastHttpSession:
             Another side effect of setting stream to True is that the time for downloading the response
             content will not be accounted for in the request time that is reported by Locust.
         :param allow_redirects: (optional) Set to True by default.
+        :param params: (optional) Dictionary of query parameters to include in the request.
+        :param files: (optional) Dictionary of ``'name': file-like-objects`` for multipart upload.
         :return: A :py:class:`FastResponse <locust.contrib.fasthttp.FastResponse>` object if catch_response is False, and
             :py:class:`ResponseContextManager <locust.contrib.fasthttp.ResponseContextManager>` if True.
+
+        FastHttpSession does not implement the python-requests keyword arguments ``timeout``,
+        ``verify``, ``cert``, ``proxies``, ``cookies`` and ``hooks``. They are omitted from the
+        type hints so a type checker will flag them. Do not pass them at runtime either:
+        geventhttpclient would send them to the server as request parameters. Set the equivalent
+        options on the :py:class:`FastHttpUser <locust.contrib.fasthttp.FastHttpUser>` class
+        instead (for example ``network_timeout``, ``connection_timeout``, ``insecure``,
+        ``proxy_host`` / ``proxy_port``).
         """
         # accept a bytes URL, as HttpSession and requests do, and record its name as text
         if isinstance(url, bytes):
@@ -261,6 +281,12 @@ class FastHttpSession:
         # if group name has been set and no name parameter has been passed in; set the name parameter to group_name
         if self.request_name and not name:
             name = self.request_name
+
+        params = kwargs.get("params")
+        if isinstance(params, dict):
+            # geventhttpclient merges any extra keyword arguments into the params mapping it is given,
+            # so pass a copy rather than modifying the caller's dict in place
+            kwargs["params"] = dict(params)
 
         # prepend url with hostname unless it's already an absolute URL
         built_url = self._build_url(url)
@@ -356,9 +382,10 @@ class FastHttpSession:
         """Sends a GET request"""
         return self.request("GET", url, **kwargs)
 
-    def iter_lines(self, url: str, method: str = "GET", **kwargs) -> Generator[str]:
+    def iter_lines(self, url: str, method: str = "GET", **kwargs: Unpack[RESTKwargs]) -> Generator[str]:
         """Sends a iter_lines request for streaming responses"""
-        response = self.request(method, url, stream=True, **kwargs)
+        kwargs["stream"] = True
+        response = self.request(method, url, **kwargs)
         response.raise_for_status()
 
         decoder = getincrementaldecoder("utf-8")(errors="replace")

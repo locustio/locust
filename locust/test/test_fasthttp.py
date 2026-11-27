@@ -58,6 +58,19 @@ class TestFastHttpSession(WebserverTestCase):
         self.assertEqual(1, self.runner.stats.get("outer", "GET").num_requests)
         self.assertIsNone(client.request_name)
 
+    def test_params_dict_is_not_modified(self):
+        s = self.get_client()
+        params = {"arg": "hello"}
+        r = s.get("/get_arg", params=params, other="extra")
+        self.assertEqual("hello", r.text)
+        self.assertEqual({"arg": "hello"}, params)
+
+    def test_unknown_kwargs_are_still_sent_as_query_parameters(self):
+        # backwards compatibility: geventhttpclient sends unknown keyword arguments as request parameters
+        s = self.get_client()
+        r = s.get("/get_arg", arg="from-kwarg")
+        self.assertEqual("from-kwarg", r.text)
+
     def test_rename_request_restores_existing_name(self):
         client = self.get_client()
         client.request_name = "existing"

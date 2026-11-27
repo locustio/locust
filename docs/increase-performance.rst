@@ -56,6 +56,12 @@ A single FastHttpUser/geventhttpclient session can run concurrent requests, you 
 
     FastHttpUser/geventhttpclient is very similar to HttpUser/python-requests, but sometimes there are subtle differences. This is particularly true if you work with the client library's internals, e.g. when manually managing cookies.
 
+    FastHttpSession does not implement the python-requests keyword arguments ``timeout``, ``verify``,
+    ``cert``, ``proxies``, ``cookies`` and ``hooks``. They are omitted from its type hints, so a type
+    checker will flag them. Do not pass them at runtime either: geventhttpclient would send them to the
+    server as request parameters. Configure the equivalent settings on the FastHttpUser class instead
+    (e.g. ``network_timeout``, ``connection_timeout``, ``insecure``, ``proxy_host``/``proxy_port``).
+
 .. _rest:
 
 REST
