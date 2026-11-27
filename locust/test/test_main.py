@@ -346,6 +346,42 @@ class StandaloneIntegrationTests(ProcessIntegrationTest):
                 tp.expect('Spawning additional {"UserSubclass": 1} ({"UserSubclass": 0} already running)...')
                 tp.not_expect_any("Traceback")
 
+    def test_run_time_is_not_shortened_by_slow_locustfile(self):
+        # CPU-bound work while the locustfile is imported (heavy imports, building test data) never yields to gevent
+        with mock_locustfile(
+            content=textwrap.dedent(
+                """
+                from locust import User, task, constant, events
+
+                import time
+
+                deadline = time.perf_counter() + 1
+                while time.perf_counter() < deadline:
+                    pass
+
+                class TestUser(User):
+                    wait_time = constant(1)
+                    @task
+                    def my_task(self):
+                        pass
+
+                @events.test_start.add_listener
+                def on_test_start(environment, **kwargs):
+                    environment.test_started_at = time.perf_counter()
+
+                @events.test_stop.add_listener
+                def on_test_stop(environment, **kwargs):
+                    print(f"test ran for {time.perf_counter() - environment.test_started_at:.2f} seconds")
+                """
+            )
+        ) as mocked:
+            with TestProcess(
+                f"locust -f {mocked.file_path} --headless -u 1 -r 1 --run-time 2s", sigint_on_exit=False
+            ) as tp:
+                tp.expect("test ran for", stream="stdout")
+            [line] = [line for line in tp.stdout_output if "test ran for" in line]
+            self.assertGreater(float(line.split()[3]), 1.5)
+
     def test_invalid_stop_timeout_string(self):
         with mock_locustfile() as mocked:
             with TestProcess(
